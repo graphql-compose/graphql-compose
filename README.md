@@ -26,7 +26,7 @@ Middlewares
 ===========
 
 ### Basics
-All `GraphQL-compose` middlewares' types have 3 phases: 
+All `graphql-compose` middlewares have 3 phases: 
 - `setup phase`, which runs only once, when middleware added to the `GraphQL-compose` 
 - `capturing phase`, when you may change properties before it will pass to next middleware
 - `bubbling phase`, when you may change response from underlying middlewares
@@ -34,23 +34,24 @@ All `GraphQL-compose` middlewares' types have 3 phases:
 Middlewares use LIFO (last in, first out) stack. Or simply put - use `compose` function. So if you pass such middlewares [M1(opts), M2(opts)] it will be work such way:
 - call setup phase of `M1` with its opts
 - call setup phase of `M2` with its opts
-- for each resolve
- - call capture phase of `M1`
- - call capture phase of `M2`
- - call `fetch` method
- - call bubbling phase of `M2`
- - call bubbling phase of `M1`
- - pass `payloadPromise` to graphql resolve method.
+- for each run
+ - call capture phase of `M1` (changing args)
+ - call capture phase of `M2` (changing args)
+ - call `some-internal-bottom` method with prepared args in capture phase and pass result to bubbling phase
+ - call bubbling phase of `M2` (changing result)
+ - call bubbling phase of `M1` (changing result)
+ - pass result to `some-internal-upper` method.
  
 
 ### How `resolveMiddleware` work internally [Promise]
+Will be executed for every request, if resolve needed for query serving. 
 ```js
 export default function resolveMiddleware(opts = {}) {
   // [SETUP PHASE]: here you can process `opts`, when you create Middleware
   
-  return next => (resolveParams) => {
+  return next => (resolveArgs) => {
     // [CAPTURING PHASE]: 
-    // `resolveParams` consist from { source, args, context, info }
+    // `resolveArgs` consist from { source, args, context, info }  (*type GraphQLFieldResolveFn*)
     // you may change `source`, `args`, `context`, `info` before it will pass to `next` resolve function.
     
     // ...some code which modify resolveParams
@@ -68,37 +69,43 @@ export default function resolveMiddleware(opts = {}) {
 ```
 
 ### How `typeMiddleware` works internally [Object]
+Will be executed once, when building graphQL schema.
 ```js
 export default function typeMiddleware(opts = {}) {
   // [SETUP PHASE]: here you can process setup `opts`, when you create Middleware
   
-  return next => ({ name, description, fields, interfaces, isTypeOf }) => {
-    // [CAPTURING PHASE]: here you can change `name`, `description`, `fields`, `interfaces`, `isTypeOf` before it will pass to `next` middleware.
+  return next => (typeConfig) => {
+    // [CAPTURING PHASE]: 
+    // `typeConfig` consist from { name, description, fields, interfaces, isTypeOf } (*type GraphQLObjectTypeConfig*)
+    // here you can change `name`, `description`, `fields`, `interfaces`, `isTypeOf` before it will pass to `next` middleware.
     // ...some code which modify params
     
-    const typeConfig = next({ name, description, fields, interfaces, isTypeOf }); // passing config data to underlying middleware
+    const type = next(typeConfig); // passing config data to underlying middleware
     
-    // [BUBBLING PHASE]: here you may change typeConfig returned from underlying middlewares.
+    // [BUBBLING PHASE]: here you may change `type` returned from underlying middlewares.
     
-    return typeConfig; // return typeConfig to upper middleware 
+    return type; // return typeConfig to upper middleware 
   };
 }
 ```
 
 ### How `fieldMiddleware` works internally [Object]
+Will be executed once, when building graphQL schema.
 ```js
 export default function fieldMiddleware(opts = {}) {
   // [SETUP PHASE]: here you can process setup `opts`, when you create Middleware
   
-  return next => ({ type, description, args, resolve, deprecationReason }) => {
-    // [CAPTURING PHASE]: here you can change `type`, `description`, `args`, `resolve`, `deprecationReason` before it will pass to `next` middleware.
+  return next => (fieldConfig) => {
+    // [CAPTURING PHASE]: 
+    // `fieldConfig` consist from { type, description, args, resolve, deprecationReason } (*type GraphQLFieldConfig*)
+    // here you can change `type`, `description`, `args`, `resolve`, `deprecationReason` before it will pass to `next` middleware.
     // ...some code which modify params
     
-    const fieldConfig = next({ type, description, args, resolve, deprecationReason }); // passing config data to underlying middleware
+    const field = next(fieldConfig); // passing config data to underlying middleware
     
-    // [BUBBLING PHASE]: here you may change fieldConfig returned from underlying middlewares.
+    // [BUBBLING PHASE]: here you may change `field` returned from underlying middlewares.
     
-    return fieldConfig; // return fieldConfig to upper middleware 
+    return field; // return fieldConfig to upper middleware 
   };
 }
 ```
