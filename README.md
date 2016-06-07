@@ -1,8 +1,11 @@
 # Right now just proposal, stay tunned.
 See previous production ready, but unpublished version of mongoose to graphql module (fully rewrited graffity-mongoose): https://github.com/nodkz/graphql-mongoose
 By this link you may find what mash can be obtained from a map-derived-schema adapters/converters.
+
 So long live to middlewares and compose! 
 This module `graphql-compose` should be ready in Mid of June.
+
+🌶🌶🌶 **Just [look on API](https://github.com/nodkz/graphql-compose/blob/master/src/metaApiProposal.js) which should be with methods `composeType`, `composeField`, `composeResolve`.** 🌶🌶🌶 
 
 
 GraphQL-compose
@@ -13,9 +16,6 @@ You may extend types, rename fields, reduce access to fields, attach custom logi
 Middlewares should solve problem of mash code in schemas, which derived via map configs. 
 
 One more abstraction over graphql for clever peoples ;P for simple life ;).
-
-**Just [look on API](https://github.com/nodkz/graphql-compose/blob/master/src/metaApiProposal.js) which should be with methods `composeType`, `composeField`, `composeResolve`.** 🌶🌶🌶 
-
 
 Installation
 ============
