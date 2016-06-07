@@ -82,6 +82,7 @@ composeType('User',
   add(
     'friends',
     composeField(
+      fieldType('User'), // call composeStorage.Types.get('User')
       // custom field middleware
       next => fieldConfig => {
         const gqField = next(fieldConfig);
@@ -141,7 +142,7 @@ composeLoader(
       return cursor.exec();
     }
   ),
-  addResolve( ...chainedResolverIfNeeded),
+  addResolve(...chainedAnotherResolverIfNeeded),
 );
 
 composeLoader(
@@ -158,26 +159,25 @@ composeLoader(
 
 
 
-//---------- MUTATIONS (in progress, not ready)
-
-composeType('UserInput',
-  cloneType('User'),
-  makeInputType(),
-  remove(['id'])
-);
-
-composeType('RootMutation',
-  add('createUser', composeType('User').queryById)
-);
-
-
-//----------- ROOT CONSTRUCTOR  (in progress, not ready)
+//----------- ROOT QUERY CONSTRUCTOR
 
 composeType('RootQuery',
-  add('user', composeType('User').queryById),
-  add('userList', composeType('User').queryList),
-  add('userConnection', composeType('User').queryConnection),
-  add('superUser', composeType('SuperUser').queryById)
+  add('user',
+    composeField(
+      fieldType('User'),
+      description('Fetch user by Id'),
+      composeResolve(
+        hasAccess((source, args, context, info) => context.isFriend),
+        loader('one')
+      ),
+    ),
+  ),
+
+  // other simplified way
+  add('user', composeLoader('User', 'one')),
+  add('userList', composeLoader('User', 'many')),
+  add('userConnection', composeLoader('User', 'connection')),
+  add('superUser', composeLoader('SuperUser', 'someFancy', addIdArg, loader('one'))),
 );
 
 
@@ -202,3 +202,24 @@ composeInterface('Timestable',
   ),
   addTypeResolver(otherTypeResolver),
 );
+
+
+
+//---------- MUTATIONS (in progress, not ready yet)
+
+composeType('UserInput',
+  cloneType('User'), // should be cloned to store resolveParams, eg mongoose model
+  remove(['id']), // remove unneeded fields
+  makeInputType(), // convert types to inputTypes
+  add('clientIp', { // or add fields manually
+    type: GraphQLInputType,
+    defaultValue?: any,
+    description?: ?string,
+  }),
+);
+
+composeType('RootMutation',
+  add('createUser', composeType('User').loader('one'))
+);
+
+
