@@ -20,6 +20,7 @@ import { GraphQLString } from 'graphql';
 
 composeType('User',
   composeTypeFromMongoose(UserMongooseModel),
+     addResolverParam('model', UserMongooseModel), // internally added by `composeTypeFromMongoose`
   composeInterface('Timestable'), // internally call composeStorage.Interfaces.get('Timestable')
   description('User model description'),
   only(['myName', 'surname']), // get only described fields
@@ -49,7 +50,7 @@ composeType('User',
     }
   ),
   changeValue({
-    name: (source, args, context, info) => `${source.name} modified`,
+    name: ({ source, args, context, info }) => `${source.name} modified`,
   }),
 
   // example of custom type-middleware
@@ -87,7 +88,7 @@ composeType('User',
         return gqField;
       },
       description('List of friends'),
-      argAdd('gender', {}),
+      addArg('gender', {}),
       composeResolve(
         argEval(({ source }) => ({ frendId: source._id })),
         resolveList('User'),
@@ -103,23 +104,56 @@ composeType('User',
 
 
 
-//---------- TYPE/OBJECT DEFAULT FETCHERS (in progress, not ready)
+//---------- TYPE/OBJECT DEFAULT LOADERS
+// aggggr we get a MONSTER here,
+// but it should be hidden by plugin eg. graphql-compose-mongoose
+// and don't worry this is not latest version
 
-composeTypeFetcher('User',
-  byId({
-    resolve: () => {}
+composeLoader(
+  'User',
+  'many', // 'one', 'many', 'connection', 'byId', ... may be some other named loaders
+  addIdArg, // id!
+  addConnectionArgs, // after, first, before, last
+  addListArgs, // limit, skip
+  addFilterArg('age', {
+    type: GraphQLInt,
+    query: (query, args) => {
+      query.age = args.age || 18;
+      return query;
+    },
   }),
-  byList({
-    args: { ids, limit, skip, filter, sort },
-    resolve: () => {},
+  addFilterArg('nameStartWith', {
+    type: GraphQLString,
+    query: (query, args) => {
+      query.name = new RegExp('^' + escapeRegExp(args.name)); // mongoose regexp search
+      return query;
+    },
   }),
-  byConnection({
-    args: { after, first, before, last, filter, sort},
-    resolve: () => {},
-  }),
-  queryById( // another way
-    new DataLoader(keys => myBatchGetUsers(keys))
-  )
+  addSortArg('AGE__ASC', (sort) => { sort.age = 1; return sort; } ),
+  addSortArg('AGE__DESC', (sort) => { sort.age = -1; return sort; } ),
+  addSortArg('AGE_NAME__DESC', (sort) => { sort = { age: -1, name: -1 }; return sort; } ),
+  addResolve(
+    (pluginParams, loaderParams, { source, args, context, info }) => {
+      let cursor = pluginParams.model.find();
+      cursor = loaderParams.getFilter(cursor, args);
+      cursor = loaderParams.getSort(cursor, args);
+      cursor = cursor.select(loaderParams.projection(info));
+      return cursor.exec();
+    }
+  ),
+  addResolve( ...chainedResolverIfNeeded),
+);
+
+composeLoader(
+  'User',
+  'byId',
+  addIdArg,
+  addResolverParam('DL', new DataLoader(keys => myBatchGetUsers(keys))),
+  addResolve(
+    (pluginParams, loaderParams, { source, args, context, info }) => {
+      return loaderParams.DL.load(args.id);
+    }
+  ),
 );
 
 
