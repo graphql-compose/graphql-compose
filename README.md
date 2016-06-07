@@ -1,5 +1,5 @@
 # Right now just proposal, stay tunned.
-See previous unpublished version of mongoose to graphql module (fully rewrited graffity-mongoose): https://github.com/nodkz/graphql-mongoose
+See previous production ready, but unpublished version of mongoose to graphql module (fully rewrited graffity-mongoose): https://github.com/nodkz/graphql-mongoose
 By this link you may find what mash can be obtained from a map-derived-schema adapters/converters.
 So long live to middlewares and compose! 
 This module `graphql-compose` should be ready in Mid of June.
@@ -18,7 +18,7 @@ One more abstraction over graphql for clever peoples ;P for simple life ;).
 Installation
 ============
 
-`npm install graphql-compose`
+`npm install graphql-compose` - it is too early to run this command, module is not ready yet 
 
 
 Middlewares
