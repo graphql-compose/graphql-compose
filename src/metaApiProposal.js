@@ -112,7 +112,7 @@ composeType('User',
 
 composeLoader(
   'User',
-  'many', // 'one', 'many', 'connection', 'byId', ... may be some other named loaders
+  'many', // 'one', 'many', 'connection', 'byId', 'new', ... may be some other named loaders
   addIdArg, // id!
   addConnectionArgs, // after, first, before, last
   addListArgs, // limit, skip
@@ -205,21 +205,36 @@ composeInterface('Timestable',
 
 
 
-//---------- MUTATIONS (in progress, not ready yet)
+//---------- MUTATIONS
 
-composeType('UserInput',
-  cloneType('User'), // should be cloned to store resolveParams, eg mongoose model
-  remove(['id']), // remove unneeded fields
-  makeInputType(), // convert types to inputTypes
-  add('clientIp', { // or add fields manually
+composeMutation('User', 'create',
+  description('Create new User'),
+  // declare input fields
+  convertToInput('User'), // deeply convert type `User` to input types
+  removeInput('id'), // remove id field from input
+  addInput('clientIp', { // also can add fields manually
     type: GraphQLInputType,
-    defaultValue?: any,
-    description?: ?string,
+    defaultValue: any,
+    description: string,
   }),
+  // declare output fields
+  addOutputId,
+  addOutputChanged,
+  addOutputChangedEdge,
+  addOutputViewer,
+  addOutput('someField', {
+    type: GraphQLString,
+    description: 'Some random value',
+    resolve: () =>Math.random(),
+  }),
+  // declare loaders validators and mutators
+  hasAccess((source, args, context, info) => context.canCreateUser),
+  loader('new'),
+  trimStrings,
+  checkIsEmailBusy,
+  loader('save'), // too strange, 100% will be changed in future
 );
 
 composeType('RootMutation',
-  add('createUser', composeType('User').loader('one'))
+  add('createUser', composeMutation('User', 'create'),
 );
-
-
