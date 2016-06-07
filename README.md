@@ -1,10 +1,18 @@
 # Right now just proposal, stay tunned.
+See previous unpublished version of mongoose to graphql module (fully rewrited graffity-mongoose): https://github.com/nodkz/graphql-mongoose
+By this link you may find what mash can be obtained from a map-derived-schema adapters/converters.
+So long live to middlewares and compose! 
+This module `graphql-compose` should be ready in Mid of June.
+
 
 GraphQL-compose
 ======================
 
-The `GraphQL-compose` is a module which allow construct flexible graphql schema from different data sources.
-You may extend types, rename fields, reduce access to fields, attach custom logic to resolvers via middlewares.
+The `GraphQL-compose` is a module which allow construct flexible graphql schema from different data sources via plugins (Mongoose, DataLoader, Redis, Fetch and so on).
+You may extend types, rename fields, reduce access to fields, attach custom logic to resolvers and much more.
+Middlewares should solve problem of mash code in schemas, which derived via map configs. 
+
+One more abstraction over graphql for clever peoples ;P for simple life ;).
 
 
 Installation
