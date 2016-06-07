@@ -16,27 +16,44 @@ import { GraphQLString } from 'graphql';
 composeType('User',
   composeTypeFromMongoose(UserMongooseModel),
   description('User model description'),
-  only(['myName', 'surname']),
+  only(['myName', 'surname']), // get only described fields
+  remove(['stats', 'password']), // ... or leave others, and remove just listed here
   rename({
     myName: 'name',
     surname: 'lastname',
   }),
-  remove(['stats', 'password']),
   restrict({
     hasAccess: (source, args, context, info) => {
       return context.isAdmin;
     },
     fields: ['name', 'dob'],
   }),
-  add({
-    time: {
+  restrict({
+    hasAccess: (source, args, context, info) => {
+      return context.isOwner;
+    },
+    fields: ['stats'],
+  }),
+  add('time',
+    {
       type: GraphQLString,
       resolve: (source, args, context, info) => {
         return JSON.stringify(Date.now());
       },
-    },
-    friends: () => listOf(getComposeType('User')),
-  })
+    }
+  ),
+  add(
+    'friends',
+    composeField(
+      description('List of friends'),
+      argAdd('gender', {}),
+      composeResolve(
+        argEval((promise, { source, args, context, info }) => ({ frendId: source._id })),
+        resolveList('User'),
+        (promise, { source, args, context, info }) => promise.then(payload => payload.map( someFn )),
+      ),
+    ),
+  )
 );
 
 // somewere else in code extend `User` type
@@ -44,36 +61,45 @@ composeType('User',
   changeValue({
     name: (source, args, context, info) => `${source.name} modified`,
   }),
-  resolveById({
+  queryById({
     resolve: () => {}
   }),
-  resolveList({
+  queryList({
     args: { ids, limit, skip, filter, sort },
     resolve: () => {},
   }),
-  resolveConnection({
+  queryConnection({
     args: { after, first, before, last, filter, sort},
     resolve: () => {},
   }),
-  resolveById( // another way
+  queryById( // another way
     new DataLoader(keys => myBatchGetUsers(keys))
   )
 );
 
-composeType('SuperUser', 
+composeType('SuperUser',
   cloneType('User'),
-  add({
-    isSuperUserType: {
+  add('isSuperUserType',
+    {
       type: GraphQLBoolean,
       resolve: () => true,
     }
-  })
+  )
 );
 
 composeType('RootQuery',
-  add('user', composeType('User').resolveById),
-  add('userList', composeType('User').resolveList),
-  add('userConnection', composeType('User').resolveConnection),
-  add('superUser', composeType('SuperUser').resolveById)
+  add('user', composeType('User').queryById),
+  add('userList', composeType('User').queryList),
+  add('userConnection', composeType('User').queryConnection),
+  add('superUser', composeType('SuperUser').queryById)
 );
 
+composeType('UserInput',
+  cloneType('User'),
+  makeInputType(),
+  remove(['id'])
+);
+
+composeType('RootMutation',
+  add('createUser', composeType('User').queryById)
+);

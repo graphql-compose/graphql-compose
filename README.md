@@ -52,11 +52,11 @@ Middlewares use LIFO (last in, first out) stack. Or simply put - use `compose` f
 export default function resolveMiddleware(opts = {}) {
   // [SETUP PHASE]: here you can process `opts`, when you create Middleware
   
-  return next => ({ source, args, context, info }) => {
+  return next => promise => (source, args, context, info) => {
     // [CAPTURING PHASE]: here you can change `source`, `args`, `context`, `info` before it will pass to `next` resolve function.
     // ...some code which modify params
     
-    const payloadPromise = next({ source, args, context, info }); // pass request to following middleware and get response promise from it
+    const payloadPromise = next(promise)(source, args, context, info); // pass request to following middleware and get response promise from it
     
     // [BUBBLING PHASE]: here you may change payload of underlying middlewares, via promise syntax 
     // ...some code, which may add `then()` or `catch()` to payload promise
