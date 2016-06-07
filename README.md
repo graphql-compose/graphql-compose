@@ -49,7 +49,7 @@ Will be executed for every request, if resolve needed for query serving.
 export default function resolveMiddleware(opts = {}) {
   // [SETUP PHASE]: here you can process `opts`, when you create Middleware
   
-  return next => (resolveArgs) => {
+  return next => resolveArgs => {
     // [CAPTURING PHASE]: 
     // `resolveArgs` consist from { source, args, context, info }  (*type GraphQLFieldResolveFn*)
     // you may change `source`, `args`, `context`, `info` before it will pass to `next` resolve function.
@@ -74,7 +74,7 @@ Will be executed once, when building graphQL schema.
 export default function typeMiddleware(opts = {}) {
   // [SETUP PHASE]: here you can process setup `opts`, when you create Middleware
   
-  return next => (typeConfig) => {
+  return next => typeConfig => {
     // [CAPTURING PHASE]: 
     // `typeConfig` consist from { name, description, fields, interfaces, isTypeOf } (*type GraphQLObjectTypeConfig*)
     // here you can change `name`, `description`, `fields`, `interfaces`, `isTypeOf` before it will pass to `next` middleware.
@@ -95,7 +95,7 @@ Will be executed once, when building graphQL schema.
 export default function fieldMiddleware(opts = {}) {
   // [SETUP PHASE]: here you can process setup `opts`, when you create Middleware
   
-  return next => (fieldConfig) => {
+  return next => fieldConfig => {
     // [CAPTURING PHASE]: 
     // `fieldConfig` consist from { type, description, args, resolve, deprecationReason } (*type GraphQLFieldConfig*)
     // here you can change `type`, `description`, `args`, `resolve`, `deprecationReason` before it will pass to `next` middleware.
