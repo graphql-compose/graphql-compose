@@ -5,9 +5,11 @@ const UserMongooseModel = new Schema({
   stats: String,
   password: String,
   dob: String,
+  createdAt: Date,
+  updatedAt: Date,
 });
 
-import { composeType, composeField, composeResolve } from 'graphql-compose';
+import { composeType, composeField, composeResolve, composeInterface, composeStorage } from 'graphql-compose';
 import { description, only, remove, restrict, add } from 'graphql-compose/type';
 import { composeTypeFromMongoose } from 'graphql-compose-mongoose';
 import { GraphQLString } from 'graphql';
@@ -18,6 +20,7 @@ import { GraphQLString } from 'graphql';
 
 composeType('User',
   composeTypeFromMongoose(UserMongooseModel),
+  composeInterface('Timestable'), // internally call composeStorage.Interfaces.get('Timestable')
   description('User model description'),
   only(['myName', 'surname']), // get only described fields
   remove(['stats', 'password']), // ... or leave others, and remove just listed here
@@ -45,61 +48,15 @@ composeType('User',
       },
     }
   ),
+  changeValue({
+    name: (source, args, context, info) => `${source.name} modified`,
+  }),
 
-  // custom type-middleware
+  // example of custom type-middleware
   next => typeConfig => {
     const gqType = next(typeConfig);
     return gqType;
   },
-);
-
-
-
-//---------- RESOLVERS
-
-composeType('User',
-  add(
-    'friends',
-    composeField(
-      // custom field middleware
-      next => fieldConfig => {
-        const gqField = next(fieldConfig);
-        return gqField;
-      },
-      description('List of friends'),
-      argAdd('gender', {}),
-      composeResolve(
-        argEval(({ source }) => ({ frendId: source._id })),
-        resolveList('User'),
-
-        // custom resolve-middleware
-        next => resolveParams => {
-          return next(resolveParams).then(payload => payload.map( someFn ));
-        }
-      ),
-    ),
-  ),
-
-
-  // BEGIN under mind storm
-  changeValue({
-    name: (source, args, context, info) => `${source.name} modified`,
-  }),
-  queryById({
-    resolve: () => {}
-  }),
-  queryList({
-    args: { ids, limit, skip, filter, sort },
-    resolve: () => {},
-  }),
-  queryConnection({
-    args: { after, first, before, last, filter, sort},
-    resolve: () => {},
-  }),
-  queryById( // another way
-    new DataLoader(keys => myBatchGetUsers(keys))
-  )
-  // END under mind storm
 );
 
 
@@ -118,9 +75,57 @@ composeType('SuperUser',
 
 
 
-//---------- MUTATIONS
+//---------- FIELD RESOLVERS
 
-// BEGIN under mind storm
+composeType('User',
+  add(
+    'friends',
+    composeField(
+      // custom field middleware
+      next => fieldConfig => {
+        const gqField = next(fieldConfig);
+        return gqField;
+      },
+      description('List of friends'),
+      argAdd('gender', {}),
+      composeResolve(
+        argEval(({ source }) => ({ frendId: source._id })),
+        resolveList('User'),
+
+        // example of custom resolve-middleware
+        next => resolveParams => {
+          return next(resolveParams).then(payload => payload.map( someFn ));
+        }
+      ),
+    ),
+  ),
+);
+
+
+
+//---------- TYPE/OBJECT DEFAULT FETCHERS (in progress, not ready)
+
+composeTypeFetcher('User',
+  byId({
+    resolve: () => {}
+  }),
+  byList({
+    args: { ids, limit, skip, filter, sort },
+    resolve: () => {},
+  }),
+  byConnection({
+    args: { after, first, before, last, filter, sort},
+    resolve: () => {},
+  }),
+  queryById( // another way
+    new DataLoader(keys => myBatchGetUsers(keys))
+  )
+);
+
+
+
+//---------- MUTATIONS (in progress, not ready)
+
 composeType('UserInput',
   cloneType('User'),
   makeInputType(),
@@ -130,16 +135,36 @@ composeType('UserInput',
 composeType('RootMutation',
   add('createUser', composeType('User').queryById)
 );
-// END under mind storm
 
 
-//----------- ROOT CONSTRUCTOR
+//----------- ROOT CONSTRUCTOR  (in progress, not ready)
 
-// BEGIN under mind storm
 composeType('RootQuery',
   add('user', composeType('User').queryById),
   add('userList', composeType('User').queryList),
   add('userConnection', composeType('User').queryConnection),
   add('superUser', composeType('SuperUser').queryById)
 );
-// END under mind storm
+
+
+
+//----------- INTERFACES
+
+composeInterface('Timestable',
+  description('Timestable interface for types, which have fields with creation and modification time'),
+  add('createdAt', {
+    type: GraphQLDate,
+  }),
+  add('updatedAt', {
+    type: GraphQLDate,
+  }),
+  addTypeResolver( // too bad name, need another
+    (value, info) => {
+      const type = value._type ? composeStorage.Types.get(value._type) : null;
+      if (type) {
+        return type;
+      }
+    }
+  ),
+  addTypeResolver(otherTypeResolver),
+);
