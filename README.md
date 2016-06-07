@@ -14,16 +14,13 @@ Middlewares should solve problem of mash code in schemas, which derived via map 
 
 One more abstraction over graphql for clever peoples ;P for simple life ;).
 
+**Just [look on API](https://github.com/nodkz/graphql-compose/blob/master/src/metaApiProposal.js) which should be with methods `composeType`, `composeField`, `composeResolve`.** 🌶🌶🌶 
+
 
 Installation
 ============
 
 `npm install graphql-compose` - it is too early to run this command, module is not ready yet 
-
-
-Meta of Api
-===========
-Proposal of API which should be https://github.com/nodkz/graphql-compose/blob/master/src/metaApiProposal.js
 
 
 Middlewares
@@ -52,11 +49,15 @@ Middlewares use LIFO (last in, first out) stack. Or simply put - use `compose` f
 export default function resolveMiddleware(opts = {}) {
   // [SETUP PHASE]: here you can process `opts`, when you create Middleware
   
-  return next => promise => (source, args, context, info) => {
-    // [CAPTURING PHASE]: here you can change `source`, `args`, `context`, `info` before it will pass to `next` resolve function.
-    // ...some code which modify params
+  return next => (resolveParams) => {
+    // [CAPTURING PHASE]: 
+    // `resolveParams` consist from { source, args, context, info }
+    // you may change `source`, `args`, `context`, `info` before it will pass to `next` resolve function.
     
-    const payloadPromise = next(promise)(source, args, context, info); // pass request to following middleware and get response promise from it
+    // ...some code which modify resolveParams
+    
+    // pass request to following middleware and get response promise from it
+    const payloadPromise = next(resolveParams);
     
     // [BUBBLING PHASE]: here you may change payload of underlying middlewares, via promise syntax 
     // ...some code, which may add `then()` or `catch()` to payload promise

@@ -48,10 +48,10 @@ composeType('User',
       description('List of friends'),
       argAdd('gender', {}),
       composeResolve(
-        argEval((source, args, context, info) => ({ frendId: source._id })),
+        argEval(({ source }) => ({ frendId: source._id })),
         resolveList('User'),
-        next => promise => (source, args, context, info) => {
-          return next(promise).then(payload => payload.map( someFn ));
+        next => resolveParams => {
+          return next(resolveParams).then(payload => payload.map( someFn ));
         }
       ),
     ),
