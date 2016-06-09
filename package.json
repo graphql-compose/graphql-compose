@@ -13,8 +13,10 @@
     "build-cjs": "rimraf lib && BABEL_ENV=cjs babel src -d lib",
     "build-es": "rimraf es && BABEL_ENV=es babel src -d es",
     "lint": "eslint src test *.js",
+    "jest": "jest --watch",
+    "jestc": "jest --coverage",
     "prepublish": "npm run build",
-    "test": "npm run lint"
+    "test": "npm run lint && jest"
   },
   "repository": {
     "type": "git",
@@ -37,6 +39,7 @@
     "babel-cli": "^6.7.7",
     "babel-core": "^6.7.7",
     "babel-eslint": "^6.0.3",
+    "babel-jest": "^12.1.0",
     "babel-loader": "^6.2.4",
     "babel-plugin-add-module-exports": "^0.1.2",
     "babel-plugin-dev-expression": "^0.2.1",
@@ -54,6 +57,19 @@
     "eslint-plugin-jsx-a11y": "^0.6.2",
     "eslint-plugin-react": "^4.3.0",
     "graphql": "^0.4.18",
+    "jest-cli": "^12.1.1",
     "rimraf": "^2.5.2"
+  },
+  "jest": {
+    "rootDir": "",
+    "setupTestFrameworkScriptFile": "<rootDir>/scripts/jest/setupTestFrameworkScriptFile.js",
+    "coverageDirectory": "<rootDir>/src",
+    "testPathDirs": [
+      "<rootDir>/src"
+    ],
+    "unmockedModulePathPatterns": [
+      "<rootDir>/node_modules/graphql/",
+      "<rootDir>/node_modules/core-js/"
+    ]
   }
 }

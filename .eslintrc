@@ -3,5 +3,9 @@
   "parser": "babel-eslint",
   "rules": {
     "no-underscore-dangle": 0
+  },
+  "env": {
+    "jasmine": true,
+    "jest": true
   }
 }
