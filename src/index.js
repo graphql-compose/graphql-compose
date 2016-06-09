@@ -1,5 +1,5 @@
 import { GraphQLSchema } from 'graphql';
-import compose from './compose';
+import compose from './utils/compose';
 
 function initGraphqlTypes() {
   // populate root types in Storage.Types
