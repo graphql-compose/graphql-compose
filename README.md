@@ -16,6 +16,9 @@ Middlewares should solve problem of mash code in schemas, which derived via map 
 
 One more abstraction over graphql for clever peoples ;P for simple life ;).
 
+Here you can see `graphql-compose` blocks and how it will work. 
+<img width="677" alt="graphql-composer" src="https://cloud.githubusercontent.com/assets/1946920/15902133/48c56dec-2dc8-11e6-9114-d1e0ee432cfb.png">
+
 Installation
 ============
 
