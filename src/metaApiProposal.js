@@ -19,8 +19,8 @@ import { GraphQLString } from 'graphql';
 //---------- TYPE MODIFICATORS
 
 composeType('User',
-  composeTypeFromMongoose(UserMongooseModel),
-     addResolverParam('model', UserMongooseModel), // internally added by `composeTypeFromMongoose`
+  composeFromMongoose(UserMongooseModel),
+     setMiddlewareParam('model', UserMongooseModel), // internally added by `composeTypeFromMongoose`
   composeInterface('Timestable'), // internally call composeStorage.Interfaces.get('Timestable')
   description('User model description'),
   only(['myName', 'surname']), // get only described fields
@@ -49,8 +49,14 @@ composeType('User',
       },
     }
   ),
-  changeValue({
-    name: ({ source, args, context, info }) => `${source.name} modified`,
+  resolveField('name', (payload, { source, args, context, info }) => `${payload.name} modified`),
+  composeField('name', {
+    composeResolve(
+      (next) => (resolveParams) => next(resolveParams).then(payload => `${payload.name} modified`)
+    ),
+    composePayload(
+      (payload, { source, args, context, info }) => `${payload.name} modified`,
+    ),
   }),
 
   // example of custom type-middleware
@@ -89,10 +95,9 @@ composeType('User',
         return gqField;
       },
       description('List of friends'),
-      addArg('gender', {}),
+      addArg('gender', {...}),
       composeResolve(
-        argEval(({ source }) => ({ frendId: source._id })),
-        resolveList('User'),
+        loader('User', 'many', (pluginParams, resolveParams) => { return query; }),
 
         // example of custom resolve-middleware
         next => resolveParams => {
@@ -113,46 +118,55 @@ composeType('User',
 composeLoader(
   'User',
   'many', // 'one', 'many', 'connection', 'byId', 'new', ... may be some other named loaders
+  // ??? return type name ???
+  setMiddlewareParam('model', UserMongooseModel), /// ---- ???
   addIdArg, // id!
   addConnectionArgs, // after, first, before, last
   addListArgs, // limit, skip
-  addFilterArg('age', {
-    type: GraphQLInt,
-    query: (query, args) => {
-      query.age = args.age || 18;
+  filterArg('age', GraphQLInt,
+    (query, resloveParams) => {
+      query.age = args.age;
       return query;
     },
-  }),
-  addFilterArg('nameStartWith', {
-    type: GraphQLString,
-    query: (query, args) => {
+  ),
+  filterArg('nameStartWith', GraphQLString,
+    (query, { source, args, context, info }) => {
       query.name = new RegExp('^' + escapeRegExp(args.name)); // mongoose regexp search
       return query;
     },
-  }),
-  addSortArg('AGE__ASC', (sort) => { sort.age = 1; return sort; } ),
-  addSortArg('AGE__DESC', (sort) => { sort.age = -1; return sort; } ),
-  addSortArg('AGE_NAME__DESC', (sort) => { sort = { age: -1, name: -1 }; return sort; } ),
-  addResolve(
-    (pluginParams, loaderParams, { source, args, context, info }) => {
-      let cursor = pluginParams.model.find();
-      cursor = loaderParams.getFilter(cursor, args);
-      cursor = loaderParams.getSort(cursor, args);
+  ),
+  sortArg('AGE__ASC', (query, resloveParams) => { query.sort({ age: 1 }); return query; } ),
+  sortArg('AGE__DESC', (query, resloveParams) => { query.sort({ age: -1 }); return query; } ),
+  sortArg('AGE_NAME__DESC', (query, resloveParams) => { query.sort({ age: -1, name: -1 }); return query; } ),
+  beforeResolve((middlewareParams, resloveParams) => resloveParams),
+  execResolve(
+    (middlewareParams, { source, args, context, info }) => {
+      let cursor = middlewareParams.model.find();
+      cursor = middlewareParams.filter.forEach((name, cb) => {
+        if (args.input[name]) {
+          cursor = cb(cursor, { source, args, context, info });
+        }
+      });
+      cursor = middlewareParams.getSort(cursor, args);
       cursor = cursor.select(loaderParams.projection(info));
       return cursor.exec();
     }
   ),
-  addResolve(...chainedAnotherResolverIfNeeded),
+  afterResolve(payloadPromise => payloadPromise),
+
+  // ---- upper loader API
+  removeSortArg('name'),
+  removeFilterArg('name'),
 );
 
 composeLoader(
   'User',
   'byId',
   addIdArg,
-  addResolverParam('DL', new DataLoader(keys => myBatchGetUsers(keys))),
-  addResolve(
-    (pluginParams, loaderParams, { source, args, context, info }) => {
-      return loaderParams.DL.load(args.id);
+  setMiddlewareParam('DL', new DataLoader(keys => myBatchGetUsers(keys))),
+  execResolve(
+    (middlewareParams, { source, args, context, info }) => {
+      return middlewareParams.DL.load(args.id);
     }
   ),
 );
@@ -164,11 +178,11 @@ composeLoader(
 composeType('RootQuery',
   add('user',
     composeField(
-      fieldType('User'),
+      // fieldType(mongooseLoaderTypeAsString('User', 'one')),
+      composeLoader('User', 'one'), // setup arg, Resolve, Type  return arrayOfFieldMW
       description('Fetch user by Id'),
       composeResolve(
         hasAccess((source, args, context, info) => context.isFriend),
-        loader('one')
       ),
     ),
   ),
@@ -210,7 +224,7 @@ composeInterface('Timestable',
 composeMutation('User', 'create',
   description('Create new User'),
   // declare input fields
-  convertToInput('User'), // deeply convert type `User` to input types
+  addInputsFromType('User'), // deeply convert type `User` to input types
   removeInput('id'), // remove id field from input
   addInput('clientIp', { // also can add fields manually
     type: GraphQLInputType,

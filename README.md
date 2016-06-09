@@ -2,7 +2,7 @@
 See my previous production ready, but unpublished version of mongoose to graphql module: https://github.com/nodkz/graphql-mongoose
 By this link you may find example of mash-code in my app, which derived from a map-derived-schema adapters/converters.
 
-🌶🌶🌶 **Just [look on compose API](https://github.com/nodkz/graphql-compose/blob/master/src/metaApiProposal.js) which should be! Look on methods `composeType`, `composeField` and `composeResolve`. Yay!** 🌶🌶🌶 
+🌶🌶🌶 **Just [look on compose API](https://github.com/nodkz/graphql-compose/blob/master/src/metaApiProposalV2.js) which should be! Look on methods `composeType`, `composeField` and `composeResolve`. Yay!** 🌶🌶🌶 
 
 Long live to middlewares and compose! 
 This module `graphql-compose` should be ready in Mid of June.
@@ -43,8 +43,9 @@ Middlewares use LIFO (last in, first out) stack. Or simply put - use `compose` f
  - pass result to `some-internal-upper` method.
  
 
-### How `resolveMiddleware` work internally [Promise]
-Will be executed for every request, if resolve needed for query serving. 
+### How `resolveMiddleware` work internally
+Will be executed for every request, if resolve needed for query serving.
+Works in `Resolver`. Resolver knows output type, needed args and how to fetch and process data.  Each Type can have several named resolvers for retrieving one object, array of objects, a graphql connection type or perform mutation.
 ```js
 export default function resolveMiddleware(opts = {}) {
   // [SETUP PHASE]: here you can process `opts`, when you create Middleware
@@ -64,48 +65,6 @@ export default function resolveMiddleware(opts = {}) {
     //    payloadPromise.then(payload => { console.log(payload); return payload; })
     
     return payloadPromise; // return payload promise to upper middleware 
-  };
-}
-```
-
-### How `typeMiddleware` works internally [Object]
-Will be executed once, when building graphQL schema.
-```js
-export default function typeMiddleware(opts = {}) {
-  // [SETUP PHASE]: here you can process setup `opts`, when you create Middleware
-  
-  return next => typeConfig => {
-    // [CAPTURING PHASE]: 
-    // `typeConfig` consist from { name, description, fields, interfaces, isTypeOf } (*type GraphQLObjectTypeConfig*)
-    // here you can change `name`, `description`, `fields`, `interfaces`, `isTypeOf` before it will pass to `next` middleware.
-    // ...some code which modify params
-    
-    const type = next(typeConfig); // passing config data to underlying middleware
-    
-    // [BUBBLING PHASE]: here you may change `type` returned from underlying middlewares.
-    
-    return type; // return typeConfig to upper middleware 
-  };
-}
-```
-
-### How `fieldMiddleware` works internally [Object]
-Will be executed once, when building graphQL schema.
-```js
-export default function fieldMiddleware(opts = {}) {
-  // [SETUP PHASE]: here you can process setup `opts`, when you create Middleware
-  
-  return next => fieldConfig => {
-    // [CAPTURING PHASE]: 
-    // `fieldConfig` consist from { type, description, args, resolve, deprecationReason } (*type GraphQLFieldConfig*)
-    // here you can change `type`, `description`, `args`, `resolve`, `deprecationReason` before it will pass to `next` middleware.
-    // ...some code which modify params
-    
-    const field = next(fieldConfig); // passing config data to underlying middleware
-    
-    // [BUBBLING PHASE]: here you may change `field` returned from underlying middlewares.
-    
-    return field; // return fieldConfig to upper middleware 
   };
 }
 ```
