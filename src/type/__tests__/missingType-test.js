@@ -6,15 +6,16 @@ import {
   GraphQLObjectType,
 } from 'graphql';
 
-import GraphQLMissingType from '../missingType';
-import ComposeStorage from '../../ComposeStorage';
-import ComposeType from '../../ComposeType';
+import MissingType from '../missingType';
+
+jest.mock('../../gqc');
+import gqc from '../../gqc';
 
 
 describe('MissingType', () => {
   it('should coerse value to string', () => {
     const unknownType = 'BlackCow';
-    expect(GraphQLMissingType.serialize(unknownType)).toEqual(unknownType);
+    expect(MissingType.serialize(unknownType)).toEqual(unknownType);
   });
 
   it('should pass value through resolve method', async () => {
@@ -25,7 +26,7 @@ describe('MissingType', () => {
         name: 'Query',
         fields: {
           foo: {
-            type: GraphQLMissingType,
+            type: MissingType,
             resolve: () => unknownType,
           },
         },
@@ -45,21 +46,20 @@ describe('MissingType', () => {
     async () => {
       const unknownType = 'BlackCow';
 
-      const fieldType = new ComposeType('RootQuery')
-        .addRelation('foo', ComposeStorage.getTypeResolver(unknownType))
+      const fieldType = gqc.typeComposer('RootQuery')
+        .addRelation('foo', gqc.getTypeResolver(unknownType))
         .getFieldType('foo');
 
-      expect(fieldType).toEqual(GraphQLMissingType);
+      expect(fieldType).toEqual(MissingType);
     }
   );
-
 
   it('should pass a type name in response',
     async () => {
       const unknownTypeName = 'BlackCow';
 
-      const rootQuery = new ComposeType('RootQuery')
-        .addRelation('foo', ComposeStorage.getTypeResolver(unknownTypeName))
+      const rootQuery = gqc.typeComposer('RootQuery')
+        .addRelation('foo', gqc.getTypeResolver(unknownTypeName))
         .getType();
 
       const schema = new GraphQLSchema({

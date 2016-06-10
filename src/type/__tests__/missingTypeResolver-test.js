@@ -7,8 +7,9 @@ import {
 } from 'graphql';
 
 import MissingTypeResolver from '../missingTypeResolver';
-import ComposeStorage from '../../ComposeStorage';
-import ComposeType from '../../ComposeType';
+
+jest.mock('../../gqc');
+import gqc from '../../gqc';
 
 
 describe('MissingTypeResolver', () => {
@@ -41,17 +42,14 @@ describe('MissingTypeResolver', () => {
     });
   });
 
+
   it('should be set as type for field, which composed via undefined resolver in existed type',
     async () => {
-      const existedTypeName = 'User';
+      const existedTypeName = gqc.__mockExistedType;
       const unknownResolverName = 'missingResolverName';
 
-      const existedTypeComposer = new ComposeType(existedTypeName);
-
-      console.log(ComposeStorage);
-
-      const fieldType = new ComposeType('RootQuery')
-        .addRelation('foo', ComposeStorage.getTypeResolver(existedTypeName, unknownResolverName))
+      const fieldType = gqc.typeComposer('RootQuery')
+        .addRelation('foo', gqc.getTypeResolver(existedTypeName, unknownResolverName))
         .getFieldType('foo');
 
       expect(fieldType).toEqual(MissingTypeResolver);
@@ -61,13 +59,11 @@ describe('MissingTypeResolver', () => {
 
   it('should pass a type name and a missing resolver name in response',
     async () => {
-      const existedTypeName = 'User';
+      const existedTypeName = gqc.__mockExistedType;
       const unknownResolverName = 'missingResolverName';
 
-      const existedTypeComposer = new ComposeType(existedTypeName);
-      
-      const rootQuery = new ComposeType('RootQuery')
-        .addRelation('foo', ComposeStorage.getTypeResolver(existedTypeName, unknownResolverName))
+      const rootQuery = gqc.typeComposer('RootQuery')
+        .addRelation('foo', gqc.queries(existedTypeName).getResolver('byId'))
         .getType();
 
       const schema = new GraphQLSchema({
