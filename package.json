@@ -62,7 +62,6 @@
   },
   "jest": {
     "rootDir": "",
-    "setupTestFrameworkScriptFile": "<rootDir>/scripts/jest/setupTestFrameworkScriptFile.js",
     "coverageDirectory": "<rootDir>/src",
     "testPathDirs": [
       "<rootDir>/src"
