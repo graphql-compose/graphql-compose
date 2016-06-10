@@ -2,22 +2,19 @@
 See my previous production ready, but unpublished version of mongoose to graphql module: https://github.com/nodkz/graphql-mongoose
 By this link you may find example of mash-code in my app, which derived from a map-derived-schema adapters/converters.
 
-🌶🌶🌶 **Just [look on compose API](https://github.com/nodkz/graphql-compose/blob/master/src/metaApiProposalV2.js) which should be! Look on methods `composeType`, `composeField` and `composeResolve`. Yay!** 🌶🌶🌶 
-
-Long live to middlewares and compose! 
+🌶🌶🌶 Long live to middlewares and compose!🌶🌶🌶  
 This module `graphql-compose` should be ready in Mid of June.
 
 GraphQL-compose
 ======================
 
 The `GraphQL-compose` is a module which allow construct flexible graphql schema from different data sources via plugins (Mongoose, DataLoader, Redis, Fetch and so on).
+Also will be available `graphql-compose-relay` plugin, which add Relay specific things, like `Node` type and interface, `globalId`, `clientMutationId`.
 You may extend types, rename fields, reduce access to fields, attach custom logic to resolvers and much more.
 Middlewares should solve problem of mash code in schemas, which derived via map configs. 
 
 One more abstraction over graphql for clever peoples ;P for simple life ;).
 
-Here you can see `graphql-compose` blocks and how it will work. 
-<img width="677" alt="graphql-composer" src="https://cloud.githubusercontent.com/assets/1946920/15902133/48c56dec-2dc8-11e6-9114-d1e0ee432cfb.png">
 
 Installation
 ============
@@ -29,7 +26,7 @@ Middlewares
 ===========
 
 ### Basics
-All `graphql-compose` middlewares have 3 phases: 
+`graphql-compose` middleware have 3 phases: 
 - `setup phase`, which runs only once, when middleware added to the `GraphQL-compose` 
 - `capturing phase`, when you may change properties before it will pass to next middleware
 - `bubbling phase`, when you may change response from underlying middlewares
