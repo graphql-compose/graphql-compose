@@ -1,4 +1,5 @@
 import Resolver from './resolver';
+import MissingTypeResolver from '../type/missingTypeResolver';
 
 export default class ResolverList {
   constructor(listType, typeComposer) {
@@ -6,23 +7,23 @@ export default class ResolverList {
     this.resolvers = {};
   }
 
-  setResolver(name, resolver) {
+  set(name, resolver) {
     if (!resolver instanceof Resolver) {
       throw new Error('You should provide Resolver instance to ResolverList.');
     }
     this.resolvers[name] = resolver;
   }
 
-  hasResolver(name) {
+  has(name) {
     return this.resolvers.hasOwnProperty(name);
   }
 
-  getResolver(name) {
-    if (this.hasResolver(name)) {
+  get(name) {
+    if (this.has(name)) {
       return this.resolvers[name];
     }
 
-    return null;
+    return this._getMissingResolver(name);
   }
 
   addMiddleware(name, resolverMiddleware) {
@@ -32,5 +33,14 @@ export default class ResolverList {
     }
 
     resolver.addMiddleware(resolverMiddleware);
+  }
+
+  _getMissingResolver(unknownResolverName) {
+    const existedTypeName = this.typeComposer.getTypeName();
+    return new Resolver('MissingTypeResolver', 'missingResolver', {
+      type: MissingTypeResolver,
+      resolve: () =>
+        `Missing resolver name '${unknownResolverName}' in type '${existedTypeName}'`,
+    });
   }
 }

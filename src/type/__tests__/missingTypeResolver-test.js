@@ -49,7 +49,7 @@ describe('MissingTypeResolver', () => {
       const unknownResolverName = 'missingResolverName';
 
       const fieldType = gqc.typeComposer('RootQuery')
-        .addRelation('foo', gqc.getTypeResolver(existedTypeName, unknownResolverName))
+        .addRelation('foo', gqc.queries(existedTypeName).get(unknownResolverName))
         .getFieldType('foo');
 
       expect(fieldType).toEqual(MissingTypeResolver);
@@ -63,7 +63,7 @@ describe('MissingTypeResolver', () => {
       const unknownResolverName = 'missingResolverName';
 
       const rootQuery = gqc.typeComposer('RootQuery')
-        .addRelation('foo', gqc.queries(existedTypeName).getResolver('byId'))
+        .addRelation('foo', gqc.queries(existedTypeName).get(unknownResolverName))
         .getType();
 
       const schema = new GraphQLSchema({

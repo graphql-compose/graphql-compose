@@ -30,13 +30,22 @@ export default class Resolver {
       this.isArray = opts.isArray;
     }
   }
-  
-  getArg(fieldName) {
+
+  hasArg(argName) {
+    return this.args.hasOwnProperty(argName);
   }
-  
-  setArg(fieldName, argumentConfig) {
+
+  getArg(argName) {
+    if (this.hasArg(argName)) {
+      return this.args[argName];
+    }
+    return undefined;
   }
-  
+
+  setArg(argName, argumentConfig) {
+    this.args[argName] = argumentConfig;
+  }
+
   resolve(source, args, context, info) {
     return null;
   }
@@ -56,7 +65,7 @@ export default class Resolver {
 
     return type;
   }
-  
+
   getOutputType() {
     if (this.forceType) {
       return this.forceType;

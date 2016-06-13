@@ -1,5 +1,6 @@
 import { isFunction } from './utils/misc';
 import ResolverList from './resolver/resolverList';
+import Resolver from './resolver/resolver';
 
 export default class TypeComposer {
   constructor(gqType, storage) {
@@ -9,7 +10,7 @@ export default class TypeComposer {
 
   /**
    * Get fields from a GraphQL type
-   * WARNING: this method patch graphql type
+   * WARNING: this method read an internal GraphQL instance variable.
    */
   _getFields() {
     const fields = this.gqType._typeConfig.fields;
@@ -18,7 +19,7 @@ export default class TypeComposer {
 
   /**
    * Completely replace all fields in GraphQL type
-   * WARNING: this method patch graphql type
+   * WARNING: this method rewrite an internal GraphQL instance variable.
    */
   _setFields(fields) {
     this.gqType._typeConfig.fields = () => fields;
@@ -26,6 +27,10 @@ export default class TypeComposer {
 
 
   addRelation(fieldName, resolver, description, deprecationReason) {
+    if (!resolver instanceof Resolver) {
+      throw new Error('You should provide correct Resolver object.');
+    }
+
     this.addField(fieldName, {
       description,
       deprecationReason,
@@ -82,6 +87,15 @@ export default class TypeComposer {
 
   getType() {
     return this.gqType;
+  }
+
+  getTypeName() {
+    const type = this.getType();
+    if (type) {
+      return type.name;
+    }
+
+    return 'MissingType';
   }
 
   getQueryResolverList() {
