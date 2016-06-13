@@ -84,20 +84,27 @@ describe('Resolver', () => {
     });
   });
 
-  it('compose resolve method with middlewares', async () => {
+  it('compose resolve method with middlewares chain', async () => {
     const resolvedName = 'nameFromResolve';
     const changeName = (name) => `wrappedName(${name})`;
+    const changeNameAgain = (name) => `secondWrap(${name})`;
     const resolver = new Resolver('User', {
       storage: GQC,
       resolve: () => ({ name: resolvedName }),
     });
 
-    resolver.addMiddleware(
-      next => resolveArgs => {
-        const payload = next(resolveArgs);
-        return { ...payload, name: changeName(payload.name) };
-      }
-    );
+    const M1 = next => resolveArgs => {
+      const payload = next(resolveArgs);
+      return { ...payload, name: changeNameAgain(payload.name) };
+    };
+
+    const M2 = next => resolveArgs => {
+      const payload = next(resolveArgs);
+      return { ...payload, name: changeName(payload.name) };
+    };
+
+
+    resolver.addMiddleware(M1, M2);
 
     GQC.typeComposer('RootQuery')
       .addRelation('resolveUserWithMiddleware', resolver);
@@ -109,7 +116,7 @@ describe('Resolver', () => {
     ).toEqual({
       data: {
         resolveUserWithMiddleware: {
-          name: changeName(resolvedName),
+          name: changeNameAgain(changeName(resolvedName)),
         },
       },
     });

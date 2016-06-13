@@ -109,7 +109,12 @@ export default class Resolver {
     };
   }
 
-  addMiddleware(middleware) {
-    this.middlewares.push(middleware);
+  /**
+   * You may pass one middleware or list of them:
+   *   addMiddleware(M1)
+   *   addMiddleware(M1, M2, ...)
+   */
+  addMiddleware(...middlewares) {
+    this.middlewares.push(...middlewares);
   }
 }
