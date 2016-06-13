@@ -1,13 +1,10 @@
 import MissingType from '../type/missingType';
 import {
-  graphql,
-  GraphQLSchema,
-  GraphQLObjectType,
   GraphQLList,
-  GraphQLScalarType,
-  GraphQLNonNull
+  GraphQLNonNull,
 } from 'graphql';
 import compose from '../utils/compose';
+import ArgsIsRequired from './middlewares/argsIsRequired';
 
 export default class Resolver {
   constructor(outputTypeName, opts = {}) {
@@ -46,21 +43,19 @@ export default class Resolver {
   }
 
   setArg(argName, argumentConfig) {
-    this.args[argName] = this.wrapArg(argumentConfig);
+    this.args[argName] = argumentConfig;
   }
 
   removeArg(argName) {
     delete this.args[argName];
   }
 
-  wrapArg(argConfig) {
-    if (argConfig.hasOwnProperty('isRequired') && argConfig.isRequired) {
-      if (!(argConfig.type instanceof GraphQLNonNull)) {
-        argConfig.type = new GraphQLNonNull(argConfig.type); // eslint-disable-line
-      }
-    }
-
-    return argConfig;
+  composeArgs() {
+    const argsMWs = this._getMiddlewaresByKey('args', [
+      // add internal middleware, that wraps isRequired args with GraphQLNonNull
+      new ArgsIsRequired(),
+    ]);
+    return compose(...argsMWs)(args => Object.assign({}, args, this.args))(this.args);
   }
 
   resolve(source, args, context, info) {
@@ -68,7 +63,8 @@ export default class Resolver {
   }
 
   composeResolve() {
-    return compose(...this.middlewares)(this.resolve);
+    const resolveMWs = this._getMiddlewaresByKey('resolve');
+    return compose(...resolveMWs)(this.resolve);
   }
 
   setStorage(storage) {
@@ -104,7 +100,7 @@ export default class Resolver {
   getFieldConfig() {
     return {
       type: this.getOutputType(),
-      args: this.args,
+      args: this.composeArgs(),
       resolve: this.composeResolve(),
     };
   }
@@ -116,5 +112,11 @@ export default class Resolver {
    */
   addMiddleware(...middlewares) {
     this.middlewares.push(...middlewares);
+  }
+
+  _getMiddlewaresByKey(key, internalMiddlewares = []) {
+    return [...this.middlewares, ...internalMiddlewares]
+      .filter(mw => mw.hasOwnProperty(key))
+      .map(mw => mw[key]);
   }
 }

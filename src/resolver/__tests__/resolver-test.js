@@ -1,7 +1,8 @@
 jest.disableAutomock();
-jest.mock('../../gqc');
 
+jest.mock('../../gqc');
 import GQC from '../../gqc';
+
 import {
   graphql,
   GraphQLList,
@@ -40,27 +41,6 @@ describe('Resolver', () => {
     expect(resolver.getOutputType() instanceof GraphQLList).toBeTruthy();
   });
 
-  it('should be able to create required argument', () => {
-    const resolver = new Resolver('User', {
-      storage: GQC,
-      resolve: () => ({ name: 'Test', age: 13, nickname: 'tEst' }),
-    });
-    const argName = 'requiredId';
-    const argConfig = { type: GraphQLString, isRequired: true };
-
-    resolver.setArg(argName, argConfig);
-
-    // check by type
-    const argType = resolver.getArg(argName).type;
-    expect(argType instanceof GraphQLNonNull).toBeTruthy();
-
-    // check by printed graphql schema
-    GQC.typeComposer('RootQuery').addRelation('userByRequiredId', resolver);
-    const schema = GQC.buildSchema();
-    expect(printSchema(schema)).toContain('userByRequiredId(requiredId: String!)');
-  });
-
-
   it('should return data from resolve', async () => {
     const resolvedName = 'nameFromResolve';
     const resolver = new Resolver('User', {
@@ -85,7 +65,7 @@ describe('Resolver', () => {
   });
 
   it('compose resolve method with middlewares chain', async () => {
-    const resolvedName = 'nameFromResolve';
+    const resolvedName = 'myNameIsSlimShady';
     const changeName = (name) => `wrappedName(${name})`;
     const changeNameAgain = (name) => `secondWrap(${name})`;
     const resolver = new Resolver('User', {
@@ -93,16 +73,19 @@ describe('Resolver', () => {
       resolve: () => ({ name: resolvedName }),
     });
 
-    const M1 = next => resolveArgs => {
-      const payload = next(resolveArgs);
-      return { ...payload, name: changeNameAgain(payload.name) };
+    const M1 = {
+      resolve: next => resolveArgs => {
+        const payload = next(resolveArgs);
+        return { ...payload, name: changeNameAgain(payload.name) };
+      },
     };
 
-    const M2 = next => resolveArgs => {
-      const payload = next(resolveArgs);
-      return { ...payload, name: changeName(payload.name) };
+    const M2 = {
+      resolve: next => resolveArgs => {
+        const payload = next(resolveArgs);
+        return { ...payload, name: changeName(payload.name) };
+      },
     };
-
 
     resolver.addMiddleware(M1, M2);
 
@@ -121,4 +104,17 @@ describe('Resolver', () => {
       },
     });
   });
+
+  it('should call `ArgsIsRequired` middleware for args internally when call `composeArgs()`',
+    () => {
+      const resolver = new Resolver('TestArgsIsRequired');
+      resolver.setArg('requiredArg', {
+        type: GraphQLString,
+        isRequired: true,
+      });
+
+      const args = resolver.composeArgs();
+      expect(args.requiredArg.type instanceof GraphQLNonNull).toBeTruthy();
+    }
+  );
 });
