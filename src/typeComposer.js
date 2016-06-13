@@ -12,7 +12,7 @@ export default class TypeComposer {
    * Get fields from a GraphQL type
    * WARNING: this method read an internal GraphQL instance variable.
    */
-  _getFields() {
+  getFields() {
     const fields = this.gqType._typeConfig.fields;
     return isFunction(fields) ? fields() : fields;
   }
@@ -21,8 +21,9 @@ export default class TypeComposer {
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
-  _setFields(fields) {
+  setFields(fields) {
     this.gqType._typeConfig.fields = () => fields;
+    this.gqType._fields = null; // if schema was builded, nullify defineFieldMap
   }
 
 
@@ -50,14 +51,14 @@ export default class TypeComposer {
    * Add new fields or replace existed in a GraphQL type
    */
   addFields(newFields) {
-    this._setFields(Object.assign({}, this._getFields(), newFields));
+    this.setFields(Object.assign({}, this.getFields(), newFields));
   }
 
   /**
    * Get fieldConfig by name
    */
   getField(fieldName) {
-    const fields = this._getFields();
+    const fields = this.getFields();
 
     if (fields.hasOwnProperty(fieldName)) {
       return fields[fieldName];
@@ -70,7 +71,7 @@ export default class TypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this._getFields();
     fieldNames.forEach((fieldName) => delete fields[fieldName]);
-    this._setFields(Object.assign({}, fields)); // immutability
+    this.setFields(Object.assign({}, fields)); // immutability
   }
 
   /**

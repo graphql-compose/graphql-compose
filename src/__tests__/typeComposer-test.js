@@ -1,4 +1,7 @@
 jest.disableAutomock();
+jest.mock('../gqc');
+
+import GQC from '../gqc';
 
 import {
   graphql,
@@ -24,7 +27,7 @@ describe('TypeComposer', () => {
       });
 
       const composer = new TypeComposer(objectType);
-      const fieldNames = Object.keys(composer._getFields());
+      const fieldNames = Object.keys(composer.getFields());
 
       expect(fieldNames).toContain('field1');
       expect(fieldNames).toContain('field2');
@@ -46,7 +49,24 @@ describe('TypeComposer', () => {
 
       expect(fieldNames).toContain('field3');
     });
+
+    it('should clear defineFieldMap if fields modified after schema build', () => {
+      GQC.typeComposer('RootQuery')
+        .addField('testField', {
+          type: GraphQLString,
+        });
+
+      GQC.buildSchema();
+
+      const definedFieldMap = GQC.typeComposer('RootQuery').getType()._fields;
+      expect(typeof definedFieldMap).toEqual('object');
+
+      GQC.typeComposer('RootQuery')
+        .addField('testField2', {
+          type: GraphQLString,
+        });
+
+      expect(GQC.typeComposer('RootQuery').getType()._fields).toEqual(null);
+    });
   });
-  
-  
 });
