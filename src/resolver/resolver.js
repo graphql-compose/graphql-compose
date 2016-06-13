@@ -5,13 +5,15 @@ import {
   GraphQLObjectType,
   GraphQLList,
   GraphQLScalarType,
+  GraphQLNonNull
 } from 'graphql';
+import compose from '../utils/compose';
 
 export default class Resolver {
-  constructor(typeName, resolverName, opts = {}) {
+  constructor(outputTypeName, opts = {}) {
     this.middlewares = [];
     this.args = {};
-    this.outputTypeName = typeName;
+    this.outputTypeName = outputTypeName;
     this.isArray = false;
 
     if (opts.resolve) {
@@ -39,15 +41,34 @@ export default class Resolver {
     if (this.hasArg(argName)) {
       return this.args[argName];
     }
+
     return undefined;
   }
 
   setArg(argName, argumentConfig) {
-    this.args[argName] = argumentConfig;
+    this.args[argName] = this.wrapArg(argumentConfig);
+  }
+
+  removeArg(argName) {
+    delete this.args[argName];
+  }
+
+  wrapArg(argConfig) {
+    if (argConfig.hasOwnProperty('isRequired') && argConfig.isRequired) {
+      if (!(argConfig.type instanceof GraphQLNonNull)) {
+        argConfig.type = new GraphQLNonNull(argConfig.type); // eslint-disable-line
+      }
+    }
+
+    return argConfig;
   }
 
   resolve(source, args, context, info) {
     return null;
+  }
+
+  composeResolve() {
+    return compose(...this.middlewares)(this.resolve);
   }
 
   setStorage(storage) {
@@ -84,7 +105,7 @@ export default class Resolver {
     return {
       type: this.getOutputType(),
       args: this.args,
-      resolve: this.resolve,
+      resolve: this.composeResolve(),
     };
   }
 
