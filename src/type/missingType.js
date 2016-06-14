@@ -1,3 +1,5 @@
+/* @flow */
+
 import { GraphQLScalarType, GraphQLError } from 'graphql';
 
 export default new GraphQLScalarType({

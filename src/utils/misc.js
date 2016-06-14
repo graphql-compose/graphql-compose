@@ -1,5 +1,11 @@
+/* @flow */
+
 import pluralize from './pluralize';
 
+
+export function resolveMaybeThunk<T>(thingOrThunk: T | () => T): T { // eslint-disable-line
+  return typeof thingOrThunk === 'function' ? thingOrThunk() : thingOrThunk;
+}
 
 export function isString(value) {
   return typeof value === 'string';

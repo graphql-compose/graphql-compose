@@ -1,19 +1,26 @@
+/* @flow */
+
 import MissingType from './type/missingType';
 import TypeComposer from './typeComposer';
 import { GraphQLObjectType, GraphQLList, GraphQLSchema } from 'graphql';
+import type {
+  GraphQLNamedType,
+} from 'graphql/type/definition.js';
 import { isType } from 'graphql/type';
 
 
-class ComposeStorage {
+export default class ComposeStorage {
+  types: { [typeName: string]: GraphQLNamedType };
+
   constructor() {
     this.types = {};
   }
 
-  hasType(typeName) {
+  hasType(typeName: string): boolean {
     return this.types.hasOwnProperty(typeName);
   }
 
-  getType(typeName) {
+  getType(typeName: string): GraphQLNamedType {
     if (this.hasType(typeName)) {
       return this.types[typeName];
     }
@@ -21,9 +28,9 @@ class ComposeStorage {
     return MissingType;
   }
 
-  setType(typeObject) {
+  setType(typeObject: GraphQLNamedType): void {
     if (!isType(typeObject)) {
-      throw new Error('You must provide correct GraphQLType');
+      throw new Error('You must provide correct GraphQLNamedType');
     }
 
     if (typeObject instanceof GraphQLList
@@ -35,11 +42,11 @@ class ComposeStorage {
     this.types[typeObject.name] = typeObject;
   }
 
-  clear() {
+  clear(): void {
     this.types = {};
   }
 
-  typeComposer(typeName) {
+  typeComposer(typeName: string): TypeComposer {
     if (!this.hasType(typeName)) {
       this.types[typeName] = new GraphQLObjectType({
         name: typeName,
@@ -50,19 +57,19 @@ class ComposeStorage {
     return new TypeComposer(this.types[typeName], this);
   }
 
-  rootQuery() {
+  rootQuery(): TypeComposer {
     return this.typeComposer('RootQuery');
   }
 
-  rootMutation() {
+  rootMutation(): TypeComposer {
     return this.typeComposer('RootMutation');
   }
 
-  queries(typeName) {
+  queries(typeName: string) {
     return this.typeComposer(typeName).getQueryResolverList();
   }
 
-  mutations(typeName) {
+  mutations(typeName: string) {
     return this.typeComposer(typeName).getMutationResolverList();
   }
 
@@ -70,11 +77,21 @@ class ComposeStorage {
     const fields = {};
 
     if (this.hasType('RootQuery')) {
-      fields.query = this.getType('RootQuery');
+      const rootQuery = this.getType('RootQuery');
+      if (rootQuery instanceof GraphQLObjectType) {
+        fields.query = rootQuery;
+      } else {
+        throw new Error('RootQuery must be GraphQLObjectType');
+      }
     }
 
     if (this.hasType('RootMutation')) {
-      fields.mutation = this.getType('RootMutation');
+      const rootMutation = this.getType('RootMutation');
+      if (rootMutation instanceof GraphQLObjectType) {
+        fields.mutation = rootMutation;
+      } else {
+        throw new Error('RootMutation must be GraphQLObjectType');
+      }
     }
 
     if (Object.keys(fields).length === 0) {
@@ -85,5 +102,3 @@ class ComposeStorage {
     return new GraphQLSchema(fields);
   }
 }
-
-export default ComposeStorage;

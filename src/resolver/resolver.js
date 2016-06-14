@@ -3,12 +3,26 @@
 import MissingType from '../type/missingType';
 import {
   GraphQLList,
-  GraphQLNonNull,
 } from 'graphql';
+import type {
+  GraphQLArgumentConfig,
+  GraphQLFieldConfigArgumentMap,
+  GraphQLFieldResolveFn,
+  GraphQLOutputType,
+  GraphQLResolveInfo,
+} from 'graphql/type/definition.js';
 import compose from '../utils/compose';
 import ArgsIsRequired from './middlewares/argsIsRequired';
 
 export default class Resolver {
+  middlewares: Array<mixed>;
+  args: GraphQLFieldConfigArgumentMap;
+  outputTypeName: string;
+  resolve: GraphQLFieldResolveFn;
+  storage: mixed;
+  forceType: GraphQLOutputType;
+  isArray: boolean;
+
   constructor(outputTypeName: string, opts: Object = {}) {
     this.middlewares = [];
     this.args = {};
@@ -34,7 +48,6 @@ export default class Resolver {
 
   hasArg(argName: string): boolean {
     return this.args.hasOwnProperty(argName);
-
   }
 
   getArg(argName: string) {
@@ -46,13 +59,12 @@ export default class Resolver {
     return undefined;
   }
 
-  setArg(argName: string, argumentConfig) {
-    this.args[argName] = argumentConfig;
+  setArg(argName: string, argConfig: GraphQLArgumentConfig) {
+    this.args[argName] = argConfig;
   }
 
   removeArg(argName: string) {
     delete this.args[argName];
-
   }
 
   composeArgs() {
@@ -63,24 +75,29 @@ export default class Resolver {
     return compose(...argsMWs)(args => Object.assign({}, args, this.args))(this.args);
   }
 
-  resolve(source, args, context, info) {
+  resolve(
+    source: mixed,
+    args: {[argName: string]: mixed},
+    context: mixed,
+    info: GraphQLResolveInfo // eslint-disable-line
+  ) {
     return null;
   }
 
-  composeResolve() {
+  composeResolve(): GraphQLFieldResolveFn {
     const resolveMWs = this._getMiddlewaresByKey('resolve');
     return compose(...resolveMWs)(this.resolve);
   }
 
-  setStorage(storage) {
+  setStorage(storage): void {
     this.storage = storage;
   }
 
-  setResolve(resolve) {
+  setResolve(resolve: GraphQLFieldResolveFn): void {
     this.resolve = resolve;
   }
 
-  wrapType(type) {
+  wrapType(type: GraphQLOutputType): GraphQLOutputType {
     if (this.isArray) {
       return new GraphQLList(type);
     }
@@ -88,7 +105,7 @@ export default class Resolver {
     return type;
   }
 
-  getOutputType() {
+  getOutputType(): GraphQLOutputType {
     if (this.forceType) {
       return this.forceType;
     }

@@ -1,9 +1,20 @@
-import { isFunction } from './utils/misc';
+/* @flow */
+
+import { resolveMaybeThunk } from './utils/misc';
 import ResolverList from './resolver/resolverList';
 import Resolver from './resolver/resolver';
+import type {
+  GraphQLNamedType,
+  GraphQLObjectType,
+  GraphQLFieldConfigMap,
+} from 'graphql/type/definition.js';
+import type ComposerStorage from './storage';
 
 export default class TypeComposer {
-  constructor(gqType, storage) {
+  storage: ComposerStorage;
+  gqType: GraphQLObjectType;
+
+  constructor(gqType: GraphQLObjectType, storage: ComposerStorage) {
     this.gqType = gqType;
     this.storage = storage;
   }
@@ -12,22 +23,29 @@ export default class TypeComposer {
    * Get fields from a GraphQL type
    * WARNING: this method read an internal GraphQL instance variable.
    */
-  getFields() {
+  getFields(): GraphQLFieldConfigMap {
     const fields = this.gqType._typeConfig.fields;
-    return isFunction(fields) ? fields() : fields;
+    const fieldMap: any = resolveMaybeThunk(fields);
+
+    return fieldMap;
   }
 
   /**
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
-  setFields(fields) {
+  setFields(fields: GraphQLFieldConfigMap): void {
     this.gqType._typeConfig.fields = () => fields;
-    this.gqType._fields = null; // if schema was builded, nullify defineFieldMap
+    this.gqType._fields = {}; // if schema was builded, nullify defineFieldMap
   }
 
 
-  addRelation(fieldName, resolver, description, deprecationReason) {
+  addRelation(
+    fieldName: string,
+    resolver: Resolver,
+    description: string,
+    deprecationReason: ?string
+  ) {
     if (!resolver instanceof Resolver) {
       throw new Error('You should provide correct Resolver object.');
     }
@@ -43,21 +61,21 @@ export default class TypeComposer {
   /**
    * Add field to a GraphQL type
    */
-  addField(fieldName, fieldConfig) {
+  addField(fieldName: string, fieldConfig: GraphQLFieldConfigMap) {
     this.addFields({ [fieldName]: fieldConfig });
   }
 
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  addFields(newFields) {
+  addFields(newFields: GraphQLFieldConfigMap) {
     this.setFields(Object.assign({}, this.getFields(), newFields));
   }
 
   /**
    * Get fieldConfig by name
    */
-  getField(fieldName) {
+  getField(fieldName: string) {
     const fields = this.getFields();
 
     if (fields.hasOwnProperty(fieldName)) {
@@ -67,9 +85,9 @@ export default class TypeComposer {
     return undefined;
   }
 
-  removeField(fieldNameOrArray) {
+  removeField(fieldNameOrArray: string | Array<string>) {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    const fields = this._getFields();
+    const fields = this.getFields();
     fieldNames.forEach((fieldName) => delete fields[fieldName]);
     this.setFields(Object.assign({}, fields)); // immutability
   }
@@ -77,7 +95,7 @@ export default class TypeComposer {
   /**
    * Get fieldType by name
    */
-  getFieldType(fieldName) {
+  getFieldType(fieldName: string) {
     const field = this.getField(fieldName);
     if (field) {
       return field.type;
@@ -86,11 +104,11 @@ export default class TypeComposer {
     return undefined;
   }
 
-  getType() {
+  getType(): GraphQLNamedType {
     return this.gqType;
   }
 
-  getTypeName() {
+  getTypeName(): string {
     const type = this.getType();
     if (type) {
       return type.name;

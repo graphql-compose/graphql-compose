@@ -1,11 +1,22 @@
+/* @flow */
+
 import { GraphQLString } from 'graphql';
+import type {
+  NextArgsFn,
+  ArgsMap,
+  ObjectMap,
+  NextResolveFn,
+  ResolveParams,
+} from './flowTypes';
 
 export default class ArgsRequireId {
-  constructor(opts = {}) {
+  opts: ObjectMap;
+
+  constructor(opts: ObjectMap = {}) {
     this.opts = opts;
   }
 
-  args = next => args => {
+  args: ObjectMap = (next: NextArgsFn) => (args: ArgsMap) => {
     const nextArgs = Object.assign({}, args, {
       id: {
         type: GraphQLString,
@@ -15,7 +26,7 @@ export default class ArgsRequireId {
     return next(nextArgs);
   };
 
-  resolve = next => resolveArgs => {
-    return next(resolveArgs);
+  resolve: mixed = (next: NextResolveFn) => (resolveParams: ResolveParams) => {
+    return next(resolveParams);
   };
 }
