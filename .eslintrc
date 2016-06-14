@@ -2,7 +2,8 @@
   "extends": "airbnb",
   "parser": "babel-eslint",
   "rules": {
-    "no-underscore-dangle": 0
+    "no-underscore-dangle": 0,
+    "arrow-body-style": 0
   },
   "env": {
     "jasmine": true,
