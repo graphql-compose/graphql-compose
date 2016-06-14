@@ -9,7 +9,6 @@ import {
   GraphQLString,
   GraphQLNonNull,
 } from 'graphql';
-import { printSchema } from 'graphql/utilities';
 
 import Resolver from '../resolver';
 

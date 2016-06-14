@@ -1,0 +1,3 @@
+[submodule "graphql-js"]
+      path = __forks__/graphql-js
+      url = git://github.com/graphql/graphql-js.git

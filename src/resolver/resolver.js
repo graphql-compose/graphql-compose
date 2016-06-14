@@ -1,3 +1,5 @@
+// @flow
+
 import MissingType from '../type/missingType';
 import {
   GraphQLList,
@@ -7,7 +9,7 @@ import compose from '../utils/compose';
 import ArgsIsRequired from './middlewares/argsIsRequired';
 
 export default class Resolver {
-  constructor(outputTypeName, opts = {}) {
+  constructor(outputTypeName: string, opts: Object = {}) {
     this.middlewares = [];
     this.args = {};
     this.outputTypeName = outputTypeName;
@@ -30,24 +32,27 @@ export default class Resolver {
     }
   }
 
-  hasArg(argName) {
+  hasArg(argName: string): boolean {
     return this.args.hasOwnProperty(argName);
+
   }
 
-  getArg(argName) {
+  getArg(argName: string) {
     if (this.hasArg(argName)) {
       return this.args[argName];
     }
 
+
     return undefined;
   }
 
-  setArg(argName, argumentConfig) {
+  setArg(argName: string, argumentConfig) {
     this.args[argName] = argumentConfig;
   }
 
-  removeArg(argName) {
+  removeArg(argName: string) {
     delete this.args[argName];
+
   }
 
   composeArgs() {
@@ -115,7 +120,7 @@ export default class Resolver {
   }
 
   _getMiddlewaresByKey(key, internalMiddlewares = []) {
-    return [...this.middlewares, ...internalMiddlewares]
+    return [...internalMiddlewares, ...this.middlewares]
       .filter(mw => mw.hasOwnProperty(key))
       .map(mw => mw[key]);
   }

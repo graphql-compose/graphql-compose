@@ -16,7 +16,7 @@
     "jest": "jest --watch",
     "jestc": "jest --coverage",
     "prepublish": "npm run build",
-    "test": "npm run lint && jest"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -56,6 +56,8 @@
     "eslint-config-airbnb": "^7.0.0",
     "eslint-plugin-jsx-a11y": "^0.6.2",
     "eslint-plugin-react": "^4.3.0",
+    "flow": "^0.2.3",
+    "flow-bin": "^0.27.0",
     "graphql": "^0.4.18",
     "jest-cli": "^12.1.1",
     "rimraf": "^2.5.2"
