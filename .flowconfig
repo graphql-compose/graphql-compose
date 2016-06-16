@@ -6,4 +6,4 @@
 
 [options]
 esproposal.class_instance_fields=enable
-module.name_mapper='^graphql\(.*\)$' -> '/Users/nod/www/_npm/graphql-compose/__forks__/graphql-js/src\1'
+module.name_mapper='^graphql\(.*\)$' -> '<PROJECT_ROOT>/__forks__/graphql-js/src\1'
