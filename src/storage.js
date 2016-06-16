@@ -5,6 +5,8 @@ import TypeComposer from './typeComposer';
 import { GraphQLObjectType, GraphQLList, GraphQLSchema } from 'graphql';
 import type {
   GraphQLNamedType,
+  GraphQLObjectType,
+  GraphQLOutputType,
 } from 'graphql/type/definition.js';
 import { isType } from 'graphql/type';
 
@@ -20,7 +22,7 @@ export default class ComposeStorage {
     return this.types.hasOwnProperty(typeName);
   }
 
-  getType(typeName: string): GraphQLNamedType {
+  getType(typeName: string): GraphQLOutputType {
     if (this.hasType(typeName)) {
       return this.types[typeName];
     }

@@ -4,26 +4,40 @@ import MissingType from '../type/missingType';
 import {
   GraphQLList,
 } from 'graphql';
+import compose from '../utils/compose';
+import ArgsIsRequired from './middlewares/argsIsRequired';
+
 import type {
   GraphQLArgumentConfig,
   GraphQLFieldConfigArgumentMap,
   GraphQLFieldResolveFn,
   GraphQLOutputType,
   GraphQLResolveInfo,
-} from 'graphql/type/definition.js';
-import compose from '../utils/compose';
-import ArgsIsRequired from './middlewares/argsIsRequired';
+  ResolverMiddlewareMethodKeys,
+  ResolverFieldConfig,
+  ResolverMiddlewareArgs,
+  ResolverMiddlewareResolve,
+} from '../definition.js';
+import type ComposeStorage from '../storage';
+import type { ResolverMiddleware } from './resolverMiddleware';
+
+export type ResolverOpts = {
+  resolve?: GraphQLFieldResolveFn,
+  storage?: ComposeStorage,
+  forceType?: GraphQLOutputType,
+  isArray?: boolean,
+};
 
 export default class Resolver {
-  middlewares: Array<mixed>;
+  middlewares: Array<ResolverMiddleware>;
   args: GraphQLFieldConfigArgumentMap;
   outputTypeName: string;
   resolve: GraphQLFieldResolveFn;
-  storage: mixed;
+  storage: ComposeStorage;
   forceType: GraphQLOutputType;
   isArray: boolean;
 
-  constructor(outputTypeName: string, opts: Object = {}) {
+  constructor(outputTypeName: string, opts: ResolverOpts = {}) {
     this.middlewares = [];
     this.args = {};
     this.outputTypeName = outputTypeName;
@@ -37,8 +51,8 @@ export default class Resolver {
       this.storage = opts.storage;
     }
 
-    if (opts.type) {
-      this.forceType = opts.type;
+    if (opts.forceType) {
+      this.forceType = opts.forceType;
     }
 
     if (opts.isArray) {
@@ -47,7 +61,7 @@ export default class Resolver {
   }
 
   hasArg(argName: string): boolean {
-    return this.args.hasOwnProperty(argName);
+    return !!this.args[argName];
   }
 
   getArg(argName: string) {
@@ -67,12 +81,16 @@ export default class Resolver {
     delete this.args[argName];
   }
 
-  composeArgs() {
-    const argsMWs = this._getMiddlewaresByKey('args', [
-      // add internal middleware, that wraps isRequired args with GraphQLNonNull
-      new ArgsIsRequired(),
-    ]);
-    return compose(...argsMWs)(args => Object.assign({}, args, this.args))(this.args);
+  composeArgs():GraphQLFieldConfigArgumentMap {
+    const argsMWs: ResolverMiddlewareArgs[] =
+      this._getMiddlewaresByKey('args', [
+        // add internal middleware, it wraps isRequired args with GraphQLNonNull
+        new ArgsIsRequired(),
+      ])
+      .map(mw => mw.args);
+
+    const composedMWs = compose(...argsMWs);
+    return composedMWs(args => Object.assign({}, args, this.args))(this.args);
   }
 
   resolve(
@@ -80,16 +98,19 @@ export default class Resolver {
     args: {[argName: string]: mixed},
     context: mixed,
     info: GraphQLResolveInfo // eslint-disable-line
-  ) {
+  ): mixed {
     return null;
   }
 
   composeResolve(): GraphQLFieldResolveFn {
-    const resolveMWs = this._getMiddlewaresByKey('resolve');
-    return compose(...resolveMWs)(this.resolve);
+    const resolveMWs: ResolverMiddlewareResolve[] =
+      this._getMiddlewaresByKey('resolve')
+      .map(mv => mv.resolve);
+    // (({ source, args, context, info }) => this.resolve(source, args, context, info))
+    return compose(...resolveMWs);
   }
 
-  setStorage(storage): void {
+  setStorage(storage: ComposeStorage): void {
     this.storage = storage;
   }
 
@@ -119,7 +140,8 @@ export default class Resolver {
     return this.wrapType(MissingType);
   }
 
-  getFieldConfig() {
+
+  getFieldConfig(): ResolverFieldConfig {
     return {
       type: this.getOutputType(),
       args: this.composeArgs(),
@@ -132,13 +154,15 @@ export default class Resolver {
    *   addMiddleware(M1)
    *   addMiddleware(M1, M2, ...)
    */
-  addMiddleware(...middlewares) {
+  addMiddleware(...middlewares: Array<ResolverMiddleware>) {
     this.middlewares.push(...middlewares);
   }
 
-  _getMiddlewaresByKey(key, internalMiddlewares = []) {
+  _getMiddlewaresByKey(
+    key: ResolverMiddlewareMethodKeys,
+    internalMiddlewares:Array<ResolverMiddleware> = []
+  ) {
     return [...internalMiddlewares, ...this.middlewares]
-      .filter(mw => mw.hasOwnProperty(key))
-      .map(mw => mw[key]);
+      .filter(mw => mw.hasMethod(key));
   }
 }

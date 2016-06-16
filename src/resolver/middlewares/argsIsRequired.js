@@ -5,23 +5,25 @@ This middleware wrap arguments in GraphQLNonNull
 if they have param `isRequired: true` in their config
 */
 
-
+import ResolverMiddleware from '../resolverMiddleware';
 import { GraphQLNonNull } from 'graphql/type';
 import type {
   NextArgsFn,
-  ArgsMap,
   ObjectMap,
-} from './flowTypes';
+  ResolverMiddlewareArgs,
+  GraphQLFieldConfigArgumentMap,
+} from '../../definition';
 
 
-export default class ArgsIsRequired {
+export default class ArgsIsRequired extends ResolverMiddleware {
   opts: ObjectMap;
 
   constructor(opts: ObjectMap = {}) {
+    super(opts);
     this.opts = opts;
   }
 
-  args: ArgsMap = (next: NextArgsFn) => (args: ArgsMap) => {
+  args: ResolverMiddlewareArgs = (next: NextArgsFn) => (args: GraphQLFieldConfigArgumentMap) => {
     const nextArgs = next(args);
 
     Object.keys(nextArgs).forEach(argName => {

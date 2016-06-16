@@ -1,22 +1,26 @@
 /* @flow */
 
+import ResolverMiddleware from '../resolverMiddleware';
 import { GraphQLString } from 'graphql';
 import type {
   NextArgsFn,
-  ArgsMap,
   ObjectMap,
   NextResolveFn,
   ResolveParams,
-} from './flowTypes';
+  ResolverMiddlewareArgs,
+  GraphQLFieldConfigArgumentMap,
+  ResolverMiddlewareResolve,
+} from '../../definition';
 
-export default class ArgsRequireId {
+export default class ArgsRequireId extends ResolverMiddleware {
   opts: ObjectMap;
 
   constructor(opts: ObjectMap = {}) {
+    super(opts);
     this.opts = opts;
   }
 
-  args: ObjectMap = (next: NextArgsFn) => (args: ArgsMap) => {
+  args: ResolverMiddlewareArgs = (next: NextArgsFn) => (args: GraphQLFieldConfigArgumentMap) => {
     const nextArgs = Object.assign({}, args, {
       id: {
         type: GraphQLString,
@@ -26,7 +30,7 @@ export default class ArgsRequireId {
     return next(nextArgs);
   };
 
-  resolve: mixed = (next: NextResolveFn) => (resolveParams: ResolveParams) => {
+  resolve: ResolverMiddlewareResolve = (next: NextResolveFn) => (resolveParams: ResolveParams) => {
     return next(resolveParams);
   };
 }
