@@ -3,13 +3,13 @@
 import ResolverMiddleware from '../resolverMiddleware';
 import { GraphQLString } from 'graphql';
 import type {
-  NextArgsFn,
+  ResolverMWArgsFn,
   ObjectMap,
-  NextResolveFn,
+  ResolverMWResolveFn,
+  ResolverMWResolve,
   ResolveParams,
-  ResolverMiddlewareArgs,
+  ResolverMWArgs,
   GraphQLFieldConfigArgumentMap,
-  ResolverMiddlewareResolve,
 } from '../../definition';
 
 export default class ArgsRequireId extends ResolverMiddleware {
@@ -20,7 +20,7 @@ export default class ArgsRequireId extends ResolverMiddleware {
     this.opts = opts;
   }
 
-  args: ResolverMiddlewareArgs = (next: NextArgsFn) => (args: GraphQLFieldConfigArgumentMap) => {
+  args: ResolverMWArgs = (next: ResolverMWArgsFn) => (args: GraphQLFieldConfigArgumentMap) => {
     const nextArgs = Object.assign({}, args, {
       id: {
         type: GraphQLString,
@@ -30,7 +30,7 @@ export default class ArgsRequireId extends ResolverMiddleware {
     return next(nextArgs);
   };
 
-  resolve: ResolverMiddlewareResolve = (next: NextResolveFn) => (resolveParams: ResolveParams) => {
+  resolve: ResolverMWResolve = (next: ResolverMWResolveFn) => (resolveParams: ResolveParams) => {
     return next(resolveParams);
   };
 }

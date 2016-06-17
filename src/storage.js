@@ -1,44 +1,32 @@
 /* @flow */
 
-import MissingType from './type/missingType';
 import TypeComposer from './typeComposer';
-import { GraphQLObjectType, GraphQLList, GraphQLSchema } from 'graphql';
-import type {
-  GraphQLNamedType,
-  GraphQLObjectType,
-  GraphQLOutputType,
-} from 'graphql/type/definition.js';
-import { isType } from 'graphql/type';
+import { GraphQLObjectType, GraphQLSchema } from 'graphql';
+import type ResolverList from './resolver/resolverList';
 
 
 export default class ComposeStorage {
-  types: { [typeName: string]: GraphQLNamedType };
+  types: { [typeName: string]: GraphQLObjectType };
 
   constructor() {
     this.types = {};
   }
 
   hasType(typeName: string): boolean {
-    return this.types.hasOwnProperty(typeName);
+    return !!this.types[typeName];
   }
 
-  getType(typeName: string): GraphQLOutputType {
+  getType(typeName: string): ?GraphQLObjectType {
     if (this.hasType(typeName)) {
       return this.types[typeName];
     }
 
-    return MissingType;
+    return undefined;
   }
 
-  setType(typeObject: GraphQLNamedType): void {
-    if (!isType(typeObject)) {
-      throw new Error('You must provide correct GraphQLNamedType');
-    }
-
-    if (typeObject instanceof GraphQLList
-      || typeObject instanceof GraphQLList) {
-      throw new Error('setType does not accept GraphQLList and GraphQLNonNull types. '
-      + 'Because this types can not have unique names. So they can be implemented via resolver.');
+  setType(typeObject: GraphQLObjectType): void {
+    if (!(typeObject instanceof GraphQLObjectType)) {
+      throw new Error('You must provide correct GraphQLObjectType');
     }
 
     this.types[typeObject.name] = typeObject;
@@ -67,11 +55,11 @@ export default class ComposeStorage {
     return this.typeComposer('RootMutation');
   }
 
-  queries(typeName: string) {
+  queries(typeName: string):ResolverList {
     return this.typeComposer(typeName).getQueryResolverList();
   }
 
-  mutations(typeName: string) {
+  mutations(typeName: string):ResolverList {
     return this.typeComposer(typeName).getMutationResolverList();
   }
 

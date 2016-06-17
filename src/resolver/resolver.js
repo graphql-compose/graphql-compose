@@ -1,9 +1,6 @@
-// @flow
+/* @flow */
 
 import MissingType from '../type/missingType';
-import {
-  GraphQLList,
-} from 'graphql';
 import compose from '../utils/compose';
 import ArgsIsRequired from './middlewares/argsIsRequired';
 
@@ -12,11 +9,11 @@ import type {
   GraphQLFieldConfigArgumentMap,
   GraphQLFieldResolveFn,
   GraphQLOutputType,
-  GraphQLResolveInfo,
-  ResolverMiddlewareMethodKeys,
+  ResolverMWMethodKeys,
   ResolverFieldConfig,
-  ResolverMiddlewareArgs,
-  ResolverMiddlewareResolve,
+  ResolverMWArgs,
+  ResolverMWResolve,
+  ResolveParams,
 } from '../definition.js';
 import type ComposeStorage from '../storage';
 import type { ResolverMiddleware } from './resolverMiddleware';
@@ -31,32 +28,16 @@ export type ResolverOpts = {
 export default class Resolver {
   middlewares: Array<ResolverMiddleware>;
   args: GraphQLFieldConfigArgumentMap;
-  outputTypeName: string;
+  outputType: GraphQLOutputType;
   resolve: GraphQLFieldResolveFn;
-  storage: ComposeStorage;
-  forceType: GraphQLOutputType;
-  isArray: boolean;
 
-  constructor(outputTypeName: string, opts: ResolverOpts = {}) {
+  constructor(outputType: GraphQLOutputType, opts: ResolverOpts = {}) {
+    this.outputType = outputType;
     this.middlewares = [];
     this.args = {};
-    this.outputTypeName = outputTypeName;
-    this.isArray = false;
 
     if (opts.resolve) {
       this.resolve = opts.resolve;
-    }
-
-    if (opts.storage) {
-      this.storage = opts.storage;
-    }
-
-    if (opts.forceType) {
-      this.forceType = opts.forceType;
-    }
-
-    if (opts.isArray) {
-      this.isArray = opts.isArray;
     }
   }
 
@@ -82,7 +63,7 @@ export default class Resolver {
   }
 
   composeArgs():GraphQLFieldConfigArgumentMap {
-    const argsMWs: ResolverMiddlewareArgs[] =
+    const argsMWs: ResolverMWArgs[] =
       this._getMiddlewaresByKey('args', [
         // add internal middleware, it wraps isRequired args with GraphQLNonNull
         new ArgsIsRequired(),
@@ -93,51 +74,27 @@ export default class Resolver {
     return composedMWs(args => Object.assign({}, args, this.args))(this.args);
   }
 
-  resolve(
-    source: mixed,
-    args: {[argName: string]: mixed},
-    context: mixed,
-    info: GraphQLResolveInfo // eslint-disable-line
-  ): mixed {
+  resolve(resolveParams: ResolveParams): mixed { // eslint-disable-line
     return null;
   }
 
   composeResolve(): GraphQLFieldResolveFn {
-    const resolveMWs: ResolverMiddlewareResolve[] =
+    const resolveMWs: ResolverMWResolve[] =
       this._getMiddlewaresByKey('resolve')
       .map(mv => mv.resolve);
-    // (({ source, args, context, info }) => this.resolve(source, args, context, info))
-    return compose(...resolveMWs);
-  }
-
-  setStorage(storage: ComposeStorage): void {
-    this.storage = storage;
+    return compose(...resolveMWs)(this.resolve);
   }
 
   setResolve(resolve: GraphQLFieldResolveFn): void {
     this.resolve = resolve;
   }
 
-  wrapType(type: GraphQLOutputType): GraphQLOutputType {
-    if (this.isArray) {
-      return new GraphQLList(type);
-    }
-
-    return type;
-  }
-
   getOutputType(): GraphQLOutputType {
-    if (this.forceType) {
-      return this.forceType;
+    if (this.outputType) {
+      return this.outputType;
     }
 
-    if (this.storage) {
-      return this.wrapType(
-        this.storage.getType(this.outputTypeName)
-      );
-    }
-
-    return this.wrapType(MissingType);
+    return MissingType;
   }
 
 
@@ -159,7 +116,7 @@ export default class Resolver {
   }
 
   _getMiddlewaresByKey(
-    key: ResolverMiddlewareMethodKeys,
+    key: ResolverMWMethodKeys,
     internalMiddlewares:Array<ResolverMiddleware> = []
   ) {
     return [...internalMiddlewares, ...this.middlewares]

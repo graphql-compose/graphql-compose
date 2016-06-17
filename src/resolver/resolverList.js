@@ -1,24 +1,31 @@
+/* @flow */
 import Resolver from './resolver';
 import MissingTypeResolver from '../type/missingTypeResolver';
+import type TypeComposer from '../typeComposer';
+import type ResolverMiddleware from './resolverMiddleware';
 
 export default class ResolverList {
-  constructor(listType, typeComposer) {
+  typeComposer: TypeComposer;
+  resolvers: { [resolverName: string]: Resolver };
+
+  constructor(listType: string, typeComposer: TypeComposer) {
     this.typeComposer = typeComposer;
     this.resolvers = {};
   }
 
-  set(name, resolver) {
+  set(name: string, resolver: Resolver) {
     if (!resolver instanceof Resolver) {
       throw new Error('You should provide Resolver instance to ResolverList.');
     }
+
     this.resolvers[name] = resolver;
   }
 
-  has(name) {
-    return this.resolvers.hasOwnProperty(name);
+  has(name: string):boolean {
+    return !!this.resolvers[name];
   }
 
-  get(name) {
+  get(name: string) {
     if (this.has(name)) {
       return this.resolvers[name];
     }
@@ -26,8 +33,8 @@ export default class ResolverList {
     return this._getMissingResolver(name);
   }
 
-  addMiddleware(name, resolverMiddleware) {
-    const resolver = this.getResolver(name);
+  addMiddleware(name: string, resolverMiddleware: ResolverMiddleware) {
+    const resolver = this.get(name);
     if (!resolver) {
       throw new Error(`Resolver with name '${name}' not found.`);
     }
@@ -35,10 +42,9 @@ export default class ResolverList {
     resolver.addMiddleware(resolverMiddleware);
   }
 
-  _getMissingResolver(unknownResolverName) {
+  _getMissingResolver(unknownResolverName: string) {
     const existedTypeName = this.typeComposer.getTypeName();
-    return new Resolver('MissingTypeResolver', {
-      type: MissingTypeResolver,
+    return new Resolver(MissingTypeResolver, {
       resolve: () =>
         `Missing resolver name '${unknownResolverName}' in type '${existedTypeName}'`,
     });

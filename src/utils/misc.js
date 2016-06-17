@@ -7,49 +7,39 @@ export function resolveMaybeThunk<T>(thingOrThunk: T | () => T): T { // eslint-d
   return typeof thingOrThunk === 'function' ? thingOrThunk() : thingOrThunk;
 }
 
-export function isString(value) {
+export function isString(value: mixed): boolean {
   return typeof value === 'string';
 }
 
 
-export function isObject(value) {
-  return (typeof value === 'object' && !Array.isArray(value) && value !== null);
+export function isObject(value: mixed): boolean {
+  return typeof value === 'object' && !Array.isArray(value) && value !== null;
 }
 
 
-export function isFunction(value) {
-  return !!(value && value.constructor && value.call && value.apply);
+export function isFunction(value: mixed): boolean {
+  return !!(value && value.constructor && value.call && typeof value === 'function' && value.apply);
 }
 
-export function getNameViaOpts(defaultName, opts) {
-  if (isString(opts)) {
-    return opts;
-  } else if (isObject(opts) && isString(opts.name)) {
-    return opts.name;
-  }
-
-  return defaultName;
-}
-
-export function camelCase(str) {
+export function camelCase(str: string): string {
   return str.replace(
     /(?:^\w|[A-Z]|\b\w)/g,
-    (letter, index) => index === 0 ? letter.toLowerCase() : letter.toUpperCase()
+    (letter, index) => (index === 0 ? letter.toLowerCase() : letter.toUpperCase())
   ).replace(/\s+/g, '');
 }
 
 
-export function getPluralName(name) {
+export function getPluralName(name: string): string {
   return pluralize(camelCase(name));
 }
 
 
-export function upperFirst(string) {
+export function upperFirst(string: string): string {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 
-export function omit(object, keys) {
+export function omit(object: Object, keys: string[]) {
   if (!object) {
     return {};
   }
@@ -82,7 +72,7 @@ export function omit(object, keys) {
  * @param {Object} target target object
  * @param {Array} path path array (internal)
  */
-export function dotObject(obj, target, path) {
+export function dotObject(obj: Object, target: Object, path: string[]):Object {
   /* eslint-disable */
   target = target || {};
   path = path || [];

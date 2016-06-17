@@ -46,10 +46,9 @@ describe('MissingTypeResolver', () => {
   it('should be set as type for field, which composed via undefined resolver in existed type',
     async () => {
       const existedTypeName = gqc.__mockExistedType;
-      const unknownResolverName = 'missingResolverName';
 
       const fieldType = gqc.typeComposer('RootQuery')
-        .addRelation('foo', gqc.queries(existedTypeName).get(unknownResolverName))
+        .addRelation('foo', gqc.queries(existedTypeName).get('unknownResolverName'))
         .getFieldType('foo');
 
       expect(fieldType).toEqual(MissingTypeResolver);

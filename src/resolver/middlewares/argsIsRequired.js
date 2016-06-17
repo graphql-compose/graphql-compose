@@ -8,9 +8,9 @@ if they have param `isRequired: true` in their config
 import ResolverMiddleware from '../resolverMiddleware';
 import { GraphQLNonNull } from 'graphql/type';
 import type {
-  NextArgsFn,
+  ResolverMWArgsFn,
+  ResolverMWArgs,
   ObjectMap,
-  ResolverMiddlewareArgs,
   GraphQLFieldConfigArgumentMap,
 } from '../../definition';
 
@@ -23,7 +23,7 @@ export default class ArgsIsRequired extends ResolverMiddleware {
     this.opts = opts;
   }
 
-  args: ResolverMiddlewareArgs = (next: NextArgsFn) => (args: GraphQLFieldConfigArgumentMap) => {
+  args: ResolverMWArgs = (next: ResolverMWArgsFn) => (args: GraphQLFieldConfigArgumentMap) => {
     const nextArgs = next(args);
 
     Object.keys(nextArgs).forEach(argName => {

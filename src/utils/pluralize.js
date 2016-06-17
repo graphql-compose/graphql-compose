@@ -1,3 +1,4 @@
+/* @flow */
 
 const rules = [
   [/(m)an$/gi, '$1en'],
@@ -56,7 +57,7 @@ const uncountables = [
 ];
 
 
-function pluralize(str) {
+function pluralize(str: string): string {
   let found;
   if (!~uncountables.indexOf(str.toLowerCase())) {
     found = rules.filter((rule) => str.match(rule[0]));

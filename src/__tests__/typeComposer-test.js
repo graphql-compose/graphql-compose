@@ -4,11 +4,7 @@ jest.mock('../gqc');
 import GQC from '../gqc';
 
 import {
-  graphql,
-  GraphQLSchema,
   GraphQLObjectType,
-  GraphQLList,
-  GraphQLScalarType,
   GraphQLString,
 } from 'graphql';
 
@@ -46,7 +42,6 @@ describe('TypeComposer', () => {
       const composer = new TypeComposer(objectType);
       composer.addField('field3', { type: GraphQLString });
       const fieldNames = Object.keys(objectType.getFields());
-
       expect(fieldNames).toContain('field3');
     });
 
@@ -66,7 +61,7 @@ describe('TypeComposer', () => {
           type: GraphQLString,
         });
 
-      expect(GQC.typeComposer('RootQuery').getType()._fields).toEqual(null);
+      expect(GQC.typeComposer('RootQuery').getType()._fields).toEqual(undefined);
     });
   });
 });

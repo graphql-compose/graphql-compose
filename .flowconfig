@@ -1,4 +1,11 @@
 [ignore]
+.*/__tests__/.*
+.*/__mocks__/.*
+.*/lib/.*
+.*/dist/.*
+.*/coverage/.*
+.*/resources/.*
+.*/node_modules/.*
 
 [include]
 

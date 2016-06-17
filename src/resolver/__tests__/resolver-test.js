@@ -2,10 +2,10 @@ jest.disableAutomock();
 
 jest.mock('../../gqc');
 import GQC from '../../gqc';
+import ResolverMiddleware from '../resolverMiddleware';
 
 import {
   graphql,
-  GraphQLList,
   GraphQLString,
   GraphQLNonNull,
 } from 'graphql';
@@ -34,21 +34,13 @@ describe('Resolver', () => {
     expect(resolver.getArg(argName)).toEqual(undefined);
   });
 
-  it('should be able to return an array (GraphQLList)', () => {
-    const resolver = new Resolver('User', { isArray: true });
-
-    expect(resolver.getOutputType() instanceof GraphQLList).toBeTruthy();
-  });
-
   it('should return data from resolve', async () => {
     const resolvedName = 'nameFromResolve';
-    const resolver = new Resolver('User', {
-      storage: GQC,
+    const resolver = new Resolver(GQC.getType('User'), {
       resolve: () => ({ name: resolvedName }),
     });
 
-    GQC.typeComposer('RootQuery')
-      .addRelation('resolveUser', resolver);
+    GQC.rootQuery().addRelation('resolveUser', resolver);
 
     const schema = GQC.buildSchema();
     const result = await graphql(schema, '{ resolveUser { name } }');
@@ -67,29 +59,25 @@ describe('Resolver', () => {
     const resolvedName = 'myNameIsSlimShady';
     const changeName = (name) => `wrappedName(${name})`;
     const changeNameAgain = (name) => `secondWrap(${name})`;
-    const resolver = new Resolver('User', {
-      storage: GQC,
+    const resolver = new Resolver(GQC.getType('User'), {
       resolve: () => ({ name: resolvedName }),
     });
 
-    const M1 = {
-      resolve: next => resolveArgs => {
-        const payload = next(resolveArgs);
-        return { ...payload, name: changeNameAgain(payload.name) };
-      },
+    const M1 = new ResolverMiddleware();
+    M1.resolve = next => resolveArgs => {
+      const payload = next(resolveArgs);
+      return { ...payload, name: changeNameAgain(payload.name) };
     };
 
-    const M2 = {
-      resolve: next => resolveArgs => {
-        const payload = next(resolveArgs);
-        return { ...payload, name: changeName(payload.name) };
-      },
+    const M2 = new ResolverMiddleware();
+    M2.resolve = next => resolveArgs => {
+      const payload = next(resolveArgs);
+      return { ...payload, name: changeName(payload.name) };
     };
 
     resolver.addMiddleware(M1, M2);
 
-    GQC.typeComposer('RootQuery')
-      .addRelation('resolveUserWithMiddleware', resolver);
+    GQC.rootQuery().addRelation('resolveUserWithMiddleware', resolver);
 
     const schema = GQC.buildSchema();
     const result = await graphql(schema, '{ resolveUserWithMiddleware { name } }');

@@ -2,23 +2,23 @@
 
 import type {
   ObjectMap,
-  ResolverMiddlewareArgs,
-  ResolverMiddlewareResolve,
-  ResolverMiddlewareMethodKeys,
+  ResolverMWArgs,
+  ResolverMWResolve,
+  ResolverMWMethodKeys,
 } from '../definition';
 
-export type ResolverMiddlewareMethods = {
-  args: ResolverMiddlewareArgs,
-  resolve: ResolverMiddlewareResolve,
+export type ResolverMWMethods = {
+  args: ResolverMWArgs,
+  resolve: ResolverMWResolve,
 };
 
 export default class ResolverMiddleware {
   opts: ObjectMap;
-  args: ResolverMiddlewareArgs;
-  resolve: ResolverMiddlewareResolve;
+  args: ResolverMWArgs;
+  resolve: ResolverMWResolve;
 
-  hasMethod(methodKey: ResolverMiddlewareMethodKeys) {
-    const that:ResolverMiddlewareMethods = this;
+  hasMethod(methodKey: ResolverMWMethodKeys) {
+    const that:ResolverMWMethods = this;
     return this.hasOwnProperty(methodKey) && !!that[methodKey];
   }
 }

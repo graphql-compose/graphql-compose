@@ -1,5 +1,5 @@
+/*
 import { GraphQLSchema } from 'graphql';
-import compose from './utils/compose';
 
 function initGraphqlTypes() {
   // populate root types in Storage.Types
@@ -24,8 +24,7 @@ function getSchema() {
   return new GraphQLSchema(schemaConfig);
 }
 
-
 export {
   getSchema,
 };
-
+*/

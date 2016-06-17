@@ -1,10 +1,7 @@
 jest.disableAutomock();
 
 import {
-  graphql,
-  GraphQLSchema,
   GraphQLObjectType,
-  GraphQLList,
   GraphQLScalarType,
 } from 'graphql';
 
@@ -32,34 +29,19 @@ describe('Storage [Class]', () => {
   });
 
 
-  it('should implements setType and accept only graphQL types', () => {
+  it('should implements setType and accept only GraphQLObjectType', () => {
     const storage = new Storage();
 
     const validType = new GraphQLObjectType({ name: 'validType' });
     storage.setType(validType);
     expect(storage.getType('validType')).toEqual(validType);
 
-    const validType1 = new GraphQLScalarType({ name: 'validType1', serialize: () => {} });
-    storage.setType(validType1);
-    expect(storage.getType('validType1')).toEqual(validType1);
+    const errTypeObj1 = new GraphQLScalarType({ name: 'validType1', serialize: () => {} });
+    expect(() => { storage.setType(errTypeObj1); }).toThrow();
 
-    const errTypeObj = { name: '123' };
-    expect(() => { storage.setType(errTypeObj); }).toThrow();
+    const errTypeObj2 = { name: '123' };
+    expect(() => { storage.setType(errTypeObj2); }).toThrow();
   });
-
-
-  it('should throw error, if passed GraphQLList or GraphQLNonNull. This type does not have name.',
-    () => {
-      const storage = new Storage();
-
-      const validType = new GraphQLObjectType({ name: 'validType' });
-      storage.setType(validType);
-      expect(storage.getType('validType')).toEqual(validType);
-
-      const invalid = new GraphQLList(validType);
-      expect(() => { storage.setType(invalid); }).toThrow();
-    }
-  );
 
   it('should throw error, if root fields not defined', () => {
     const storage = new Storage();
@@ -67,6 +49,4 @@ describe('Storage [Class]', () => {
 
     expect(() => { storage.buildSchema(); }).toThrow();
   });
-  
-  
 });

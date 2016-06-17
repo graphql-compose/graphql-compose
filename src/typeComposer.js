@@ -1,18 +1,22 @@
 /* @flow */
 
-import { resolveMaybeThunk } from './utils/misc';
+import { resolveMaybeThunk, isObject } from './utils/misc';
 import ResolverList from './resolver/resolverList';
 import Resolver from './resolver/resolver';
 import type {
-  GraphQLNamedType,
   GraphQLObjectType,
+  GraphQLFieldConfig,
   GraphQLFieldConfigMap,
-} from 'graphql/type/definition.js';
+  GraphQLFieldConfigMapThunk,
+} from './definition.js';
 import type ComposerStorage from './storage';
 
 export default class TypeComposer {
-  storage: ComposerStorage;
-  gqType: GraphQLObjectType;
+  storage: ?ComposerStorage;
+  gqType: GraphQLObjectType & {
+    _gqcQueryResolverList?: ResolverList,
+    _gqcMutationResolverList?: ResolverList,
+  };
 
   constructor(gqType: GraphQLObjectType, storage: ComposerStorage) {
     this.gqType = gqType;
@@ -24,10 +28,15 @@ export default class TypeComposer {
    * WARNING: this method read an internal GraphQL instance variable.
    */
   getFields(): GraphQLFieldConfigMap {
-    const fields = this.gqType._typeConfig.fields;
-    const fieldMap: any = resolveMaybeThunk(fields);
+    const fields: GraphQLFieldConfigMapThunk | GraphQLFieldConfigMap
+      = this.gqType._typeConfig.fields;
 
-    return fieldMap;
+    const fieldMap:mixed = resolveMaybeThunk(fields);
+
+    if (isObject(fieldMap)) {
+      return Object.assign({}, fieldMap);
+    }
+    return {};
   }
 
   /**
@@ -36,7 +45,7 @@ export default class TypeComposer {
    */
   setFields(fields: GraphQLFieldConfigMap): void {
     this.gqType._typeConfig.fields = () => fields;
-    this.gqType._fields = {}; // if schema was builded, nullify defineFieldMap
+    delete this.gqType._fields; // if schema was builded, delete defineFieldMap
   }
 
 
@@ -61,7 +70,7 @@ export default class TypeComposer {
   /**
    * Add field to a GraphQL type
    */
-  addField(fieldName: string, fieldConfig: GraphQLFieldConfigMap) {
+  addField(fieldName: string, fieldConfig: GraphQLFieldConfig) {
     this.addFields({ [fieldName]: fieldConfig });
   }
 
@@ -78,7 +87,7 @@ export default class TypeComposer {
   getField(fieldName: string) {
     const fields = this.getFields();
 
-    if (fields.hasOwnProperty(fieldName)) {
+    if (fields[fieldName]) {
       return fields[fieldName];
     }
 
@@ -104,7 +113,7 @@ export default class TypeComposer {
     return undefined;
   }
 
-  getType(): GraphQLNamedType {
+  getType(): GraphQLObjectType {
     return this.gqType;
   }
 
@@ -117,21 +126,29 @@ export default class TypeComposer {
     return 'MissingType';
   }
 
-  getQueryResolverList() {
+  getQueryResolverList(): ResolverList {
+    let resolverList;
+
     const injectedParamName = '_gqcQueryResolverList';
-    if (!this.gqType.hasOwnProperty(injectedParamName)) {
-      this.gqType[injectedParamName] = new ResolverList('query', this);
+    if (!this.gqType[injectedParamName]) {
+      resolverList = this.gqType[injectedParamName] = new ResolverList('query', this);
+    } else {
+      resolverList = this.gqType[injectedParamName];
     }
 
-    return this.gqType[injectedParamName];
+    return resolverList;
   }
 
-  getMutationResolverList() {
+  getMutationResolverList(): ResolverList {
+    let resolverList;
+
     const injectedParamName = '_gqcMutationResolverList';
-    if (!this.gqType.hasOwnProperty(injectedParamName)) {
-      this.gqType[injectedParamName] = new ResolverList('mutation', this);
+    if (!this.gqType[injectedParamName]) {
+      resolverList = this.gqType[injectedParamName] = new ResolverList('mutation', this);
+    } else {
+      resolverList = this.gqType[injectedParamName];
     }
 
-    return this.gqType[injectedParamName];
+    return resolverList;
   }
 }
