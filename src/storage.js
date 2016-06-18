@@ -44,7 +44,7 @@ export default class ComposeStorage {
       });
     }
 
-    return new TypeComposer(this.types[typeName], this);
+    return new TypeComposer(this.types[typeName]);
   }
 
   rootQuery(): TypeComposer {

@@ -9,18 +9,15 @@ import type {
   GraphQLFieldConfigMap,
   GraphQLFieldConfigMapThunk,
 } from './definition.js';
-import type ComposerStorage from './storage';
 
 export default class TypeComposer {
-  storage: ?ComposerStorage;
   gqType: GraphQLObjectType & {
     _gqcQueryResolverList?: ResolverList,
     _gqcMutationResolverList?: ResolverList,
   };
 
-  constructor(gqType: GraphQLObjectType, storage: ComposerStorage) {
+  constructor(gqType: GraphQLObjectType) {
     this.gqType = gqType;
-    this.storage = storage;
   }
 
   /**
