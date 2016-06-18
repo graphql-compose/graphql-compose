@@ -5,15 +5,18 @@ import type {
   ResolverMWArgs,
   ResolverMWResolve,
   ResolverMWMethodKeys,
+  ResolverMWOutputType,
 } from '../definition';
 
 export type ResolverMWMethods = {
+  outputType: ResolverMWOutputType,
   args: ResolverMWArgs,
   resolve: ResolverMWResolve,
 };
 
 export default class ResolverMiddleware {
   opts: ObjectMap;
+  outputType: ResolverMWOutputType;
   args: ResolverMWArgs;
   resolve: ResolverMWResolve;
 

@@ -34,13 +34,16 @@ export type ResolveParams = {
 };
 
 // RESOLVER -----------------------------
-export type ResolverMWMethodKeys = 'args' | 'resolve';
+export type ResolverMWMethodKeys = 'args' | 'resolve' | 'outputType';
 
 export type ResolverMWArgsFn = (args: GraphQLFieldConfigArgumentMap) => GraphQLFieldConfigArgumentMap;
 export type ResolverMWArgs = (next: ResolverMWArgsFn) => ResolverMWArgsFn;
 
 export type ResolverMWResolveFn = (resolveParams: ResolveParams) => mixed;
 export type ResolverMWResolve = (next: ResolverMWResolveFn) => ResolverMWResolveFn;
+
+export type ResolverMWOutputTypeFn = (outputType: GraphQLOutputType) => GraphQLOutputType;
+export type ResolverMWOutputType = (next: ResolverMWOutputTypeFn) => ResolverMWOutputTypeFn;
 
 export type ResolverFieldConfig = {
   type: GraphQLOutputType,
