@@ -3,7 +3,9 @@ See my previous production ready, but unpublished version of mongoose to graphql
 By this link you may find example of mash-code in my app, which derived from a map-derived-schema adapters/converters.
 
 🌶🌶🌶 Long live to middlewares and compose!🌶🌶🌶  
-This module `graphql-compose` should be ready in Mid of June.
+This module `graphql-compose` should be ready in the End of June.
+
+Right now [graphql-compose-mongoose](https://github.com/nodkz/graphql-compose-mongoose) is in active development. This is plugin for graphql-compose, which allow to convert mongoose (MongoDB) models to graphql types. 
 
 GraphQL-compose
 ======================
