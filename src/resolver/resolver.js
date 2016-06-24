@@ -14,11 +14,13 @@ import type {
   ResolverMWArgs,
   ResolverMWResolve,
   ResolveParams,
+  ResolverKinds,
 } from '../definition.js';
 import type ComposeStorage from '../storage';
 import type { ResolverMiddleware } from './resolverMiddleware';
 
 export type ResolverOpts = {
+  outputType?: GraphQLOutputType,
   resolve?: GraphQLFieldResolveFn,
   storage?: ComposeStorage,
   forceType?: GraphQLOutputType,
@@ -28,13 +30,19 @@ export type ResolverOpts = {
 export default class Resolver {
   middlewares: Array<ResolverMiddleware>;
   args: GraphQLFieldConfigArgumentMap;
-  outputType: GraphQLOutputType;
+  outputType: ?GraphQLOutputType;
   resolve: GraphQLFieldResolveFn;
+  name: string;
+  kind: ?ResolverKinds;
+  description: ?string;
 
-  constructor(outputType: GraphQLOutputType, opts: ResolverOpts = {}) {
-    this.outputType = outputType;
+  constructor(opts: ResolverOpts = {}) {
+    this.outputType = opts.outputType || null;
     this.middlewares = [];
-    this.args = {};
+    this.args = opts.args || {};
+    this.name = opts.name || null;
+    this.kind = opts.kind || null;
+    this.description = opts.description || '';
 
     if (opts.resolve) {
       this.resolve = opts.resolve;
@@ -121,5 +129,13 @@ export default class Resolver {
   ) {
     return [...internalMiddlewares, ...this.middlewares]
       .filter(mw => mw.hasMethod(key));
+  }
+
+  getKind() {
+    return this.kind;
+  }
+
+  getDescription() {
+    return this.description;
   }
 }
