@@ -3,8 +3,12 @@
 import { resolveMaybeThunk, isObject } from './utils/misc';
 import ResolverList from './resolver/resolverList';
 import Resolver from './resolver/resolver';
+import { toInputObjectType } from './toInputObjectType';
+import TypeInputComposer from './typeInputComposer';
+
 import type {
   GraphQLObjectType,
+  GraphQLInputObjectType,
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
   GraphQLFieldConfigMapThunk,
@@ -14,6 +18,7 @@ export default class TypeComposer {
   gqType: GraphQLObjectType & {
     _gqcQueryResolverList?: ResolverList,
     _gqcMutationResolverList?: ResolverList,
+    _gqcInputType?: GraphQLInputObjectType,
   };
 
   constructor(gqType: GraphQLObjectType) {
@@ -60,6 +65,7 @@ export default class TypeComposer {
       description,
       deprecationReason,
       ...resolver.getFieldConfig(),
+      _gqcResolver: resolver,
     });
     return this;
   }
@@ -112,6 +118,18 @@ export default class TypeComposer {
 
   getType(): GraphQLObjectType {
     return this.gqType;
+  }
+
+  getInputType(): GraphQLInputObjectType {
+    if (!this.gqType._gqcInputType) {
+      this.gqType._gqcInputType = toInputObjectType(this.gqType);
+    }
+
+    return this.gqType._gqcInputType;
+  }
+
+  getInputTypeComposer(): TypeInputComposer {
+    return new TypeInputComposer(this.getInputType());
   }
 
   getTypeName(): string {
