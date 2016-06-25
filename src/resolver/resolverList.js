@@ -45,6 +45,7 @@ export default class ResolverList {
   _getMissingResolver(unknownResolverName: string) {
     const existedTypeName = this.typeComposer.getTypeName();
     return new Resolver({
+      name: 'MissingTypeResolver',
       outputType: MissingTypeResolver,
       resolve: () =>
         `Missing resolver name '${unknownResolverName}' in type '${existedTypeName}'`,

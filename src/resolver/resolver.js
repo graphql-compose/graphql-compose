@@ -7,7 +7,7 @@ import ArgsIsRequired from './middlewares/argsIsRequired';
 import type {
   GraphQLArgumentConfig,
   GraphQLFieldConfigArgumentMap,
-  GraphQLFieldResolveFn,
+  ResolverMWResolveFn,
   GraphQLOutputType,
   ResolverMWMethodKeys,
   ResolverFieldConfig,
@@ -16,23 +16,23 @@ import type {
   ResolveParams,
   ResolverKinds,
 } from '../definition.js';
-import type ComposeStorage from '../storage';
 import type { ResolverMiddleware } from './resolverMiddleware';
 
 export type ResolverOpts = {
   outputType?: GraphQLOutputType,
-  resolve?: GraphQLFieldResolveFn,
-  storage?: ComposeStorage,
-  forceType?: GraphQLOutputType,
-  isArray?: boolean,
+  resolve?: ResolverMWResolveFn,
+  args?: GraphQLFieldConfigArgumentMap,
+  name?: string,
+  kind?: ResolverKinds,
+  description?: string,
 };
 
 export default class Resolver {
   middlewares: Array<ResolverMiddleware>;
   args: GraphQLFieldConfigArgumentMap;
   outputType: ?GraphQLOutputType;
-  resolve: GraphQLFieldResolveFn;
-  name: string;
+  resolve: ResolverMWResolveFn;
+  name: ?string;
   kind: ?ResolverKinds;
   description: ?string;
 
@@ -82,18 +82,18 @@ export default class Resolver {
     return composedMWs(args => Object.assign({}, args, this.args))(this.args);
   }
 
-  resolve(resolveParams: ResolveParams): mixed { // eslint-disable-line
-    return null;
+  resolve(resolveParams: ResolveParams): Promise { // eslint-disable-line
+    return Promise.resolve();
   }
 
-  composeResolve(): GraphQLFieldResolveFn {
+  composeResolve(): ResolverMWResolveFn {
     const resolveMWs: ResolverMWResolve[] =
       this._getMiddlewaresByKey('resolve')
       .map(mv => mv.resolve);
     return compose(...resolveMWs)(this.resolve);
   }
 
-  setResolve(resolve: GraphQLFieldResolveFn): void {
+  setResolve(resolve: ResolverMWResolveFn): void {
     this.resolve = resolve;
   }
 

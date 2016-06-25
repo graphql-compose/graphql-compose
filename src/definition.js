@@ -23,6 +23,7 @@ export type ObjectMap = { [optName: string]: mixed };
 
 // GRAPHQL RE-EXPORT --------------------
 export type GraphQLType = _GraphQLType;
+export type GraphQLObjectType = _GraphQLObjectType;
 export type GraphQLOutputType = _GraphQLOutputType;
 export type GraphQLInputObjectType = _GraphQLInputObjectType;
 export type GraphQLFieldConfigArgumentMap = _GraphQLFieldConfigArgumentMap;
@@ -35,7 +36,6 @@ export type GraphQLFieldConfig = _GraphQLFieldConfig & {
 };
 export type GraphQLFieldConfigMap = _GraphQLFieldConfigMap;
 export type GraphQLFieldConfigMapThunk = () => GraphQLFieldConfigMap;
-export type GraphQLObjectType = _GraphQLObjectType;
 export type ResolveParams = {
   source: mixed,
   args: {[argName: string]: mixed},
@@ -55,7 +55,7 @@ export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 export type ResolverMWArgsFn = (args: GraphQLFieldConfigArgumentMap) => GraphQLFieldConfigArgumentMap;
 export type ResolverMWArgs = (next: ResolverMWArgsFn) => ResolverMWArgsFn;
 
-export type ResolverMWResolveFn = (resolveParams: ResolveParams) => mixed;
+export type ResolverMWResolveFn = (resolveParams: ResolveParams) => Promise;
 export type ResolverMWResolve = (next: ResolverMWResolveFn) => ResolverMWResolveFn;
 
 export type ResolverMWOutputTypeFn = (outputType: GraphQLOutputType) => GraphQLOutputType;
