@@ -6,13 +6,16 @@ import Resolver from './resolver/resolver';
 import { toInputObjectType } from './toInputObjectType';
 import TypeInputComposer from './typeInputComposer';
 
+import { GraphQLObjectType } from 'graphql/type';
+
 import type {
-  GraphQLObjectType,
   GraphQLInputObjectType,
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
   GraphQLFieldConfigMapThunk,
+  GraphQLOutputType,
 } from './definition.js';
+
 
 export default class TypeComposer {
   gqType: GraphQLObjectType & {
@@ -104,10 +107,20 @@ export default class TypeComposer {
     this.setFields(Object.assign({}, fields)); // immutability
   }
 
+
+  clone(newTypeName: string): TypeComposer {
+    return new TypeComposer(
+      new GraphQLObjectType({
+        name: newTypeName,
+        fields: this.getFields(),
+      })
+    );
+  }
+
   /**
    * Get fieldType by name
    */
-  getFieldType(fieldName: string) {
+  getFieldType(fieldName: string): GraphQLOutputType | void {
     const field = this.getField(fieldName);
     if (field) {
       return field.type;

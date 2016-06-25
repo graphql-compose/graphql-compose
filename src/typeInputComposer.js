@@ -1,8 +1,9 @@
 /* @flow */
 
 import { resolveMaybeThunk, isObject } from './utils/misc';
+import { GraphQLInputObjectType } from 'graphql/type';
+
 import type {
-  GraphQLInputObjectType,
   InputObjectFieldConfig,
   InputObjectConfigFieldMap,
   InputObjectConfigFieldMapThunk,
@@ -75,10 +76,19 @@ export default class TypeInputComposer {
     this.setFields(Object.assign({}, fields)); // immutability
   }
 
+  clone(newTypeName: string): TypeInputComposer {
+    return new TypeInputComposer(
+      new GraphQLInputObjectType({
+        name: newTypeName,
+        fields: this.getFields(),
+      })
+    );
+  }
+
   /**
    * Get fieldType by name
    */
-  getFieldType(fieldName: string): GraphQLInputType {
+  getFieldType(fieldName: string): GraphQLInputType | void {
     const field = this.getField(fieldName);
     if (field) {
       return field.type;
