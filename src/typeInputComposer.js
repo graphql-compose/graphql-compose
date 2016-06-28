@@ -1,7 +1,7 @@
 /* @flow */
 
 import { resolveMaybeThunk, isObject } from './utils/misc';
-import { GraphQLInputObjectType } from 'graphql/type';
+import { GraphQLInputObjectType, GraphQLNonNull } from 'graphql/type';
 
 import type {
   InputObjectFieldConfig,
@@ -73,7 +73,7 @@ export default class TypeInputComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     fieldNames.forEach((fieldName) => delete fields[fieldName]);
-    this.setFields(Object.assign({}, fields)); // immutability
+    this.setFields(fields);
   }
 
   clone(newTypeName: string): TypeInputComposer {
@@ -108,5 +108,31 @@ export default class TypeInputComposer {
     }
 
     return 'MissingInputType';
+  }
+
+  makeFieldsRequired(fieldNameOrArray: string | Array<string>) {
+    const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
+    const fields = this.getFields();
+    fieldNames.forEach((fieldName) => {
+      if (fields[fieldName]) {
+        if (!(fields[fieldName].type instanceof GraphQLNonNull)) {
+          fields[fieldName].type = new GraphQLNonNull(fields[fieldName].type);
+        }
+      }
+    });
+    this.setFields(fields);
+  }
+
+  makeFieldsOptional(fieldNameOrArray: string | Array<string>) {
+    const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
+    const fields = this.getFields();
+    fieldNames.forEach((fieldName) => {
+      if (fieldNames.includes(fieldName)) {
+        if (fields[fieldName].type instanceof GraphQLNonNull) {
+          fields[fieldName].type = fields[fieldName].type.ofType;
+        }
+      }
+    });
+    this.setFields(fields);
   }
 }
