@@ -22,6 +22,7 @@ export default class TypeComposer {
     _gqcQueryResolverList?: ResolverList,
     _gqcMutationResolverList?: ResolverList,
     _gqcInputType?: GraphQLInputObjectType,
+    _gqcResolvers?: ResolverList,
   };
 
   constructor(gqType: GraphQLObjectType) {
@@ -53,6 +54,10 @@ export default class TypeComposer {
     delete this.gqType._fields; // if schema was builded, delete defineFieldMap
   }
 
+  hasField(fieldName: string): boolean {
+    const fields = this.getFields();
+    return !!fields[fieldName];
+  }
 
   addRelation(
     fieldName: string,
@@ -90,7 +95,7 @@ export default class TypeComposer {
   /**
    * Get fieldConfig by name
    */
-  getField(fieldName: string) {
+  getField(fieldName: string): GraphQLFieldConfig {
     const fields = this.getFields();
 
     if (fields[fieldName]) {
@@ -154,29 +159,31 @@ export default class TypeComposer {
     return 'MissingType';
   }
 
-  getQueryResolverList(): ResolverList {
-    let resolverList;
-
-    const injectedParamName = '_gqcQueryResolverList';
-    if (!this.gqType[injectedParamName]) {
-      resolverList = this.gqType[injectedParamName] = new ResolverList('query', this);
-    } else {
-      resolverList = this.gqType[injectedParamName];
+  hasResolver(name: string): boolean {
+    if (!this.gqType._gqcResolvers) {
+      return false;
     }
-
-    return resolverList;
+    return this.gqType._gqcResolvers.has(name);
   }
 
-  getMutationResolverList(): ResolverList {
-    let resolverList;
-
-    const injectedParamName = '_gqcMutationResolverList';
-    if (!this.gqType[injectedParamName]) {
-      resolverList = this.gqType[injectedParamName] = new ResolverList('mutation', this);
-    } else {
-      resolverList = this.gqType[injectedParamName];
+  getResolver(name: string): Resolver | null {
+    if (this.hasResolver(name) && this.gqType._gqcResolvers) {
+      return this.gqType._gqcResolvers.get(name);
     }
 
-    return resolverList;
+    return null;
+  }
+
+  setResolver(resolver: Resolver) {
+    if (!this.gqType._gqcResolvers) {
+      this.gqType._gqcResolvers = new ResolverList();
+    }
+    if (!(resolver instanceof Resolver)) {
+      throw new Error('setResolver() accept only Resolver instance');
+    }
+    if (!resolver.name) {
+      throw new Error('resolver should have non-empty name property');
+    }
+    this.gqType._gqcResolvers.set(resolver.name, resolver);
   }
 }
