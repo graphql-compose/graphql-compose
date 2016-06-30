@@ -57,7 +57,6 @@ describe('MissingType', () => {
   xit('should pass a type name in response',
     async () => {
       const unknownTypeName = 'BlackCow';
-console.log(gqc.queries(unknownTypeName));
       const rootQuery = gqc.typeComposer('RootQuery')
         .addRelation('foo', gqc.queries(unknownTypeName).get('one'))
         .getType();

@@ -5,6 +5,8 @@ import {
   GraphQLObjectType,
   isInputType,
   isAbstractType,
+  GraphQLList,
+  GraphQLNonNull,
 } from 'graphql';
 import TypeComposer from './typeComposer';
 import GenericType from './type/generic';
@@ -30,9 +32,14 @@ export function removeWrongFields(fields: GraphQLFieldConfigMap): GraphQLFieldCo
   return result;
 }
 
+export type toInputObjectTypeOpts = {
+  prefix?: string,
+  postfix?: string,
+}
 
 export function toInputObjectType(
-  graphQLType: GraphQLObjectType, opts = {}
+  graphQLType: GraphQLObjectType,
+  opts: toInputObjectTypeOpts = {}
 ): GraphQLInputObjectType {
   const prefix: string = opts.prefix || '';
   const postfix: string = opts.postfix || 'Input';
@@ -63,13 +70,23 @@ export function toInputObjectType(
 }
 
 
+export type convertInputObjectFieldOpts = {
+  prefix?: string,
+  postfix?: string,
+  fieldName?: string,
+  outputTypeName?: string,
+}
+
 export function convertInputObjectField(
-  field: GraphQLFieldConfig, opts = {}
+  field: GraphQLFieldConfig,
+  opts: convertInputObjectFieldOpts
 ): InputObjectFieldConfig {
   let fieldType: GraphQLType = field.type;
 
   const wrappers = [];
-  while (fieldType.ofType) {
+  while (fieldType instanceof GraphQLList ||
+         fieldType instanceof GraphQLNonNull
+  ) {
     wrappers.unshift(fieldType.constructor);
     fieldType = fieldType.ofType;
   }
@@ -82,7 +99,7 @@ export function convertInputObjectField(
       };
       fieldType = toInputObjectType(fieldType, typeOpts);
     } else {
-      console.log(
+      console.log( // eslint-disable-line
         `GQC: can not convert field '${opts.outputTypeName}.${opts.fieldName}' to InputType`
       );
       fieldType = GenericType;

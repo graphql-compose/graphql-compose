@@ -31,9 +31,7 @@ export type GraphQLFieldResolveFn = _GraphQLFieldResolveFn;
 export type GraphQLResolveInfo = _GraphQLResolveInfo;
 export type GraphQLArgumentConfig = _GraphQLArgumentConfig;
 export type GraphQLNamedType = _GraphQLNamedType;
-export type GraphQLFieldConfig = _GraphQLFieldConfig & {
-  _gqcResolver?: mixed,
-};
+export type GraphQLFieldConfig = _GraphQLFieldConfig;
 export type GraphQLFieldConfigMap = _GraphQLFieldConfigMap;
 export type GraphQLFieldConfigMapThunk = () => GraphQLFieldConfigMap;
 export type ResolveParams = {
@@ -42,6 +40,7 @@ export type ResolveParams = {
   context: mixed,
   info: GraphQLResolveInfo,
   projection: { [fieldName: string]: true },
+  [opt: string]: mixed,
 };
 export type InputObjectFieldConfig = _InputObjectFieldConfig;
 export type InputObjectConfigFieldMap = _InputObjectConfigFieldMap;

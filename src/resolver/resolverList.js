@@ -1,6 +1,6 @@
 /* @flow */
 import Resolver from './resolver';
-import MissingTypeResolver from '../type/missingTypeResolver';
+// import MissingTypeResolver from '../type/missingTypeResolver';
 import type ResolverMiddleware from './resolverMiddleware';
 
 export default class ResolverList {
@@ -22,11 +22,11 @@ export default class ResolverList {
     return !!this.resolvers[name];
   }
 
-  get(name: string) {
+  get(name: string): Resolver | void {
     if (this.has(name)) {
       return this.resolvers[name];
     }
-    return null;
+    return undefined;
     // return this._getMissingResolver(name);
   }
 

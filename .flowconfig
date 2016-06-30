@@ -12,5 +12,6 @@
 [libs]
 
 [options]
+suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
 esproposal.class_instance_fields=enable
 module.name_mapper='^graphql\(.*\)$' -> '<PROJECT_ROOT>/__forks__/graphql-js/src\1'

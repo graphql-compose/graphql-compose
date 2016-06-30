@@ -4,7 +4,7 @@ import { resolveMaybeThunk, isObject } from './utils/misc';
 import ResolverList from './resolver/resolverList';
 import Resolver from './resolver/resolver';
 import { toInputObjectType } from './toInputObjectType';
-import TypeInputComposer from './typeInputComposer';
+import InputTypeComposer from './inputTypeComposer';
 
 import { GraphQLObjectType } from 'graphql/type';
 
@@ -19,8 +19,6 @@ import type {
 
 export default class TypeComposer {
   gqType: GraphQLObjectType & {
-    _gqcQueryResolverList?: ResolverList,
-    _gqcMutationResolverList?: ResolverList,
     _gqcInputType?: GraphQLInputObjectType,
     _gqcResolvers?: ResolverList,
   };
@@ -95,7 +93,7 @@ export default class TypeComposer {
   /**
    * Get fieldConfig by name
    */
-  getField(fieldName: string): GraphQLFieldConfig {
+  getField(fieldName: string): ?GraphQLFieldConfig {
     const fields = this.getFields();
 
     if (fields[fieldName]) {
@@ -146,8 +144,8 @@ export default class TypeComposer {
     return this.gqType._gqcInputType;
   }
 
-  getInputTypeComposer(): TypeInputComposer {
-    return new TypeInputComposer(this.getInputType());
+  getInputTypeComposer(): InputTypeComposer {
+    return new InputTypeComposer(this.getInputType());
   }
 
   getTypeName(): string {
@@ -159,6 +157,13 @@ export default class TypeComposer {
     return 'MissingType';
   }
 
+  getResolvers(): ResolverList {
+    if (!this.gqType._gqcResolvers) {
+      this.gqType._gqcResolvers = new ResolverList();
+    }
+    return this.gqType._gqcResolvers;
+  }
+
   hasResolver(name: string): boolean {
     if (!this.gqType._gqcResolvers) {
       return false;
@@ -166,12 +171,12 @@ export default class TypeComposer {
     return this.gqType._gqcResolvers.has(name);
   }
 
-  getResolver(name: string): Resolver | null {
+  getResolver(name: string): Resolver | void {
     if (this.hasResolver(name) && this.gqType._gqcResolvers) {
       return this.gqType._gqcResolvers.get(name);
     }
 
-    return null;
+    return undefined;
   }
 
   setResolver(resolver: Resolver) {

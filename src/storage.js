@@ -2,7 +2,9 @@
 
 import TypeComposer from './typeComposer';
 import { GraphQLObjectType, GraphQLSchema } from 'graphql';
+
 import type ResolverList from './resolver/resolverList';
+import type Resolver from './resolver/resolver';
 
 
 export default class ComposeStorage {
@@ -55,12 +57,12 @@ export default class ComposeStorage {
     return this.typeComposer('RootMutation');
   }
 
-  queries(typeName: string):ResolverList {
-    return this.typeComposer(typeName).getQueryResolverList();
+  resolvers(typeName: string): ResolverList {
+    return this.typeComposer(typeName).getResolvers();
   }
 
-  mutations(typeName: string):ResolverList {
-    return this.typeComposer(typeName).getMutationResolverList();
+  resolver(typeName: string, resolverName: string): Resolver | void {
+    return this.typeComposer(typeName).getResolver(resolverName);
   }
 
   buildSchema() {

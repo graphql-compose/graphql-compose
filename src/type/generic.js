@@ -1,14 +1,12 @@
 import { GraphQLScalarType, GraphQLError } from 'graphql';
 import { Kind } from 'graphql/language';
 
-
 function coerceDate(value) {
   const json = JSON.stringify(value);
   return json.replace(/"/g, '\'');
 }
 
-
-export default new GraphQLScalarType({
+const GenericType = new GraphQLScalarType({
   name: 'Generic',
   serialize: coerceDate,
   parseValue: coerceDate,
@@ -24,3 +22,5 @@ export default new GraphQLScalarType({
     return JSON.parse(json);
   },
 });
+
+export default GenericType;
