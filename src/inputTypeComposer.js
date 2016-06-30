@@ -10,10 +10,13 @@ import type {
   GraphQLInputType,
 } from './definition.js';
 
-export default class TypeInputComposer {
+export default class InputTypeComposer {
   gqType: GraphQLInputObjectType;
 
   constructor(gqType: GraphQLInputObjectType) {
+    if (!(gqType instanceof GraphQLInputObjectType)) {
+      throw new Error('InputTypeComposer accept only GraphQLInputObjectType in constructor');
+    }
     this.gqType = gqType;
   }
 
@@ -31,6 +34,11 @@ export default class TypeInputComposer {
       return Object.assign({}, fieldMap);
     }
     return {};
+  }
+
+  hasField(fieldName: string): boolean {
+    const fields = this.getFields();
+    return !!fields[fieldName];
   }
 
   /**
@@ -76,8 +84,11 @@ export default class TypeInputComposer {
     this.setFields(fields);
   }
 
-  clone(newTypeName: string): TypeInputComposer {
-    return new TypeInputComposer(
+  clone(newTypeName: string): InputTypeComposer {
+    if (!newTypeName) {
+      throw new Error('You should provide new type name for clone() method');
+    }
+    return new InputTypeComposer(
       new GraphQLInputObjectType({
         name: newTypeName,
         fields: this.getFields(),
