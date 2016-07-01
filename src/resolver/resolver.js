@@ -57,8 +57,6 @@ export default class Resolver {
     if (this.hasArg(argName)) {
       return this.args[argName];
     }
-
-
     return undefined;
   }
 

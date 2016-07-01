@@ -113,12 +113,23 @@ export default class InputTypeComposer {
   }
 
   getTypeName(): string {
-    const type = this.getType();
-    if (type) {
-      return type.name;
-    }
+    return this.gqType.name;
+  }
 
-    return 'MissingInputType';
+  setTypeName(name: string): void {
+    this.gqType.name = name;
+  }
+
+  getDescription(): string | void {
+    return this.gqType.description;
+  }
+
+  setDescription(description: string): void {
+    this.gqType.description = description;
+  }
+
+  isFieldRequired(fieldName: string): boolean {
+    return this.getFieldType(fieldName) instanceof GraphQLNonNull;
   }
 
   makeFieldsRequired(fieldNameOrArray: string | Array<string>) {

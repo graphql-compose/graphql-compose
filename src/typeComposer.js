@@ -148,15 +148,6 @@ export default class TypeComposer {
     return new InputTypeComposer(this.getInputType());
   }
 
-  getTypeName(): string {
-    const type = this.getType();
-    if (type) {
-      return type.name;
-    }
-
-    return 'MissingType';
-  }
-
   getResolvers(): ResolverList {
     if (!this.gqType._gqcResolvers) {
       this.gqType._gqcResolvers = new ResolverList();
@@ -179,7 +170,7 @@ export default class TypeComposer {
     return undefined;
   }
 
-  setResolver(resolver: Resolver) {
+  setResolver(resolver: Resolver): void {
     if (!this.gqType._gqcResolvers) {
       this.gqType._gqcResolvers = new ResolverList();
     }
@@ -190,5 +181,21 @@ export default class TypeComposer {
       throw new Error('resolver should have non-empty name property');
     }
     this.gqType._gqcResolvers.set(resolver.name, resolver);
+  }
+
+  getTypeName(): string {
+    return this.gqType.name;
+  }
+
+  setTypeName(name: string): void {
+    this.gqType.name = name;
+  }
+
+  getDescription(): string | void {
+    return this.gqType.description;
+  }
+
+  setDescription(description: string): void {
+    this.gqType.description = description;
   }
 }
