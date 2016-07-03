@@ -108,7 +108,8 @@ export default class Resolver {
     return {
       type: this.getOutputType(),
       args: this.composeArgs(),
-      resolve: this.composeResolve(),
+      resolve: (source, args, context, info) =>
+        this.composeResolve()({ source, args, context, info }),
     };
   }
 
