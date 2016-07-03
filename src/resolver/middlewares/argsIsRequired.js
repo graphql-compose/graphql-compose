@@ -6,7 +6,7 @@ if they have param `isRequired: true` in their config
 */
 
 import ResolverMiddleware from '../resolverMiddleware';
-import { GraphQLNonNull } from 'graphql/type';
+import { GraphQLNonNull } from 'graphql';
 import type {
   ResolverMWArgsFn,
   ResolverMWArgs,

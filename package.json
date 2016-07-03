@@ -10,8 +10,8 @@
   "jsnext:main": "es/index.js",
   "scripts": {
     "build": "npm run build-cjs && npm run build-es",
-    "build-cjs": "rimraf lib && BABEL_ENV=cjs babel src -d lib",
-    "build-es": "rimraf es && BABEL_ENV=es babel src -d es",
+    "build-cjs": "rimraf lib && BABEL_ENV=cjs babel src -d lib && cp src/definition.js lib/definition.js",
+    "build-es": "rimraf es && BABEL_ENV=es babel src -d es && cp src/definition.js es/definition.js",
     "lint": "eslint src test *.js",
     "jest": "jest --watch",
     "jestc": "jest --coverage",

@@ -108,8 +108,10 @@ export default class Resolver {
     return {
       type: this.getOutputType(),
       args: this.composeArgs(),
-      resolve: (source, args, context, info) =>
-        this.composeResolve()({ source, args, context, info }),
+      resolve: (source, args, context, info) => {
+        const projection = {}; // TODO
+        this.composeResolve()({ source, args, context, info, projection });
+      },
     };
   }
 

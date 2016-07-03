@@ -6,7 +6,7 @@ import Resolver from './resolver/resolver';
 import { toInputObjectType } from './toInputObjectType';
 import InputTypeComposer from './inputTypeComposer';
 
-import { GraphQLObjectType } from 'graphql/type';
+import { GraphQLObjectType } from 'graphql';
 
 import type {
   GraphQLInputObjectType,
@@ -21,6 +21,7 @@ export default class TypeComposer {
   gqType: GraphQLObjectType & {
     _gqcInputType?: GraphQLInputObjectType,
     _gqcResolvers?: ResolverList,
+    description: string,
   };
 
   constructor(gqType: GraphQLObjectType) {
@@ -191,8 +192,8 @@ export default class TypeComposer {
     this.gqType.name = name;
   }
 
-  getDescription(): string | void {
-    return this.gqType.description;
+  getDescription(): string {
+    return this.gqType.description || '';
   }
 
   setDescription(description: string): void {

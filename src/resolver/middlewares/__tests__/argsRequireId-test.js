@@ -4,7 +4,7 @@ jest.mock('../../../gqc');
 import {
   GraphQLString,
   getNamedType,
-} from 'graphql/type';
+} from 'graphql';
 
 import Resolver from '../../resolver';
 import ArgsRequireId from '../argsRequireId';

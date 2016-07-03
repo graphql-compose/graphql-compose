@@ -1,7 +1,7 @@
 /* @flow */
 
 import { resolveMaybeThunk, isObject } from './utils/misc';
-import { GraphQLInputObjectType, GraphQLNonNull } from 'graphql/type';
+import { GraphQLInputObjectType, GraphQLNonNull } from 'graphql';
 
 import type {
   InputObjectFieldConfig,
@@ -120,8 +120,8 @@ export default class InputTypeComposer {
     this.gqType.name = name;
   }
 
-  getDescription(): string | void {
-    return this.gqType.description;
+  getDescription(): string {
+    return this.gqType.description || '';
   }
 
   setDescription(description: string): void {
