@@ -7,12 +7,13 @@ import ArgsIsRequired from './middlewares/argsIsRequired';
 import type {
   GraphQLArgumentConfig,
   GraphQLFieldConfigArgumentMap,
-  ResolverMWResolveFn,
   GraphQLOutputType,
   ResolverMWMethodKeys,
   ResolverFieldConfig,
   ResolverMWArgs,
   ResolverMWResolve,
+  ResolverMWResolveFn,
+  ResolverMWOutputType,
   ResolveParams,
   ResolverKinds,
 } from '../definition.js';
@@ -83,8 +84,8 @@ export default class Resolver {
       ])
       .map(mw => mw.args);
 
-    const composedMWs = compose(...argsMWs);
-    return composedMWs(args => Object.assign({}, args, this.args))(this.args);
+    // return compose(...argsMWs)(args => Object.assign({}, args, this.args))(this.args);
+    return compose(...argsMWs)(args => args)(this.args);
   }
 
   resolve(resolveParams: ResolveParams): Promise { // eslint-disable-line
@@ -110,9 +111,17 @@ export default class Resolver {
     return MissingType;
   }
 
+  composeOutputType(): GraphQLOutputType {
+    const outputTypeMWs: ResolverMWOutputType[] =
+      this._getMiddlewaresByKey('outputType')
+      .map(mw => mw.outputType);
+
+    return compose(...outputTypeMWs)(outputType => outputType)(this.getOutputType);
+  }
+
   getFieldConfig(): ResolverFieldConfig {
     return {
-      type: this.getOutputType(),
+      type: this.composeOutputType(),
       args: this.composeArgs(),
       resolve: (source, args, context, info) => {
         const projection = {}; // TODO
