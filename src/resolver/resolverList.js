@@ -43,6 +43,12 @@ export default class ResolverList {
     resolver.addMiddleware(resolverMiddleware);
   }
 
+  forEach(cb: (resolver: Resolver, name?: string) => mixed) {
+    this.getKeys().forEach((name) => {
+      cb(this.resolvers[name], name);
+    });
+  }
+
   // _getMissingResolver(unknownResolverName: string) {
   //   const existedTypeName = this.typeComposer.getTypeName();
   //   return new Resolver({
