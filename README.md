@@ -10,12 +10,13 @@ To-Do
 =====
 - [x] write mongoose schema converter to graphql types with CRUD resolver helpers [graphql-compose-mongoose](https://github.com/nodkz/graphql-compose-mongoose)
 - [ ] write a Relay types wrapper for adding relay specifics things, like `Node` type and interface, `globalId`, `clientMutationId`() [graphql-compose-relay](https://github.com/nodkz/graphql-compose-relay)
+- [ ] realize `Grapql Cursor Connections` wrapper, which extends types dirived via graphql-compose with additional resolvers `connectionByIds` and `connection`. This wrapper implicitly consume `findByIds`, `findMany` and `count` resolvers defined in type
 - [ ] polish `graphq-compose`, add access restrictions to fields, attach custom logic to resolvers, docs and examples
 - [ ] write [DataLoader](https://github.com/facebook/dataloader) resolver's wrapper for reducing number of queries
 - [ ] add support for PubSub. Introduce subscriptions to your graphql schemas
 - [ ] write `graphql-compose-remote-graphql` module, for building your own types which will resolve from 3rd party graphql servers
 - [ ] write `graphql-compose-rest` module, for building your own types which will resolve from 3rd party REST api's. It will be prototype for simple and fast realization of your rest wrappers
-- [ ] **need help** find somebody who write `graphql-compose-sequilze` module like `graphql-compose-mongoose` (need to write types converter, and change resolver functions). Flow type and mocha tests are required!
+- [ ] **[need help]** find somebody who write `graphql-compose-sequilze` module like `graphql-compose-mongoose` (need to write types converter, and change resolver functions). Flow type and mocha tests are required!
 
 GraphQL-compose
 ======================
