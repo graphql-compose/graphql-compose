@@ -16,6 +16,7 @@ import type {
   ResolveParams,
   ResolverKinds,
 } from '../definition.js';
+import TypeComposer from '../typeComposer';
 import type { ResolverMiddleware } from './resolverMiddleware';
 
 export type ResolverOpts = {
@@ -35,8 +36,14 @@ export default class Resolver {
   name: ?string;
   kind: ?ResolverKinds;
   description: ?string;
+  typeComposer: TypeComposer;
 
-  constructor(opts: ResolverOpts = {}) {
+  constructor(typeComposer: TypeComposer, opts: ResolverOpts = {}) {
+    if (!(typeComposer instanceof TypeComposer)) {
+      throw Error('First argument for Resolver.constructor should be TypeComposer instance');
+    }
+    this.typeComposer = typeComposer;
+
     this.outputType = opts.outputType || null;
     this.middlewares = [];
     this.args = opts.args || {};
@@ -72,7 +79,7 @@ export default class Resolver {
     const argsMWs: ResolverMWArgs[] =
       this._getMiddlewaresByKey('args', [
         // add internal middleware, it wraps isRequired args with GraphQLNonNull
-        new ArgsIsRequired(),
+        new ArgsIsRequired(this.typeComposer),
       ])
       .map(mw => mw.args);
 
@@ -102,7 +109,6 @@ export default class Resolver {
 
     return MissingType;
   }
-
 
   getFieldConfig(): ResolverFieldConfig {
     return {

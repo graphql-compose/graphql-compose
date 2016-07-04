@@ -13,14 +13,12 @@ import type {
   ObjectMap,
   GraphQLFieldConfigArgumentMap,
 } from '../../definition';
+import type TypeComposer from '../../typeComposer';
 
 
 export default class ArgsIsRequired extends ResolverMiddleware {
-  opts: ObjectMap;
-
-  constructor(opts: ObjectMap = {}) {
-    super(opts);
-    this.opts = opts;
+  constructor(typeComposer: TypeComposer, opts: ObjectMap = {}) {
+    super(typeComposer, opts);
   }
 
   args: ResolverMWArgs = (next: ResolverMWArgsFn) => (args: GraphQLFieldConfigArgumentMap) => {

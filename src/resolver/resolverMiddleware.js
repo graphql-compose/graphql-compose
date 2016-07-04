@@ -8,6 +8,8 @@ import type {
   ResolverMWOutputType,
 } from '../definition';
 
+import type TypeComposer from '../typeComposer';
+
 export type ResolverMWMethods = {
   outputType: ResolverMWOutputType,
   args: ResolverMWArgs,
@@ -19,6 +21,12 @@ export default class ResolverMiddleware {
   outputType: ResolverMWOutputType;
   args: ResolverMWArgs;
   resolve: ResolverMWResolve;
+  typeComposer: TypeComposer;
+
+  constructor(typeComposer: TypeComposer, opts: ObjectMap = {}) {
+    this.typeComposer = typeComposer;
+    this.opts = opts;
+  }
 
   hasMethod(methodKey: ResolverMWMethodKeys) {
     const that:ResolverMWMethods = this;
