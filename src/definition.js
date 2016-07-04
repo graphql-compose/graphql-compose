@@ -16,6 +16,7 @@ import type {
   InputObjectFieldConfig as _InputObjectFieldConfig,
   InputObjectConfigFieldMap as _InputObjectConfigFieldMap,
 //  InputObjectConfigFieldMapThunk as _InputObjectConfigFieldMapThunk,
+  GraphQLInterfaceType as _GraphQLInterfaceType,
   GraphQLInputType as _GraphQLInputType,
 } from 'graphql/type/definition.js';
 
@@ -24,6 +25,8 @@ export type ObjectMap = { [optName: string]: mixed };
 // GRAPHQL RE-EXPORT --------------------
 export type GraphQLType = _GraphQLType;
 export type GraphQLObjectType = _GraphQLObjectType;
+export type GraphQLInterfaceType = _GraphQLInterfaceType;
+export type GraphQLInterfacesThunk = () => Array<GraphQLInterfaceType>;
 export type GraphQLOutputType = _GraphQLOutputType;
 export type GraphQLInputObjectType = _GraphQLInputObjectType;
 export type GraphQLFieldConfigArgumentMap = _GraphQLFieldConfigArgumentMap;
@@ -67,4 +70,4 @@ export type ResolverFieldConfig = {
   name?: ?string,
 };
 
-export type GetRecordIdFn = (source: string) => string;
+export type GetRecordIdFn = (source: mixed, args: ?mixed, context: ?mixed) => string;

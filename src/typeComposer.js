@@ -14,6 +14,8 @@ import type {
   GraphQLFieldConfigMap,
   GraphQLFieldConfigMapThunk,
   GraphQLOutputType,
+  GraphQLInterfaceType,
+  GraphQLInterfacesThunk,
   GetRecordIdFn,
 } from './definition.js';
 
@@ -60,6 +62,40 @@ export default class TypeComposer {
     return !!fields[fieldName];
   }
 
+  /**
+   * Add field to a GraphQL type
+   */
+  addField(fieldName: string, fieldConfig: GraphQLFieldConfig) {
+    this.addFields({ [fieldName]: fieldConfig });
+  }
+
+  /**
+   * Add new fields or replace existed in a GraphQL type
+   */
+  addFields(newFields: GraphQLFieldConfigMap): void {
+    this.setFields(Object.assign({}, this.getFields(), newFields));
+  }
+
+  /**
+   * Get fieldConfig by name
+   */
+  getField(fieldName: string): ?GraphQLFieldConfig {
+    const fields = this.getFields();
+
+    if (fields[fieldName]) {
+      return fields[fieldName];
+    }
+
+    return undefined;
+  }
+
+  removeField(fieldNameOrArray: string | Array<string>): void {
+    const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
+    const fields = this.getFields();
+    fieldNames.forEach((fieldName) => delete fields[fieldName]);
+    this.setFields(Object.assign({}, fields)); // immutability
+  }
+
   addRelation(
     fieldName: string,
     resolver: Resolver,
@@ -80,39 +116,47 @@ export default class TypeComposer {
   }
 
   /**
-   * Add field to a GraphQL type
+   * Get fields from a GraphQL type
+   * WARNING: this method read an internal GraphQL instance variable.
    */
-  addField(fieldName: string, fieldConfig: GraphQLFieldConfig) {
-    this.addFields({ [fieldName]: fieldConfig });
-  }
+  getInterfaces(): Array<GraphQLInterfaceType> {
+    const interfaces: Array<GraphQLInterfaceType> | ?GraphQLInterfacesThunk
+      = this.gqType._typeConfig.interfaces || [];
 
-  /**
-   * Add new fields or replace existed in a GraphQL type
-   */
-  addFields(newFields: GraphQLFieldConfigMap) {
-    this.setFields(Object.assign({}, this.getFields(), newFields));
-  }
-
-  /**
-   * Get fieldConfig by name
-   */
-  getField(fieldName: string): ?GraphQLFieldConfig {
-    const fields = this.getFields();
-
-    if (fields[fieldName]) {
-      return fields[fieldName];
+    if (typeof interfaces === 'function') {
+      return interfaces();
     }
 
-    return undefined;
+    return interfaces || [];
   }
 
-  removeField(fieldNameOrArray: string | Array<string>) {
-    const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    const fields = this.getFields();
-    fieldNames.forEach((fieldName) => delete fields[fieldName]);
-    this.setFields(Object.assign({}, fields)); // immutability
+  /**
+   * Completely replace all interfaces in GraphQL type
+   * WARNING: this method rewrite an internal GraphQL instance variable.
+   */
+  setInterfaces(interfaces: Array<GraphQLInterfaceType>): void {
+    this.gqType._typeConfig.interfaces = interfaces;
+    delete this.gqType._interfaces; // if schema was builded, delete _interfaces
   }
 
+  hasInterface(interfaceObj: GraphQLInterfaceType): boolean {
+    return this.getInterfaces().indexOf(interfaceObj) > -1;
+  }
+
+  addInterface(interfaceObj: GraphQLInterfaceType): void {
+    if (!this.hasInterface(interfaceObj)) {
+      this.setInterfaces([...this.getInterfaces(), interfaceObj]);
+    }
+  }
+
+  removeInterface(interfaceObj: GraphQLInterfaceType): void {
+    const interfaces = this.getInterfaces();
+    const idx = interfaces.indexOf(interfaceObj);
+    if (idx > -1) {
+      interfaces.splice(idx, 1);
+      this.setInterfaces(interfaces);
+    }
+  }
 
   clone(newTypeName: string): TypeComposer {
     return new TypeComposer(
@@ -206,13 +250,16 @@ export default class TypeComposer {
     this.gqType._gqcGetRecordIdFn = fn;
   }
 
-  /**
-  * Get function that returns record id, from provided object.
-  */
   getRecordIdFn(): GetRecordIdFn {
     if (!this.gqType._gqcGetRecordIdFn) {
       throw new Error(`Type ${this.getTypeName()} should have RecordIdFn`);
     }
     return this.gqType._gqcGetRecordIdFn;
+  }
+  /**
+  * Get function that returns record id, from provided object.
+  */
+  getRecordId(source: ?mixed, args: ?mixed, context: ?mixed): string | number {
+    return this.getRecordIdFn()(source, args, context);
   }
 }
