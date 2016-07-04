@@ -14,6 +14,7 @@ import type {
   GraphQLFieldConfigMap,
   GraphQLFieldConfigMapThunk,
   GraphQLOutputType,
+  GetRecordIdFn,
 } from './definition.js';
 
 
@@ -21,6 +22,7 @@ export default class TypeComposer {
   gqType: GraphQLObjectType & {
     _gqcInputType?: GraphQLInputObjectType,
     _gqcResolvers?: ResolverList,
+    _gqcGetRecordIdFn?: GetRecordIdFn,
     description: string,
   };
 
@@ -198,5 +200,19 @@ export default class TypeComposer {
 
   setDescription(description: string): void {
     this.gqType.description = description;
+  }
+
+  setRecordIdFn(fn: GetRecordIdFn): void {
+    this.gqType._gqcGetRecordIdFn = fn;
+  }
+
+  /**
+  * Get function that returns record id, from provided object.
+  */
+  getRecordIdFn(): GetRecordIdFn {
+    if (!this.gqType._gqcGetRecordIdFn) {
+      throw new Error(`Type ${this.getTypeName()} should have RecordIdFn`);
+    }
+    return this.gqType._gqcGetRecordIdFn;
   }
 }

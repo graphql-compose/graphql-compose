@@ -66,3 +66,5 @@ export type ResolverFieldConfig = {
   resolve: GraphQLFieldResolveFn,
   name?: ?string,
 };
+
+export type GetRecordIdFn = (source: string) => string;
