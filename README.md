@@ -9,7 +9,7 @@ I wanted to finish `graphql-compose` module in the End of June, but it takes too
 To-Do
 =====
 - [x] write mongoose schema converter to graphql types with CRUD resolver helpers [graphql-compose-mongoose](https://github.com/nodkz/graphql-compose-mongoose)
-- [ ] write a Relay types wrapper for adding relay specifics things, like `Node` type and interface, `globalId`, `clientMutationId`() [graphql-compose-relay](https://github.com/nodkz/graphql-compose-relay)
+- [x] write a Relay types wrapper for adding relay specifics things, like `Node` type and interface, `globalId`, `clientMutationId`() [graphql-compose-relay](https://github.com/nodkz/graphql-compose-relay)
 - [ ] realize `Grapql Cursor Connections` wrapper, which extends types dirived via graphql-compose with additional resolvers `connectionByIds` and `connection`. This wrapper implicitly consume `findByIds`, `findMany` and `count` resolvers defined in type
 - [ ] polish `graphq-compose`, add access restrictions to fields, attach custom logic to resolvers, docs and examples
 - [ ] write [DataLoader](https://github.com/facebook/dataloader) resolver's wrapper for reducing number of queries
