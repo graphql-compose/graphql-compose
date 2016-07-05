@@ -55,6 +55,8 @@ export default class Resolver {
     if (opts.resolve) {
       this.resolve = opts.resolve;
     }
+
+    typeComposer.addResolver(this);
   }
 
   hasArg(argName: string): boolean {
@@ -116,7 +118,7 @@ export default class Resolver {
       this._getMiddlewaresByKey('outputType')
       .map(mw => mw.outputType);
 
-    return compose(...outputTypeMWs)(outputType => outputType)(this.getOutputType);
+    return compose(...outputTypeMWs)(outputType => outputType)(this.getOutputType());
   }
 
   getFieldConfig(): ResolverFieldConfig {
@@ -125,7 +127,7 @@ export default class Resolver {
       args: this.composeArgs(),
       resolve: (source, args, context, info) => {
         const projection = {}; // TODO
-        this.composeResolve()({ source, args, context, info, projection });
+        return this.composeResolve()({ source, args, context, info, projection });
       },
     };
   }
@@ -153,5 +155,20 @@ export default class Resolver {
 
   getDescription() {
     return this.description;
+  }
+
+  clone(newTypeComposer: TypeComposer): Resolver {
+    const opts = {};
+    for (const key in this) {
+      if (this.hasOwnProperty(key)) {
+        // $FlowFixMe
+        opts[key] = this[key];
+      }
+    }
+    return new Resolver(newTypeComposer, opts);
+  }
+
+  getTypeComposer(): TypeComposer {
+    return this.typeComposer;
   }
 }

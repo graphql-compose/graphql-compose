@@ -159,12 +159,29 @@ export default class TypeComposer {
   }
 
   clone(newTypeName: string): TypeComposer {
-    return new TypeComposer(
+    if (!newTypeName) {
+      throw new Error('You should provide newTypeName:string for TypeComposer.clone()');
+    }
+
+    const cloned = new TypeComposer(
       new GraphQLObjectType({
         name: newTypeName,
         fields: this.getFields(),
       })
     );
+
+    cloned.setDescription(this.getDescription());
+    try {
+      cloned.setRecordIdFn(this.getRecordIdFn());
+    } catch (e) {
+      // no problem, clone without resolveIdFn
+    }
+    this.getResolvers().forEach(resolver => {
+      const newResolver = resolver.clone(cloned);
+      cloned.addResolver(newResolver);
+    });
+
+    return cloned;
   }
 
   /**
@@ -230,6 +247,19 @@ export default class TypeComposer {
     this.gqType._gqcResolvers.set(resolver.name, resolver);
   }
 
+  addResolver(resolver: Resolver): void {
+    this.setResolver(resolver);
+  }
+
+  removeResolver(resolver: string|Resolver): void {
+    const resolverName = resolver instanceof Resolver
+      ? resolver.name
+      : resolver;
+    if (resolverName) {
+      this.getResolvers().remove(resolverName);
+    }
+  }
+
   getTypeName(): string {
     return this.gqType.name;
   }
@@ -250,9 +280,13 @@ export default class TypeComposer {
     this.gqType._gqcGetRecordIdFn = fn;
   }
 
+  hasRecordIdFn(): boolean {
+    return !!this.gqType._gqcGetRecordIdFn;
+  }
+
   getRecordIdFn(): GetRecordIdFn {
     if (!this.gqType._gqcGetRecordIdFn) {
-      throw new Error(`Type ${this.getTypeName()} should have RecordIdFn`);
+      throw new Error(`Type ${this.getTypeName()} does not have RecordIdFn`);
     }
     return this.gqType._gqcGetRecordIdFn;
   }
