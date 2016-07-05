@@ -8,16 +8,6 @@
   ],
   "main": "lib/index.js",
   "jsnext:main": "es/index.js",
-  "scripts": {
-    "build": "npm run build-cjs && npm run build-es",
-    "build-cjs": "rimraf lib && BABEL_ENV=cjs babel src -d lib && cp src/definition.js lib/definition.js",
-    "build-es": "rimraf es && BABEL_ENV=es babel src -d es && cp src/definition.js es/definition.js",
-    "lint": "eslint src test *.js",
-    "jest": "jest --watch",
-    "jestc": "jest --coverage",
-    "prepublish": "npm run build",
-    "test": "jest"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nodkz/graphql-compose.git"
@@ -71,5 +61,15 @@
       "<rootDir>/node_modules/graphql/",
       "<rootDir>/node_modules/core-js/"
     ]
+  },
+  "scripts": {
+    "build": "npm run build-cjs && npm run build-es",
+    "build-cjs": "rimraf lib && BABEL_ENV=cjs babel src --ignore __tests__,__mocks__ -d lib && cp src/definition.js lib/definition.js",
+    "build-es": "rimraf es && BABEL_ENV=es babel src --ignore __tests__,__mocks__ -d es && cp src/definition.js es/definition.js",
+    "lint": "eslint src test *.js",
+    "jest": "jest --watch",
+    "jestc": "jest --coverage",
+    "prepublish": "npm run build",
+    "test": "jest"
   }
 }

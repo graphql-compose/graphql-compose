@@ -34,6 +34,10 @@ export default class ResolverList {
     // return this._getMissingResolver(name);
   }
 
+  remove(name: string): void {
+    delete this.resolvers[name];
+  }
+
   addMiddleware(name: string, resolverMiddleware: ResolverMiddleware) {
     const resolver = this.get(name);
     if (!resolver) {
