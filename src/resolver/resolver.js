@@ -2,7 +2,6 @@
 
 import MissingType from '../type/missingType';
 import compose from '../utils/compose';
-import ArgsIsRequired from './middlewares/argsIsRequired';
 
 import type {
   GraphQLArgumentConfig,
@@ -80,10 +79,7 @@ export default class Resolver {
 
   composeArgs():GraphQLFieldConfigArgumentMap {
     const argsMWs: ResolverMWArgs[] =
-      this._getMiddlewaresByKey('args', [
-        // add internal middleware, it wraps isRequired args with GraphQLNonNull
-        new ArgsIsRequired(this.typeComposer),
-      ])
+      this._getMiddlewaresByKey('args')
       .map(mw => mw.args);
 
     // return compose(...argsMWs)(args => Object.assign({}, args, this.args))(this.args);
@@ -142,11 +138,9 @@ export default class Resolver {
   }
 
   _getMiddlewaresByKey(
-    key: ResolverMWMethodKeys,
-    internalMiddlewares:Array<ResolverMiddleware> = []
+    key: ResolverMWMethodKeys
   ) {
-    return [...internalMiddlewares, ...this.middlewares]
-      .filter(mw => mw.hasMethod(key));
+    return this.middlewares.filter(mw => mw.hasMethod(key));
   }
 
   getKind() {
