@@ -1,5 +1,11 @@
 ## master
 
+## 0.0.4 (July 07, 2016)
+* TypeComposer can manipulate the object type interfaces  
+* add ability to clone types
+* exports flow annotations
+* some internal improvements
+
 ## 0.0.3 (July 03, 2016)
 * Published for playing and testing `graphql-compose-mongoose`
 * fix call resolver function with proper arguments
