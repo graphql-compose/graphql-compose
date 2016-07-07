@@ -1,5 +1,3 @@
-jest.disableAutomock();
-
 import {
   graphql,
   GraphQLSchema,
@@ -8,7 +6,6 @@ import {
 
 import MissingType from '../missingType';
 
-jest.mock('../../gqc');
 import gqc from '../../gqc';
 
 

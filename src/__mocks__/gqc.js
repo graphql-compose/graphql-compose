@@ -1,4 +1,3 @@
-jest.unmock('../gqc');
 import gqc from '../gqc';
 import {
   GraphQLInt,

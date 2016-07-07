@@ -1,6 +1,3 @@
-jest.disableAutomock();
-jest.mock('../gqc');
-
 import GQC from '../gqc';
 
 import {

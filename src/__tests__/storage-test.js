@@ -1,5 +1,3 @@
-jest.disableAutomock();
-
 import {
   GraphQLObjectType,
   GraphQLScalarType,
