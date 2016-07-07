@@ -1,6 +1,6 @@
 {
   "env": {
-    "cjs": {
+    "development": {
       "presets": ["es2015"],
       "plugins": [
         "syntax-async-functions",
@@ -16,7 +16,7 @@
         "transform-regenerator",
         "transform-class-properties",
         "transform-object-rest-spread",
-        "transform-flow-comments",
+        "transform-flow-strip-types",
       ]
     }
   }
