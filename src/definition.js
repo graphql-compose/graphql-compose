@@ -30,12 +30,12 @@ export type GraphQLInterfacesThunk = () => Array<GraphQLInterfaceType>;
 export type GraphQLOutputType = _GraphQLOutputType;
 export type GraphQLInputObjectType = _GraphQLInputObjectType;
 export type GraphQLFieldConfigArgumentMap = _GraphQLFieldConfigArgumentMap;
-export type GraphQLFieldResolveFn = _GraphQLFieldResolveFn;
+export type GraphQLFieldResolveFn = _GraphQLFieldResolveFn<any>;
 export type GraphQLResolveInfo = _GraphQLResolveInfo;
 export type GraphQLArgumentConfig = _GraphQLArgumentConfig;
 export type GraphQLNamedType = _GraphQLNamedType;
-export type GraphQLFieldConfig = _GraphQLFieldConfig;
-export type GraphQLFieldConfigMap = _GraphQLFieldConfigMap;
+export type GraphQLFieldConfig = _GraphQLFieldConfig<any>;
+export type GraphQLFieldConfigMap = _GraphQLFieldConfigMap<any>;
 export type GraphQLFieldConfigMapThunk = () => GraphQLFieldConfigMap;
 export type ResolveParams = {
   source: mixed,
@@ -57,7 +57,7 @@ export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 export type ResolverMWArgsFn = (args: GraphQLFieldConfigArgumentMap) => GraphQLFieldConfigArgumentMap;
 export type ResolverMWArgs = (next: ResolverMWArgsFn) => ResolverMWArgsFn;
 
-export type ResolverMWResolveFn = (resolveParams: ResolveParams) => Promise;
+export type ResolverMWResolveFn = (resolveParams: ResolveParams) => Promise<any>;
 export type ResolverMWResolve = (next: ResolverMWResolveFn) => ResolverMWResolveFn;
 
 export type ResolverMWOutputTypeFn = (outputType: GraphQLOutputType) => GraphQLOutputType;

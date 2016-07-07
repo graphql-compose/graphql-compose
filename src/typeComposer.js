@@ -25,7 +25,7 @@ export default class TypeComposer {
     _gqcInputType?: GraphQLInputObjectType,
     _gqcResolvers?: ResolverList,
     _gqcGetRecordIdFn?: GetRecordIdFn,
-    description: string,
+    description: ?string,
   };
 
   constructor(gqType: GraphQLObjectType) {

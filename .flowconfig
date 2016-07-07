@@ -1,4 +1,5 @@
 [ignore]
+.*/es/.*
 .*/__tests__/.*
 .*/__mocks__/.*
 .*/lib/.*

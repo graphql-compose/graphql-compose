@@ -86,7 +86,7 @@ export default class Resolver {
     return compose(...argsMWs)(args => args)(this.args);
   }
 
-  resolve(resolveParams: ResolveParams): Promise { // eslint-disable-line
+  resolve(resolveParams: ResolveParams): Promise<any> { // eslint-disable-line
     return Promise.resolve();
   }
 
