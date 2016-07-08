@@ -15,7 +15,6 @@ function exec(command, options) {
       cmd: cmd,
       env: {
         ...process.env,
-        BABEL_ENV: 'cjs',
       },
       stdio: 'inherit'
     });
@@ -121,6 +120,7 @@ function runTests(filepaths) {
     '--compilers', 'js:babel-core/register',
     // '--reporter', 'progress',
     '--reporter', 'dot',
+    '--require', 'babel-polyfill',
     '--require', './resources/mocha-bootload',
   ].concat(
     allTests(filepaths) ?

@@ -9,6 +9,7 @@ import type {
 } from '../definition';
 
 import TypeComposer from '../typeComposer';
+import Resolver from './resolver';
 
 export type ResolverMWMethods = {
   outputType: ResolverMWOutputType,
@@ -22,13 +23,19 @@ export default class ResolverMiddleware {
   args: ResolverMWArgs;
   resolve: ResolverMWResolve;
   typeComposer: TypeComposer;
+  typeResolver: Resolver;
 
-  constructor(typeComposer: TypeComposer, opts: ObjectMap = {}) {
+  constructor(typeComposer: TypeComposer, typeResolver: Resolver, opts: ObjectMap = {}) {
     if (!(typeComposer instanceof TypeComposer)) {
-      throw new Error('ResolverMiddleware.constructor(tc, opts) '
+      throw new Error('ResolverMiddleware.constructor(typeComposer, typeResolver, opts) '
                     + 'first argument must be instance of TypeComposer');
     }
+    if (!(typeResolver instanceof Resolver)) {
+      throw new Error('ResolverMiddleware.constructor(typeComposer, typeResolver, opts) '
+                    + 'second argument must be instance of Resolver');
+    }
     this.typeComposer = typeComposer;
+    this.typeResolver = typeResolver;
     this.opts = opts;
   }
 

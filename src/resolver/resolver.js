@@ -2,6 +2,7 @@
 
 import MissingType from '../type/missingType';
 import compose from '../utils/compose';
+import { upperFirst } from '../utils/misc';
 
 import type {
   GraphQLArgumentConfig,
@@ -15,6 +16,7 @@ import type {
   ResolverMWOutputType,
   ResolveParams,
   ResolverKinds,
+  ObjectMap,
 } from '../definition.js';
 import TypeComposer from '../typeComposer';
 import type { ResolverMiddleware } from './resolverMiddleware';
@@ -33,7 +35,7 @@ export default class Resolver {
   args: GraphQLFieldConfigArgumentMap;
   outputType: ?GraphQLOutputType;
   resolve: ResolverMWResolveFn;
-  name: ?string;
+  name: string;
   kind: ?ResolverKinds;
   description: ?string;
   typeComposer: TypeComposer;
@@ -44,10 +46,14 @@ export default class Resolver {
     }
     this.typeComposer = typeComposer;
 
+    if (!opts.name) {
+      throw Error('For Resolver constructor the `opts.name` is required option.');
+    }
+    this.name = opts.name;
+
     this.outputType = opts.outputType || null;
     this.middlewares = [];
     this.args = opts.args || {};
-    this.name = opts.name || null;
     this.kind = opts.kind || null;
     this.description = opts.description || '';
 
@@ -151,18 +157,22 @@ export default class Resolver {
     return this.description;
   }
 
-  clone(newTypeComposer: TypeComposer): Resolver {
-    const opts = {};
+  clone(newTypeComposer: TypeComposer, opts: ObjectMap = {}): Resolver {
+    const oldOpts = {};
     for (const key in this) {
       if (this.hasOwnProperty(key)) {
         // $FlowFixMe
-        opts[key] = this[key];
+        oldOpts[key] = this[key];
       }
     }
-    return new Resolver(newTypeComposer, opts);
+    return new Resolver(newTypeComposer, Object.assign({}, oldOpts, opts));
   }
 
   getTypeComposer(): TypeComposer {
     return this.typeComposer;
+  }
+
+  getNameCamelCase(): string {
+    return upperFirst(this.name);
   }
 }
