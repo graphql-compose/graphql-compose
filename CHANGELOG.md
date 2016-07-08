@@ -1,5 +1,8 @@
 ## master
 
+## 0.0.5 (July 08, 2016)
+* ResolverMiddlewares now have access to wrapped resolver
+
 ## 0.0.4 (July 07, 2016)
 * TypeComposer can manipulate the object type interfaces  
 * add ability to clone types
