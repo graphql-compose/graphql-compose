@@ -48,6 +48,10 @@ export default class TypeComposer {
     return {};
   }
 
+  getFieldNames(): string[] {
+    return Object.keys(this.getFields());
+  }
+
   /**
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.

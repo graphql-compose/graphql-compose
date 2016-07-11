@@ -36,6 +36,10 @@ export default class InputTypeComposer {
     return {};
   }
 
+  getFieldNames(): string[] {
+    return Object.keys(this.getFields());
+  }
+
   hasField(fieldName: string): boolean {
     const fields = this.getFields();
     return !!fields[fieldName];
