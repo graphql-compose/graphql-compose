@@ -92,10 +92,17 @@ export default class InputTypeComposer {
     if (!newTypeName) {
       throw new Error('You should provide new type name for clone() method');
     }
+
+    const fields = this.getFields();
+    const newFields = {};
+    Object.keys(fields).forEach(fieldName => {
+      newFields[fieldName] = Object.assign({}, fields[fieldName]);
+    });
+
     return new InputTypeComposer(
       new GraphQLInputObjectType({
         name: newTypeName,
-        fields: this.getFields(),
+        fields: newFields,
       })
     );
   }

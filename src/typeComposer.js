@@ -167,10 +167,16 @@ export default class TypeComposer {
       throw new Error('You should provide newTypeName:string for TypeComposer.clone()');
     }
 
+    const fields = this.getFields();
+    const newFields = {};
+    Object.keys(fields).forEach(fieldName => {
+      newFields[fieldName] = Object.assign({}, fields[fieldName]);
+    });
+
     const cloned = new TypeComposer(
       new GraphQLObjectType({
         name: newTypeName,
-        fields: this.getFields(),
+        fields: newFields,
       })
     );
 
