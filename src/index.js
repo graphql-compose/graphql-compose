@@ -1,3 +1,5 @@
+/* @flow */
+
 export { default as TypeComposer } from './typeComposer';
 export { default as InputTypeComposer } from './inputTypeComposer';
 export { default as ComposeStorage } from './storage';

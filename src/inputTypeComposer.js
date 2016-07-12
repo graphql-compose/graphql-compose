@@ -1,6 +1,7 @@
 /* @flow */
 
-import { resolveMaybeThunk, isObject } from './utils/misc';
+import { resolveMaybeThunk } from './utils/misc';
+import { isObject } from './utils/is';
 import { GraphQLInputObjectType, GraphQLNonNull } from 'graphql';
 
 import type {

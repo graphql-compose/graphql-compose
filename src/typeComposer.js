@@ -1,6 +1,7 @@
 /* @flow */
 
-import { resolveMaybeThunk, isObject } from './utils/misc';
+import { resolveMaybeThunk } from './utils/misc';
+import { isObject } from './utils/is';
 import ResolverList from './resolver/resolverList';
 import Resolver from './resolver/resolver';
 import { toInputObjectType } from './toInputObjectType';

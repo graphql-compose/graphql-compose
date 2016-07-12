@@ -7,20 +7,6 @@ export function resolveMaybeThunk<T>(thingOrThunk: T | () => T): T { // eslint-d
   return typeof thingOrThunk === 'function' ? thingOrThunk() : thingOrThunk;
 }
 
-export function isString(value: mixed): boolean {
-  return typeof value === 'string';
-}
-
-
-export function isObject(value: mixed): boolean {
-  return typeof value === 'object' && !Array.isArray(value) && value !== null;
-}
-
-
-export function isFunction(value: mixed): boolean {
-  return !!(value && value.constructor && value.call && typeof value === 'function' && value.apply);
-}
-
 export function camelCase(str: string): string {
   return str.replace(
     /(?:^\w|[A-Z]|\b\w)/g,
