@@ -3,6 +3,7 @@
 import MissingType from '../type/missingType';
 import compose from '../utils/compose';
 import { upperFirst } from '../utils/misc';
+import getProjection from '../projection';
 
 import type {
   GraphQLArgumentConfig,
@@ -92,6 +93,9 @@ export default class Resolver {
     return compose(...argsMWs)(args => args)(this.args);
   }
 
+  /*
+  * This method should be overriden via constructor
+  */
   resolve(resolveParams: ResolveParams): Promise<any> { // eslint-disable-line
     return Promise.resolve();
   }
@@ -128,7 +132,7 @@ export default class Resolver {
       type: this.composeOutputType(),
       args: this.composeArgs(),
       resolve: (source, args, context, info) => {
-        const projection = {}; // TODO
+        const projection = getProjection(info);
         return this.composeResolve()({ source, args, context, info, projection });
       },
     };
