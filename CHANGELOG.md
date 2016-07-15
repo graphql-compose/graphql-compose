@@ -1,5 +1,9 @@
 ## master
 
+## 0.0.6 (July 15, 2016)
+* feat: derive projection for resolverParams from fieldASTs
+* fix: clone for Types
+
 ## 0.0.5 (July 08, 2016)
 * ResolverMiddlewares now have access to wrapped resolver
 
