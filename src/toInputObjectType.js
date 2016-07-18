@@ -95,7 +95,7 @@ export function convertInputObjectField(
     if (fieldType instanceof GraphQLObjectType) {
       const typeOpts = {
         prefix: opts.prefix,
-        postfix: `${upperFirst(opts.fieldName)}${opts.postfix}`,
+        postfix: `${upperFirst(opts.fieldName)}${opts.postfix || ''}`,
       };
       fieldType = toInputObjectType(fieldType, typeOpts);
     } else {
