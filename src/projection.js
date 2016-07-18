@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 
-export default function projection(context, fieldASTs) {
+export function getProjectionFromAST(context, fieldASTs) {
   if (!context) {
     return null;
   }
@@ -25,17 +25,17 @@ export default function projection(context, fieldASTs) {
     switch (kind) {
       case 'Field':
         list = list || {};
-        list[name.value] = projection(context, ast) || true;
+        list[name.value] = getProjectionFromAST(context, ast) || true;
         return list;
       case 'InlineFragment':
         return {
           ...list,
-          ...projection(context, ast),
+          ...getProjectionFromAST(context, ast),
         };
       case 'FragmentSpread':
         return {
           ...list,
-          ...projection(context, context.fragments[name.value]),
+          ...getProjectionFromAST(context, context.fragments[name.value]),
         };
       default:
         throw new Error('Unsuported query selection');

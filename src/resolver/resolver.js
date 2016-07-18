@@ -3,7 +3,7 @@
 import MissingType from '../type/missingType';
 import compose from '../utils/compose';
 import { upperFirst } from '../utils/misc';
-import getProjection from '../projection';
+import { getProjectionFromAST } from '../projection';
 
 import type {
   GraphQLArgumentConfig,
@@ -132,7 +132,7 @@ export default class Resolver {
       type: this.composeOutputType(),
       args: this.composeArgs(),
       resolve: (source, args, context, info) => {
-        const projection = getProjection(info);
+        const projection = getProjectionFromAST(info);
         return this.composeResolve()({ source, args, context, info, projection });
       },
     };
