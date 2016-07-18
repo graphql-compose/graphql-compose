@@ -31,9 +31,10 @@ THE FUTURE OF CRAZY GRAPHQL SCHEMAS NOT SO FAR ;).
 Installation
 ============
 
-`npm install graphql-compose` - it is too early to run this command, module is not ready yet
-Current version 0.0.2 published for testing and playing with  [graphql-compose-mongoose](https://github.com/nodkz/graphql-compose-mongoose)
-
+```
+npm install graphql graphql-compose --save
+```
+Module `graphql` declared in `peerDependencies`, so it should be installed explicitly in your app. It has global objects and should not have ability to be installed as submodule.
 
 Middlewares
 ===========

@@ -1,5 +1,10 @@
 ## master
 
+## 0.0.7 (July 18, 2016)
+* Add export of `getProjectionFromAST` function to module
+* Fix peerDependencies
+* Update flow-bin till 0.29
+
 ## 0.0.6 (July 15, 2016)
 * feat: derive projection for resolverParams from fieldASTs
 * fix: clone for Types
