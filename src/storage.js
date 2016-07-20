@@ -5,92 +5,94 @@ import { GraphQLObjectType, GraphQLSchema } from 'graphql';
 
 import type ResolverList from './resolver/resolverList';
 import type Resolver from './resolver/resolver';
-
+import type InputTypeComposer from './inputTypeComposer';
 
 export default class ComposeStorage {
-  types: { [typeName: string]: GraphQLObjectType };
+  types: { [typeName: string]: TypeComposer };
 
   constructor() {
     this.types = {};
   }
 
-  hasType(typeName: string): boolean {
+  has(typeName: string): boolean {
     return !!this.types[typeName];
   }
 
-  getType(typeName: string): ?GraphQLObjectType {
-    if (this.hasType(typeName)) {
-      return this.types[typeName];
+  add(typeComposer: TypeComposer): void {
+    if (!(typeComposer instanceof TypeComposer)) {
+      throw new Error('You must provide instance of TypeComposer');
     }
 
-    return undefined;
-  }
-
-  setType(typeObject: GraphQLObjectType): void {
-    if (!(typeObject instanceof GraphQLObjectType)) {
-      throw new Error('You must provide correct GraphQLObjectType');
-    }
-
-    this.types[typeObject.name] = typeObject;
+    this.types[typeComposer.getTypeName()] = typeComposer;
   }
 
   clear(): void {
     this.types = {};
   }
 
-  typeComposer(typeName: string): TypeComposer {
-    if (!this.hasType(typeName)) {
-      this.types[typeName] = new GraphQLObjectType({
+  get(typeName: string): TypeComposer {
+    if (!this.has(typeName)) {
+      const gqType = new GraphQLObjectType({
         name: typeName,
-        fields: {},
+        fields: () => ({}),
       });
+      this.types[typeName] = new TypeComposer(gqType);
     }
-
-    return new TypeComposer(this.types[typeName]);
+    return this.types[typeName];
   }
 
   rootQuery(): TypeComposer {
-    return this.typeComposer('RootQuery');
+    return this.get('RootQuery');
   }
 
   rootMutation(): TypeComposer {
-    return this.typeComposer('RootMutation');
+    return this.get('RootMutation');
   }
 
   resolvers(typeName: string): ResolverList {
-    return this.typeComposer(typeName).getResolvers();
+    return this.get(typeName).getResolvers();
   }
 
   resolver(typeName: string, resolverName: string): Resolver | void {
-    return this.typeComposer(typeName).getResolver(resolverName);
+    return this.get(typeName).getResolver(resolverName);
   }
 
   buildSchema() {
-    const fields = {};
+    const roots = {};
 
-    if (this.hasType('RootQuery')) {
-      const rootQuery = this.getType('RootQuery');
-      if (rootQuery instanceof GraphQLObjectType) {
-        fields.query = rootQuery;
-      } else {
-        throw new Error('RootQuery must be GraphQLObjectType');
-      }
+    if (this.has('RootQuery')) {
+      const tc = this.get('RootQuery');
+      roots.query = this.removeEmptyTypes(tc).getType();
     }
 
-    if (this.hasType('RootMutation')) {
-      const rootMutation = this.getType('RootMutation');
-      if (rootMutation instanceof GraphQLObjectType) {
-        fields.mutation = rootMutation;
-      } else {
-        throw new Error('RootMutation must be GraphQLObjectType');
-      }
+    if (this.has('RootMutation')) {
+      const tc = this.get('RootMutation');
+      roots.mutation = this.removeEmptyTypes(tc).getType();
     }
 
-    if (Object.keys(fields).length === 0) {
+    if (Object.keys(roots).length === 0) {
       throw new Error('Can not build schema. Must be initialized at least one '
       + 'of the following types: RootQuery, RootMutation.');
     }
 
-    return new GraphQLSchema(fields);
+    return new GraphQLSchema(roots);
+  }
+
+  removeEmptyTypes<T: TypeComposer | InputTypeComposer>(typeComposer: T): T {
+    const fields = typeComposer.getFields();
+    Object.keys(fields).forEach(fieldName => {
+      if (fields[fieldName].type instanceof GraphQLObjectType) {
+        const tc = new TypeComposer(fields[fieldName].type);
+        if (Object.keys(tc.getFields()).length > 0) {
+          this.removeEmptyTypes(tc);
+        } else {
+          console.log(`GQC: Delete field '${typeComposer.getTypeName()}.${fieldName}' `
+                    + `with type '${tc.getTypeName()}', cause it does not have fields.`)
+          delete fields[fieldName];
+        }
+      }
+    });
+    typeComposer.setFields(fields);
+    return typeComposer;
   }
 }
