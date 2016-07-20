@@ -1,5 +1,14 @@
 ## master
 
+## 0.0.9 (July 20, 2016)
+- Add method `getFlatProjectionFromAST`, which returns projection only for first level
+- `toInputObjectType` now works with TypeComposer, rather than GraphQLType (if TypeComposer already has InputType, then it does not generate new one)
+- Clear types' fields, if they are ObjectTypes without fields.
+- Rename GQC methods:
+  - `typeComposer` to `get`
+  - `setType` to `add`
+  - `hasType` to `has`
+
 ## 0.0.8 (July 18, 2016)
 * Add export of `getProjectionFromAST` function to module
 * Fix peerDependencies
