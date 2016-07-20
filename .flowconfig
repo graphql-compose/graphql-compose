@@ -3,6 +3,8 @@
 .*/__mocks__/.*
 .*/coverage/.*
 .*/resources/.*
+<PROJECT_ROOT>/lib/.*
+<PROJECT_ROOT>/dist/.*
 
 [include]
 
