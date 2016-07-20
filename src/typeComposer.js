@@ -23,7 +23,7 @@ import type {
 
 export default class TypeComposer {
   gqType: GraphQLObjectType & {
-    _gqcInputType?: GraphQLInputObjectType,
+    _gqcInputTypeComposer?: InputTypeComposer,
     _gqcResolvers?: ResolverList,
     _gqcGetRecordIdFn?: GetRecordIdFn,
     description: ?string,
@@ -104,7 +104,7 @@ export default class TypeComposer {
   addRelation(
     fieldName: string,
     resolver: Resolver,
-    description: string,
+    description: ?string,
     deprecationReason: ?string
   ) {
     if (!resolver instanceof Resolver) {
@@ -212,15 +212,19 @@ export default class TypeComposer {
   }
 
   getInputType(): GraphQLInputObjectType {
-    if (!this.gqType._gqcInputType) {
-      this.gqType._gqcInputType = toInputObjectType(this.gqType);
-    }
+    return this.getInputTypeComposer().getType();
+  }
 
-    return this.gqType._gqcInputType;
+  hasInputTypeComposer(): boolean {
+    return !!this.gqType._gqcInputTypeComposer;
   }
 
   getInputTypeComposer(): InputTypeComposer {
-    return new InputTypeComposer(this.getInputType());
+    if (!this.gqType._gqcInputTypeComposer) {
+      this.gqType._gqcInputTypeComposer = toInputObjectType(this);
+    }
+
+    return this.gqType._gqcInputTypeComposer;
   }
 
   getResolvers(): ResolverList {

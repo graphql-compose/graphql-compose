@@ -1,3 +1,4 @@
+/* @flow */
 /* eslint-disable no-use-before-define */
 
 import {
@@ -9,6 +10,7 @@ import {
   GraphQLNonNull,
 } from 'graphql';
 import TypeComposer from './typeComposer';
+import InputTypeComposer from './inputTypeComposer';
 import GenericType from './type/generic';
 import { upperFirst } from './utils/misc';
 import type {
@@ -16,6 +18,7 @@ import type {
   GraphQLFieldConfigMap,
   GraphQLType,
   InputObjectFieldConfig,
+  GraphQLInputType,
 } from './definition.js';
 
 export function removeWrongFields(fields: GraphQLFieldConfigMap): GraphQLFieldConfigMap {
@@ -38,35 +41,38 @@ export type toInputObjectTypeOpts = {
 }
 
 export function toInputObjectType(
-  graphQLType: GraphQLObjectType,
+  typeComposer: TypeComposer,
   opts: toInputObjectTypeOpts = {}
-): GraphQLInputObjectType {
+): InputTypeComposer {
+  if (typeComposer.hasInputTypeComposer()) {
+    return typeComposer.getInputTypeComposer();
+  }
+
   const prefix: string = opts.prefix || '';
   const postfix: string = opts.postfix || 'Input';
 
-  const name = `${prefix}${graphQLType.name}${postfix}`;
+  const name = `${prefix}${typeComposer.getTypeName()}${postfix}`;
 
-  const inputTypeComposer = new TypeComposer(
+  const inputTypeComposer = new InputTypeComposer(
     new GraphQLInputObjectType({
       name,
       fields: {},
     })
   );
 
-  const outputTypeComposer = new TypeComposer(graphQLType);
-  const outputFields = removeWrongFields(outputTypeComposer.getFields());
+  const outputFields = removeWrongFields(typeComposer.getFields());
   const inputFields = {};
   Object.keys(outputFields).forEach((key) => {
     const fieldOpts = {
       ...opts,
       fieldName: key,
-      outputTypeName: graphQLType.name,
+      outputTypeName: typeComposer.getTypeName(),
     };
     inputFields[key] = convertInputObjectField(outputFields[key], fieldOpts);
   });
   inputTypeComposer.addFields(inputFields);
 
-  return inputTypeComposer.getType();
+  return inputTypeComposer;
 }
 
 
@@ -94,19 +100,21 @@ export function convertInputObjectField(
   if (!isInputType(fieldType)) {
     if (fieldType instanceof GraphQLObjectType) {
       const typeOpts = {
-        prefix: opts.prefix,
-        postfix: `${upperFirst(opts.fieldName)}${opts.postfix || ''}`,
+        prefix: `${opts.prefix || ''}${upperFirst(opts.outputTypeName || '')}`,
+        postfix: opts.postfix || 'Input',
       };
-      fieldType = toInputObjectType(fieldType, typeOpts);
+      const typeComposer = new TypeComposer(fieldType);
+      fieldType = toInputObjectType(typeComposer, typeOpts).getType();
     } else {
       console.log( // eslint-disable-line
-        `GQC: can not convert field '${opts.outputTypeName}.${opts.fieldName}' to InputType`
+        `GQC: can not convert field '${opts.outputTypeName || ''}.${opts.fieldName || ''}' to InputType`
       );
       fieldType = GenericType;
     }
   }
 
-  fieldType = wrappers.reduce((type, Wrapper) => new Wrapper(type), fieldType);
+  // $FlowFixMe
+  const inputFieldType: GraphQLInputType = wrappers.reduce((type, Wrapper) => new Wrapper(type), fieldType);
 
-  return { type: fieldType, description: field.description };
+  return { type: inputFieldType, description: field.description };
 }
