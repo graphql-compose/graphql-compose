@@ -42,3 +42,12 @@ export function getProjectionFromAST(context, fieldASTs) {
     }
   }, null);
 }
+
+export function getFlatProjectionFromAST(context, fieldASTs) {
+  const projection = getProjectionFromAST(context, fieldASTs);
+  const flatProjection = {};
+  Object.keys(projection).forEach(key => {
+    flatProjection[key] = !!projection[key];
+  });
+  return flatProjection;
+}

@@ -3,7 +3,7 @@
 export { default as TypeComposer } from './typeComposer';
 export { default as InputTypeComposer } from './inputTypeComposer';
 export { default as ComposeStorage } from './storage';
-export { getProjectionFromAST } from './projection';
+export * from './projection';
 export { default as GQC } from './gqc';
 
 export {
