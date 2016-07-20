@@ -128,12 +128,13 @@ export default class Resolver {
   }
 
   getFieldConfig(): ResolverFieldConfig {
+    const resolve = this.composeResolve();
     return {
       type: this.composeOutputType(),
       args: this.composeArgs(),
       resolve: (source, args, context, info) => {
         const projection = getProjectionFromAST(info);
-        return this.composeResolve()({ source, args, context, info, projection });
+        return resolve({ source, args, context, info, projection });
       },
     };
   }
