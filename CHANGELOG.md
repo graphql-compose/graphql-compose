@@ -1,5 +1,8 @@
 ## master
 
+## 0.0.10 (July 21, 2016)
+- Change `addRelation` method. Now it maps arguments, and strip out provided args from field config.
+
 ## 0.0.9 (July 20, 2016)
 - Add method `getFlatProjectionFromAST`, which returns projection only for first level
 - `toInputObjectType` now works with TypeComposer, rather than GraphQLType (if TypeComposer already has InputType, then it does not generate new one)
