@@ -1,7 +1,7 @@
 /* @flow */
 
 import { resolveMaybeThunk } from './utils/misc';
-import { isObject } from './utils/is';
+import { isObject, isFunction } from './utils/is';
 import ResolverList from './resolver/resolverList';
 import Resolver from './resolver/resolver';
 import { toInputObjectType } from './toInputObjectType';
@@ -18,6 +18,8 @@ import type {
   GraphQLInterfaceType,
   GraphQLInterfacesThunk,
   GetRecordIdFn,
+  RelationArgsMapper,
+  RelationArgsMapperFn,
 } from './definition.js';
 
 
@@ -104,19 +106,58 @@ export default class TypeComposer {
   addRelation(
     fieldName: string,
     resolver: Resolver,
-    description: ?string,
-    deprecationReason: ?string
+    argsMapper: RelationArgsMapper = {},
+    opts?: {
+      description?: string,
+      deprecationReason?: string,
+    } = {}
   ) {
     if (!resolver instanceof Resolver) {
       throw new Error('You should provide correct Resolver object.');
     }
 
-    this.addField(fieldName, {
-      description,
-      deprecationReason,
-      ...resolver.getFieldConfig(),
-      _gqcResolver: resolver,
+    const resolverFieldConfig = resolver.getFieldConfig();
+    const argsConfig = Object.assign({}, resolverFieldConfig.args);
+    const argsProto = {};
+    const argsRuntime: ([string, RelationArgsMapperFn])[] = [];
+
+    // remove args from config, if arg name provided in argsMapper
+    //    if `argMapVal`
+    //       is `undefined`, then keep arg field in config
+    //       is `null`, then just remove arg field from config
+    //       is `function`, then remove arg field and run it in resolve
+    //       is any other value, then put it to args prototype for resolve
+    Object.keys(argsMapper).forEach(argName => {
+      const argMapVal = argsMapper[argName];
+      if (argMapVal !== undefined) {
+        delete argsConfig[argName];
+
+        if (isFunction(argMapVal)) {
+          // $FlowFixMe
+          argsRuntime.push([argName, argMapVal]);
+        } else if (argMapVal !== null) {
+          argsProto[argName] = argMapVal;
+        }
+      }
     });
+
+    const resolve = (source, args, context, info) => {
+      const newArgs = Object.assign({}, args, argsProto);
+      argsRuntime.forEach(([argName, argFn]) => {
+        newArgs[argName] = argFn(source, args, context, info);
+      });
+
+      return resolverFieldConfig.resolve(source, newArgs, context, info);
+    };
+
+    this.addField(fieldName, {
+      type: resolverFieldConfig.type,
+      description: opts.description,
+      deprecationReason: opts.deprecationReason,
+      args: argsConfig,
+      resolve,
+    });
+
     return this;
   }
 

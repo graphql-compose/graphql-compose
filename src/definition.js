@@ -71,3 +71,12 @@ export type ResolverFieldConfig = {
 };
 
 export type GetRecordIdFn = (source: mixed, args: ?mixed, context: ?mixed) => string;
+
+// addRelation
+export type ArgsType = {
+  [argName: string]: mixed,
+};
+export type RelationArgsMapperFn = (source: mixed, args: ArgsType, context: ?mixed) => ArgsType;
+export type RelationArgsMapper = {
+  [argName: string]: RelationArgsMapperFn | null | void | mixed,
+};
