@@ -1,5 +1,16 @@
 ## master
 
+## 0.0.11 (July 28, 2016)
+- Add `getByPath` method to TypeComposer and InputTypeComposer for obtaining deep field type.
+
+Eg.
+```js
+const recordInputTC = GQC.rootMutation().getByPath('addUser.@input.record');
+const languagesTC = GQC.rootQuery().getByPath('viewer.user.languages');
+const languagesTC2 = GQC.get('User').getByPath('viewer.user.languages');
+const languagesTC3 = new TypeComposer(UserOutputType).getByPath('viewer.user.languages');
+```
+
 ## 0.0.10 (July 21, 2016)
 - Change `addRelation` method. Now it maps arguments, and strip out provided args from field config.
 
