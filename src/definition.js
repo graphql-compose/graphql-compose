@@ -13,6 +13,7 @@ import type {
   GraphQLFieldConfig as _GraphQLFieldConfig,
   GraphQLFieldConfigMap as _GraphQLFieldConfigMap,
   GraphQLType as _GraphQLType,
+  InputObjectField as _InputObjectField,
   InputObjectFieldConfig as _InputObjectFieldConfig,
   InputObjectConfigFieldMap as _InputObjectConfigFieldMap,
 //  InputObjectConfigFieldMapThunk as _InputObjectConfigFieldMapThunk,
@@ -28,6 +29,7 @@ export type GraphQLObjectType = _GraphQLObjectType;
 export type GraphQLInterfaceType = _GraphQLInterfaceType;
 export type GraphQLInterfacesThunk = () => Array<GraphQLInterfaceType>;
 export type GraphQLOutputType = _GraphQLOutputType;
+export type InputObjectField = _InputObjectField;
 export type GraphQLInputObjectType = _GraphQLInputObjectType;
 export type GraphQLFieldConfigArgumentMap = _GraphQLFieldConfigArgumentMap;
 export type GraphQLFieldResolveFn = _GraphQLFieldResolveFn<any>;

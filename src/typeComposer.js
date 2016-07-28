@@ -7,10 +7,13 @@ import Resolver from './resolver/resolver';
 import { toInputObjectType } from './toInputObjectType';
 import InputTypeComposer from './inputTypeComposer';
 
-import { GraphQLObjectType } from 'graphql';
+import {
+  GraphQLObjectType,
+  GraphQLInputObjectType,
+  getNamedType,
+} from 'graphql';
 
 import type {
-  GraphQLInputObjectType,
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
   GraphQLFieldConfigMapThunk,
@@ -20,6 +23,8 @@ import type {
   GetRecordIdFn,
   RelationArgsMapper,
   RelationArgsMapperFn,
+  GraphQLFieldConfigArgumentMap,
+  GraphQLArgumentConfig,
 } from './definition.js';
 
 
@@ -351,5 +356,48 @@ export default class TypeComposer {
   */
   getRecordId(source: ?mixed, args: ?mixed, context: ?mixed): string | number {
     return this.getRecordIdFn()(source, args, context);
+  }
+
+  getFieldArgs(fieldName: string): ?GraphQLFieldConfigArgumentMap {
+    const field = this.getField(fieldName);
+    if (field) {
+      return field.args;
+    }
+    return null;
+  }
+
+  getFieldArg(fieldName: string, argName: string): ?GraphQLArgumentConfig {
+    const fieldArgs = this.getFieldArgs(fieldName) || {};
+    return fieldArgs[argName] ? fieldArgs[argName] : undefined;
+  }
+
+  getByPath(path: string): TypeComposer | InputTypeComposer | void {
+    let tc: TypeComposer = this;
+    const parts = path.split('.');
+    while(parts.length > 0) {
+      const name = parts[0];
+      const nextName = parts[1];
+      if (!name) return undefined;
+
+      if (nextName && nextName.startsWith('@')) {
+        const arg = tc.getFieldArg(name, nextName.substring(1));
+        if (!arg) return undefined;
+        let argType = getNamedType(arg.type);
+        if (argType instanceof GraphQLInputObjectType) {
+          const itc = new InputTypeComposer(argType);
+          return itc.getByPath(parts.slice(2).join('.'));
+        }
+        return undefined;
+      }
+
+      const field = this.getFieldType(name);
+      if (field && field.type instanceof GraphQLObjectType) {
+        tc = new TypeComposer(field.type);
+        parts.shift();
+      } else {
+        return undefined;
+      }
+    }
+    return tc;
   }
 }

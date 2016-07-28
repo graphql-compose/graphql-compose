@@ -2,13 +2,20 @@
 
 import { resolveMaybeThunk } from './utils/misc';
 import { isObject } from './utils/is';
-import { GraphQLInputObjectType, GraphQLNonNull } from 'graphql';
+import {
+  GraphQLInputObjectType,
+  GraphQLNonNull,
+  getNamedType,
+} from 'graphql';
 
 import type {
   InputObjectFieldConfig,
   InputObjectConfigFieldMap,
   InputObjectConfigFieldMapThunk,
+  InputObjectField,
   GraphQLInputType,
+  GraphQLFieldConfigArgumentMap,
+  GraphQLFieldConfig,
 } from './definition.js';
 
 export default class InputTypeComposer {
@@ -72,7 +79,7 @@ export default class InputTypeComposer {
   /**
    * Get fieldConfig by name
    */
-  getField(fieldName: string) {
+  getField(fieldName: string): ?InputObjectField {
     const fields = this.getFields();
 
     if (fields[fieldName]) {
@@ -168,5 +175,22 @@ export default class InputTypeComposer {
       }
     });
     this.setFields(fields);
+  }
+
+  getByPath(path: string): InputTypeComposer | void {
+    let itc = this;
+    let parts = path.split('.');
+    while(parts.length > 0) {
+      if (!itc) return undefined;
+      const name = parts[0];
+      const fieldType = getNamedType(this.getFieldType(name));
+      if (fieldType instanceof GraphQLInputObjectType) {
+        itc = new InputTypeComposer(fieldType);
+      } else {
+        itc = undefined;
+      }
+      parts.shift();
+    }
+    return itc;
   }
 }
