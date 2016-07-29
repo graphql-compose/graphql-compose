@@ -4,13 +4,15 @@ By this link you may find example of mash-code in my app, which derived from a m
 So I have brilliant thoughts how to simplify it!
 
 🌶🌶🌶 Long live to middlewares and compose!🌶🌶🌶  
-I wanted to finish `graphql-compose` module in the End of June, but it takes too much time. So... Welcome July!
+I wanted to finish `graphql-compose` module in the End of June, but it takes too much time. So... Welcome July! And... Welcome August, **but I began implement and test it in our big `project`**.
+
+[Tiny live demo showing mongoose schema convertation](https://graphql-compose-mongoose.herokuapp.com/)
 
 To-Do
 =====
 - [x] write mongoose schema converter to graphql types with CRUD resolver helpers [graphql-compose-mongoose](https://github.com/nodkz/graphql-compose-mongoose)
 - [x] write a Relay types wrapper for adding relay specifics things, like `Node` type and interface, `globalId`, `clientMutationId`() [graphql-compose-relay](https://github.com/nodkz/graphql-compose-relay)
-- [x] realize `Grapql Cursor Connections` wrapper, which extends types dirived via graphql-compose with additional resolvers `connection`. This wrapper implicitly consume `findMany` and `count` resolvers defined in type [graphql-compose-connection](https://github.com/nodkz/graphql-compose-connection)
+- [x] realize `GraphQL Cursor Connections` wrapper, which extends types dirived via graphql-compose with additional resolvers `connection`. This wrapper implicitly consume `findMany` and `count` resolvers defined in type [graphql-compose-connection](https://github.com/nodkz/graphql-compose-connection)
 - [ ] polish `graphq-compose`, add access restrictions to fields, attach custom logic to resolvers, docs and examples
 - [ ] write [DataLoader](https://github.com/facebook/dataloader) resolver's wrapper for reducing number of queries
 - [ ] add support for PubSub. Introduce subscriptions to your graphql schemas
@@ -34,55 +36,115 @@ Installation
 ```
 npm install graphql graphql-compose --save
 ```
-Module `graphql` declared in `peerDependencies`, so it should be installed explicitly in your app. It has global objects and should not have ability to be installed as submodule.
-
-Middlewares
-===========
-
-### Basics
-`graphql-compose` middleware have 3 phases:
-- `setup phase`, which runs only once, when middleware added to the `GraphQL-compose`
-- `capturing phase`, when you may change properties before it will pass to next middleware
-- `bubbling phase`, when you may change response from underlying middlewares
-
-Middlewares use LIFO (last in, first out) stack. Or simply put - use `compose` function. So if you pass such middlewares [M1(opts), M2(opts)] it will be work such way:
-- call setup phase of `M1` with its opts
-- call setup phase of `M2` with its opts
-- for each run
- - call capture phase of `M1` (changing args)
- - call capture phase of `M2` (changing args)
- - call `some-internal-bottom` method with prepared args in capture phase and pass result to bubbling phase
- - call bubbling phase of `M2` (changing result)
- - call bubbling phase of `M1` (changing result)
- - pass result to `some-internal-upper` method.
+Module `graphql` declared in `peerDependencies`, so it should be installed explicitly in your app, cause internally uses the classes instances checks.
 
 
-### How `resolveMiddleware` work internally
-Will be executed for every request, if resolve needed for query serving.
-Works in `Resolver`. Resolver knows output type, needed args and how to fetch and process data.  Each Type can have several named resolvers for retrieving one object, array of objects, a graphql connection type or perform mutation.
+Level 1: TYPES MODIFICATION: modify your GraphQL Object Types anywhere
+==========================================
+`graphql-compose` has two awesome manipulators. That can change graphql anywhere and anytime before build schema. It allows to create a bunch of awesome wrappers, plugins and middlewares (level 4).
+- `TypeComposer` for `GraphQLObjectType`
+  - Basic methods:
+    - constructor(gqType: GraphQLObjectType)
+    - getType(): GraphQLObjectType
+    - getTypeName(): string
+    - setTypeName(name: string): void
+    - getDescription(): string
+    - setDescription(description: string): void
+  - Working with fields:
+    - getFields(): GraphQLFieldConfigMap
+    - setFields(fields: GraphQLFieldConfigMap): void
+    - getFieldNames(): string[]
+    - hasField(fieldName: string): boolean
+    - getField(fieldName: string): ?GraphQLFieldConfig
+    - addField(fieldName: string, fieldConfig: GraphQLFieldConfig)
+    - addFields(newFields: GraphQLFieldConfigMap): void
+    - removeField(fieldNameOrArray: string | Array<string>): void
+    - getFieldType(fieldName: string): GraphQLOutputType | void
+    - getFieldArgs(fieldName: string): ?GraphQLFieldConfigArgumentMap
+    - getFieldArg(fieldName: string, argName: string): ?GraphQLArgumentConfig
+  - Working with interfaces:  
+    - getInterfaces(): Array<GraphQLInterfaceType>
+    - setInterfaces(interfaces: Array<GraphQLInterfaceType>): void
+    - hasInterface(interfaceObj: GraphQLInterfaceType): boolean
+    - addInterface(interfaceObj: GraphQLInterfaceType): void
+    - removeInterface(interfaceObj: GraphQLInterfaceType): void
+  - New thing: working with automatically converted InputType  
+    - getInputType(): GraphQLInputObjectType
+    - hasInputTypeComposer()
+    - getInputTypeComposer()
+  - New thing: working with `RESOLVER (level 2)`
+    - getResolvers(): ResolverList
+    - hasResolver(name: string): boolean
+    - getResolver(name: string): Resolver | void
+    - setResolver(resolver: Resolver): void  
+    - addResolver(resolver: Resolver): void
+    - removeResolver(resolver: string|Resolver): void
+  - New thing: obtaining id from `source`
+    - hasRecordIdFn(): boolean
+    - getRecordIdFn(): GetRecordIdFn
+    - getRecordId(source: ?mixed, args: ?mixed, context: ?mixed): string | number
+  - New other things
+    - clone(newTypeName: string): TypeComposer
+    - addRelation(fieldName: string, resolver: Resolver, argsMapper: RelationArgsMapper = {}, opts)
+    - getByPath(path: string): TypeComposer | InputTypeComposer | void
+
+- `InputTypeComposer` for `GraphQLInputObjectType`
+  - Basic methods:
+    - constructor(gqType: GraphQLInputObjectType)
+    - getType(): GraphQLInputObjectType
+    - getTypeName(): string
+    - setTypeName(name: string): void
+    - getDescription(): string
+    - setDescription(description: string): void
+  - Working with fields:
+    - getFields(): InputObjectConfigFieldMap
+    - getFieldNames(): string[]
+    - hasField(fieldName: string): boolean
+    - setFields(fields: InputObjectConfigFieldMap): void
+    - addField(fieldName: string, fieldConfig: InputObjectFieldConfig)
+    - addFields(newFields: InputObjectConfigFieldMap)
+    - getField(fieldName: string): ?InputObjectField
+    - removeField(fieldNameOrArray: string | Array<string>)
+    - getFieldType(fieldName: string): GraphQLInputType | void
+  - Helpers for fields
+    - isFieldRequired(fieldName: string): boolean
+    - makeFieldsRequired(fieldNameOrArray: string | Array<string>)
+    - makeFieldsOptional(fieldNameOrArray: string | Array<string>)
+  - New other things
+    - clone(newTypeName: string): InputTypeComposer
+    - getByPath(path: string): InputTypeComposer | void
+
+Level 2: RESOLVERS
+==================
+`graphql-compose` by design assume that MainTypes has CRUD operations. And they are called `RESOLVERS`, e.g. `findById`, `findByIds`, `findOne`, `findByMany`, `update*`, `remove*`, `createOne`, `count` or any others as you wish. This helps reuse existed resolvers for building complex schema.
+
+RESOLVER consist from:
+- `outputType` - type that will be returned after resolving
+- `args` - arguments needed for resolving
+- `resolve` - standard graphql resolve method
+
+So when you build relations, you may use defined standard resolvers wrapped with your additional business logic, applying middlewares to it.
+
+So when you define field (non-scalar) via `graphql-compose` you will use something like this:
 ```js
-export default function resolveMiddleware(opts = {}) {
-  // [SETUP PHASE]: here you can process `opts`, when you create Middleware
-
-  return next => resolveArgs => {
-    // [CAPTURING PHASE]:
-    // `resolveArgs` consist from { source, args, context, info }  (*type GraphQLFieldResolveFn*)
-    // you may change `source`, `args`, `context`, `info` before it will pass to `next` resolve function.
-
-    // ...some code which modify resolveParams
-
-    // pass request to following middleware and get response promise from it
-    const payloadPromise = next(resolveParams);
-
-    // [BUBBLING PHASE]: here you may change payload of underlying middlewares, via promise syntax
-    // ...some code, which may add `then()` or `catch()` to payload promise
-    //    payloadPromise.then(payload => { console.log(payload); return payload; })
-
-    return payloadPromise; // return payload promise to upper middleware
-  };
+fieldName: {
+  description
+  middlewares(resolver)
 }
 ```
 
+Level 3: BUILDING SCHEMA (in active development)
+========================
+- Field Restrictions
+- Types Relation
+- Applying other business logic to resolvers
+
+Level 4: PLUGINS
+================
+Ready plugins for production:
+- [graphql-compose-mongoose](https://github.com/nodkz/graphql-compose-mongoose) - right now the most powerful mongoose schema converter to graphql types
+- [graphql-compose-relay](https://github.com/nodkz/graphql-compose-relay) - get TypeComposer(GraphQLType + Resolvers) and apply some wrappers to make them Relay compliant.
+- [graphql-compose-connection](https://github.com/nodkz/graphql-compose-connection) - extended realization of `GraphQL Cursor Connections`, introduced `filter` and `sort` arguments.
 
 Other
 =====
