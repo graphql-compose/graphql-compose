@@ -1,10 +1,10 @@
 # Right now just proposal, stay tunned.
 See my previous production ready, but unpublished version of mongoose to graphql module: https://github.com/nodkz/graphql-mongoose
-By this link you may find example of mash-code in my app, which derived from a map-derived-schema adapters/converters.
+By this link, you may find an example of mash-code in my app, which derived from a map-derived-schema adapters/converters.
 So I have brilliant thoughts how to simplify it!
 
 🌶🌶🌶 Long live to middlewares and compose!🌶🌶🌶  
-I wanted to finish `graphql-compose` module in the End of June, but it takes too much time. So... Welcome July! And... Welcome August, **but I began implement and test it in our big `project`**.
+I wanted to finish `graphql-compose` module at the End of June, but it takes too much time. So... Welcome July! And... Welcome August, **but I began to implement and test it in our big `project`**.
 
 [Tiny live demo showing mongoose schema convertation](https://graphql-compose-mongoose.herokuapp.com/)
 
@@ -23,11 +23,11 @@ To-Do
 GraphQL-compose
 ======================
 
-The `GraphQL-compose` is a module which allow construct flexible graphql schema from different data sources via plugins (Mongoose, DataLoader, Redis, Fetch and so on).
+The `GraphQL-compose` is a module which allows construct flexible graphql schema from different data sources via plugins (Mongoose, DataLoader, Redis, Fetch and so on).
 You may extend types, rename fields, reduce access to fields, attach custom logic to resolvers and much more.
-Middlewares and converters should solve problem of mash code in schemas, which derived via map configs.
+Middlewares and converters should solve the problem of mash code in schemas, and ridiculously simplify build process.
 
-THE FUTURE OF CRAZY GRAPHQL SCHEMAS NOT SO FAR ;).
+THE FUTURE OF CRAZY GRAPHQL SCHEMAS IS NOT SO FAR ;).
 
 
 Installation
