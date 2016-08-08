@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign */
 
-export function getProjectionFromAST(context, fieldASTs) {
+export function getProjectionFromAST(context, fieldASTs)/* :ProjectionType */ {
   if (!context) {
     return null;
   }

@@ -19,6 +19,7 @@ import type {
   ResolveParams,
   ResolverKinds,
   ObjectMap,
+  ProjectionType,
 } from '../definition.js';
 import TypeComposer from '../typeComposer';
 import type { ResolverMiddleware } from './resolverMiddleware';
@@ -130,7 +131,7 @@ export default class Resolver {
 
   getFieldConfig(
     opts: {
-      projection?: ObjectMap,
+      projection?: ProjectionType,
     } = {}
   ): ResolverFieldConfig {
     const resolve = this.composeResolve();

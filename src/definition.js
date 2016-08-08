@@ -22,6 +22,7 @@ import type {
 } from 'graphql/type/definition.js';
 
 export type ObjectMap = { [optName: string]: mixed };
+export type ProjectionType = { [fieldName: string]: true | ProjectionType };
 
 // GRAPHQL RE-EXPORT --------------------
 export type GraphQLType = _GraphQLType;
@@ -44,7 +45,7 @@ export type ResolveParams = {
   args: {[argName: string]: mixed},
   context: mixed,
   info: GraphQLResolveInfo,
-  projection: { [fieldName: string]: true },
+  projection: ProjectionType,
   [opt: string]: mixed,
 };
 export type InputObjectFieldConfig = _InputObjectFieldConfig;

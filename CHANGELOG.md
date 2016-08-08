@@ -1,5 +1,7 @@
 ## master
 
+- Added flow-type `ProjectionType` 
+
 ## 0.0.13 (August 8, 2016)
 - Change `TypeComposer.addRelation` arguments:
   - move `argsMapper` to `opts.args`

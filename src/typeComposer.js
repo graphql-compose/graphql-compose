@@ -26,6 +26,7 @@ import type {
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
   ObjectMap,
+  ProjectionType,
 } from './definition.js';
 
 
@@ -34,7 +35,7 @@ export default class TypeComposer {
     _gqcInputTypeComposer?: InputTypeComposer,
     _gqcResolvers?: ResolverList,
     _gqcGetRecordIdFn?: GetRecordIdFn,
-    _gqcProjectionMapper?: ObjectMap,
+    _gqcProjectionMapper?: ProjectionType,
     description: ?string,
   };
 
@@ -115,7 +116,7 @@ export default class TypeComposer {
     resolver: Resolver,
     opts: {
       args?: RelationArgsMapper,
-      projection?: ObjectMap,
+      projection?: ProjectionType,
       description?: string,
       deprecationReason?: string,
     } = { args: {}, projection: {} }
@@ -411,7 +412,7 @@ export default class TypeComposer {
   // Sometimes, when you create relations you need query additional fields, that not in query.
   // Eg. for obtaining `friendList` you also should add `friendIds` to projection.
   // this _gqcProjectionMapper used in `projection` method
-  addProjectionMapper(relationName: string, sourceProjection: ObjectMap):void {
+  addProjectionMapper(relationName: string, sourceProjection: ProjectionType):void {
     if (!this.gqType._gqcProjectionMapper) {
       this.gqType._gqcProjectionMapper = {};
     }
