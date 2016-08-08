@@ -111,29 +111,32 @@ export default class TypeComposer {
   addRelation(
     fieldName: string,
     resolver: Resolver,
-    argsMapper: RelationArgsMapper = {},
-    opts?: {
+    opts: {
+      args: RelationArgsMapper,
+      projection?: { [fieldName: string]: boolean },
       description?: string,
       deprecationReason?: string,
-    } = {}
+    } = { args: {}, projection: {} }
   ) {
     if (!resolver instanceof Resolver) {
       throw new Error('You should provide correct Resolver object.');
     }
 
-    const resolverFieldConfig = resolver.getFieldConfig();
+    const resolverFieldConfig = resolver.getFieldConfig({
+      projection: opts.projection,
+    });
     const argsConfig = Object.assign({}, resolverFieldConfig.args);
     const argsProto = {};
     const argsRuntime: ([string, RelationArgsMapperFn])[] = [];
 
-    // remove args from config, if arg name provided in argsMapper
+    // remove args from config, if arg name provided in args
     //    if `argMapVal`
     //       is `undefined`, then keep arg field in config
     //       is `null`, then just remove arg field from config
     //       is `function`, then remove arg field and run it in resolve
     //       is any other value, then put it to args prototype for resolve
-    Object.keys(argsMapper).forEach(argName => {
-      const argMapVal = argsMapper[argName];
+    Object.keys(opts.args).forEach(argName => {
+      const argMapVal = opts.args[argName];
       if (argMapVal !== undefined) {
         delete argsConfig[argName];
 

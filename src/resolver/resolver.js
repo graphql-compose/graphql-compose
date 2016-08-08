@@ -2,6 +2,7 @@
 
 import MissingType from '../type/missingType';
 import compose from '../utils/compose';
+import deepmerge from '../utils/deepmerge';
 import { upperFirst } from '../utils/misc';
 import { getProjectionFromAST } from '../projection';
 
@@ -127,13 +128,17 @@ export default class Resolver {
     return compose(...outputTypeMWs)(outputType => outputType)(this.getOutputType());
   }
 
-  getFieldConfig(): ResolverFieldConfig {
+  getFieldConfig(
+    opts: {
+      projection?: { [fieldName: string]: boolean },
+    } = { projection: {} }
+  ): ResolverFieldConfig {
     const resolve = this.composeResolve();
     return {
       type: this.composeOutputType(),
       args: this.composeArgs(),
       resolve: (source, args, context, info) => {
-        const projection = getProjectionFromAST(info);
+        const projection = deepmerge(getProjectionFromAST(info), opts.projection);
         return resolve({ source, args, context, info, projection });
       },
     };
