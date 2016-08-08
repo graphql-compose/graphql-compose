@@ -28,3 +28,5 @@ export {
 
 export * from './utils/misc';
 export * from './utils/is';
+export { default as toDottedObject } from './utils/toDottedObject';
+export { default as deepmerge } from './utils/deepmerge';
