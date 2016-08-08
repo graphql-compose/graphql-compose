@@ -1,5 +1,12 @@
 ## master
 
+## 0.0.13 (August 8, 2016)
+- Change `TypeComposer.addRelation` arguments:
+  - move `argsMapper` to `opts.args`
+  - add `projection` to `opts` (relations may require some fields, that not described in GraphQL query)
+- Add projectionMapper to Types. Now `relation` works without redundantly defining additional fields.
+  - When you create relations you need query additional fields, that not in the GraphQL query. E.g. for obtaining `friendList` you also should add `friendIds` to projection. ProjectionMapper solves this problem.
+
 ## 0.0.11 (July 28, 2016)
 - Add `getByPath` method to TypeComposer and InputTypeComposer for obtaining deep field type.
 

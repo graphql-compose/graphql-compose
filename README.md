@@ -85,7 +85,15 @@ Level 1: TYPES MODIFICATION: modify your GraphQL Object Types anywhere
     - getRecordId(source: ?mixed, args: ?mixed, context: ?mixed): string | number
   - New other things
     - clone(newTypeName: string): TypeComposer
-    - addRelation(fieldName: string, resolver: Resolver, argsMapper: RelationArgsMapper = {}, opts)
+    - addRelation(
+        fieldName: string,
+        resolver: Resolver, 
+        opts: {
+          args: RelationArgsMapper,
+          projection?: { [fieldName: string]: boolean },
+          description?: string,
+          deprecationReason?: string,
+        })
     - getByPath(path: string): TypeComposer | InputTypeComposer | void
 
 - `InputTypeComposer` for `GraphQLInputObjectType`
