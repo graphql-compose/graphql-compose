@@ -130,15 +130,18 @@ export default class Resolver {
 
   getFieldConfig(
     opts: {
-      projection?: { [fieldName: string]: boolean },
-    } = { projection: {} }
+      projection?: ObjectMap,
+    } = {}
   ): ResolverFieldConfig {
     const resolve = this.composeResolve();
     return {
       type: this.composeOutputType(),
       args: this.composeArgs(),
       resolve: (source, args, context, info) => {
-        const projection = deepmerge(getProjectionFromAST(info), opts.projection);
+        let projection = getProjectionFromAST(info);
+        if (opts.projection) {
+          projection = deepmerge(projection, opts.projection);
+        }
         return resolve({ source, args, context, info, projection });
       },
     };

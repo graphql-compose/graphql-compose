@@ -25,6 +25,7 @@ import type {
   RelationArgsMapperFn,
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
+  ObjectMap,
 } from './definition.js';
 
 
@@ -33,6 +34,7 @@ export default class TypeComposer {
     _gqcInputTypeComposer?: InputTypeComposer,
     _gqcResolvers?: ResolverList,
     _gqcGetRecordIdFn?: GetRecordIdFn,
+    _gqcProjectionMapper?: ObjectMap,
     description: ?string,
   };
 
@@ -112,8 +114,8 @@ export default class TypeComposer {
     fieldName: string,
     resolver: Resolver,
     opts: {
-      args: RelationArgsMapper,
-      projection?: { [fieldName: string]: boolean },
+      args?: RelationArgsMapper,
+      projection?: ObjectMap,
       description?: string,
       deprecationReason?: string,
     } = { args: {}, projection: {} }
@@ -122,9 +124,7 @@ export default class TypeComposer {
       throw new Error('You should provide correct Resolver object.');
     }
 
-    const resolverFieldConfig = resolver.getFieldConfig({
-      projection: opts.projection,
-    });
+    const resolverFieldConfig = resolver.getFieldConfig();
     const argsConfig = Object.assign({}, resolverFieldConfig.args);
     const argsProto = {};
     const argsRuntime: ([string, RelationArgsMapperFn])[] = [];
@@ -135,8 +135,9 @@ export default class TypeComposer {
     //       is `null`, then just remove arg field from config
     //       is `function`, then remove arg field and run it in resolve
     //       is any other value, then put it to args prototype for resolve
-    Object.keys(opts.args).forEach(argName => {
-      const argMapVal = opts.args[argName];
+    const args = opts.args || {};
+    Object.keys(args).forEach(argName => {
+      const argMapVal = args[argName];
       if (argMapVal !== undefined) {
         delete argsConfig[argName];
 
@@ -165,6 +166,9 @@ export default class TypeComposer {
       args: argsConfig,
       resolve,
     });
+    if (opts.projection) {
+      this.addProjectionMapper(fieldName, opts.projection);
+    }
 
     return this;
   }
@@ -402,5 +406,15 @@ export default class TypeComposer {
       }
     }
     return tc;
+  }
+
+  // Sometimes, when you create relations you need query additional fields, that not in query.
+  // Eg. for obtaining `friendList` you also should add `friendIds` to projection.
+  // this _gqcProjectionMapper used in `projection` method
+  addProjectionMapper(relationName: string, sourceProjection: ObjectMap):void {
+    if (!this.gqType._gqcProjectionMapper) {
+      this.gqType._gqcProjectionMapper = {};
+    }
+    this.gqType._gqcProjectionMapper[relationName] = sourceProjection;
   }
 }

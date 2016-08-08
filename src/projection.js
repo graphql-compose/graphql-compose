@@ -26,6 +26,17 @@ export function getProjectionFromAST(context, fieldASTs) {
       case 'Field':
         list = list || {};
         list[name.value] = getProjectionFromAST(context, ast) || true;
+
+        // this type params are setup via TypeComposer.addProjectionMapper()
+        // Sometimes, when you create relations you need query additional fields, that not in query.
+        // Eg. for obtaining `friendList` you also should add `friendIds` to projection.
+        if (context.returnType && typeof context.returnType._gqcProjectionMapper === 'object') {
+          Object.keys(context.returnType._gqcProjectionMapper).forEach(key => {
+            if (list[key]) {
+              Object.assign(list, context.returnType._gqcProjectionMapper[key]);
+            }
+          });
+        }
         return list;
       case 'InlineFragment':
         return {
