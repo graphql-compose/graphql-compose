@@ -18,11 +18,15 @@ import type {
   GraphQLFieldConfigMap,
   GraphQLFieldConfigMapThunk,
   GraphQLOutputType,
+  GraphQLObjectTypeExtended,
   GraphQLInterfaceType,
   GraphQLInterfacesThunk,
   GetRecordIdFn,
+  RelationThunk,
+  RelationThunkMap,
   RelationArgsMapper,
   RelationArgsMapperFn,
+  RelationOpts,
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
   ObjectMap,
@@ -31,13 +35,7 @@ import type {
 
 
 export default class TypeComposer {
-  gqType: GraphQLObjectType & {
-    _gqcInputTypeComposer?: InputTypeComposer,
-    _gqcResolvers?: ResolverList,
-    _gqcGetRecordIdFn?: GetRecordIdFn,
-    _gqcProjectionMapper?: ProjectionType,
-    description: ?string,
-  };
+  gqType: GraphQLObjectTypeExtended;
 
   constructor(gqType: GraphQLObjectType) {
     this.gqType = gqType;
@@ -111,7 +109,42 @@ export default class TypeComposer {
     this.setFields(Object.assign({}, fields)); // immutability
   }
 
-  addRelation(
+  addRelation(fieldName: string, relationFn: RelationThunk): TypeComposer {
+    if (!this.gqType._gqcRelations) {
+      this.gqType._gqcRelations = {};
+    }
+    this.gqType._gqcRelations[fieldName] = relationFn;
+
+    return this;
+  }
+
+  getRelations(): RelationThunkMap {
+    if (!this.gqType._gqcRelations) {
+      this.gqType._gqcRelations = {};
+    }
+    return this.gqType._gqcRelations;
+  }
+
+  buildRelations(): void {
+    const relationFields = {};
+
+    const names = Object.keys(this.getRelations());
+    names.forEach(fieldName => {
+      relationFields[fieldName] = this.buildRelation(fieldName);
+    });
+  }
+
+  buildRelation(fieldName: string): void {
+    if (!this.gqType._gqcRelations || !isFunction(this.gqType._gqcRelations[fieldName])) {
+      throw new Error(`Can not buildRelation in Type ${this.getTypeName()}. `
+                    + `Relation with name '${fieldName}' does not exists.`);
+    }
+    const relationFn: RelationThunk = this.gqType._gqcRelations[fieldName];
+    const relationOpts: RelationOpts = relationFn();
+    this.addRelationRaw(fieldName, relationOpts.resolver, relationOpts);
+  }
+
+  addRelationRaw(
     fieldName: string,
     resolver: Resolver,
     opts: {
@@ -120,7 +153,7 @@ export default class TypeComposer {
       description?: string,
       deprecationReason?: string,
     } = { args: {}, projection: {} }
-  ) {
+  ): TypeComposer {
     if (!resolver instanceof Resolver) {
       throw new Error('You should provide correct Resolver object.');
     }

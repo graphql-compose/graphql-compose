@@ -1,6 +1,10 @@
 /* @flow */
 /* eslint-disable */
 
+import type Resolver from './resolver/resolver';
+import type ResolverList from './resolver/resolverList';
+import type InputTypeComposer from './inputTypeComposer';
+
 import type {
   GraphQLFieldConfigArgumentMap as _GraphQLFieldConfigArgumentMap,
   GraphQLFieldResolveFn as _GraphQLFieldResolveFn,
@@ -53,6 +57,31 @@ export type InputObjectConfigFieldMap = _InputObjectConfigFieldMap;
 export type InputObjectConfigFieldMapThunk = () => InputObjectConfigFieldMap; // _InputObjectConfigFieldMapThunk;
 export type GraphQLInputType = _GraphQLInputType;
 
+export type GraphQLObjectTypeExtended = GraphQLObjectType & {
+  _gqcInputTypeComposer?: InputTypeComposer,
+  _gqcResolvers?: ResolverList,
+  _gqcGetRecordIdFn?: GetRecordIdFn,
+  _gqcProjectionMapper?: ProjectionType,
+  _gqcRelations?: RelationThunkMap,
+  description: ?string,
+};
+
+// RELATION -----------------------------
+export type RelationThunkMap = { [fieldName: string]: RelationThunk };
+export type RelationThunk = () => RelationOpts;
+export type RelationOpts = {
+  resolver: Resolver,
+  args?: RelationArgsMapper,
+  projection?: ProjectionType,
+  description?: string,
+  deprecationReason?: string,
+}
+export type ArgsType = { [argName: string]: mixed };
+export type RelationArgsMapperFn = (source: mixed, args: ArgsType, context: ?mixed) => ArgsType;
+export type RelationArgsMapper = {
+  [argName: string]: RelationArgsMapperFn | null | void | mixed,
+};
+
 // RESOLVER -----------------------------
 export type ResolverMWMethodKeys = 'args' | 'resolve' | 'outputType';
 export type ResolverKinds = 'query' | 'mutation' | 'subscription';
@@ -74,12 +103,3 @@ export type ResolverFieldConfig = {
 };
 
 export type GetRecordIdFn = (source: mixed, args: ?mixed, context: ?mixed) => string;
-
-// addRelation
-export type ArgsType = {
-  [argName: string]: mixed,
-};
-export type RelationArgsMapperFn = (source: mixed, args: ArgsType, context: ?mixed) => ArgsType;
-export type RelationArgsMapper = {
-  [argName: string]: RelationArgsMapperFn | null | void | mixed,
-};
