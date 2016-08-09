@@ -87,6 +87,13 @@ export default class TypeComposer {
    */
   addFields(newFields: GraphQLFieldConfigMap): void {
     this.setFields(Object.assign({}, this.getFields(), newFields));
+
+    // if field has a projection option, then add it to projection mapper
+    Object.keys(newFields).forEach(name => {
+      if (newFields[name].projection) {
+        this.addProjectionMapper(name, newFields[name].projection);
+      }
+    })
   }
 
   /**
@@ -199,10 +206,8 @@ export default class TypeComposer {
       deprecationReason: opts.deprecationReason,
       args: argsConfig,
       resolve,
+      projection: opts.projection,
     });
-    if (opts.projection) {
-      this.addProjectionMapper(fieldName, opts.projection);
-    }
 
     return this;
   }
@@ -442,13 +447,16 @@ export default class TypeComposer {
     return tc;
   }
 
-  // Sometimes, when you create relations you need query additional fields, that not in query.
-  // Eg. for obtaining `friendList` you also should add `friendIds` to projection.
+
+  // Sometimes, when you create relations or some tricky fields,
+  // you should have a data from additional fields, that not in a query projection.
+  // E.g. for obtaining `friendList` you also should add `friendIds` to projection.
+  //      or for `fullname` field you should request `firstname` and `lastname` from DB.
   // this _gqcProjectionMapper used in `projection` method
-  addProjectionMapper(relationName: string, sourceProjection: ProjectionType):void {
+  addProjectionMapper(fieldName: string, sourceProjection: ProjectionType):void {
     if (!this.gqType._gqcProjectionMapper) {
       this.gqType._gqcProjectionMapper = {};
     }
-    this.gqType._gqcProjectionMapper[relationName] = sourceProjection;
+    this.gqType._gqcProjectionMapper[fieldName] = sourceProjection;
   }
 }

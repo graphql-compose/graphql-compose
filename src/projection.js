@@ -19,24 +19,13 @@ export function getProjectionFromAST(context, fieldASTs)/* :ProjectionType */ {
     return result;
   }, []);
 
-  return selections.reduce((list, ast) => {
+  const projection = selections.reduce((list, ast) => {
     const { name, kind } = ast;
 
     switch (kind) {
       case 'Field':
         list = list || {};
         list[name.value] = getProjectionFromAST(context, ast) || true;
-
-        // this type params are setup via TypeComposer.addProjectionMapper()
-        // Sometimes, when you create relations you need query additional fields, that not in query.
-        // Eg. for obtaining `friendList` you also should add `friendIds` to projection.
-        if (context.returnType && typeof context.returnType._gqcProjectionMapper === 'object') {
-          Object.keys(context.returnType._gqcProjectionMapper).forEach(key => {
-            if (list[key]) {
-              Object.assign(list, context.returnType._gqcProjectionMapper[key]);
-            }
-          });
-        }
         return list;
       case 'InlineFragment':
         return {
@@ -52,6 +41,24 @@ export function getProjectionFromAST(context, fieldASTs)/* :ProjectionType */ {
         throw new Error('Unsuported query selection');
     }
   }, null);
+
+  // this type params are setup via TypeComposer.addProjectionMapper()
+  // Sometimes, when you create relations you need query additional fields, that not in query.
+  // Eg. for obtaining `friendList` you also should add `friendIds` to projection.
+  if (projection && context.returnType) {
+    let returnType = context.returnType;
+    while (returnType.ofType) {
+      returnType = returnType.ofType;
+    }
+    if (typeof returnType._gqcProjectionMapper === 'object') {
+      Object.keys(returnType._gqcProjectionMapper).forEach(key => {
+        if (projection[key]) {
+          Object.assign(projection, returnType._gqcProjectionMapper[key]);
+        }
+      });
+    }
+  }
+  return projection;
 }
 
 export function getFlatProjectionFromAST(context, fieldASTs) {
