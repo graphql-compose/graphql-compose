@@ -43,17 +43,16 @@ Level 1: TYPES MODIFICATION: modify your GraphQL Object Types anywhere
 ==========================================
 `graphql-compose` has two awesome manipulators. That can change graphql anywhere and anytime before build schema. It allows to create a bunch of awesome wrappers, plugins and middlewares (level 4).
 #### `TypeComposer` for `GraphQLObjectType`
-##### Basic methods:
 ```js
+  // Basic methods:
   constructor(gqType: GraphQLObjectType)
   getType(): GraphQLObjectType
   getTypeName(): string
   setTypeName(name: string): void
   getDescription(): string
   setDescription(description: string): void
-```
-##### Working with fields:
-```js
+
+  // Working with fields:
   getFields(): GraphQLFieldConfigMap
   setFields(fields: GraphQLFieldConfigMap): void
   getFieldNames(): string[]
@@ -65,32 +64,28 @@ Level 1: TYPES MODIFICATION: modify your GraphQL Object Types anywhere
   getFieldType(fieldName: string): GraphQLOutputType | void
   getFieldArgs(fieldName: string): ?GraphQLFieldConfigArgumentMap
   getFieldArg(fieldName: string, argName: string): ?GraphQLArgumentConfig
-```
-##### Working with interfaces:
-```js
+
+  // Working with interfaces:
   getInterfaces(): Array<GraphQLInterfaceType>
   setInterfaces(interfaces: Array<GraphQLInterfaceType>): void
   hasInterface(interfaceObj: GraphQLInterfaceType): boolean
   addInterface(interfaceObj: GraphQLInterfaceType): void
   removeInterface(interfaceObj: GraphQLInterfaceType): void
-```
-##### New thing: working with automatically converted InputType
-```js
+
+  // New thing: working with automatically converted InputType
   getInputType(): GraphQLInputObjectType
   hasInputTypeComposer()
   getInputTypeComposer()
-```
-##### New thing: working with `RESOLVER (level 2)`
-```js
+
+  // New thing: working with `RESOLVER (level 2)`
   getResolvers(): ResolverList
   hasResolver(name: string): boolean
   getResolver(name: string): Resolver | void
   setResolver(resolver: Resolver): void  
   addResolver(resolver: Resolver): void
   removeResolver(resolver: string|Resolver): void
-```
-##### New thing: working with `RELATIONS`
-```js
+
+  // New thing: working with `RELATIONS`
   addRelation(fieldName: string, relationFn: () => ({
     resolver: Resolver,
     args?: RelationArgsMapper,
@@ -111,15 +106,13 @@ Level 1: TYPES MODIFICATION: modify your GraphQL Object Types anywhere
   getRelations(): RelationThunkMap
   buildRelations(): void
   buildRelation(fieldName: string): void
-```
-##### New thing: obtaining id from `source`
-```js
+
+  // New thing: obtaining id from `source`
   hasRecordIdFn(): boolean
   getRecordIdFn(): GetRecordIdFn
   getRecordId(source: ?mixed, args: ?mixed, context: ?mixed): string | number
-```
-##### New other things
-```js
+
+  // New other things
   clone(newTypeName: string): TypeComposer
   getByPath(path: string): TypeComposer | InputTypeComposer | void
 ```
@@ -127,17 +120,16 @@ Level 1: TYPES MODIFICATION: modify your GraphQL Object Types anywhere
 
 
 #### `InputTypeComposer` for `GraphQLInputObjectType`
-##### Basic methods:
 ```js
+  // Basic methods:
   constructor(gqType: GraphQLInputObjectType)
   getType(): GraphQLInputObjectType
   getTypeName(): string
   setTypeName(name: string): void
   getDescription(): string
   setDescription(description: string): void
-```
-##### Working with fields:
-```js
+
+  // Working with fields:
   getFields(): InputObjectConfigFieldMap
   getFieldNames(): string[]
   hasField(fieldName: string): boolean
@@ -147,15 +139,13 @@ Level 1: TYPES MODIFICATION: modify your GraphQL Object Types anywhere
   getField(fieldName: string): ?InputObjectField
   removeField(fieldNameOrArray: string | Array<string>)
   getFieldType(fieldName: string): GraphQLInputType | void
-```
-##### Helpers for fields
-```js
+
+  // Helpers for fields
   isFieldRequired(fieldName: string): boolean
   makeFieldsRequired(fieldNameOrArray: string | Array<string>)
   makeFieldsOptional(fieldNameOrArray: string | Array<string>)
-```
-##### New other things
-```js
+
+  // New other things
   clone(newTypeName: string): InputTypeComposer
   getByPath(path: string): InputTypeComposer | void
 ```
