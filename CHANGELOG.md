@@ -1,6 +1,10 @@
 ## master
 
-- Added flow-type `ProjectionType` 
+## 0.0.14 (August 9, 2016)
+- Added `projection` argument for `TypeComposer.addField` and `TypeComposer.addField`. Sometimes, when you create relations or some tricky fields, you should have a data from additional fields, that not in a query projection. E.g. for obtaining `friendList` you also should add `friendIds` to projection. Or for `fullname` field you should request `firstname` and `lastname` from DB.
+- Again was changed `TypeComposer.addRelation` declaration. Added ability to create relations for cross imported files via an anonymous function. Also added build step for converting relations to GraphQL fields, when call schemaBuild().
+- Fix `projection` from AST method. Incorrectly works with ProjectionMapper.
+- Added flow-type `ProjectionType`
 
 ## 0.0.13 (August 8, 2016)
 - Change `TypeComposer.addRelation` arguments:
