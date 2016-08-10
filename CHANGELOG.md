@@ -1,5 +1,8 @@
 ## master
 
+## 0.0.15 (August 10, 2016)
+- Update packages, add `babel-plugin-transform-runtime` for build process. Fix [issue](https://github.com/nodkz/graphql-compose-connection/issues/2) for vanilla node.js users without babel (thanks @jacobbubu).
+
 ## 0.0.14 (August 9, 2016)
 - Added `projection` argument for `TypeComposer.addField` and `TypeComposer.addField`. Sometimes, when you create relations or some tricky fields, you should have a data from additional fields, that not in a query projection. E.g. for obtaining `friendList` you also should add `friendIds` to projection. Or for `fullname` field you should request `firstname` and `lastname` from DB.
 - Again was changed `TypeComposer.addRelation` declaration. Added ability to create relations for cross imported files via an anonymous function. Also added build step for converting relations to GraphQL fields, when calling schemaBuild().
@@ -37,30 +40,30 @@ const languagesTC3 = new TypeComposer(UserOutputType).getByPath('viewer.user.lan
   - `hasType` to `has`
 
 ## 0.0.8 (July 18, 2016)
-* Add export of `getProjectionFromAST` function to module
-* Fix peerDependencies
-* Update flow-bin till 0.29
-* Fix `undefined` postfix for generated InputTypes
+- Add export of `getProjectionFromAST` function to module
+- Fix peerDependencies
+- Update flow-bin till 0.29
+- Fix `undefined` postfix for generated InputTypes
 
 ## 0.0.6 (July 15, 2016)
-* feat: derive projection for resolverParams from fieldASTs
-* fix: clone for Types
+- feat: derive projection for resolverParams from fieldASTs
+- fix: clone for Types
 
 ## 0.0.5 (July 08, 2016)
-* ResolverMiddlewares now have access to wrapped resolver
+- ResolverMiddlewares now have access to wrapped resolver
 
 ## 0.0.4 (July 07, 2016)
-* TypeComposer can manipulate the object type interfaces  
-* add ability to clone types
-* exports flow annotations
-* some internal improvements
+- TypeComposer can manipulate the object type interfaces  
+- add ability to clone types
+- exports flow annotations
+- some internal improvements
 
 ## 0.0.3 (July 03, 2016)
-* Published for playing and testing `graphql-compose-mongoose`
-* fix call resolver function with proper arguments
+- Published for playing and testing `graphql-compose-mongoose`
+- fix call resolver function with proper arguments
 
 ## 0.0.2 (July 01, 2016)
-* Published for playing and testing `graphql-compose-mongoose`
+- Published for playing and testing `graphql-compose-mongoose`
 
 ## 0.0.1 (June 07, 2016)
-* Initial commit with proposal
+- Initial commit with proposal
