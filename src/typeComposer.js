@@ -143,8 +143,8 @@ export default class TypeComposer {
 
   buildRelation(fieldName: string): void {
     if (!this.gqType._gqcRelations || !isFunction(this.gqType._gqcRelations[fieldName])) {
-      throw new Error(`Can not buildRelation in Type ${this.getTypeName()}. `
-                    + `Relation with name '${fieldName}' does not exists.`);
+      throw new Error(`Cannot call buildRelation() for type ${this.getTypeName()}. `
+                    + `Relation with name '${fieldName}' does not exist.`);
     }
     const relationFn: RelationThunk = this.gqType._gqcRelations[fieldName];
     const relationOpts: RelationOpts = relationFn();
