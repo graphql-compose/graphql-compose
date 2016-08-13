@@ -1,20 +1,26 @@
 {
   "env": {
     "development": {
-      "presets": ["es2015"],
+      "presets": [
+        ["es2015", {"modules": "commonjs"}]
+      ],
       "plugins": [
         "syntax-async-functions",
         "transform-regenerator",
         "transform-class-properties",
         "transform-object-rest-spread",
-        "transform-flow-strip-types",
-        "transform-runtime",
+        "transform-flow-strip-types"
       ]
     },
     "es": {
+      "presets": [
+        ["es2015", {"modules": false}]
+      ],
       "plugins": [
         "syntax-async-functions",
-        "transform-regenerator",
+        ["transform-regenerator", {
+            "async": false
+        }],
         "transform-class-properties",
         "transform-object-rest-spread",
         "transform-flow-strip-types",

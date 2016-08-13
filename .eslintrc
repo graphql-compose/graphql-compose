@@ -8,5 +8,8 @@
   "env": {
     "jasmine": true,
     "jest": true
-  }
+  },
+  "plugins": [
+    "flowtype"
+  ]
 }
