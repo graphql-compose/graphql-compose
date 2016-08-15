@@ -1,8 +1,13 @@
 {
   "env": {
     "development": {
+      "passPerPreset": true,
       "presets": [
-        ["es2015", {"modules": "commonjs"}]
+        { "plugins": [ "transform-runtime" ] },
+        {
+    			"passPerPreset": false,
+    			"presets": ["es2015"]
+    		}
       ],
       "plugins": [
         "syntax-async-functions",
