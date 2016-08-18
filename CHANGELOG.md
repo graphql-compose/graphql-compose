@@ -1,7 +1,37 @@
 ## master
 
+## 0.0.18 (August 18, 2016)
+
+- Add `Resolver.wrapResolve(resolveMW: ResolverMWResolve): Resolver` method
+It will create new Resolver with wrapped `resolve` method.
+```js
+const UserFindByIdRestrictedResolver = UserTC
+  .getResolver('findById')
+  .wrapResolve(next => resolveParams => {
+    return resolveParams.context.isAdmin
+      ? next(resolveParams) // call internal resolver
+      : Promise.reject('This operation permitted only for admins.');
+  });
+```
+- fix: Catch error for `relations` and display it to the server stdout.
+  - If article does not have value in `authorId`, then `findById` resolver throws error, that not provided author id. By default this error will be caught, and client will receive `null` for `author` field.
+  - If `catchErrors = false`, then error will be passed to client.
+```js
+ArticleTC.addRelation(
+  'author',
+  () => ({
+    resolver: UserTC.getResolver('findById'),
+    args: {
+      _id: (source) => `${source.authorId}`,
+    },
+    projection: { authorId: true },
+    catchErrors: false, // true, by default
+  })
+);
+```
+
 ## 0.0.17 (August 15, 2016)
-- fix: babel build via the workaround https://phabricator.babeljs.io/T2877#78089 Huh, it's to tricky to use Map/Set in ES5.
+- fix: babel build via the workaround https://phabricator.babeljs.io/T2877#78089 Huh, it's too tricky to use Map/Set in ES5.
 
 ## 0.0.16 (August 13, 2016)
 - fix: babel build process
