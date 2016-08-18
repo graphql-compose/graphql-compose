@@ -109,6 +109,10 @@ export default class Resolver {
     return compose(...resolveMWs)(this.resolve);
   }
 
+  getResolve():ResolverMWResolveFn {
+    return this.resolve;
+  }
+
   setResolve(resolve: ResolverMWResolveFn): void {
     this.resolve = resolve;
   }
@@ -188,5 +192,13 @@ export default class Resolver {
 
   getNameCamelCase(): string {
     return upperFirst(this.name);
+  }
+
+  wrapResolve(resolveMW: ResolverMWResolve): Resolver {
+    const newResolver = this.clone(this.typeComposer);
+    newResolver.setResolve(
+      resolveMW(this.getResolve())
+    );
+    return newResolver;
   }
 }
