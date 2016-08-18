@@ -75,6 +75,7 @@ export type RelationOpts = {
   projection?: ProjectionType,
   description?: string,
   deprecationReason?: string,
+  catchErrors?: boolean,
 }
 export type ArgsType = { [argName: string]: mixed };
 export type RelationArgsMapperFn = (source: mixed, args: ArgsType, context: ?mixed) => ArgsType;

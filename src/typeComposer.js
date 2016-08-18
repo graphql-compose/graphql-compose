@@ -154,12 +154,7 @@ export default class TypeComposer {
   addRelationRaw(
     fieldName: string,
     resolver: Resolver,
-    opts: {
-      args?: RelationArgsMapper,
-      projection?: ProjectionType,
-      description?: string,
-      deprecationReason?: string,
-    } = { args: {}, projection: {} }
+    opts: RelationOpts
   ): TypeComposer {
     if (!resolver instanceof Resolver) {
       throw new Error('You should provide correct Resolver object.');
@@ -191,21 +186,25 @@ export default class TypeComposer {
       }
     });
 
+    // if opts.catchErrors is undefined then set true, otherwise take it value
+    const { catchErrors = true } = opts;
+
     const resolve = (source, args, context, info) => {
       const newArgs = Object.assign({}, args, argsProto);
       argsRuntime.forEach(([argName, argFn]) => {
         newArgs[argName] = argFn(source, args, context, info);
       });
 
-      return Promise.resolve(
-          resolverFieldConfig.resolve(source, newArgs, context, info)
-        ).catch(e => {
-          console.log(
-            `GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`
-          );
-          console.log(e);
-          return null;
-        });
+      const payload = resolverFieldConfig.resolve(source, newArgs, context, info);
+      return catchErrors
+        ? Promise.resolve(payload).catch(e => {
+            console.log(
+              `GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`
+            );
+            console.log(e);
+            return null;
+          })
+        : payload;
     };
 
     this.addField(fieldName, {
