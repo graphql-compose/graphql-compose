@@ -197,7 +197,15 @@ export default class TypeComposer {
         newArgs[argName] = argFn(source, args, context, info);
       });
 
-      return resolverFieldConfig.resolve(source, newArgs, context, info);
+      return Promise.resolve(
+          resolverFieldConfig.resolve(source, newArgs, context, info)
+        ).catch(e => {
+          console.log(
+            `GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`
+          );
+          console.log(e);
+          return null;
+        });
     };
 
     this.addField(fieldName, {
