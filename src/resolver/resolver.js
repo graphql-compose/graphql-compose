@@ -55,7 +55,7 @@ export default class Resolver {
     this.name = opts.name;
 
     this.outputType = opts.outputType || null;
-    this.middlewares = [];
+    this.middlewares = opts.middlewares || [];
     this.args = opts.args || {};
     this.kind = opts.kind || null;
     this.description = opts.description || '';
