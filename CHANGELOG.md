@@ -1,6 +1,7 @@
 ## master
 
-- Fix: Resolver now accept middlewares via options. Resolver.clone() now copy all middlewares. 
+## 0.0.19 (August 19, 2016)
+- Fix: Resolver now accept middlewares via options. Resolver.clone() now copy all middlewares.
 
 ## 0.0.18 (August 18, 2016)
 - Add `Resolver.wrapResolve(resolveMW: ResolverMWResolve): Resolver` method
