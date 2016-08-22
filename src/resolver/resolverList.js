@@ -15,7 +15,7 @@ export default class ResolverList {
   }
 
   set(name: string, resolver: Resolver) {
-    if (!resolver instanceof Resolver) {
+    if (!(resolver instanceof Resolver)) {
       throw new Error('You should provide Resolver instance to ResolverList.');
     }
 

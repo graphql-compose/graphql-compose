@@ -156,8 +156,9 @@ export default class TypeComposer {
     resolver: Resolver,
     opts: RelationOpts
   ): TypeComposer {
-    if (!resolver instanceof Resolver) {
-      throw new Error('You should provide correct Resolver object.');
+    if (!(resolver instanceof Resolver)) {
+      throw new Error('You should provide correct Resolver object for relation '
+                    + `${this.getTypeName()}.${fieldName}`);
     }
 
     const resolverFieldConfig = resolver.getFieldConfig();
