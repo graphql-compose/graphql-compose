@@ -435,7 +435,7 @@ export default class TypeComposer {
       if (nextName && nextName.startsWith('@')) {
         const arg = tc.getFieldArg(name, nextName.substring(1));
         if (!arg) return undefined;
-        let argType = getNamedType(arg.type);
+        const argType = getNamedType(arg.type);
         if (argType instanceof GraphQLInputObjectType) {
           const itc = new InputTypeComposer(argType);
           return itc.getByPath(parts.slice(2).join('.'));
@@ -443,10 +443,14 @@ export default class TypeComposer {
         return undefined;
       }
 
-      const field = this.getFieldType(name);
-      if (field && field.type instanceof GraphQLObjectType) {
-        tc = new TypeComposer(field.type);
-        parts.shift();
+      const fieldType = getNamedType(this.getFieldType(name));
+      if (fieldType) {
+        if (fieldType instanceof GraphQLObjectType) {
+          tc = new TypeComposer(fieldType);
+          parts.shift();
+        } else {
+          return undefined;
+        }
       } else {
         return undefined;
       }
