@@ -1,7 +1,7 @@
 /* @flow */
 
 import TypeComposer from './typeComposer';
-import { GraphQLObjectType, GraphQLSchema } from 'graphql';
+import { GraphQLObjectType, GraphQLSchema, getNamedType } from 'graphql';
 
 import type ResolverList from './resolver/resolverList';
 import type Resolver from './resolver/resolver';
@@ -103,8 +103,10 @@ export default class ComposeStorage {
 
     const fields = typeComposer.getFields();
     Object.keys(fields).forEach(fieldName => {
-      const fieldType = fields[fieldName].type;
-      if (fieldType instanceof GraphQLObjectType) {
+      const typeAndField = `${typeComposer.getTypeName()}.${fieldName}`;
+      const fieldType = getNamedType(fields[fieldName].type);
+      if (fieldType instanceof GraphQLObjectType && !createdRelations.has(typeAndField)) {
+        createdRelations.add(typeAndField);
         this.buildRelations(new TypeComposer(fieldType), createdRelations);
       }
     });
