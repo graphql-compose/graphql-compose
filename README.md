@@ -6,7 +6,7 @@ So I have brilliant thoughts how to simplify it!
 🌶🌶🌶 Long live to middlewares and compose!🌶🌶🌶  
 I wanted to finish `graphql-compose` module at the End of June, but it takes too much time. So... Welcome July! And... Welcome August, **but I began to implement and test it in our big `project`**.
 
-[Tiny live demo showing mongoose schema convertation](https://graphql-compose-mongoose.herokuapp.com/)
+Live demo: [https://graphql-compose.herokuapp.com/](https://graphql-compose.herokuapp.com/)
 
 To-Do
 =====
