@@ -1,7 +1,12 @@
 ## master
 
+## 0.0.20 (August 22, 2016)
+- fix: `TypeComposer.getByPath()` now can extract type from `GraphQLNonNull` and `GraphQLList`.
+- fix: Maximum call stack size exceeded for schema build with cross referenced types.
+- fix: checking `Resolver` instance in relations, improve error message.
+
 ## 0.0.19 (August 19, 2016)
-- Fix: Resolver now accept middlewares via options. Resolver.clone() now copy all middlewares.
+- fix: Resolver now accept middlewares via options. Resolver.clone() now copy all middlewares.
 
 ## 0.0.18 (August 18, 2016)
 - Add `Resolver.wrapResolve(resolveMW: ResolverMWResolve): Resolver` method
