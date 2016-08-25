@@ -1,5 +1,8 @@
 ## master
 
+## 0.0.22 (August 25, 2016)
+- Fix `Resolver.wrapResolve()` overwrites original resolver in TypeComposer. Double wrapResolve does not work properly.
+
 ## 0.0.21 (August 25, 2016)
 - Add `getProjectionMapper` method to `TypeComposer`. More clarified variable and type names for projection in fields.
 
