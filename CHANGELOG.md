@@ -1,5 +1,8 @@
 ## master
 
+## 0.0.21 (August 25, 2016)
+- Add `getProjectionMapper` method to `TypeComposer`. More clarified variable and type names for projection in fields.
+
 ## 0.0.20 (August 22, 2016)
 - fix: `TypeComposer.getByPath()` now can extract type from `GraphQLNonNull` and `GraphQLList`.
 - fix: Maximum call stack size exceeded for schema build with cross referenced types.
