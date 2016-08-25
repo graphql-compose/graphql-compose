@@ -31,6 +31,7 @@ import type {
   GraphQLArgumentConfig,
   ObjectMap,
   ProjectionType,
+  ProjectionMapType,
 } from './definition.js';
 
 
@@ -90,8 +91,8 @@ export default class TypeComposer {
 
     // if field has a projection option, then add it to projection mapper
     Object.keys(newFields).forEach(name => {
-      if (newFields[name].projection) {
-        this.addProjectionMapper(name, newFields[name].projection);
+      if (newFields[name]._gqcProjection) {
+        this.addProjectionMapper(name, newFields[name]._gqcProjection);
       }
     })
   }
@@ -214,7 +215,8 @@ export default class TypeComposer {
       deprecationReason: opts.deprecationReason,
       args: argsConfig,
       resolve,
-      projection: opts.projection,
+      _gqcProjection: opts.projection,
+      _gqcIsRelation: true,
     });
 
     return this;
@@ -464,11 +466,15 @@ export default class TypeComposer {
   // you should have a data from additional fields, that not in a query projection.
   // E.g. for obtaining `friendList` you also should add `friendIds` to projection.
   //      or for `fullname` field you should request `firstname` and `lastname` from DB.
-  // this _gqcProjectionMapper used in `projection` method
+  // this _gqcProjectionMapper used in `projection` module
   addProjectionMapper(fieldName: string, sourceProjection: ProjectionType):void {
     if (!this.gqType._gqcProjectionMapper) {
       this.gqType._gqcProjectionMapper = {};
     }
     this.gqType._gqcProjectionMapper[fieldName] = sourceProjection;
+  }
+
+  getProjectionMapper(): ProjectionMapType {
+    return this.gqType._gqcProjectionMapper || {};
   }
 }

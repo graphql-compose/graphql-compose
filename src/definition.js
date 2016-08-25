@@ -27,6 +27,7 @@ import type {
 
 export type ObjectMap = { [optName: string]: mixed };
 export type ProjectionType = { [fieldName: string]: true | ProjectionType };
+export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 
 // GRAPHQL RE-EXPORT --------------------
 export type GraphQLType = _GraphQLType;
@@ -61,7 +62,7 @@ export type GraphQLObjectTypeExtended = GraphQLObjectType & {
   _gqcInputTypeComposer?: InputTypeComposer,
   _gqcResolvers?: ResolverList,
   _gqcGetRecordIdFn?: GetRecordIdFn,
-  _gqcProjectionMapper?: ProjectionType,
+  _gqcProjectionMapper?: ProjectionMapType,
   _gqcRelations?: RelationThunkMap,
   description: ?string,
 };
