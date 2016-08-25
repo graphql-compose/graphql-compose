@@ -195,7 +195,12 @@ export default class Resolver {
   }
 
   wrapResolve(resolveMW: ResolverMWResolve): Resolver {
-    const newResolver = this.clone(this.typeComposer);
+    const newResolver = this.clone(
+      this.typeComposer,
+      // IMPORTANT to give new name for Resolver
+      // otherwise original resolver, will be overwrited in TypeComposer
+      { name: `${this.name}Wrapped` }
+    );
     newResolver.setResolve(
       resolveMW(this.getResolve())
     );
