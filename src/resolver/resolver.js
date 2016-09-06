@@ -5,7 +5,6 @@ import compose from '../utils/compose';
 import deepmerge from '../utils/deepmerge';
 import { upperFirst } from '../utils/misc';
 import { getProjectionFromAST } from '../projection';
-
 import type {
   GraphQLArgumentConfig,
   GraphQLFieldConfigArgumentMap,
@@ -23,6 +22,7 @@ import type {
 } from '../definition.js';
 import TypeComposer from '../typeComposer';
 import type { ResolverMiddleware } from './resolverMiddleware';
+
 
 export type ResolverOpts = {
   outputType?: GraphQLOutputType,

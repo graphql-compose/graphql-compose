@@ -2,6 +2,7 @@
 
 import { GraphQLScalarType } from 'graphql';
 
+
 export default new GraphQLScalarType({
   name: 'MissingTypeResolver',
   description: 'This field has missing type resolver, which was not found in ComposeStorage. '

@@ -7,7 +7,6 @@ function coerceDate(value) {
   return json.replace(/"/g, '\'');
 }
 
-
 export default new GraphQLScalarType({
   name: 'GQLReference',
   serialize: coerceDate,

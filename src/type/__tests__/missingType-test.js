@@ -3,9 +3,7 @@ import {
   GraphQLSchema,
   GraphQLObjectType,
 } from 'graphql';
-
 import MissingType from '../missingType';
-
 import gqc from '../../gqc';
 
 

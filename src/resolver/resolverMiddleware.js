@@ -7,9 +7,9 @@ import type {
   ResolverMWMethodKeys,
   ResolverMWOutputType,
 } from '../definition';
-
 import TypeComposer from '../typeComposer';
 import Resolver from './resolver';
+
 
 export type ResolverMWMethods = {
   outputType: ResolverMWOutputType,

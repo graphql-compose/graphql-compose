@@ -21,6 +21,7 @@ import type {
   GraphQLInputType,
 } from './definition.js';
 
+
 export function removeWrongFields(fields: GraphQLFieldConfigMap): GraphQLFieldConfigMap {
   const result = {};
   Object.keys(fields).forEach((key) => {

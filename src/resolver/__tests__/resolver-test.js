@@ -1,12 +1,10 @@
-import GQC from '../../gqc';
-import ResolverMiddleware from '../resolverMiddleware';
-
 import {
   graphql,
   GraphQLString,
   GraphQLNonNull,
 } from 'graphql';
-
+import GQC from '../../gqc';
+import ResolverMiddleware from '../resolverMiddleware';
 import Resolver from '../resolver';
 
 

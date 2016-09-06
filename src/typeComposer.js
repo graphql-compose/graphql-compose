@@ -1,18 +1,16 @@
 /* @flow */
 
+import {
+  GraphQLObjectType,
+  GraphQLInputObjectType,
+  getNamedType,
+} from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
 import { isObject, isFunction } from './utils/is';
 import ResolverList from './resolver/resolverList';
 import Resolver from './resolver/resolver';
 import { toInputObjectType } from './toInputObjectType';
 import InputTypeComposer from './inputTypeComposer';
-
-import {
-  GraphQLObjectType,
-  GraphQLInputObjectType,
-  getNamedType,
-} from 'graphql';
-
 import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,

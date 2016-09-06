@@ -1,10 +1,6 @@
 /* @flow */
 /* eslint-disable */
 
-import type Resolver from './resolver/resolver';
-import type ResolverList from './resolver/resolverList';
-import type InputTypeComposer from './inputTypeComposer';
-
 import type {
   GraphQLFieldConfigArgumentMap as _GraphQLFieldConfigArgumentMap,
   GraphQLFieldResolveFn as _GraphQLFieldResolveFn,
@@ -20,10 +16,15 @@ import type {
   InputObjectField as _InputObjectField,
   InputObjectFieldConfig as _InputObjectFieldConfig,
   InputObjectConfigFieldMap as _InputObjectConfigFieldMap,
-//  InputObjectConfigFieldMapThunk as _InputObjectConfigFieldMapThunk,
+  //  InputObjectConfigFieldMapThunk as _InputObjectConfigFieldMapThunk,
   GraphQLInterfaceType as _GraphQLInterfaceType,
   GraphQLInputType as _GraphQLInputType,
 } from 'graphql/type/definition.js';
+
+import type Resolver from './resolver/resolver';
+import type ResolverList from './resolver/resolverList';
+import type InputTypeComposer from './inputTypeComposer';
+
 
 export type ObjectMap = { [optName: string]: mixed };
 export type ProjectionType = { [fieldName: string]: true | ProjectionType };

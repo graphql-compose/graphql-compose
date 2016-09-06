@@ -1,7 +1,9 @@
 /* @flow */
+
 import Resolver from './resolver';
 // import MissingTypeResolver from '../type/missingTypeResolver';
 import type ResolverMiddleware from './resolverMiddleware';
+
 
 export default class ResolverList {
   resolvers: { [resolverName: string]: Resolver };

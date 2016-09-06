@@ -1,10 +1,8 @@
-import GQC from '../gqc';
-
 import {
   GraphQLObjectType,
   GraphQLString,
 } from 'graphql';
-
+import GQC from '../gqc';
 import TypeComposer from '../typeComposer';
 
 

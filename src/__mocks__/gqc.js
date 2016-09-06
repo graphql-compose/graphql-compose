@@ -1,8 +1,8 @@
-import gqc from '../gqc';
 import {
   GraphQLInt,
   GraphQLString,
 } from 'graphql';
+import gqc from '../gqc';
 
 gqc.typeComposer('User').addFields({
   name: {

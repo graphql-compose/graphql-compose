@@ -1,11 +1,11 @@
 /* @flow */
 
-import TypeComposer from './typeComposer';
 import { GraphQLObjectType, GraphQLSchema, getNamedType } from 'graphql';
-
+import TypeComposer from './typeComposer';
 import type ResolverList from './resolver/resolverList';
 import type Resolver from './resolver/resolver';
 import type InputTypeComposer from './inputTypeComposer';
+
 
 export default class ComposeStorage {
   types: { [typeName: string]: TypeComposer };

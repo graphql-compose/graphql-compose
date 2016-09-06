@@ -2,7 +2,6 @@ import {
   GraphQLObjectType,
   GraphQLScalarType,
 } from 'graphql';
-
 import Storage from '../storage';
 
 

@@ -1,12 +1,12 @@
 /* @flow */
 
-import { resolveMaybeThunk } from './utils/misc';
-import { isObject } from './utils/is';
 import {
   GraphQLInputObjectType,
   GraphQLNonNull,
   getNamedType,
 } from 'graphql';
+import { resolveMaybeThunk } from './utils/misc';
+import { isObject } from './utils/is';
 
 import type {
   InputObjectFieldConfig,
@@ -17,6 +17,7 @@ import type {
   GraphQLFieldConfigArgumentMap,
   GraphQLFieldConfig,
 } from './definition.js';
+
 
 export default class InputTypeComposer {
   gqType: GraphQLInputObjectType;
