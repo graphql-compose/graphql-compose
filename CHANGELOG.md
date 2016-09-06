@@ -1,5 +1,10 @@
 ## master
 
+## 0.0.23 (September 6, 2016)
+- Update dependencies
+- Update order of imported modules, due eslint warnings
+- Flowtype 0.32
+
 ## 0.0.22 (August 25, 2016)
 - Fix `Resolver.wrapResolve()` overwrites original resolver in TypeComposer. Double wrapResolve does not work properly.
 
