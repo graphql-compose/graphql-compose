@@ -31,6 +31,7 @@ export type ResolverOpts = {
   name?: string,
   kind?: ResolverKinds,
   description?: string,
+  middlewares?: Array<ResolverMiddleware> | [],
 };
 
 export default class Resolver {
