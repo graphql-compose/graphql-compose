@@ -1,6 +1,6 @@
 # GraphQL-compose
 
-`GraphQL-compose` is an instrument which allows you to construct flexible graphql schema from different data sources via plugins. The main aim of `graphql-compose` to solve the problem of mash code in schema's files, and ridiculously simplify build process.
+`GraphQL-compose` is an instrument which allows you to construct flexible graphql schema from different data sources via plugins. The main aim of `graphql-compose` to solve the problem of mash code in schema's files, and ridiculously simplify schema build process on server.
 
 Compose your GraphQL schema in declarative way: 
 - Add/remove needed fields in types
@@ -12,8 +12,8 @@ Compose your GraphQL schema in declarative way:
 
 Live Demos
 ==========
-Live demo of GraphQL Server (9 models, 14 files, ~750 LOC): [https://graphql-compose.herokuapp.com/](https://graphql-compose.herokuapp.com/)
-Live demo of Relay client working with the server above (8 crazy pages, 47 files, ~3000 LOC): [https://nodkz.github.io/relay-northwind](https://nodkz.github.io/relay-northwind)
+- Live demo of GraphQL Server (9 models, 14 files, ~750 LOC): [https://graphql-compose.herokuapp.com/](https://graphql-compose.herokuapp.com/)
+- Live demo of Relay client working with the server above (8 crazy pages, 47 files, ~3000 LOC): [https://nodkz.github.io/relay-northwind](https://nodkz.github.io/relay-northwind)
 
 Current Cons
 ============
@@ -21,7 +21,7 @@ GraphQL-compose in development right now:
 - Has zero documentation
 - May change API
  
-**But it works in our big project! And we are in the pre-production phase. I want to polish it and make the outstanding instrument for construction GraphQL servers.**
+**But it works in our big project! And we are in the pre-production phase. I want to polish it and make the outstanding instrument for construction GraphQL Servers.**
 
 To-Do
 =====
