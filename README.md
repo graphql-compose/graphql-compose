@@ -1,12 +1,27 @@
-# Right now just proposal, stay tunned.
-See my previous production ready, but unpublished version of mongoose to graphql module: https://github.com/nodkz/graphql-mongoose
-By this link, you may find an example of mash-code in my app, which derived from a map-derived-schema adapters/converters.
-So I have brilliant thoughts how to simplify it!
+# GraphQL-compose
 
-🌶🌶🌶 Long live to middlewares and compose!🌶🌶🌶  
-I wanted to finish `graphql-compose` module at the End of June, but it takes too much time. So... Welcome July! And... Welcome August, **but I began to implement and test it in our big `project`**.
+`GraphQL-compose` is an instrument which allows you to construct flexible graphql schema from different data sources via plugins. The main aim of `graphql-compose` to solve the problem of mash code in schema's files, and ridiculously simplify build process.
 
-Live demo: [https://graphql-compose.herokuapp.com/](https://graphql-compose.herokuapp.com/)
+Compose your GraphQL schema in declarative way: 
+- Add/remove needed fields in types
+- Create relations between types
+- Reduce access to fields, attach custom logic to resolvers and much more
+- Use [plugin](https://github.com/nodkz/graphql-compose-mongoose) to convert mongoose models to GraphQL types
+- Use [plugin](https://github.com/nodkz/graphql-compose-relay) to make your schema/types compatible with Relay (mutationId, node interface)
+- Use [plugin](https://github.com/nodkz/graphql-compose-connection) to create RelayConnectionType with filter and sorting 
+
+Live Demos
+==========
+Live demo of GraphQL Server (9 models, 14 files, ~750 LOC): [https://graphql-compose.herokuapp.com/](https://graphql-compose.herokuapp.com/)
+Live demo of Relay client working with the server above (8 crazy pages, 47 files, ~3000 LOC): [https://nodkz.github.io/relay-northwind](https://nodkz.github.io/relay-northwind)
+
+Current Cons
+============
+GraphQL-compose in development right now: 
+- Has zero documentation
+- May change API
+ 
+**But it works in our big project! And we are in the pre-production phase. I want to polish it and make the outstanding instrument for construction GraphQL servers.**
 
 To-Do
 =====
@@ -20,15 +35,7 @@ To-Do
 - [ ] write `graphql-compose-rest` module, for building your own types which will resolve from 3rd party REST api's. It will be prototype for simple and fast realization of your rest wrappers
 - [ ] **[need help]** find somebody who write `graphql-compose-sequilze` module like `graphql-compose-mongoose` (need to write types converter, and change resolver functions). Flow type and mocha tests are required!
 
-GraphQL-compose
-======================
-
-The `GraphQL-compose` is a module which allows construct flexible graphql schema from different data sources via plugins (Mongoose, DataLoader, Redis, Fetch and so on).
-You may extend types, rename fields, reduce access to fields, attach custom logic to resolvers and much more.
-Middlewares and converters should solve the problem of mash code in schemas, and ridiculously simplify build process.
-
-THE FUTURE OF CRAZY GRAPHQL SCHEMAS IS NOT SO FAR ;).
-
+THE FUTURE OF CRAZY GRAPHQL SCHEMAS IS NOT SO FAR ;)
 
 Installation
 ============
