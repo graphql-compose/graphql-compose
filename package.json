@@ -37,6 +37,7 @@
     "chai": "3.5.0",
     "chai-as-promised": "5.3.0",
     "chai-spies": "0.7.1",
+    "cz-conventional-changelog": "^1.2.0",
     "eslint": "3.4.0",
     "eslint-config-airbnb": "10.0.1",
     "eslint-plugin-flowtype": "2.15.0",
@@ -59,5 +60,10 @@
   },
   "dependencies": {
     "babel-runtime": "6.11.6"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
