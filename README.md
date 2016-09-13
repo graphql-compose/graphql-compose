@@ -7,12 +7,10 @@
 `GraphQL-compose` is an instrument which allows you to construct flexible graphql schema from different data sources via plugins. The main aim of `graphql-compose` to solve the problem of mash code in schema's files, and ridiculously simplify schema build process on server.
 
 Compose your GraphQL schema in declarative way: 
-- Add/remove needed fields in types
-- Create relations between types
-- Reduce access to fields, attach custom logic to resolvers and much more
-- Use [plugin](https://github.com/nodkz/graphql-compose-mongoose) to convert mongoose models to GraphQL types
-- Use [plugin](https://github.com/nodkz/graphql-compose-relay) to make your schema/types compatible with Relay (mutationId, node interface)
-- Use [plugin](https://github.com/nodkz/graphql-compose-connection) to create RelayConnectionType with filter and sorting 
+- allow easily edit `GraphQL` types (add/remove fields)
+- provide an easy way for creating relations between types via `Resolver`s (one time describe outputType, args and resolve method and then use them as you wish). 
+- provide converter from `OutputType` to `InputType`
+- provide `projection` parser from AST
 
 ##Example
 ```js
@@ -54,6 +52,14 @@ You can find out documentation here:
 - [ ] write `graphql-compose-remote-graphql` module, for building your own types which will resolve from 3rd party graphql servers
 - [ ] write `graphql-compose-rest` module, for building your own types which will resolve from 3rd party REST api's. It will be prototype for simple and fast realization of your rest wrappers
 - [ ] **[need help]** find somebody who write `graphql-compose-sequilze` module like `graphql-compose-mongoose` (need to write types converter, and change resolver functions). Flow type and mocha tests are required!
+
+##Immediate goal
+- Obtain better filtering customization (https://github.com/nodkz/graphql-compose/issues/3)
+
+##In future
+- Add [DataLoader](https://github.com/facebook/dataloader) wrapper for `findById` resolvers.
+- Some better API for building schema with restrictions in `graphql-compose`
+- Somehow implement `subscriptions`
 
 ##Other
 [CHANGELOG](https://github.com/nodkz/graphql-compose/blob/master/CHANGELOG.md)
