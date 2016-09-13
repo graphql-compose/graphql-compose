@@ -41,3 +41,6 @@ node_modules
 # Transpiled code
 /es
 /lib
+
+coverage
+.nyc_output
