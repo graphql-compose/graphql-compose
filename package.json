@@ -1,6 +1,6 @@
 {
   "name": "graphql-compose",
-  "version": "0.0.23",
+  "version": "0.0.0-semantically-released",
   "description": "GraphQL schema builder from different data sources with middleware extensions.",
   "files": [
     "es",
@@ -10,7 +10,7 @@
   "jsnext:main": "es/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nodkz/graphql-compose.git"
+    "url": "https://github.com/nodkz/graphql-compose.git"
   },
   "keywords": [
     "graphql",
@@ -22,10 +22,11 @@
   },
   "homepage": "https://github.com/nodkz/graphql-compose",
   "peerDependencies": {
-    "graphql": ">=0.5.0 || >=0.6.0 || >=0.7.0"
+    "graphql": ">=0.5.0 || >=0.6.0 || >=0.7.0 || >=0.8.0"
   },
   "devDependencies": {
     "babel-cli": "6.14.0",
+    "babel-core": "6.14.0",
     "babel-eslint": "6.1.2",
     "babel-plugin-syntax-async-functions": "6.13.0",
     "babel-plugin-transform-class-properties": "6.11.5",
@@ -44,19 +45,22 @@
     "eslint-plugin-import": "1.14.0",
     "flow-bin": "0.32.0",
     "mocha": "3.0.2",
+    "nyc": "8.1.0",
     "rimraf": "2.5.4",
-    "sane": "1.4.1"
+    "sane": "1.4.1",
+    "semantic-release": "^4.3.5"
   },
   "scripts": {
     "build": "npm run build-cjs && npm run build-flow && npm run build-es",
     "build-cjs": "rimraf lib && babel src --ignore __tests__,__mocks__ -d lib",
     "build-es": "rimraf es && BABEL_ENV=es babel src --ignore __tests__,__mocks__ -d es",
     "build-flow": "find ./src -name '*.js' -not -path '*/__*' | while read filepath; do cp $filepath `echo $filepath | sed 's/\\/src\\//\\/lib\\//g'`.flow; done",
+    "coverage": "nyc npm run test",
     "lint": "eslint src test *.js",
-    "prepublish": "npm run build",
     "test": "babel-node ./node_modules/.bin/_mocha --compilers js:babel-core/register --reporter dot --require ./resources/mocha-bootload src/**/__tests__/**/*-test.js",
     "watch": "babel-node ./resources/watch.js",
-    "link": "npm link graphql && npm link"
+    "link": "npm link graphql && npm link",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "dependencies": {
     "babel-runtime": "6.11.6"
@@ -65,5 +69,17 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "nyc": {
+    "exclude": [
+      "**/__mocks__/**",
+      "**/__tests__/**",
+      "resources",
+      "node_modules"
+    ],
+    "reporter": [
+      "lcov",
+      "text"
+    ]
   }
 }

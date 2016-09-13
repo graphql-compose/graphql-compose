@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import {
   GraphQLObjectType,
   GraphQLString,
@@ -7,56 +8,62 @@ import TypeComposer from '../typeComposer';
 
 
 describe('TypeComposer', () => {
-  describe('should be compatible with graphql type instance', () => {
-    it('can read fields', () => {
-      const objectType = new GraphQLObjectType({
-        name: 'Readable',
-        fields: {
-          field1: { type: GraphQLString },
-          field2: { type: GraphQLString },
-        },
-      });
+  let objectType;
 
-      const composer = new TypeComposer(objectType);
-      const fieldNames = Object.keys(composer.getFields());
+  beforeEach(() => {
+    objectType = new GraphQLObjectType({
+      name: 'Readable',
+      fields: {
+        field1: { type: GraphQLString },
+        field2: { type: GraphQLString },
+      },
+    });
+  });
 
-      expect(fieldNames).toContain('field1');
-      expect(fieldNames).toContain('field2');
-      expect(fieldNames).not.toContain('field3');
+
+  it('should has `getFields` method', () => {
+    const tc = new TypeComposer(objectType);
+    const fieldNames = Object.keys(tc.getFields());
+    expect(fieldNames).to.have.members(['field1', 'field2']);
+  });
+
+
+  it('should has `addFields` method', () => {
+    const tc = new TypeComposer(objectType);
+    tc.addField('field3', { type: GraphQLString });
+    const fieldNames = Object.keys(objectType.getFields());
+    expect(fieldNames).to.include('field3');
+  });
+
+
+  it('should add projection via addField and addFields', () => {
+    const tc = new TypeComposer(objectType);
+    tc.addField('field3', {
+      type: GraphQLString,
+      projection: { field1: true, field2: true },
+    });
+    tc.addFields({
+      field4: { type: GraphQLString },
+      field5: { type: GraphQLString, projection: { field4: true } },
     });
 
-    it('can write fields', () => {
-      const objectType = new GraphQLObjectType({
-        name: 'Writeable',
-        fields: {
-          field1: { type: GraphQLString },
-          field2: { type: GraphQLString },
-        },
-      });
+    expect(tc.getProjectionMapper()).to.deep.equal({
+      field3: { field1: true, field2: true },
+      field5: { field4: true },
+    })
+  });
 
-      const composer = new TypeComposer(objectType);
-      composer.addField('field3', { type: GraphQLString });
-      const fieldNames = Object.keys(objectType.getFields());
-      expect(fieldNames).toContain('field3');
+
+  it('should clone projection for fields', () => {
+    const tc = new TypeComposer(objectType);
+    tc.addField('field3', {
+      type: GraphQLString,
+      projection: { field1: true, field2: true },
     });
 
-    it('should clear defineFieldMap if fields modified after schema build', () => {
-      GQC.typeComposer('RootQuery')
-        .addField('testField', {
-          type: GraphQLString,
-        });
-
-      GQC.buildSchema();
-
-      const definedFieldMap = GQC.typeComposer('RootQuery').getType()._fields;
-      expect(typeof definedFieldMap).toEqual('object');
-
-      GQC.typeComposer('RootQuery')
-        .addField('testField2', {
-          type: GraphQLString,
-        });
-
-      expect(GQC.typeComposer('RootQuery').getType()._fields).toEqual(undefined);
-    });
+    const tc2 = tc.clone('newObject');
+    expect(tc2.getProjectionMapper()).to.deep.equal({
+      field3: { field1: true, field2: true },
+    })
   });
 });
