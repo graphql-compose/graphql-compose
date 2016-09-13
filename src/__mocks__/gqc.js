@@ -4,7 +4,7 @@ import {
 } from 'graphql';
 import gqc from '../gqc';
 
-gqc.typeComposer('User').addFields({
+gqc.get('User').addFields({
   name: {
     type: GraphQLString,
   },
@@ -15,6 +15,5 @@ gqc.typeComposer('User').addFields({
     type: GraphQLInt,
   },
 });
-gqc.__mockExistedType = 'User';
 
 export default gqc;

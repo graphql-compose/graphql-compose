@@ -88,7 +88,8 @@ export default class ComposeStorage {
     relationFieldNames.forEach(relationFieldName => {
       const typeAndField = `${typeComposer.getTypeName()}.${relationFieldName}`;
 
-      if (typeComposer.hasField(relationFieldName)) {
+      const existedField = typeComposer.getField(relationFieldName);
+      if (existedField && !existedField._gqcIsRelation) {
         if (!createdRelations.has(typeAndField)) {
           console.log(`GQC: Skip building relation '${typeAndField}', `
                     + `cause this type already has field with such name. `

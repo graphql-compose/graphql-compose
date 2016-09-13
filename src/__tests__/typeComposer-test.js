@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import {
   GraphQLObjectType,
   GraphQLString,
@@ -7,7 +8,7 @@ import TypeComposer from '../typeComposer';
 
 
 describe('TypeComposer', () => {
-  describe('should be compatible with graphql type instance', () => {
+  describe('should has `getFields` method', () => {
     it('can read fields', () => {
       const objectType = new GraphQLObjectType({
         name: 'Readable',
@@ -19,13 +20,11 @@ describe('TypeComposer', () => {
 
       const composer = new TypeComposer(objectType);
       const fieldNames = Object.keys(composer.getFields());
-
-      expect(fieldNames).toContain('field1');
-      expect(fieldNames).toContain('field2');
-      expect(fieldNames).not.toContain('field3');
+      expect(fieldNames).to.have.members(['field1', 'field2']);
     });
 
-    it('can write fields', () => {
+
+    it('should has `addFields` method', () => {
       const objectType = new GraphQLObjectType({
         name: 'Writeable',
         fields: {
@@ -37,26 +36,7 @@ describe('TypeComposer', () => {
       const composer = new TypeComposer(objectType);
       composer.addField('field3', { type: GraphQLString });
       const fieldNames = Object.keys(objectType.getFields());
-      expect(fieldNames).toContain('field3');
-    });
-
-    it('should clear defineFieldMap if fields modified after schema build', () => {
-      GQC.typeComposer('RootQuery')
-        .addField('testField', {
-          type: GraphQLString,
-        });
-
-      GQC.buildSchema();
-
-      const definedFieldMap = GQC.typeComposer('RootQuery').getType()._fields;
-      expect(typeof definedFieldMap).toEqual('object');
-
-      GQC.typeComposer('RootQuery')
-        .addField('testField2', {
-          type: GraphQLString,
-        });
-
-      expect(GQC.typeComposer('RootQuery').getType()._fields).toEqual(undefined);
+      expect(fieldNames).to.include('field3');
     });
   });
 });

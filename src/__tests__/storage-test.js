@@ -1,49 +1,52 @@
+import { expect } from 'chai';
 import {
   GraphQLObjectType,
   GraphQLScalarType,
 } from 'graphql';
 import Storage from '../storage';
+import TypeComposer from '../typeComposer';
 
 
 describe('Storage [Class]', () => {
-  it('should implements getType by the type name', () => {
+  const someTC = new TypeComposer(
+    new GraphQLObjectType({ name: 'validType' })
+  );
+
+
+  it('should implements `add` method that accepts only TypeComposer', () => {
     const storage = new Storage();
-
-    const validType = new GraphQLObjectType({ name: 'validType' });
-    storage.setType(validType);
-    expect(storage.getType('validType')).toEqual(validType);
-  });
-
-
-  it('should implements hasType by the type name', () => {
-    const storage = new Storage();
-
-    const validType = new GraphQLObjectType({ name: 'validType' });
-    storage.setType(validType);
-    expect(storage.hasType('validType')).toBeTruthy();
-
-    expect(storage.hasType('unexistedType')).toBeFalsy();
-  });
-
-
-  it('should implements setType and accept only GraphQLObjectType', () => {
-    const storage = new Storage();
-
-    const validType = new GraphQLObjectType({ name: 'validType' });
-    storage.setType(validType);
-    expect(storage.getType('validType')).toEqual(validType);
+    storage.add(someTC);
+    expect(storage.get('validType')).to.equal(someTC);
 
     const errTypeObj1 = new GraphQLScalarType({ name: 'validType1', serialize: () => {} });
-    expect(() => { storage.setType(errTypeObj1); }).toThrow();
+    expect(() => { storage.add(errTypeObj1); }).throw();
 
     const errTypeObj2 = { name: '123' };
-    expect(() => { storage.setType(errTypeObj2); }).toThrow();
+    expect(() => { storage.add(errTypeObj2); }).throw();
   });
 
-  it('should throw error, if root fields not defined', () => {
-    const storage = new Storage();
-    storage.clear();
 
-    expect(() => { storage.buildSchema(); }).toThrow();
+  it('should implements `get` method', () => {
+    const storage = new Storage();
+    storage.add(someTC);
+    expect(storage.get('validType')).to.equal(someTC);
+  });
+
+
+  it('should implements `has` method`', () => {
+    const storage = new Storage();
+    storage.add(someTC);
+    expect(storage.has('validType')).to.be.true
+    expect(storage.has('unexistedType')).to.be.false;
+  });
+
+
+  describe('buildSchema', () => {
+    it('should throw error, if root fields not defined', () => {
+      const storage = new Storage();
+      storage.clear();
+
+      expect(() => { storage.buildSchema(); }).throw();
+    });
   });
 });
