@@ -1,5 +1,6 @@
 # GraphQL-compose
 [![](https://img.shields.io/npm/v/graphql-compose.svg)](https://www.npmjs.com/package/graphql-compose) 
+[![Travis](https://img.shields.io/travis/nodkz/graphql-compose.svg?maxAge=2592000)](https://travis-ci.org/nodkz/graphql-compose)
  [![npm](https://img.shields.io/npm/dt/graphql-compose.svg)](https://www.npmjs.com/package/graphql-compose) 
  [![Join the chat at https://gitter.im/graphql-compose/Lobby](https://badges.gitter.im/nodkz/graphql-compose.svg)](https://gitter.im/graphql-compose/Lobby)
  [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
@@ -13,11 +14,22 @@ Compose your GraphQL schema in declarative way:
 - provide `projection` parser from AST
 
 ##Example
+country.js
 ```js
-var UserSchema = new mongoose.Schema({...})
+import composeWithMongoose from 'graphql-compose-mongoose'
 
-const Users = mongoose.model('User', UserSchema)
-const UsersTC = composeMongoose(Users) //TypeComposer - used to edit and render your GraphQLObject
+export const CountrySchema = new mongoose.Schema({
+  code: String,
+  // ...
+});
+export const Country = mongoose.model('Country', CountrySchema);
+export const CountryTC = composeWithMongoose(Country);
+// ... some other stuff for defining graphql type via TypeComposer, eg. relations, restrictions
+```
+schema.js
+```js
+import GQC from 'graphql-compose'
+import {CountryTC} from './country' 
 
 const ViewerTC = GQC.get('Viewer')
 GQC.rootQuery().addField('viewer', {
@@ -26,10 +38,9 @@ GQC.rootQuery().addField('viewer', {
   resolve: () => ({}),
 })
 
-ViewerTC.addField('user', UsersTC.getResolver('findOne').getFieldConfig() )
+ViewerTC.addField('user', CountryTC.getResolver('findOne').getFieldConfig() )
 
 export default GQC.buildSchema()
-
 ```
 
 ## Documentation

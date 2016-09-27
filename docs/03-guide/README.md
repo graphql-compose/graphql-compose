@@ -10,7 +10,7 @@ We always try to make our documentation better, so if you have feedback on the G
 ## Getting started
 
 - [Installing GraphQL Composer](01-installing.md)
-- [Generate TypeComposer](02-generate-typecomposer.md)
+- [Generate TypeComposers](02-generate-typecomposers.md)
 - [Edit TypeComposer](03-edit-typecomposer.md)
 - [Connections](04-connections.md)
 - [Generate Schema](05-generate-schema.md)
