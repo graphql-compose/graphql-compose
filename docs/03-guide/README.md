@@ -12,6 +12,6 @@ We always try to make our documentation better, so if you have feedback on the G
 - [Installing GraphQL Composer](01-installing.md)
 - [Generate TypeComposers](02-generate-typecomposers.md)
 - [Edit TypeComposer](03-edit-typecomposer.md)
-- [Connections](04-connections.md)
+- [Connections](04-relations-and-connections.md)
 - [Generate Schema](05-generate-schema.md)
 - [Relay support](06-relay.md)
