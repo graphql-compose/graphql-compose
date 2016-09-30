@@ -89,9 +89,10 @@ export default class TypeComposer {
 
     // if field has a projection option, then add it to projection mapper
     Object.keys(newFields).forEach(name => {
-      if (newFields[name].projection) {
+      const projection: ProjectionType = newFields[name].projection || newFields[name]._gqcProjection;
+      
+      if (projection) {
         // $FlowFixMe
-        const projection: ProjectionType = newFields[name].projection;
         this.addProjectionMapper(name, projection);
       }
     })
