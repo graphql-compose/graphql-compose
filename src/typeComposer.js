@@ -215,7 +215,7 @@ export default class TypeComposer {
       deprecationReason: opts.deprecationReason,
       args: argsConfig,
       resolve,
-      _gqcProjection: opts.projection,
+      projection: opts.projection,
       _gqcIsRelation: true,
     });
 
