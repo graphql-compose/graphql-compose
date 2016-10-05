@@ -3,6 +3,9 @@ Before we start, lets setup 2 schemas..
 
 `People.js`
 ```js
+import mongoose from 'mongoose'
+import composeWithMongoose from 'graphql-compose-mongoose'
+
 var PeopleSchema = new mongoose.Schema({
   firstName: { type: String },
   lastName: { type: String },
@@ -13,11 +16,14 @@ var PeopleSchema = new mongoose.Schema({
   }
 })
 export const People = mongoose.model('People', PeopleSchema)
-export const PeopleTC = composeRelay(composeMongoose(People))
+export const PeopleTC = composeWithMongoose(People)
 ```
 
 `Companies.js`
 ```js
+import mongoose from 'mongoose'
+import composeWithMongoose from 'graphql-compose-mongoose'
+
 var CompanysSchema = new mongoose.Schema({
   name: { type: String },
   description: { type: String },
@@ -27,7 +33,7 @@ var CompanysSchema = new mongoose.Schema({
   }],
 })
 export const Companies = mongoose.model('Companies', CompanysSchema)
-export const CompaniesTC = composeRelay(composeMongoose(Companies))
+export const CompaniesTC = composeWithMongoose(Companies)
 ```
 
 ###Adding a single relation

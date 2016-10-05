@@ -14,7 +14,7 @@ var PersonSchema = new mongoose.Schema({
   email: { type: String },
 })
 export const Person = mongoose.model('Person', PersonSchema)
-export const PersonTC = composeRelay(composeMongoose(Person))
+export const PersonTC = composeMongoose(Person)
 ```
 
 yey, thats all..
