@@ -63,7 +63,8 @@
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "dependencies": {
-    "babel-runtime": "6.11.6"
+    "babel-runtime": "6.11.6",
+    "object-path": "0.11.2"
   },
   "config": {
     "commitizen": {

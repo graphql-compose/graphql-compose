@@ -19,6 +19,7 @@ import type {
   //  InputObjectConfigFieldMapThunk as _InputObjectConfigFieldMapThunk,
   GraphQLInterfaceType as _GraphQLInterfaceType,
   GraphQLInputType as _GraphQLInputType,
+  GraphQLNullableType as _GraphQLNullableType,
 } from 'graphql/type/definition.js';
 
 import type Resolver from './resolver/resolver';
@@ -33,6 +34,7 @@ export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 // GRAPHQL RE-EXPORT --------------------
 export type GraphQLType = _GraphQLType;
 export type GraphQLObjectType = _GraphQLObjectType;
+export type GraphQLNullableType = _GraphQLNullableType;
 export type GraphQLInterfaceType = _GraphQLInterfaceType;
 export type GraphQLInterfacesThunk = () => Array<GraphQLInterfaceType>;
 export type GraphQLOutputType = _GraphQLOutputType;
