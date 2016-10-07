@@ -185,13 +185,10 @@ export default class Resolver {
     for (const key in this) { // eslint-disable-line no-restricted-syntax
       if ({}.hasOwnProperty.call(this, key)) {
         // $FlowFixMe
-        if (isObject(this[key])) {
-          oldOpts[key] = Object.assign({}, this[key]);
-        } else {
-          oldOpts[key] = this[key];
-        }
+        oldOpts[key] = this[key];
       }
     }
+    oldOpts.args = Object.assign({}, this.args);
     return new Resolver(newTypeComposer, Object.assign({}, oldOpts, opts));
   }
 
