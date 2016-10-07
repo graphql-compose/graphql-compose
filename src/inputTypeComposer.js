@@ -4,23 +4,44 @@ import {
   GraphQLInputObjectType,
   GraphQLNonNull,
   getNamedType,
+  isInputType,
 } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
-import { isObject } from './utils/is';
+import { isObject, isString } from './utils/is';
+import TypeMapper from './typeMapper';
 
 import type {
+  InputObjectConfig,
   InputObjectFieldConfig,
   InputObjectConfigFieldMap,
   InputObjectConfigFieldMapThunk,
   InputObjectField,
   GraphQLInputType,
-  GraphQLFieldConfigArgumentMap,
-  GraphQLFieldConfig,
-} from './definition.js';
+} from './definition';
 
 
 export default class InputTypeComposer {
   gqType: GraphQLInputObjectType;
+
+  static create(opts: InputObjectConfig | string) {
+    let objConfig;
+
+    if (isString(opts)) {
+      objConfig = {
+        name: opts,
+        fields: () => ({}),
+      };
+    } else if (isObject(opts)) {
+      objConfig = opts;
+    } else {
+      throw new Error('You should provide InputObjectConfig or string with type name to InputTypeComposer.create(opts)');
+    }
+
+    // $FlowFixMe
+    const gqType = new GraphQLInputObjectType(objConfig);
+
+    return new InputTypeComposer(gqType);
+  }
 
   constructor(gqType: GraphQLInputObjectType) {
     if (!(gqType instanceof GraphQLInputObjectType)) {
@@ -59,6 +80,20 @@ export default class InputTypeComposer {
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
   setFields(fields: InputObjectConfigFieldMap): void {
+    Object.keys(fields).forEach((name) => {
+      const fieldConfig = fields[name];
+      if (typeof fieldConfig.type === 'string') {
+        const typeName: string = fieldConfig.type;
+        const type = TypeMapper.getWrapped(typeName);
+        if (isInputType(type)) {
+          // $FlowFixMe
+          fieldConfig.type = type; // eslint-disable-line
+        } else {
+          throw new Error(`${this.getTypeName()}.${name} provided incorrect output type '${typeName}'`);
+        }
+      }
+    });
+
     this.gqType._typeConfig.fields = () => fields;
     delete this.gqType._fields; // if schema was builded, delete defineFieldMap
   }
@@ -93,7 +128,7 @@ export default class InputTypeComposer {
   removeField(fieldNameOrArray: string | Array<string>) {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
-    fieldNames.forEach((fieldName) => delete fields[fieldName]);
+    fieldNames.forEach(fieldName => delete fields[fieldName]);
     this.setFields(fields);
   }
 
@@ -104,7 +139,7 @@ export default class InputTypeComposer {
 
     const fields = this.getFields();
     const newFields = {};
-    Object.keys(fields).forEach(fieldName => {
+    Object.keys(fields).forEach((fieldName) => {
       newFields[fieldName] = Object.assign({}, fields[fieldName]);
     });
 
@@ -180,8 +215,8 @@ export default class InputTypeComposer {
 
   getByPath(path: string): InputTypeComposer | void {
     let itc = this;
-    let parts = path.split('.');
-    while(parts.length > 0) {
+    const parts = path.split('.');
+    while (parts.length > 0) {
       if (!itc) return undefined;
       const name = parts[0];
       const fieldType = getNamedType(this.getFieldType(name));

@@ -104,12 +104,12 @@ class TypeMapper {
     this.set('ID', GraphQLID);
   }
 
-  getWrapped(str: String): ?GraphQLType {
+  getWrapped(str: string): ?GraphQLType {
     const inputTypeAST: Type = parseType(str);
     return typeFromAST(inputTypeAST);
   }
 
-  createType(str: String): ?GraphQLNamedType {
+  createType(str: string): ?GraphQLNamedType {
     const astDocument: Document = parse(str);
 
     if (objectPath.get(astDocument, 'kind') !== 'Document') {

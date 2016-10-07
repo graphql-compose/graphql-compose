@@ -4,30 +4,33 @@ import {
   GraphQLObjectType,
   GraphQLInputObjectType,
   getNamedType,
+  isInputType,
+  isOutputType,
 } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
-import { isObject, isFunction } from './utils/is';
+import { isObject, isFunction, isString } from './utils/is';
 import ResolverList from './resolver/resolverList';
 import Resolver from './resolver/resolver';
 import { toInputObjectType } from './toInputObjectType';
 import InputTypeComposer from './inputTypeComposer';
+import TypeMapper from './typeMapper';
+
 import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
   GraphQLFieldConfigMapThunk,
   GraphQLOutputType,
+  GraphQLObjectTypeConfig,
   GraphQLObjectTypeExtended,
   GraphQLInterfaceType,
   GraphQLInterfacesThunk,
   GetRecordIdFn,
   RelationThunk,
   RelationThunkMap,
-  RelationArgsMapper,
   RelationArgsMapperFn,
   RelationOpts,
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
-  ObjectMap,
   ProjectionType,
   ProjectionMapType,
 } from './definition.js';
@@ -35,6 +38,26 @@ import type {
 
 export default class TypeComposer {
   gqType: GraphQLObjectTypeExtended;
+
+  static create(opts: GraphQLObjectTypeConfig | string) {
+    let objConfig;
+
+    if (isString(opts)) {
+      objConfig = {
+        name: opts,
+        fields: () => ({}),
+      };
+    } else if (isObject(opts)) {
+      objConfig = opts;
+    } else {
+      throw new Error('You should provide GraphQLObjectTypeConfig or string with type name to TypeComposer.create(opts)');
+    }
+
+    // $FlowFixMe
+    const gqType = new GraphQLObjectType(objConfig);
+
+    return new TypeComposer(gqType);
+  }
 
   constructor(gqType: GraphQLObjectType) {
     this.gqType = gqType;
@@ -65,8 +88,38 @@ export default class TypeComposer {
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
   setFields(fields: GraphQLFieldConfigMap): void {
+    Object.keys(fields).forEach((name) => {
+      const fieldConfig = fields[name];
+      if (typeof fieldConfig.type === 'string') {
+        const typeName: string = fieldConfig.type;
+        const type = TypeMapper.getWrapped(typeName);
+        if (isOutputType(type)) {
+          // $FlowFixMe
+          fieldConfig.type = type; // eslint-disable-line
+        } else {
+          throw new Error(`${this.getTypeName()}.${name} provided incorrect output type '${typeName}'`);
+        }
+      }
+
+      if (fieldConfig.args) {
+        Object.keys(fieldConfig.args).forEach((argName) => {
+          // $FlowFixMe
+          const argConfig = fieldConfig.args[argName];
+          if (typeof argConfig.type === 'string') {
+            const typeName: string = argConfig.type;
+            const type = TypeMapper.getWrapped(typeName);
+            if (isInputType(type)) {
+              argConfig.type = type; // eslint-disable-line
+            } else {
+              throw new Error(`${this.getTypeName()}.${name}@${argName} provided incorrect input type '${typeName}'`);
+            }
+          }
+        });
+      }
+    });
+
     this.gqType._typeConfig.fields = () => fields;
-    delete this.gqType._fields; // if schema was builded, delete defineFieldMap
+    delete this.gqType._fields; // clear builded fields in type
   }
 
   hasField(fieldName: string): boolean {
@@ -88,13 +141,13 @@ export default class TypeComposer {
     this.setFields(Object.assign({}, this.getFields(), newFields));
 
     // if field has a projection option, then add it to projection mapper
-    Object.keys(newFields).forEach(name => {
+    Object.keys(newFields).forEach((name) => {
       if (newFields[name].projection) {
         // $FlowFixMe
         const projection: ProjectionType = newFields[name].projection;
         this.addProjectionMapper(name, projection);
       }
-    })
+    });
   }
 
   /**
@@ -113,7 +166,7 @@ export default class TypeComposer {
   removeField(fieldNameOrArray: string | Array<string>): void {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
-    fieldNames.forEach((fieldName) => delete fields[fieldName]);
+    fieldNames.forEach(fieldName => delete fields[fieldName]);
     this.setFields(Object.assign({}, fields)); // immutability
   }
 
@@ -137,7 +190,7 @@ export default class TypeComposer {
     const relationFields = {};
 
     const names = Object.keys(this.getRelations());
-    names.forEach(fieldName => {
+    names.forEach((fieldName) => {
       relationFields[fieldName] = this.buildRelation(fieldName);
     });
   }
@@ -174,7 +227,7 @@ export default class TypeComposer {
     //       is `function`, then remove arg field and run it in resolve
     //       is any other value, then put it to args prototype for resolve
     const args = opts.args || {};
-    Object.keys(args).forEach(argName => {
+    Object.keys(args).forEach((argName) => {
       const argMapVal = args[argName];
       if (argMapVal !== undefined) {
         delete argsConfig[argName];
@@ -199,13 +252,13 @@ export default class TypeComposer {
 
       const payload = resolverFieldConfig.resolve(source, newArgs, context, info);
       return catchErrors
-        ? Promise.resolve(payload).catch(e => {
-            console.log(
+        ? Promise.resolve(payload).catch((e) => {
+          console.log(
               `GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`
             );
-            console.log(e);
-            return null;
-          })
+          console.log(e);
+          return null;
+        })
         : payload;
     };
 
@@ -272,7 +325,7 @@ export default class TypeComposer {
 
     const fields = this.getFields();
     const newFields = {};
-    Object.keys(fields).forEach(fieldName => {
+    Object.keys(fields).forEach((fieldName) => {
       newFields[fieldName] = Object.assign({}, fields[fieldName]);
     });
 
@@ -290,7 +343,7 @@ export default class TypeComposer {
     } catch (e) {
       // no problem, clone without resolveIdFn
     }
-    this.getResolvers().forEach(resolver => {
+    this.getResolvers().forEach((resolver) => {
       const newResolver = resolver.clone(cloned);
       cloned.addResolver(newResolver);
     });
@@ -431,7 +484,7 @@ export default class TypeComposer {
   getByPath(path: string): TypeComposer | InputTypeComposer | void {
     let tc: TypeComposer = this;
     const parts = path.split('.');
-    while(parts.length > 0) {
+    while (parts.length > 0) {
       const name = parts[0];
       const nextName = parts[1];
       if (!name) return undefined;

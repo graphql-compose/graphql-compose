@@ -32,11 +32,7 @@ export default class ComposeStorage {
 
   get(typeName: string): TypeComposer {
     if (!this.has(typeName)) {
-      const gqType = new GraphQLObjectType({
-        name: typeName,
-        fields: () => ({}),
-      });
-      this.types[typeName] = new TypeComposer(gqType);
+      this.types[typeName] = TypeComposer.create(typeName);
     }
     return this.types[typeName];
   }

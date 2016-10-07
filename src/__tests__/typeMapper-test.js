@@ -6,12 +6,13 @@ import {
   GraphQLBoolean,
   GraphQLID,
   GraphQLObjectType,
+  GraphQLInputObjectType,
   GraphQLList,
   GraphQLNonNull,
 } from 'graphql';
-import GQC from '../gqc';
 import typeMapper from '../typeMapper';
 import TypeComposer from '../typeComposer';
+import InputTypeComposer from '../inputTypeComposer';
 
 
 describe('TypeMapper', () => {
@@ -55,11 +56,29 @@ describe('TypeMapper', () => {
 
     const IntRangeTC = new TypeComposer(type);
     expect(IntRangeTC.getTypeName()).to.equal('IntRange');
-    expect(IntRangeTC.getFieldNames()).to.include.members([ 'max', 'min', 'arr' ]);
+    expect(IntRangeTC.getFieldNames()).to.include.members(['max', 'min', 'arr']);
     expect(IntRangeTC.getField('max').description).to.equal('Max value');
     expect(IntRangeTC.getField('max').type).to.equal(GraphQLInt);
     expect(IntRangeTC.getField('min').type).instanceof(GraphQLNonNull);
     expect(IntRangeTC.getField('arr').type).instanceof(GraphQLList);
+  });
+
+
+  it('should create input object type from template string', () => {
+    const type = typeMapper.createType(`
+      input InputIntRange {
+        max: Int,
+        min: Int!
+      }
+    `);
+
+    expect(type).instanceof(GraphQLInputObjectType);
+    expect(typeMapper.get('InputIntRange')).to.equal(type);
+
+    const IntRangeTC = new InputTypeComposer(type);
+    expect(IntRangeTC.getTypeName()).to.equal('InputIntRange');
+    expect(IntRangeTC.getField('max').type).to.equal(GraphQLInt);
+    expect(IntRangeTC.getField('min').type).instanceof(GraphQLNonNull);
   });
 
 
