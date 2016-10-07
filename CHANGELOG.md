@@ -1,5 +1,9 @@
 ## master
 
+## 0.0.0-semantically-released (September 12, 2016)
+Setup fully automated package publishing via [semantic-release](https://github.com/semantic-release/semantic-release).
+[Changelog](https://github.com/nodkz/graphql-compose/releases) is generated automatically and can be found here: https://github.com/nodkz/graphql-compose/releases
+
 ## 0.0.23 (September 6, 2016)
 - Update dependencies
 - Update order of imported modules, due eslint warnings
