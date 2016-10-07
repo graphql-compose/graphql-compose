@@ -20,21 +20,45 @@ export function getPluralName(name: string): string {
 }
 
 
-export function upperFirst(string: string): string {
-  return string.charAt(0).toUpperCase() + string.slice(1);
+export function upperFirst(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 
-export function omit(object: Object, keys: string[]) {
-  if (!object) {
+export function clearName(str: string): string {
+  return str.replace(/[^_a-zA-Z0-9]/g, '');
+}
+
+
+export function omit(obj: Object, keys: string[]) {
+  if (!obj) {
     return {};
   }
 
-  const result = Object.assign({}, object);
+  const result = Object.assign({}, obj);
   if (Array.isArray(keys)) {
     keys.forEach((k) => { delete result[k]; });
   } else {
     delete result[keys];
+  }
+
+  return result;
+}
+
+export function only(obj: Object, keys: string[]) {
+  if (!obj) {
+    return {};
+  }
+
+  const result = {};
+  if (Array.isArray(keys)) {
+    keys.forEach((k) => {
+      if ({}.hasOwnProperty.call(obj, k)) {
+        result[k] = obj[k];
+      }
+    });
+  } else if ({}.hasOwnProperty.call(obj, keys)) {
+    result[keys] = obj[keys];
   }
 
   return result;

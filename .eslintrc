@@ -3,7 +3,8 @@
   "parser": "babel-eslint",
   "rules": {
     "no-underscore-dangle": 0,
-    "arrow-body-style": 0
+    "arrow-body-style": 0,
+    "no-unused-expressions": 0
   },
   "env": {
     "jasmine": true,

@@ -1,9 +1,12 @@
 /* @flow */
 
+import objectPath from 'object-path';
+import { GraphQLInputObjectType } from 'graphql';
 import MissingType from '../type/missingType';
 import compose from '../utils/compose';
 import deepmerge from '../utils/deepmerge';
-import { upperFirst } from '../utils/misc';
+import { upperFirst, clearName, only } from '../utils/misc';
+import { isFunction, isObject } from '../utils/is';
 import { getProjectionFromAST } from '../projection';
 import type {
   GraphQLArgumentConfig,
@@ -19,10 +22,11 @@ import type {
   ResolverKinds,
   ObjectMap,
   ProjectionType,
-} from '../definition.js';
+  ResolverFilterArgConfig,
+} from '../definition';
 import TypeComposer from '../typeComposer';
+import InputTypeComposer from '../inputTypeComposer';
 import type { ResolverMiddleware } from './resolverMiddleware';
-
 
 export type ResolverOpts = {
   outputType?: GraphQLOutputType,
@@ -46,12 +50,12 @@ export default class Resolver {
 
   constructor(typeComposer: TypeComposer, opts: ResolverOpts = {}) {
     if (!(typeComposer instanceof TypeComposer)) {
-      throw Error('First argument for Resolver.constructor should be TypeComposer instance');
+      throw new Error('First argument for Resolver.constructor should be TypeComposer instance');
     }
     this.typeComposer = typeComposer;
 
     if (!opts.name) {
-      throw Error('For Resolver constructor the `opts.name` is required option.');
+      throw new Error('For Resolver constructor the `opts.name` is required option.');
     }
     this.name = opts.name;
 
@@ -72,7 +76,7 @@ export default class Resolver {
     return !!this.args[argName];
   }
 
-  getArg(argName: string) {
+  getArg(argName: string): ?GraphQLArgumentConfig {
     if (this.hasArg(argName)) {
       return this.args[argName];
     }
@@ -178,13 +182,26 @@ export default class Resolver {
 
   clone(newTypeComposer: TypeComposer, opts: ObjectMap = {}): Resolver {
     const oldOpts = {};
-    for (const key in this) {
-      if (this.hasOwnProperty(key)) {
+    for (const key in this) { // eslint-disable-line no-restricted-syntax
+      if ({}.hasOwnProperty.call(this, key)) {
         // $FlowFixMe
-        oldOpts[key] = this[key];
+        if (isObject(this[key])) {
+          oldOpts[key] = Object.assign({}, this[key]);
+        } else {
+          oldOpts[key] = this[key];
+        }
       }
     }
     return new Resolver(newTypeComposer, Object.assign({}, oldOpts, opts));
+  }
+
+  cloneWithWrap(wrapperName: string = 'wrapped'): Resolver {
+    return this.clone(
+      this.typeComposer,
+      // IMPORTANT to give new name for Resolver
+      // otherwise original resolver, will be overwrited in TypeComposer
+      { name: `${wrapperName}(${this.name})` }
+    );
   }
 
   getTypeComposer(): TypeComposer {
@@ -195,16 +212,69 @@ export default class Resolver {
     return upperFirst(this.name);
   }
 
-  wrapResolve(resolveMW: ResolverMWResolve): Resolver {
-    const newResolver = this.clone(
-      this.typeComposer,
-      // IMPORTANT to give new name for Resolver
-      // otherwise original resolver, will be overwrited in TypeComposer
-      { name: `${this.name}Wrapped` }
-    );
+  wrapResolve(resolveMW: ResolverMWResolve, wrapperName: string = 'wrapResolve'): Resolver {
+    const newResolver = this.cloneWithWrap(wrapperName);
     newResolver.setResolve(
       resolveMW(this.getResolve())
     );
     return newResolver;
+  }
+
+  addFilterArg(opts: ResolverFilterArgConfig): Resolver {
+    if (!opts.name) {
+      throw new Error('For Resolver.addFilterArg the arg name `opts.name` is required.');
+    }
+
+    if (!opts.type) {
+      throw new Error('For Resolver.addFilterArg the arg type `opts.type` is required.');
+    }
+
+    const resolver = this.cloneWithWrap(`addFilterArg[${opts.name}]`);
+
+    // get filterTC or create new one argument
+    const filter = resolver.getArg('filter');
+    const filterITC = filter && filter.type instanceof GraphQLInputObjectType
+      ? new InputTypeComposer(filter.type)
+      : InputTypeComposer.create(
+        `Filter${upperFirst(clearName(this.name))}${this.typeComposer.getTypeName()}Input`
+      );
+
+    let defaultValue;
+    if (filter && filter.defaultValue) {
+      defaultValue = filter.defaultValue;
+    }
+    if (opts.defaultValue) {
+      if (!defaultValue) {
+        defaultValue = {};
+      }
+      // $FlowFixMe
+      defaultValue[opts.name] = opts.defaultValue;
+    }
+
+    resolver.setArg('filter', {
+      type: filterITC.getType(),
+      description: (filter && filter.description) || undefined,
+      defaultValue,
+    });
+
+    filterITC.addField(opts.name, {
+      ...only(opts, ['name', 'type', 'defaultValue', 'description']),
+    });
+
+    const resolve = resolver.getResolve();
+    if (isFunction(opts.query)) {
+      resolver.setResolve((resolveParams: ResolveParams) => {
+        const value = objectPath.get(resolveParams, ['args', 'filter', opts.name]);
+        if (value) {
+          if (!resolveParams.rawQuery) {
+            resolveParams.rawQuery = {}; // eslint-disable-line
+          }
+          opts.query(resolveParams.rawQuery, value, resolveParams);
+        }
+        return resolve(resolveParams);
+      });
+    }
+
+    return resolver;
   }
 }

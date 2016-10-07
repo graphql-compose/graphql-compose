@@ -13,6 +13,7 @@ import type {
   GraphQLFieldConfig as _GraphQLFieldConfig,
   GraphQLFieldConfigMap as _GraphQLFieldConfigMap,
   GraphQLType as _GraphQLType,
+  InputObjectConfig as _InputObjectConfig,
   InputObjectField as _InputObjectField,
   InputObjectFieldConfig as _InputObjectFieldConfig,
   InputObjectConfigFieldMap as _InputObjectConfigFieldMap,
@@ -40,6 +41,7 @@ export type GraphQLInterfacesThunk = () => Array<GraphQLInterfaceType>;
 export type GraphQLOutputType = _GraphQLOutputType;
 export type InputObjectField = _InputObjectField;
 export type GraphQLInputObjectType = _GraphQLInputObjectType;
+export type InputObjectConfig = _InputObjectConfig;
 export type GraphQLFieldConfigArgumentMap = _GraphQLFieldConfigArgumentMap;
 export type GraphQLFieldResolveFn = _GraphQLFieldResolveFn<*>;
 export type GraphQLResolveInfo = _GraphQLResolveInfo;
@@ -108,3 +110,12 @@ export type ResolverFieldConfig = {
 };
 
 export type GetRecordIdFn = (source: mixed, args: ?mixed, context: ?mixed) => string;
+
+export type ResolverFilterArgFn = (query: mixed, value: mixed, resolveParams: ResolveParams) => any;
+
+export type ResolverFilterArgConfig = {
+  name: string,
+  type: string | GraphQLInputObjectType,
+  description: string,
+  query: ResolverFilterArgFn,
+};
