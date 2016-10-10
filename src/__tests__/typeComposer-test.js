@@ -88,7 +88,7 @@ describe('TypeComposer', () => {
     expect(tc.getProjectionMapper()).to.deep.equal({
       field3: { field1: true, field2: true },
       field5: { field4: true },
-    })
+    });
   });
 
 
@@ -102,6 +102,61 @@ describe('TypeComposer', () => {
     const tc2 = tc.clone('newObject');
     expect(tc2.getProjectionMapper()).to.deep.equal({
       field3: { field1: true, field2: true },
-    })
+    });
+  });
+
+  describe('static method create()', () => {
+    it('should create TC by typeName as a string', () => {
+      const TC = TypeComposer.create('TypeStub');
+      expect(TC).instanceof(TypeComposer);
+      expect(TC.getType()).instanceof(GraphQLObjectType);
+      expect(TC.getFields()).deep.equal({});
+    });
+
+    it('should create TC by type template string', () => {
+      const TC = TypeComposer.create(`
+        type TestTypeTpl {
+          f1: String
+          # Description for some required Int field
+          f2: Int!
+        }
+      `);
+      expect(TC).instanceof(TypeComposer);
+      expect(TC.getTypeName()).equal('TestTypeTpl');
+      expect(TC.getFieldType('f1')).equal(GraphQLString);
+      expect(TC.getFieldType('f2')).instanceof(GraphQLNonNull);
+      expect(TC.getFieldType('f2').ofType).equal(GraphQLInt);
+    });
+
+    it('should create TC by GraphQLObjectTypeConfig', () => {
+      const TC = TypeComposer.create({
+        name: 'TestType',
+        fields: {
+          f1: {
+            type: 'String',
+          },
+          f2: 'Int!',
+        },
+      });
+      expect(TC).instanceof(TypeComposer);
+      expect(TC.getFieldType('f1')).equal(GraphQLString);
+      expect(TC.getFieldType('f2')).instanceof(GraphQLNonNull);
+      expect(TC.getFieldType('f2').ofType).equal(GraphQLInt);
+    });
+
+    it('should create TC by GraphQLObjectType', () => {
+      const objType = new GraphQLObjectType({
+        name: 'TestTypeObj',
+        fields: {
+          f1: {
+            type: GraphQLString,
+          },
+        },
+      });
+      const TC = TypeComposer.create(objType);
+      expect(TC).instanceof(TypeComposer);
+      expect(TC.getType()).equal(objType);
+      expect(TC.getFieldType('f1')).equal(GraphQLString);
+    });
   });
 });
