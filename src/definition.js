@@ -67,7 +67,7 @@ export type GraphQLInputType = _GraphQLInputType;
 
 export type GraphQLObjectTypeExtended = GraphQLObjectType & {
   _gqcInputTypeComposer?: InputTypeComposer,
-  _gqcResolvers?: ResolverList,
+  _gqcResolvers?: Map<string, Resolver>,
   _gqcGetRecordIdFn?: GetRecordIdFn,
   _gqcProjectionMapper?: ProjectionMapType,
   _gqcRelations?: RelationThunkMap,
@@ -120,4 +120,5 @@ export type ResolverFilterArgConfig = {
   type: string | GraphQLInputObjectType,
   description: string,
   query: ResolverFilterArgFn,
+  filterTypeNameFallback?: string,
 };

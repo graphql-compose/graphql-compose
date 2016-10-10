@@ -1,0 +1,322 @@
+/* @flow */
+
+import objectPath from 'object-path';
+import {
+  GraphQLInputObjectType,
+  GraphQLObjectType,
+  isOutputType,
+} from 'graphql';
+import TypeMapper from './typeMapper';
+import MissingType from './type/missingType';
+import compose from './utils/compose';
+import deepmerge from './utils/deepmerge';
+import { upperFirst, clearName, only } from './utils/misc';
+import { isFunction, isObject, isString } from './utils/is';
+import { getProjectionFromAST } from './projection';
+import type {
+  GraphQLArgumentConfig,
+  GraphQLFieldConfigArgumentMap,
+  GraphQLOutputType,
+  ResolverMWMethodKeys,
+  ResolverFieldConfig,
+  ResolverMWArgs,
+  ResolverMWResolve,
+  ResolverMWResolveFn,
+  ResolverMWOutputType,
+  ResolveParams,
+  ResolverKinds,
+  ObjectMap,
+  ProjectionType,
+  ResolverFilterArgConfig,
+} from './definition';
+import TypeComposer from './typeComposer';
+import InputTypeComposer from './inputTypeComposer';
+
+export type ResolverOpts = {
+  outputType?: GraphQLOutputType,
+  resolve?: ResolverMWResolveFn,
+  args?: GraphQLFieldConfigArgumentMap,
+  name?: string,
+  kind?: ResolverKinds,
+  description?: string,
+  parent?: Resolver,
+};
+
+export type ResolverWrapFn = (newResolver: Resolver, prevResolver: Resolver) => Resolver;
+export type ResolverWrapArgsFn = (prevArgs: GraphQLFieldConfigArgumentMap) => GraphQLFieldConfigArgumentMap;
+export type ResolverWrapOutputTypeFn = (prevOutputType: GraphQLOutputType) => GraphQLOutputType;
+
+export default class Resolver {
+  outputType: ?GraphQLOutputType;
+  args: GraphQLFieldConfigArgumentMap;
+  resolve: ResolverMWResolveFn;
+  name: string;
+  kind: ?ResolverKinds;
+  description: ?string;
+  parent: ?Resolver;
+
+  constructor(opts: ResolverOpts = {}) {
+    if (!opts.name) {
+      throw new Error('For Resolver constructor the `opts.name` is required option.');
+    }
+    this.name = opts.name;
+    this.parent = opts.parent || null;
+    this.kind = opts.kind || null;
+    this.description = opts.description || '';
+
+    if (opts.outputType) {
+      this.setOutputType(opts.outputType);
+    }
+
+    if (opts.args) {
+      this.args = TypeMapper.prepareArgsMap(opts.args, this.name, 'Resolver');
+    } else {
+      this.args = {};
+    }
+
+    if (opts.resolve) {
+      this.resolve = opts.resolve;
+    }
+  }
+
+  hasArg(argName: string): boolean {
+    return !!this.args[argName];
+  }
+
+  getArg(argName: string): ?GraphQLArgumentConfig {
+    if (this.hasArg(argName)) {
+      return this.args[argName];
+    }
+    return undefined;
+  }
+
+  getArgs(): GraphQLFieldConfigArgumentMap {
+    return this.args;
+  }
+
+  setArgs(args: GraphQLFieldConfigArgumentMap): void {
+    this.args = TypeMapper.prepareArgsMap(args, this.name, 'Resolver');
+  }
+
+  setArg(argName: string, argConfig: GraphQLArgumentConfig) {
+    this.args[argName] = TypeMapper.prepareArg(argConfig, argName, this.name, 'Resolver');
+  }
+
+  removeArg(argName: string) {
+    delete this.args[argName];
+  }
+
+  /*
+  * This method should be overriden via constructor
+  */
+  resolve(resolveParams: ResolveParams): Promise<any> {
+    return Promise.resolve();
+  }
+
+  getResolve():ResolverMWResolveFn {
+    return this.resolve;
+  }
+
+  setResolve(resolve: ResolverMWResolveFn): void {
+    this.resolve = resolve;
+  }
+
+  getOutputType(): GraphQLOutputType {
+    if (this.outputType) {
+      return this.outputType;
+    }
+    return MissingType;
+  }
+
+  setOutputType(gqType: GraphQLOutputType | string) {
+    let type;
+
+    if (isString(gqType)) {
+      if (gqType.indexOf('{') === -1) {
+        type = TypeMapper.getWrapped(gqType);
+      } else {
+        type = TypeMapper.createType(gqType);
+      }
+    } else {
+      type = gqType;
+    }
+
+    if (!isOutputType(type)) {
+      throw new Error('You should provide correct OutputType for Resolver.outputType.');
+    }
+    this.outputType = type;
+  }
+
+  getFieldConfig(
+    opts: {
+      projection?: ProjectionType,
+    } = {}
+  ): ResolverFieldConfig {
+    const resolve = this.getResolve();
+    return {
+      type: this.getOutputType(),
+      args: this.getArgs(),
+      resolve: (source, args, context, info) => {
+        let projection = getProjectionFromAST(info);
+        if (opts.projection) {
+          projection = deepmerge(projection, opts.projection);
+        }
+        return resolve({ source, args, context, info, projection });
+      },
+    };
+  }
+
+  getKind() {
+    return this.kind;
+  }
+
+  getDescription() {
+    return this.description;
+  }
+
+  clone(opts: ResolverOpts = {}): Resolver {
+    const oldOpts = {};
+    for (const key in this) { // eslint-disable-line no-restricted-syntax
+      if ({}.hasOwnProperty.call(this, key)) {
+        // $FlowFixMe
+        oldOpts[key] = this[key];
+      }
+    }
+    oldOpts.args = Object.assign({}, this.args);
+    return new Resolver(Object.assign({}, oldOpts, opts));
+  }
+
+  wrap(cb: ?ResolverWrapFn, opts: ?ResolverOpts = {}): Resolver {
+    const prevResolver = this;
+    const newResolver = this.clone({
+      name: 'wrap',
+      parent: prevResolver,
+      ...opts,
+    });
+
+    return cb ? cb(newResolver, prevResolver) : newResolver;
+  }
+
+  wrapResolve(cb: ResolverMWResolve, wrapperName: string = 'wrapResolve'): Resolver {
+    return this.wrap(
+      (newResolver, prevResolver) => {
+        const newResolve = cb(prevResolver.getResolve());
+        newResolver.setResolve(newResolve);
+        return newResolver;
+      },
+      { name: wrapperName }
+    );
+  }
+
+  wrapArgs(cb: ResolverWrapArgsFn, wrapperName: string = 'wrapArgs'): Resolver {
+    return this.wrap(
+      (newResolver, prevResolver) => {
+        // clone prevArgs, to avoid changing args in callback
+        const prevArgs = Object.assign({}, prevResolver.getArgs());
+        const newArgs = cb(prevArgs);
+        newResolver.setArgs(newArgs);
+        return newResolver;
+      },
+      { name: wrapperName }
+    );
+  }
+
+  wrapOutputType(cb: ResolverWrapOutputTypeFn, wrapperName: string = 'wrapOutputType'): Resolver {
+    return this.wrap(
+      (newResolver, prevResolver) => {
+        const prevOutputType = prevResolver.getOutputType();
+        const newOutputType = cb(prevOutputType);
+        newResolver.setOutputType(newOutputType);
+        return newResolver;
+      },
+      { name: wrapperName }
+    );
+  }
+
+  addFilterArg(opts: ResolverFilterArgConfig): Resolver {
+    if (!opts.name) {
+      throw new Error('For Resolver.addFilterArg the arg name `opts.name` is required.');
+    }
+
+    if (!opts.type) {
+      throw new Error('For Resolver.addFilterArg the arg type `opts.type` is required.');
+    }
+
+    const resolver = this.wrap(null, { name: 'addFilterArg' });
+
+    // get filterTC or create new one argument
+    const filter = resolver.getArg('filter');
+    let filterITC;
+    if (filter && filter.type instanceof GraphQLInputObjectType) {
+      filterITC = new InputTypeComposer(filter.type)
+    } else {
+      if (!opts.filterTypeNameFallback || !isString(opts.filterTypeNameFallback)) {
+        throw new Error('For Resolver.addFilterArg needs to provide `opts.filterTypeNameFallback: string`. '
+                      + 'This string will be used as unique name for `filter` type of input argument. '
+                      + 'Eg. FilterXXXXXInput');
+      }
+      filterITC = InputTypeComposer.create(opts.filterTypeNameFallback);
+    }
+
+    let defaultValue;
+    if (filter && filter.defaultValue) {
+      defaultValue = filter.defaultValue;
+    }
+    if (opts.defaultValue) {
+      if (!defaultValue) {
+        defaultValue = {};
+      }
+      // $FlowFixMe
+      defaultValue[opts.name] = opts.defaultValue;
+    }
+
+    resolver.setArg('filter', {
+      type: filterITC.getType(),
+      description: (filter && filter.description) || undefined,
+      defaultValue,
+    });
+
+    filterITC.addField(opts.name, {
+      ...only(opts, ['name', 'type', 'defaultValue', 'description']),
+    });
+
+    const resolve = resolver.getResolve();
+    if (isFunction(opts.query)) {
+      resolver.setResolve((resolveParams: ResolveParams) => {
+        const value = objectPath.get(resolveParams, ['args', 'filter', opts.name]);
+        if (value) {
+          if (!resolveParams.rawQuery) {
+            resolveParams.rawQuery = {}; // eslint-disable-line
+          }
+          opts.query(resolveParams.rawQuery, value, resolveParams);
+        }
+        return resolve(resolveParams);
+      });
+    }
+
+    return resolver;
+  }
+
+  getNestedName() {
+    if (this.parent) {
+      return `${this.name}(${this.parent.getNestedName()})`;
+    }
+    return this.name;
+  }
+
+  toString() {
+    function extendedInfo(resolver, spaces = '') {
+      return [
+        'Resolver(',
+        `  name: ${resolver.name},`,
+        `  outputType: ${resolver.outputType},`,
+        `  args: ${resolver.args},`,
+        `  resolve: ${resolver.resolve ? resolver.resolve.toString() : 'undefined'},`,
+        `  parent: ${resolver.parent ? extendedInfo(resolver.parent, '  ' + spaces) : null}`,
+        ')'
+      ].filter(s => !!s).join('\n' + spaces);
+    }
+
+    return extendedInfo(this);
+  }
+}

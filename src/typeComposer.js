@@ -4,13 +4,10 @@ import {
   GraphQLObjectType,
   GraphQLInputObjectType,
   getNamedType,
-  isInputType,
-  isOutputType,
 } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
-import ResolverList from './resolver/resolverList';
-import Resolver from './resolver/resolver';
+import Resolver from './resolver';
 import { toInputObjectType } from './toInputObjectType';
 import InputTypeComposer from './inputTypeComposer';
 import TypeMapper from './typeMapper';
@@ -103,65 +100,17 @@ export default class TypeComposer {
     return Object.keys(this.getFields());
   }
 
-
-  convertFieldStringTypes(fieldConfig: GraphQLFieldConfig, fieldName: string): GraphQLFieldConfig {
-    if (typeof fieldConfig === 'string') {
-      fieldConfig = { // eslint-disable-line no-param-reassign
-        type: fieldConfig,
-      };
-    }
-
-    if (typeof fieldConfig.type === 'string') {
-      const typeName: string = fieldConfig.type;
-      const type = TypeMapper.getWrapped(typeName);
-      if (isOutputType(type)) {
-        // $FlowFixMe
-        fieldConfig.type = type; // eslint-disable-line
-      } else {
-        throw new Error(`${this.getTypeName()}.${fieldName} provided incorrect output type '${typeName}'`);
-      }
-    }
-
-    if (fieldConfig.args) {
-      Object.keys(fieldConfig.args).forEach((argName) => {
-        // $FlowFixMe
-        let argConfig = fieldConfig.args[argName];
-
-        if (typeof argConfig === 'string') {
-          argConfig = {
-            type: argConfig,
-          };
-        }
-
-        if (typeof argConfig.type === 'string') {
-          const typeName: string = argConfig.type;
-          const type = TypeMapper.getWrapped(typeName);
-          if (isInputType(type)) {
-            // $FlowFixMe
-            argConfig.type = type;
-          } else {
-            throw new Error(`${this.getTypeName()}.${fieldName}@${argName} provided incorrect input type '${typeName}'`);
-          }
-        }
-
-        // $FlowFixMe
-        fieldConfig.args[argName] = argConfig; // eslint-disable-line
-      });
-    }
-
-    return fieldConfig;
-  }
-
   /**
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
   setFields(fields: GraphQLFieldConfigMap): void {
-    Object.keys(fields).forEach((name) => {
-      fields[name] = this.convertFieldStringTypes(fields[name], name); // eslint-disable-line
-    });
+    const prepearedFields = TypeMapper.prepareOutputFields(
+      fields,
+      this.getTypeName()
+    );
 
-    this.gqType._typeConfig.fields = () => fields;
+    this.gqType._typeConfig.fields = () => prepearedFields;
     delete this.gqType._fields; // clear builded fields in type
   }
 
@@ -269,9 +218,9 @@ export default class TypeComposer {
     //       is `null`, then just remove arg field from config
     //       is `function`, then remove arg field and run it in resolve
     //       is any other value, then put it to args prototype for resolve
-    const args = opts.args || {};
-    Object.keys(args).forEach((argName) => {
-      const argMapVal = args[argName];
+    const optsArgs = opts.args || {};
+    Object.keys(optsArgs).forEach((argName) => {
+      const argMapVal = optsArgs[argName];
       if (argMapVal !== undefined) {
         delete argsConfig[argName];
 
@@ -426,9 +375,9 @@ export default class TypeComposer {
     return this.gqType._gqcInputTypeComposer;
   }
 
-  getResolvers(): ResolverList {
+  getResolvers(): Map<string, Resolver> {
     if (!this.gqType._gqcResolvers) {
-      this.gqType._gqcResolvers = new ResolverList();
+      this.gqType._gqcResolvers = new Map();
     }
     return this.gqType._gqcResolvers;
   }
@@ -448,21 +397,21 @@ export default class TypeComposer {
     return undefined;
   }
 
-  setResolver(resolver: Resolver): void {
+  setResolver(name: string, resolver: Resolver): void {
     if (!this.gqType._gqcResolvers) {
-      this.gqType._gqcResolvers = new ResolverList();
+      this.gqType._gqcResolvers = new Map();
     }
     if (!(resolver instanceof Resolver)) {
       throw new Error('setResolver() accept only Resolver instance');
     }
-    if (!resolver.name) {
-      throw new Error('resolver should have non-empty name property');
-    }
-    this.gqType._gqcResolvers.set(resolver.name, resolver);
+    this.gqType._gqcResolvers.set(name, resolver);
   }
 
   addResolver(resolver: Resolver): void {
-    this.setResolver(resolver);
+    if (!resolver.name) {
+      throw new Error('resolver should have non-empty name property');
+    }
+    this.setResolver(resolver.name, resolver);
   }
 
   removeResolver(resolver: string|Resolver): void {
@@ -470,7 +419,7 @@ export default class TypeComposer {
       ? resolver.name
       : resolver;
     if (resolverName) {
-      this.getResolvers().remove(resolverName);
+      this.getResolvers().delete(resolverName);
     }
   }
 

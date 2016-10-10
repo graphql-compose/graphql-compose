@@ -1,4 +1,5 @@
 /* @flow */
+/* eslint-disable no-use-before-define */
 
 import objectPath from 'object-path';
 import {
@@ -52,6 +53,12 @@ import type {
   GraphQLOutputType,
   GraphQLInputType,
   GraphQLNullableType,
+  GraphQLFieldConfigMap,
+  GraphQLFieldConfig,
+  GraphQLFieldConfigArgumentMap,
+  GraphQLArgumentConfig,
+  InputObjectConfigFieldMap,
+  InputObjectFieldConfig,
 } from './definition';
 
 import type {
@@ -114,7 +121,7 @@ class TypeMapper {
 
     if (objectPath.get(astDocument, 'kind') !== 'Document') {
       throw new Error('You should provide correct type syntax. '
-                    + 'Eg. createType(\'type IntRange { min: Int, max: Int }\')')
+                    + 'Eg. createType(\'type IntRange { min: Int, max: Int }\')');
     }
 
     const types = parseTypes(astDocument);
@@ -125,6 +132,147 @@ class TypeMapper {
       this.set(type.name, type);
       return type;
     }
+
+    return undefined;
+  }
+
+  prepareOutputField(
+    fieldConfig: GraphQLFieldConfig,
+    fieldName: string,
+    typeName: string
+  ): GraphQLFieldConfig {
+    let fieldTypeName;
+    let type;
+    let args;
+
+    if (typeof fieldConfig === 'string') {
+      fieldTypeName = fieldConfig;
+    } else if (typeof fieldConfig.type === 'string') {
+      fieldTypeName = fieldConfig.type;
+    }
+
+    if (fieldTypeName) {
+      type = this.getWrapped(fieldTypeName);
+      if (!isOutputType(type)) {
+        throw new Error(`${typeName}.${fieldName} provided incorrect output type '${fieldTypeName}'`);
+      }
+    } else {
+      type = fieldConfig.type;
+    }
+
+    if (fieldConfig.args) {
+      args = this.prepareArgsMap(fieldConfig.args, fieldName, typeName);
+    }
+
+    // For performance reason
+    // return new object only of type or args is converted
+    if (type || (args && args !== fieldConfig.args)) {
+      return {
+        ...fieldConfig,
+        // $FlowFixMe
+        type: type || fieldConfig.type,
+        args: args || fieldConfig.args,
+      };
+    }
+
+    return fieldConfig;
+  }
+
+  prepareOutputFields(fields: GraphQLFieldConfigMap, typeName: string): GraphQLFieldConfigMap {
+    Object.keys(fields).forEach((name) => {
+      fields[name] = this.prepareOutputField(fields[name], name, typeName); // eslint-disable-line
+    });
+
+    return fields;
+  }
+
+  prepareArg(
+    argConfig: GraphQLArgumentConfig,
+    argName: string,
+    fieldName: string,
+    typeName: string
+  ): GraphQLArgumentConfig {
+    let argTypeName;
+
+    if (typeof argConfig === 'string') {
+      argTypeName = argConfig;
+    } else if (typeof argConfig.type === 'string') {
+      argTypeName = argConfig.type;
+    }
+
+    if (argTypeName) {
+      const type = this.getWrapped(argTypeName);
+      if (!isInputType(type)) {
+        throw new Error(`${typeName}.${fieldName}@${argName} provided incorrect input type '${argTypeName}'`);
+      }
+
+      return {
+        ...argConfig,
+        // $FlowFixMe
+        type,
+      };
+    }
+
+    return argConfig;
+  }
+
+  prepareArgsMap(
+    argsConfigMap: GraphQLFieldConfigArgumentMap,
+    fieldName: string,
+    typeName: string
+  ): GraphQLFieldConfigArgumentMap {
+    if (argsConfigMap) {
+      Object.keys(argsConfigMap).forEach((argName) => {
+        argsConfigMap[argName] = this.prepareArg( // eslint-disable-line
+          argsConfigMap[argName],
+          argName,
+          fieldName,
+          typeName,
+        );
+      });
+    }
+
+    return argsConfigMap;
+  }
+
+  prepareInputField(
+    fieldConfig: InputObjectFieldConfig,
+    fieldName: string,
+    typeName: string
+  ): InputObjectFieldConfig {
+    let fieldTypeName;
+
+    if (typeof fieldConfig === 'string') {
+      fieldTypeName = fieldConfig;
+    } else if (typeof fieldConfig.type === 'string') {
+      fieldTypeName = fieldConfig.type;
+    }
+
+    if (fieldTypeName) {
+      const type = this.getWrapped(fieldTypeName);
+      if (!isInputType(type)) {
+        throw new Error(`${typeName}.${fieldName} provided incorrect input type '${fieldTypeName}'`);
+      }
+
+      return {
+        ...fieldConfig,
+        // $FlowFixMe
+        type,
+      };
+    }
+
+    return fieldConfig;
+  }
+
+  prepareInputFields(
+    fields: InputObjectConfigFieldMap,
+    typeName: string
+  ): InputObjectConfigFieldMap {
+    Object.keys(fields).forEach((name) => {
+      fields[name] = this.prepareInputField(fields[name], name, typeName); // eslint-disable-line
+    });
+
+    return fields;
   }
 }
 

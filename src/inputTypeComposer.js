@@ -4,7 +4,6 @@ import {
   GraphQLInputObjectType,
   GraphQLNonNull,
   getNamedType,
-  isInputType,
 } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
 import { isObject, isString } from './utils/is';
@@ -95,40 +94,17 @@ export default class InputTypeComposer {
     return !!fields[fieldName];
   }
 
-  convertFieldStringTypes(
-    fieldConfig: InputObjectFieldConfig,
-    fieldName: string
-  ): InputObjectFieldConfig {
-    if (typeof fieldConfig === 'string') {
-      fieldConfig = { // eslint-disable-line no-param-reassign
-        type: fieldConfig,
-      };
-    }
-
-    if (typeof fieldConfig.type === 'string') {
-      const typeName: string = fieldConfig.type;
-      const type = TypeMapper.getWrapped(typeName);
-      if (isInputType(type)) {
-        // $FlowFixMe
-        fieldConfig.type = type; // eslint-disable-line
-      } else {
-        throw new Error(`${this.getTypeName()}.${fieldName} provided incorrect output type '${typeName}'`);
-      }
-    }
-
-    return fieldConfig;
-  }
-
   /**
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
   setFields(fields: InputObjectConfigFieldMap): void {
-    Object.keys(fields).forEach((name) => {
-      fields[name] = this.convertFieldStringTypes(fields[name], name); // eslint-disable-line
-    });
+    const prepearedFields = TypeMapper.prepareInputFields(
+      fields,
+      this.getTypeName()
+    );
 
-    this.gqType._typeConfig.fields = () => fields;
+    this.gqType._typeConfig.fields = () => prepearedFields;
     delete this.gqType._fields; // if schema was builded, delete defineFieldMap
   }
 

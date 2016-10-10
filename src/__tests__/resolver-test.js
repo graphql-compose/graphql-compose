@@ -7,12 +7,12 @@ import {
   GraphQLInputObjectType,
   GraphQLInt,
   GraphQLNonNull,
+  GraphQLObjectType,
 } from 'graphql';
-import GQC from '../../__mocks__/gqc';
-import ResolverMiddleware from '../resolverMiddleware';
+import GQC from '../__mocks__/gqc';
 import Resolver from '../resolver';
-import TypeComposer from '../../typeComposer';
-import InputTypeComposer from '../../inputTypeComposer';
+import TypeComposer from '../typeComposer';
+import InputTypeComposer from '../inputTypeComposer';
 
 
 describe('Resolver', () => {
@@ -21,25 +21,24 @@ describe('Resolver', () => {
 
   beforeEach(() => {
     someTC = TypeComposer.create('ValidType');
-    resolver = new Resolver(someTC, { name: 'find' });
-  });
-
-
-  it('should throw error if not passed TypeComposer', () => {
-    expect(() => { new Resolver(); }).to.throw();
+    resolver = new Resolver({ name: 'find' });
   });
 
 
   it('should throw error if not passed name in opts', () => {
-    expect(() => { new Resolver(someTC); }).to.throw();
+    expect(() => { new Resolver({}); }).to.throw();
   });
 
 
   it('should have setArg and getArg methods', () => {
-    const argName = 'argField';
-    const argConfig = { type: GraphQLString };
-    resolver.setArg(argName, argConfig);
-    expect(resolver.getArg(argName)).to.equal(argConfig);
+    resolver.setArg('a1', { type: GraphQLString });
+    expect(resolver.getArg('a1').type).equal(GraphQLString);
+
+    resolver.setArg('a2', { type: 'String' });
+    expect(resolver.getArg('a2').type).equal(GraphQLString);
+
+    resolver.setArg('a3', 'String');
+    expect(resolver.getArg('a3').type).equal(GraphQLString);
   });
 
 
@@ -52,17 +51,43 @@ describe('Resolver', () => {
   });
 
 
-  it('should return data from resolve', async () => {
-    const resolvedName = 'nameFromResolve';
-    const UserTC = GQC.get('User');
-    const resolver1 = new Resolver(UserTC, {
+  it('should convert type as string to GraphQLType in outputType', () => {
+    const resolver = new Resolver({
       name: 'customResolver',
-      resolve: () => ({ name: resolvedName }),
-      outputType: UserTC.getType(),
+      outputType: `String!`,
+    });
+    expect(resolver.outputType).instanceof(GraphQLNonNull);
+    expect(resolver.outputType.ofType).equal(GraphQLString);
+  });
+
+
+  it('should convert type definition to GraphQLType in outputType', () => {
+    const resolver = new Resolver({
+      name: 'customResolver',
+      outputType: `
+        type SomeType {
+          name: String
+        }
+      `,
+    });
+    expect(resolver.outputType).instanceof(GraphQLObjectType);
+    expect(resolver.outputType.name).equal('SomeType');
+  });
+
+
+  it('should return data from resolve', async () => {
+    const resolver = new Resolver({
+      name: 'customResolver',
+      resolve: () => ({ name: 'Nodkz' }),
+      outputType: `
+        type SomeType {
+          name: String
+        }
+      `,
     });
 
     GQC.rootQuery().addRelation('resolveUser', () => ({
-      resolver: UserTC.getResolver('customResolver'),
+      resolver: resolver,
       args: {},
       projection: { _id: true },
     }));
@@ -74,55 +99,12 @@ describe('Resolver', () => {
     ).to.deep.equal({
       data: {
         resolveUser: {
-          name: resolvedName,
+          name: 'Nodkz',
         },
       },
     });
   });
 
-
-  it('compose resolve method with middlewares chain', async () => {
-    const UserTC = GQC.get('User');
-    const resolvedName = 'myNameIsSlimShady';
-    const changeName = name => `wrappedName(${name})`;
-    const changeNameAgain = name => `secondWrap(${name})`;
-    const resolver1 = new Resolver(UserTC, {
-      resolve: () => ({ name: resolvedName }),
-      name: 'chainName',
-      outputType: UserTC.getType(),
-    });
-
-    const M1 = new ResolverMiddleware(UserTC, resolver);
-    M1.resolve = next => (resolveArgs) => {
-      const payload = next(resolveArgs);
-      return { ...payload, name: changeNameAgain(payload.name) };
-    };
-
-    const M2 = new ResolverMiddleware(UserTC, resolver);
-    M2.resolve = next => (resolveArgs) => {
-      const payload = next(resolveArgs);
-      return { ...payload, name: changeName(payload.name) };
-    };
-
-    resolver1.addMiddleware(M1, M2);
-
-    GQC.rootQuery().addRelation(
-      'resolveUserWithMiddleware',
-      () => ({ resolver: UserTC.getResolver('chainName') }),
-    );
-
-    const schema = GQC.buildSchema();
-    const result = await graphql(schema, '{ resolveUserWithMiddleware { name } }');
-    expect(
-      result
-    ).to.deep.equal({
-      data: {
-        resolveUserWithMiddleware: {
-          name: changeNameAgain(changeName(resolvedName)),
-        },
-      },
-    });
-  });
 
   describe('addFilterArg', () => {
     it('should add arg to filter and setup default value', () => {
@@ -131,6 +113,7 @@ describe('Resolver', () => {
         type: 'Int!',
         defaultValue: 20,
         description: 'Age filter',
+        filterTypeNameFallback: 'FilterUniqueNameInput',
       });
 
       expect(resolver.getArg('filter')).to.be.not.ok;
@@ -162,11 +145,31 @@ describe('Resolver', () => {
           query.age = { $gt: value }; // eslint-disable-line no-param-reassign
           query.someKey = resolveParams.someKey; // eslint-disable-line no-param-reassign
         },
+        filterTypeNameFallback: 'FilterUniqueNameInput',
       });
 
       newResolver.resolve({ args: { filter: { age: 15 } }, someKey: 16 });
 
       expect(rpSnap).property('rawQuery').deep.equal({ age: { $gt: 15 }, someKey: 16 });
     });
+  });
+
+  it('should return nested name for Resolver', () => {
+    const r1 = new Resolver({ name: 'find' });
+    const r2 = r1.wrapResolve((next) => (resolveParams) => {
+      return 'function code';
+    });
+
+    expect(r1.getNestedName()).equal('find');
+    expect(r2.getNestedName()).equal('wrapResolve(find)');
+  });
+
+  it('should on toString() call provide debug info with source code', () => {
+    const r1 = new Resolver({ name: 'find' });
+    const r2 = r1.wrapResolve((next) => (resolveParams) => {
+      return 'function code';
+    });
+
+    expect(r2.toString()).to.have.string('function code');
   });
 });
