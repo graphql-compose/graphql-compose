@@ -9,6 +9,7 @@ import type {
   GraphQLOutputType as _GraphQLOutputType,
   GraphQLNamedType as _GraphQLNamedType,
   GraphQLObjectType as _GraphQLObjectType,
+  GraphQLObjectTypeConfig as _GraphQLObjectTypeConfig,
   GraphQLInputObjectType as _GraphQLInputObjectType,
   GraphQLFieldConfig as _GraphQLFieldConfig,
   GraphQLFieldConfigMap as _GraphQLFieldConfigMap,
@@ -35,6 +36,7 @@ export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 // GRAPHQL RE-EXPORT --------------------
 export type GraphQLType = _GraphQLType;
 export type GraphQLObjectType = _GraphQLObjectType;
+export type GraphQLObjectTypeConfig = _GraphQLObjectTypeConfig;
 export type GraphQLNullableType = _GraphQLNullableType;
 export type GraphQLInterfaceType = _GraphQLInterfaceType;
 export type GraphQLInterfacesThunk = () => Array<GraphQLInterfaceType>;
