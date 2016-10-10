@@ -23,24 +23,44 @@ import type {
 export default class InputTypeComposer {
   gqType: GraphQLInputObjectType;
 
-  static create(opts: InputObjectConfig | string) {
-    let objConfig;
+  static create(opts: InputObjectConfig | string | GraphQLInputObjectType) {
+    let ITC;
 
     if (isString(opts)) {
-      objConfig = {
-        name: opts,
-        fields: () => ({}),
-      };
+      // $FlowFixMe
+      const typeName: string = opts;
+      const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
+      if (NAME_RX.test(typeName)) {
+        ITC = new InputTypeComposer(new GraphQLInputObjectType({
+          name: typeName,
+          fields: () => ({}),
+        }));
+      } else {
+        const type = TypeMapper.createType(typeName);
+        if (!(type instanceof GraphQLInputObjectType)) {
+          throw new Error('You should provide correct GraphQLInputObjectType type definition.');
+        }
+        ITC = new InputTypeComposer(type);
+      }
+    } else if (opts instanceof GraphQLInputObjectType) {
+      ITC = new InputTypeComposer(opts);
     } else if (isObject(opts)) {
-      objConfig = opts;
+      // $FlowFixMe
+      const type = new GraphQLInputObjectType({
+        ...opts,
+        fields: () => ({}),
+      });
+      ITC = new InputTypeComposer(type);
+
+      // $FlowFixMe
+      if (isObject(opts.fields)) {
+        ITC.addFields(opts.fields);
+      }
     } else {
       throw new Error('You should provide InputObjectConfig or string with type name to InputTypeComposer.create(opts)');
     }
 
-    // $FlowFixMe
-    const gqType = new GraphQLInputObjectType(objConfig);
-
-    return new InputTypeComposer(gqType);
+    return ITC;
   }
 
   constructor(gqType: GraphQLInputObjectType) {
@@ -75,23 +95,37 @@ export default class InputTypeComposer {
     return !!fields[fieldName];
   }
 
+  convertFieldStringTypes(
+    fieldConfig: InputObjectFieldConfig,
+    fieldName: string
+  ): InputObjectFieldConfig {
+    if (typeof fieldConfig === 'string') {
+      fieldConfig = { // eslint-disable-line no-param-reassign
+        type: fieldConfig,
+      };
+    }
+
+    if (typeof fieldConfig.type === 'string') {
+      const typeName: string = fieldConfig.type;
+      const type = TypeMapper.getWrapped(typeName);
+      if (isInputType(type)) {
+        // $FlowFixMe
+        fieldConfig.type = type; // eslint-disable-line
+      } else {
+        throw new Error(`${this.getTypeName()}.${fieldName} provided incorrect output type '${typeName}'`);
+      }
+    }
+
+    return fieldConfig;
+  }
+
   /**
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
   setFields(fields: InputObjectConfigFieldMap): void {
     Object.keys(fields).forEach((name) => {
-      const fieldConfig = fields[name];
-      if (typeof fieldConfig.type === 'string') {
-        const typeName: string = fieldConfig.type;
-        const type = TypeMapper.getWrapped(typeName);
-        if (isInputType(type)) {
-          // $FlowFixMe
-          fieldConfig.type = type; // eslint-disable-line
-        } else {
-          throw new Error(`${this.getTypeName()}.${name} provided incorrect output type '${typeName}'`);
-        }
-      }
+      fields[name] = this.convertFieldStringTypes(fields[name], name); // eslint-disable-line
     });
 
     this.gqType._typeConfig.fields = () => fields;
