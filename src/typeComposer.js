@@ -125,17 +125,27 @@ export default class TypeComposer {
     if (fieldConfig.args) {
       Object.keys(fieldConfig.args).forEach((argName) => {
         // $FlowFixMe
-        const argConfig = fieldConfig.args[argName];
+        let argConfig = fieldConfig.args[argName];
+
+        if (typeof argConfig === 'string') {
+          argConfig = {
+            type: argConfig,
+          };
+        }
+
         if (typeof argConfig.type === 'string') {
           const typeName: string = argConfig.type;
           const type = TypeMapper.getWrapped(typeName);
           if (isInputType(type)) {
             // $FlowFixMe
-            argConfig.type = type; // eslint-disable-line
+            argConfig.type = type;
           } else {
             throw new Error(`${this.getTypeName()}.${fieldName}@${argName} provided incorrect input type '${typeName}'`);
           }
         }
+
+        // $FlowFixMe
+        fieldConfig.args[argName] = argConfig; // eslint-disable-line
       });
     }
 
