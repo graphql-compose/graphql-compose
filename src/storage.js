@@ -38,11 +38,11 @@ export default class ComposeStorage {
   }
 
   rootQuery(): TypeComposer {
-    return this.get('RootQuery');
+    return this.get('Query');
   }
 
   rootMutation(): TypeComposer {
-    return this.get('RootMutation');
+    return this.get('Mutation');
   }
 
   resolvers(typeName: string): ResolverList {
@@ -56,15 +56,15 @@ export default class ComposeStorage {
   buildSchema() {
     const roots = {};
 
-    if (this.has('RootQuery')) {
-      const tc = this.get('RootQuery');
+    if (this.has('Query')) {
+      const tc = this.get('Query');
       this.removeEmptyTypes(tc);
       this.buildRelations(tc, new Set());
       roots.query = tc.getType();
     }
 
-    if (this.has('RootMutation')) {
-      const tc = this.get('RootMutation');
+    if (this.has('Mutation')) {
+      const tc = this.get('Mutation');
       this.removeEmptyTypes(tc);
       roots.mutation = tc.getType();
     }
