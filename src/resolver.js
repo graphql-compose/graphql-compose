@@ -194,7 +194,11 @@ export default class Resolver {
       ...opts,
     });
 
-    return cb ? cb(newResolver, prevResolver) : newResolver;
+    if (isFunction(cb)) {
+      cb(newResolver, prevResolver);
+    }
+
+    return newResolver;
   }
 
   wrapResolve(cb: ResolverMWResolve, wrapperName: string = 'wrapResolve'): Resolver {

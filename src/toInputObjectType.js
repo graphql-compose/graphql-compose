@@ -9,6 +9,7 @@ import {
   GraphQLList,
   GraphQLNonNull,
 } from 'graphql';
+import util from 'util';
 import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import GenericType from './type/generic';
@@ -107,8 +108,11 @@ export function convertInputObjectField(
       const typeComposer = new TypeComposer(fieldType);
       fieldType = toInputObjectType(typeComposer, typeOpts).getType();
     } else {
-      console.log( // eslint-disable-line
-        `GQC: can not convert field '${opts.outputTypeName || ''}.${opts.fieldName || ''}' to InputType`
+      console.error(
+        `GQC: can not convert field '${opts.outputTypeName || ''}.${opts.fieldName || ''}' to InputType` // eslint-disable-line
+        + `\nIt should be GraphQLObjectType, but got \n`
+        + util.inspect(fieldType, { depth: 2, colors: true }
+        )
       );
       fieldType = GenericType;
     }
