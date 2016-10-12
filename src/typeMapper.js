@@ -2,6 +2,7 @@
 /* eslint-disable no-use-before-define */
 
 import objectPath from 'object-path';
+import GraphQLJSON from './type/json';
 import {
   GraphQLInt,
   GraphQLFloat,
@@ -109,6 +110,8 @@ class TypeMapper {
     this.set('Int', GraphQLInt);
     this.set('Boolean', GraphQLBoolean);
     this.set('ID', GraphQLID);
+    this.set('JSON', GraphQLJSON);
+    this.set('Json', GraphQLJSON);
   }
 
   getWrapped(str: string): ?GraphQLType {

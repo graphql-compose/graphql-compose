@@ -2,20 +2,16 @@
 
 export { default as TypeComposer } from './typeComposer';
 export { default as InputTypeComposer } from './inputTypeComposer';
+export { default as Resolver } from './resolver';
 export { default as ComposeStorage } from './storage';
 export { getProjectionFromAST, getFlatProjectionFromAST } from './projection';
 export { default as GQC } from './gqc';
 
 export {
-  Resolver,
-  ResolverList,
-  ResolverMiddleware,
-} from './resolver';
-
-export {
   GraphQLDate,
   GraphQLBuffer,
   GraphQLGeneric,
+  GraphQLJSON,
   MissingType,
   MissingTypeResolver,
   GQLReference,
