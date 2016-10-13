@@ -161,4 +161,23 @@ describe('TypeComposer', () => {
       expect(TC.getFieldType('f1')).equal(GraphQLString);
     });
   });
+
+  it('should return type by path', () => {
+    const tc = new TypeComposer(new GraphQLObjectType({
+      name: 'Readable',
+      fields: {
+        field1: {
+          type: GraphQLString,
+          args: {
+            arg1: {
+              type: GraphQLInt,
+            },
+          },
+        },
+      },
+    }));
+
+    expect(tc.get('field1')).equal(GraphQLString);
+    expect(tc.get('field1.@arg1')).equal(GraphQLInt);
+  });
 });

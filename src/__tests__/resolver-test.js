@@ -6,6 +6,7 @@ import {
   GraphQLString,
   GraphQLInputObjectType,
   GraphQLInt,
+  GraphQLFloat,
   GraphQLNonNull,
   GraphQLObjectType,
 } from 'graphql';
@@ -171,5 +172,19 @@ describe('Resolver', () => {
     });
 
     expect(r2.toString()).to.have.string('function code');
+  });
+
+
+  it('should return type by path', () => {
+    const rsv = new Resolver({
+      name: 'find',
+      outputType: 'type LonLat { lon: Float, lat: Float }',
+      args: {
+        distance: 'Int!',
+      },
+    });
+
+    expect(rsv.get('lat')).equal(GraphQLFloat);
+    expect(rsv.get('@distance')).equal(GraphQLInt);
   });
 });

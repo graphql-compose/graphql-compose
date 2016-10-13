@@ -3,11 +3,12 @@
 import {
   GraphQLInputObjectType,
   GraphQLNonNull,
-  getNamedType,
 } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
+import { deprecate } from './utils/debug';
 import { isObject, isString } from './utils/is';
 import TypeMapper from './typeMapper';
+import { typeByPath } from './typeByPath';
 
 import type {
   InputObjectConfig,
@@ -223,20 +224,15 @@ export default class InputTypeComposer {
     this.setFields(fields);
   }
 
-  getByPath(path: string): InputTypeComposer | void {
-    let itc = this;
-    const parts = path.split('.');
-    while (parts.length > 0) {
-      if (!itc) return undefined;
-      const name = parts[0];
-      const fieldType = getNamedType(this.getFieldType(name));
-      if (fieldType instanceof GraphQLInputObjectType) {
-        itc = new InputTypeComposer(fieldType);
-      } else {
-        itc = undefined;
-      }
-      parts.shift();
-    }
-    return itc;
+  /**
+  * @deprecated 2.0.0
+  */
+  getByPath(path: string | Array<string>): mixed {
+    deprecate('Use InputTypeComposer.get() instead.');
+    return this.get(path);
+  }
+
+  get(path: string | Array<string>): mixed {
+    return typeByPath(this, path);
   }
 }

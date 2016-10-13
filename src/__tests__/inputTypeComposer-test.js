@@ -108,4 +108,17 @@ describe('InputTypeComposer', () => {
       expect(TC.getFieldType('f1')).equal(GraphQLString);
     });
   });
+
+  it('should return type by path', () => {
+    const tc = new InputTypeComposer(new GraphQLInputObjectType({
+      name: 'Writable',
+      fields: {
+        field1: {
+          type: GraphQLString,
+        },
+      },
+    }));
+
+    expect(tc.get('field1')).equal(GraphQLString);
+  });
 });

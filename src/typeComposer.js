@@ -7,10 +7,12 @@ import {
 } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
+import { deprecate } from './utils/debug';
 import Resolver from './resolver';
 import { toInputObjectType } from './toInputObjectType';
 import InputTypeComposer from './inputTypeComposer';
 import TypeMapper from './typeMapper';
+import { typeByPath } from './typeByPath';
 
 import type {
   GraphQLFieldConfig,
@@ -473,40 +475,17 @@ export default class TypeComposer {
     return fieldArgs[argName] ? fieldArgs[argName] : undefined;
   }
 
-  getByPath(path: string): TypeComposer | InputTypeComposer | void {
-    let tc: TypeComposer = this;
-    const parts = path.split('.');
-    while (parts.length > 0) {
-      const name = parts[0];
-      const nextName = parts[1];
-      if (!name) return undefined;
-
-      if (nextName && nextName.startsWith('@')) {
-        const arg = tc.getFieldArg(name, nextName.substring(1));
-        if (!arg) return undefined;
-        const argType = getNamedType(arg.type);
-        if (argType instanceof GraphQLInputObjectType) {
-          const itc = new InputTypeComposer(argType);
-          return itc.getByPath(parts.slice(2).join('.'));
-        }
-        return undefined;
-      }
-
-      const fieldType = getNamedType(this.getFieldType(name));
-      if (fieldType) {
-        if (fieldType instanceof GraphQLObjectType) {
-          tc = new TypeComposer(fieldType);
-          parts.shift();
-        } else {
-          return undefined;
-        }
-      } else {
-        return undefined;
-      }
-    }
-    return tc;
+  /**
+  * @deprecated 2.0.0
+  */
+  getByPath(path: string | Array<string>): mixed {
+    deprecate('Use TypeComposer.get() instead.');
+    return this.get(this, path);
   }
 
+  get(path: string | Array<string>): mixed {
+    return typeByPath(this, path);
+  }
 
   // Sometimes, when you create relations or some tricky fields,
   // you should have a data from additional fields, that not in a query projection.

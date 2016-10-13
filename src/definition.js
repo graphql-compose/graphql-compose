@@ -122,3 +122,20 @@ export type ResolverFilterArgConfig = {
   query: ResolverFilterArgFn,
   filterTypeNameFallback?: string,
 };
+
+export type ResolverOpts = {
+  outputType?: GraphQLOutputType,
+  resolve?: ResolverMWResolveFn,
+  args?: GraphQLFieldConfigArgumentMap,
+  name?: string,
+  kind?: ResolverKinds,
+  description?: string,
+  parent?: Resolver,
+};
+
+export type ResolverWrapFn =
+  (newResolver: Resolver, prevResolver: Resolver) => Resolver;
+export type ResolverWrapArgsFn =
+  (prevArgs: GraphQLFieldConfigArgumentMap) => GraphQLFieldConfigArgumentMap;
+export type ResolverWrapOutputTypeFn =
+  (prevOutputType: GraphQLOutputType) => GraphQLOutputType;
