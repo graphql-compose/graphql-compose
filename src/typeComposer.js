@@ -480,7 +480,7 @@ export default class TypeComposer {
   */
   getByPath(path: string | Array<string>): mixed {
     deprecate('Use TypeComposer.get() instead.');
-    return this.get(this, path);
+    return this.get(path);
   }
 
   get(path: string | Array<string>): mixed {
