@@ -1,50 +1,38 @@
 /* @flow */
+/* eslint-disable no-use-before-define */
 
 import objectPath from 'object-path';
+import util from 'util';
 import {
   GraphQLInputObjectType,
-  GraphQLObjectType,
   isOutputType,
 } from 'graphql';
 import TypeMapper from './typeMapper';
+import TypeComposer from './typeComposer';
 import MissingType from './type/missingType';
-import compose from './utils/compose';
 import deepmerge from './utils/deepmerge';
-import { upperFirst, clearName, only } from './utils/misc';
-import { isFunction, isObject, isString } from './utils/is';
+import { only } from './utils/misc';
+import { isFunction, isString } from './utils/is';
 import { getProjectionFromAST } from './projection';
 import type {
   GraphQLArgumentConfig,
   GraphQLFieldConfigArgumentMap,
   GraphQLOutputType,
-  ResolverMWMethodKeys,
   ResolverFieldConfig,
-  ResolverMWArgs,
   ResolverMWResolve,
   ResolverMWResolveFn,
-  ResolverMWOutputType,
   ResolveParams,
   ResolverKinds,
-  ObjectMap,
   ProjectionType,
   ResolverFilterArgConfig,
+  ResolverOpts,
+  ResolverWrapFn,
+  ResolverWrapArgsFn,
+  ResolverWrapOutputTypeFn,
 } from './definition';
-import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
+import { typeByPath } from './typeByPath';
 
-export type ResolverOpts = {
-  outputType?: GraphQLOutputType,
-  resolve?: ResolverMWResolveFn,
-  args?: GraphQLFieldConfigArgumentMap,
-  name?: string,
-  kind?: ResolverKinds,
-  description?: string,
-  parent?: Resolver,
-};
-
-export type ResolverWrapFn = (newResolver: Resolver, prevResolver: Resolver) => Resolver;
-export type ResolverWrapArgsFn = (prevArgs: GraphQLFieldConfigArgumentMap) => GraphQLFieldConfigArgumentMap;
-export type ResolverWrapOutputTypeFn = (prevOutputType: GraphQLOutputType) => GraphQLOutputType;
 
 export default class Resolver {
   outputType: ?GraphQLOutputType;
@@ -109,7 +97,7 @@ export default class Resolver {
   /*
   * This method should be overriden via constructor
   */
-  resolve(resolveParams: ResolveParams): Promise<any> {
+  resolve(resolveParams: ResolveParams): Promise<any> { // eslint-disable-line
     return Promise.resolve();
   }
 
@@ -131,19 +119,29 @@ export default class Resolver {
   setOutputType(gqType: GraphQLOutputType | string) {
     let type;
 
+    if (gqType instanceof TypeComposer) {
+      this.outputType = gqType.getType();
+      return;
+    }
+
     if (isString(gqType)) {
+      // $FlowFixMe
       if (gqType.indexOf('{') === -1) {
+        // $FlowFixMe
         type = TypeMapper.getWrapped(gqType);
       } else {
+        // $FlowFixMe
         type = TypeMapper.createType(gqType);
       }
     } else {
       type = gqType;
     }
 
+    // $FlowFixMe
     if (!isOutputType(type)) {
       throw new Error('You should provide correct OutputType for Resolver.outputType.');
     }
+    // $FlowFixMe
     this.outputType = type;
   }
 
@@ -174,6 +172,10 @@ export default class Resolver {
     return this.description;
   }
 
+  get(path: string | Array<string>): mixed {
+    return typeByPath(this, path);
+  }
+
   clone(opts: ResolverOpts = {}): Resolver {
     const oldOpts = {};
     for (const key in this) { // eslint-disable-line no-restricted-syntax
@@ -195,6 +197,7 @@ export default class Resolver {
     });
 
     if (isFunction(cb)) {
+      // $FlowFixMe
       cb(newResolver, prevResolver);
     }
 
@@ -252,7 +255,7 @@ export default class Resolver {
     const filter = resolver.getArg('filter');
     let filterITC;
     if (filter && filter.type instanceof GraphQLInputObjectType) {
-      filterITC = new InputTypeComposer(filter.type)
+      filterITC = new InputTypeComposer(filter.type);
     } else {
       if (!opts.filterTypeNameFallback || !isString(opts.filterTypeNameFallback)) {
         throw new Error('For Resolver.addFilterArg needs to provide `opts.filterTypeNameFallback: string`. '
@@ -313,12 +316,12 @@ export default class Resolver {
       return [
         'Resolver(',
         `  name: ${resolver.name},`,
-        `  outputType: ${resolver.outputType},`,
-        `  args: ${resolver.args},`,
-        `  resolve: ${resolver.resolve ? resolver.resolve.toString() : 'undefined'},`,
-        `  parent: ${resolver.parent ? extendedInfo(resolver.parent, '  ' + spaces) : null}`,
-        ')'
-      ].filter(s => !!s).join('\n' + spaces);
+        `  outputType: ${util.inspect(resolver.outputType, { depth: 2 })},`,
+        `  args: ${util.inspect(resolver.args, { depth: 3 }).replace('\n', `\n  ${spaces}`)},`,
+        `  resolve: ${resolver.resolve ? resolver.resolve.toString().replace('\n', `\n  ${spaces}`) : 'undefined'},`,
+        `  parent: ${resolver.parent ? extendedInfo(resolver.parent, `  ${spaces}`) : ''}`,
+        ')',
+      ].filter(s => !!s).join(`\n  ${spaces}`);
     }
 
     return extendedInfo(this);
