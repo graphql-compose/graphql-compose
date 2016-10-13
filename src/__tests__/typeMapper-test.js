@@ -13,6 +13,7 @@ import {
 import typeMapper from '../typeMapper';
 import TypeComposer from '../typeComposer';
 import InputTypeComposer from '../inputTypeComposer';
+import Resolver from '../resolver';
 
 
 describe('TypeMapper', () => {
@@ -132,6 +133,21 @@ describe('TypeMapper', () => {
 
         const fc2 = typeMapper.convertOutputFieldConfig(tc);
         expect(fc2.type).equal(tc.getType());
+      });
+
+      it('should accept Resolver', () => {
+        const resolver = new Resolver({
+          name: 'find',
+          outputType: 'Float',
+          args: {
+            a1: 'String',
+          },
+          resolve: () => 123,
+        });
+        const fc = typeMapper.convertOutputFieldConfig(resolver);
+        expect(fc.type).equal(GraphQLFloat);
+        expect(fc.args.a1.type).equal(GraphQLString);
+        expect(fc.resolve()).equal(123);
       });
     });
 

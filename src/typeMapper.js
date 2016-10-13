@@ -64,6 +64,7 @@ import type {
 
 import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
+import Resolver from './resolver';
 
 import type {
   Document,
@@ -153,6 +154,9 @@ class TypeMapper {
 
     if (fieldConfig instanceof TypeComposer) {
       return { type: fieldConfig.getType() };
+    }
+    if (fieldConfig instanceof Resolver) {
+      return fieldConfig.getFieldConfig();
     }
 
     if (typeof fieldConfig === 'string') {
