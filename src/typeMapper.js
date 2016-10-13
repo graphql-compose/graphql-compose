@@ -158,6 +158,10 @@ class TypeMapper {
     if (fieldConfig instanceof Resolver) {
       return fieldConfig.getFieldConfig();
     }
+    if (fieldConfig instanceof InputTypeComposer
+      || fieldConfig.type instanceof InputTypeComposer) {
+      throw new Error(`You cannot provide InputTypeComposer to the field '${typeName}.${fieldName}'. It should be OutputType.`);
+    }
 
     if (typeof fieldConfig === 'string') {
       fieldTypeName = fieldConfig;
@@ -216,6 +220,10 @@ class TypeMapper {
     if (argConfig instanceof InputTypeComposer) {
       return { type: argConfig.getType() };
     }
+    if (argConfig instanceof TypeComposer
+      || argConfig.type instanceof TypeComposer) {
+      throw new Error(`You cannot provide TypeComposer to the arg '${typeName}.${fieldName}.@${argName}'. It should be InputType.`);
+    }
 
     if (typeof argConfig === 'string') {
       argTypeName = argConfig;
@@ -272,6 +280,10 @@ class TypeMapper {
 
     if (fieldConfig instanceof InputTypeComposer) {
       return { type: fieldConfig.getType() };
+    }
+    if (fieldConfig instanceof TypeComposer
+      || fieldConfig.type instanceof TypeComposer) {
+      throw new Error(`You cannot provide TypeComposer to the field '${typeName}.${fieldName}'. It should be InputType.`);
     }
 
     if (typeof fieldConfig === 'string') {

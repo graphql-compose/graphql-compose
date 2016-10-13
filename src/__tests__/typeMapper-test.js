@@ -149,6 +149,21 @@ describe('TypeMapper', () => {
         expect(fc.args.a1.type).equal(GraphQLString);
         expect(fc.resolve()).equal(123);
       });
+
+      it('should throw error if provided InputTypeComposer', () => {
+        const itc = InputTypeComposer
+          .create('input LonLatInput { lon: Float, lat: Float }');
+
+        expect(() => {
+          typeMapper.convertOutputFieldConfig({
+            type: itc,
+          });
+        }).to.throw(/InputTypeComposer/);
+
+        expect(() => {
+          typeMapper.convertOutputFieldConfig(itc);
+        }).to.throw(/InputTypeComposer/);
+      });
     });
 
     it('should convert args types', () => {
@@ -215,6 +230,21 @@ describe('TypeMapper', () => {
       expect(ic2.type).equal(itc.getType());
     });
 
+    it('should throw error if provided TypeComposer', () => {
+      const tc = TypeComposer
+        .create('type LonLat { lon: Float, lat: Float }');
+
+      expect(() => {
+        typeMapper.convertInputFieldConfig({
+          type: tc,
+        });
+      }).to.throw(/\sTypeComposer/);
+
+      expect(() => {
+        typeMapper.convertInputFieldConfig(tc);
+      }).to.throw(/\sTypeComposer/);
+    });
+
     it('should process inputFieldConfigMap()', () => {
       const icm = typeMapper.convertInputFieldConfigMap({
         i1: { type: 'String' },
@@ -264,6 +294,21 @@ describe('TypeMapper', () => {
       expect(ac.type).equal(itc.getType());
       const ac2 = typeMapper.convertArgConfig(itc);
       expect(ac2.type).equal(itc.getType());
+    });
+
+    it('should throw error if provided TypeComposer', () => {
+      const tc = TypeComposer
+        .create('type LonLat { lon: Float, lat: Float }');
+
+      expect(() => {
+        typeMapper.convertArgConfig({
+          type: tc,
+        });
+      }).to.throw(/\sTypeComposer/);
+
+      expect(() => {
+        typeMapper.convertArgConfig(tc);
+      }).to.throw(/\sTypeComposer/);
     });
 
     it('should process ArgConfigMap', () => {
