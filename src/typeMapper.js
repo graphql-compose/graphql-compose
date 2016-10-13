@@ -62,6 +62,9 @@ import type {
   InputObjectFieldConfig,
 } from './definition';
 
+import TypeComposer from './typeComposer';
+import InputTypeComposer from './inputTypeComposer';
+
 import type {
   Document,
   ObjectTypeDefinition,
@@ -139,7 +142,7 @@ class TypeMapper {
     return undefined;
   }
 
-  prepareOutputField(
+  convertOutputFieldConfig(
     fieldConfig: GraphQLFieldConfig,
     fieldName: string,
     typeName: string
@@ -147,6 +150,10 @@ class TypeMapper {
     let fieldTypeName;
     let type;
     let args;
+
+    if (fieldConfig instanceof TypeComposer) {
+      return { type: fieldConfig.getType() };
+    }
 
     if (typeof fieldConfig === 'string') {
       fieldTypeName = fieldConfig;
@@ -159,12 +166,14 @@ class TypeMapper {
       if (!isOutputType(type)) {
         throw new Error(`${typeName}.${fieldName} provided incorrect output type '${fieldTypeName}'`);
       }
+    } else if (fieldConfig.type instanceof TypeComposer) {
+      type = fieldConfig.type.getType();
     } else {
       type = fieldConfig.type;
     }
 
     if (fieldConfig.args) {
-      args = this.prepareArgsMap(fieldConfig.args, fieldName, typeName);
+      args = this.convertArgConfigMap(fieldConfig.args, fieldName, typeName);
     }
 
     // For performance reason
@@ -181,21 +190,28 @@ class TypeMapper {
     return fieldConfig;
   }
 
-  prepareOutputFields(fields: GraphQLFieldConfigMap, typeName: string): GraphQLFieldConfigMap {
+  convertOutputFieldConfigMap(
+    fields: GraphQLFieldConfigMap,
+    typeName: string
+  ): GraphQLFieldConfigMap {
     Object.keys(fields).forEach((name) => {
-      fields[name] = this.prepareOutputField(fields[name], name, typeName); // eslint-disable-line
+      fields[name] = this.convertOutputFieldConfig(fields[name], name, typeName); // eslint-disable-line
     });
 
     return fields;
   }
 
-  prepareArg(
+  convertArgConfig(
     argConfig: GraphQLArgumentConfig,
     argName: string,
     fieldName: string,
     typeName: string
   ): GraphQLArgumentConfig {
     let argTypeName;
+
+    if (argConfig instanceof InputTypeComposer) {
+      return { type: argConfig.getType() };
+    }
 
     if (typeof argConfig === 'string') {
       argTypeName = argConfig;
@@ -214,19 +230,24 @@ class TypeMapper {
         // $FlowFixMe
         type,
       };
+    } else if (argConfig.type instanceof InputTypeComposer) {
+      return {
+        ...argConfig,
+        type: argConfig.type.getType(),
+      };
     }
 
     return argConfig;
   }
 
-  prepareArgsMap(
+  convertArgConfigMap(
     argsConfigMap: GraphQLFieldConfigArgumentMap,
     fieldName: string,
     typeName: string
   ): GraphQLFieldConfigArgumentMap {
     if (argsConfigMap) {
       Object.keys(argsConfigMap).forEach((argName) => {
-        argsConfigMap[argName] = this.prepareArg( // eslint-disable-line
+        argsConfigMap[argName] = this.convertArgConfig( // eslint-disable-line
           argsConfigMap[argName],
           argName,
           fieldName,
@@ -238,12 +259,16 @@ class TypeMapper {
     return argsConfigMap;
   }
 
-  prepareInputField(
+  convertInputFieldConfig(
     fieldConfig: InputObjectFieldConfig,
     fieldName: string,
     typeName: string
   ): InputObjectFieldConfig {
     let fieldTypeName;
+
+    if (fieldConfig instanceof InputTypeComposer) {
+      return { type: fieldConfig.getType() };
+    }
 
     if (typeof fieldConfig === 'string') {
       fieldTypeName = fieldConfig;
@@ -262,17 +287,22 @@ class TypeMapper {
         // $FlowFixMe
         type,
       };
+    } else if (fieldConfig.type instanceof InputTypeComposer) {
+      return {
+        ...fieldConfig,
+        type: fieldConfig.type.getType(),
+      };
     }
 
     return fieldConfig;
   }
 
-  prepareInputFields(
+  convertInputFieldConfigMap(
     fields: InputObjectConfigFieldMap,
     typeName: string
   ): InputObjectConfigFieldMap {
     Object.keys(fields).forEach((name) => {
-      fields[name] = this.prepareInputField(fields[name], name, typeName); // eslint-disable-line
+      fields[name] = this.convertInputFieldConfig(fields[name], name, typeName); // eslint-disable-line
     });
 
     return fields;
@@ -342,12 +372,12 @@ function makeInputValues(values: Array<InputValueDefinition>) {
   return keyValMap(
     values,
     value => value.name.value,
-    value => {
+    (value) => {
       const type = produceInputType(value.type);
       return {
         type,
         description: getDescription(value),
-        defaultValue: valueFromAST(value.defaultValue, type)
+        defaultValue: valueFromAST(value.defaultValue, type),
       };
     }
   );
@@ -363,7 +393,7 @@ function makeFieldDefMap(
       type: produceOutputType(field.type),
       description: getDescription(field),
       args: makeInputValues(field.arguments),
-      deprecationReason: getDeprecationReason(field.directives)
+      deprecationReason: getDeprecationReason(field.directives),
     })
   );
 }
@@ -377,7 +407,7 @@ function makeEnumDef(def: EnumTypeDefinition) {
       enumValue => enumValue.name.value,
       enumValue => ({
         description: getDescription(enumValue),
-        deprecationReason: getDeprecationReason(enumValue.directives)
+        deprecationReason: getDeprecationReason(enumValue.directives),
       })
     ),
   });

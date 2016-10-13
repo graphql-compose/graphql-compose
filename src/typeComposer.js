@@ -105,7 +105,7 @@ export default class TypeComposer {
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
   setFields(fields: GraphQLFieldConfigMap): void {
-    const prepearedFields = TypeMapper.prepareOutputFields(
+    const prepearedFields = TypeMapper.convertOutputFieldConfigMap(
       fields,
       this.getTypeName()
     );

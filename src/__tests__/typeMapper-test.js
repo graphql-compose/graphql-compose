@@ -91,4 +91,172 @@ describe('TypeMapper', () => {
 
     expect(typeMapper.getWrapped('String')).equal(GraphQLString);
   });
+
+
+  describe('convertOutputFieldConfig()', () => {
+    describe('converting field type', () => {
+      it('should accept GraphQLOutputType', () => {
+        const fc = typeMapper.convertOutputFieldConfig({
+          type: GraphQLString,
+        });
+        expect(fc.type).equal(GraphQLString);
+
+        const objectType = new GraphQLObjectType({
+          name: 'SomeType',
+          fields: { f: GraphQLString },
+        });
+        const fc2 = typeMapper.convertOutputFieldConfig({
+          type: objectType,
+        });
+        expect(fc2.type).equal(objectType);
+      });
+
+      it('should accept type name as string', () => {
+        const fc = typeMapper.convertOutputFieldConfig({
+          type: 'String',
+        });
+        expect(fc.type).equal(GraphQLString);
+      });
+
+      it('should create field config from type name as string', () => {
+        const fc = typeMapper.convertOutputFieldConfig('String');
+        expect(fc.type).equal(GraphQLString);
+      });
+
+      it('should accept TypeComposer', () => {
+        const tc = TypeComposer.create('type PriceRange { lon: Float, lat: Float }');
+        const fc = typeMapper.convertOutputFieldConfig({
+          type: tc,
+        });
+        expect(fc.type).equal(tc.getType());
+
+        const fc2 = typeMapper.convertOutputFieldConfig(tc);
+        expect(fc2.type).equal(tc.getType());
+      });
+    });
+
+    it('should convert args types', () => {
+      const fc = typeMapper.convertOutputFieldConfig({
+        type: 'String',
+        args: {
+          a1: { type: 'String' },
+          a2: 'Int',
+        },
+      });
+      expect(fc.args.a1.type).equal(GraphQLString);
+      expect(fc.args.a2.type).equal(GraphQLInt);
+    });
+
+    it('should process outputFieldConfigMap()', () => {
+      const fcm = typeMapper.convertOutputFieldConfigMap({
+        f1: 'String',
+        f2: 'Int',
+      });
+      expect(fcm.f1.type).equal(GraphQLString);
+      expect(fcm.f2.type).equal(GraphQLInt);
+    });
+  });
+
+  describe('convertInputFieldConfig()', () => {
+    it('should accept GraphQLInputObjectType', () => {
+      const ic = typeMapper.convertInputFieldConfig({
+        type: GraphQLString,
+      });
+      expect(ic.type).equal(GraphQLString);
+
+      const objectType = new GraphQLInputObjectType({
+        name: 'SomeTypeInput',
+        fields: { f: GraphQLString },
+      });
+      const ic2 = typeMapper.convertInputFieldConfig({
+        type: objectType,
+      });
+      expect(ic2.type).equal(objectType);
+    });
+
+    it('should accept type name as string', () => {
+      const ic = typeMapper.convertInputFieldConfig({
+        type: 'String',
+      });
+      expect(ic.type).equal(GraphQLString);
+    });
+
+    it('should create field config from type name as string', () => {
+      const ic = typeMapper.convertInputFieldConfig('String');
+      expect(ic.type).equal(GraphQLString);
+    });
+
+    it('should accept InputTypeComposer', () => {
+      const itc = InputTypeComposer.create(
+        'input PriceRangeInput { lon: Float, lat: Float }'
+      );
+      const ic = typeMapper.convertInputFieldConfig({
+        type: itc,
+      });
+      expect(ic.type).equal(itc.getType());
+
+      const ic2 = typeMapper.convertInputFieldConfig(itc);
+      expect(ic2.type).equal(itc.getType());
+    });
+
+    it('should process inputFieldConfigMap()', () => {
+      const icm = typeMapper.convertInputFieldConfigMap({
+        i1: { type: 'String' },
+        i2: 'Int',
+      });
+      expect(icm.i1.type).equal(GraphQLString);
+      expect(icm.i2.type).equal(GraphQLInt);
+    });
+  });
+
+  describe('convertArgConfig()', () => {
+    it('should accept GraphQLInputObjectType', () => {
+      const ac = typeMapper.convertArgConfig({
+        type: GraphQLString,
+      });
+      expect(ac.type).equal(GraphQLString);
+
+      const objectType = new GraphQLInputObjectType({
+        name: 'SomeTypeInput',
+        fields: { f: GraphQLString },
+      });
+      const ac2 = typeMapper.convertArgConfig({
+        type: objectType,
+      });
+      expect(ac2.type).equal(objectType);
+    });
+
+    it('should accept type name as string', () => {
+      const ac = typeMapper.convertArgConfig({
+        type: 'String',
+      });
+      expect(ac.type).equal(GraphQLString);
+    });
+
+    it('should create field config from type name as string', () => {
+      const ac = typeMapper.convertArgConfig('String');
+      expect(ac.type).equal(GraphQLString);
+    });
+
+    it('should accept InputTypeComposer', () => {
+      const itc = InputTypeComposer.create(
+        'input PriceRangeInput { lon: Float, lat: Float }'
+      );
+      const ac = typeMapper.convertArgConfig({
+        type: itc,
+      });
+      expect(ac.type).equal(itc.getType());
+      const ac2 = typeMapper.convertArgConfig(itc);
+      expect(ac2.type).equal(itc.getType());
+    });
+
+    it('should process ArgConfigMap', () => {
+      const acm = typeMapper.convertArgConfigMap({
+        a1: { type: 'String' },
+        a2: 'Int',
+      });
+      expect(acm.a1.type).equal(GraphQLString);
+      expect(acm.a2.type).equal(GraphQLInt);
+    });
+  });
 });

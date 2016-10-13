@@ -99,7 +99,7 @@ export default class InputTypeComposer {
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
   setFields(fields: InputObjectConfigFieldMap): void {
-    const prepearedFields = TypeMapper.prepareInputFields(
+    const prepearedFields = TypeMapper.convertInputFieldConfigMap(
       fields,
       this.getTypeName()
     );

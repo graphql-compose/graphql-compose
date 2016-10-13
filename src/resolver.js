@@ -69,7 +69,7 @@ export default class Resolver {
     }
 
     if (opts.args) {
-      this.args = TypeMapper.prepareArgsMap(opts.args, this.name, 'Resolver');
+      this.args = TypeMapper.convertArgConfigMap(opts.args, this.name, 'Resolver');
     } else {
       this.args = {};
     }
@@ -95,11 +95,11 @@ export default class Resolver {
   }
 
   setArgs(args: GraphQLFieldConfigArgumentMap): void {
-    this.args = TypeMapper.prepareArgsMap(args, this.name, 'Resolver');
+    this.args = TypeMapper.convertArgConfigMap(args, this.name, 'Resolver');
   }
 
   setArg(argName: string, argConfig: GraphQLArgumentConfig) {
-    this.args[argName] = TypeMapper.prepareArg(argConfig, argName, this.name, 'Resolver');
+    this.args[argName] = TypeMapper.convertArgConfig(argConfig, argName, this.name, 'Resolver');
   }
 
   removeArg(argName: string) {
