@@ -58,8 +58,8 @@ export default class ComposeStorage {
 
     if (this.has('Query')) {
       const tc = this.get('Query');
-      this.removeEmptyTypes(tc);
       this.buildRelations(tc, new Set());
+      this.removeEmptyTypes(tc);
       roots.query = tc.getType();
     }
 
