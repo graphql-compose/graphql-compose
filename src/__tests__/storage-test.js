@@ -49,4 +49,30 @@ describe('Storage [Class]', () => {
       expect(() => { storage.buildSchema(); }).throw();
     });
   });
+
+
+  describe('removeEmptyTypes', () => {
+    it('should remove fields with Types which have no fields', () => {
+      const storage = new Storage();
+      const typeWithoutFieldsTC = storage.get('Stub');
+      typeWithoutFieldsTC.setFields({});
+
+      const viewerTC = storage.get('Viewer');
+      viewerTC.setFields({
+        name: 'String',
+        stub: typeWithoutFieldsTC,
+      });
+
+      storage.removeEmptyTypes(viewerTC);
+      expect(viewerTC.hasField('stub')).to.be.false;
+    });
+
+    it('should not produce Maximum call stack size exceeded', () => {
+      const storage = new Storage();
+      const userTC = storage.get('User');
+      userTC.addField('friend', userTC);
+
+      storage.removeEmptyTypes(userTC);
+    });
+  });
 });

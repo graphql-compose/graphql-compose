@@ -2,8 +2,7 @@
 
 import { GraphQLObjectType, GraphQLSchema, getNamedType } from 'graphql';
 import TypeComposer from './typeComposer';
-import type ResolverList from './resolver/resolverList';
-import type Resolver from './resolver/resolver';
+import type Resolver from './resolver';
 import type InputTypeComposer from './inputTypeComposer';
 
 
@@ -45,7 +44,7 @@ export default class ComposeStorage {
     return this.get('Mutation');
   }
 
-  resolvers(typeName: string): ResolverList {
+  resolvers(typeName: string): Map<string, Resolver> {
     return this.get(typeName).getResolvers();
   }
 
@@ -59,13 +58,13 @@ export default class ComposeStorage {
     if (this.has('Query')) {
       const tc = this.get('Query');
       this.buildRelations(tc, new Set());
-      this.removeEmptyTypes(tc);
+      this.removeEmptyTypes(tc, new Set());
       roots.query = tc.getType();
     }
 
     if (this.has('Mutation')) {
       const tc = this.get('Mutation');
-      this.removeEmptyTypes(tc);
+      this.removeEmptyTypes(tc, new Set());
       roots.mutation = tc.getType();
     }
 
@@ -77,18 +76,21 @@ export default class ComposeStorage {
     return new GraphQLSchema(roots);
   }
 
-  buildRelations(typeComposer: TypeComposer, createdRelations: Set<string>) {
+  buildRelations(
+    typeComposer: TypeComposer,
+    createdRelations: Set<string>
+  ) {
     const relations = typeComposer.getRelations();
     const relationFieldNames = Object.keys(relations);
 
-    relationFieldNames.forEach(relationFieldName => {
+    relationFieldNames.forEach((relationFieldName) => {
       const typeAndField = `${typeComposer.getTypeName()}.${relationFieldName}`;
 
       const existedField = typeComposer.getField(relationFieldName);
       if (existedField && !existedField._gqcIsRelation) {
         if (!createdRelations.has(typeAndField)) {
           console.log(`GQC: Skip building relation '${typeAndField}', `
-                    + `cause this type already has field with such name. `
+                    + 'cause this type already has field with such name. '
                     + 'If you want create relation, you should remove this '
                     + 'field before run the schema build.');
         }
@@ -99,7 +101,7 @@ export default class ComposeStorage {
     });
 
     const fields = typeComposer.getFields();
-    Object.keys(fields).forEach(fieldName => {
+    Object.keys(fields).forEach((fieldName) => {
       const typeAndField = `${typeComposer.getTypeName()}.${fieldName}`;
       const fieldType = getNamedType(fields[fieldName].type);
       if (fieldType instanceof GraphQLObjectType && !createdRelations.has(typeAndField)) {
@@ -109,18 +111,25 @@ export default class ComposeStorage {
     });
   }
 
-  removeEmptyTypes(typeComposer: TypeComposer | InputTypeComposer) {
+  removeEmptyTypes(
+    typeComposer: TypeComposer | InputTypeComposer,
+    passedTypes: Set<string> = new Set()
+  ) {
     const fields = typeComposer.getFields();
-    Object.keys(fields).forEach(fieldName => {
+    Object.keys(fields).forEach((fieldName) => {
       const fieldType = fields[fieldName].type;
       if (fieldType instanceof GraphQLObjectType) {
-        const tc = new TypeComposer(fieldType);
-        if (Object.keys(tc.getFields()).length > 0) {
-          this.removeEmptyTypes(tc);
-        } else {
-          console.log(`GQC: Delete field '${typeComposer.getTypeName()}.${fieldName}' `
-                    + `with type '${tc.getTypeName()}', cause it does not have fields.`)
-          delete fields[fieldName];
+        const typeName = fieldType.name;
+        if (!passedTypes.has(typeName)) {
+          passedTypes.add(typeName);
+          const tc = new TypeComposer(fieldType);
+          if (Object.keys(tc.getFields()).length > 0) {
+            this.removeEmptyTypes(tc, passedTypes);
+          } else {
+            console.log(`GQC: Delete field '${typeComposer.getTypeName()}.${fieldName}' `
+                      + `with type '${tc.getTypeName()}', cause it does not have fields.`);
+            delete fields[fieldName];
+          }
         }
       }
     });
