@@ -9,6 +9,7 @@ import {
   GraphQLFloat,
   GraphQLNonNull,
   GraphQLObjectType,
+  GraphQLEnumType,
 } from 'graphql';
 import GQC from '../__mocks__/gqc';
 import Resolver from '../resolver';
@@ -42,6 +43,42 @@ describe('Resolver', () => {
     expect(resolver.getArg('a3').type).equal(GraphQLString);
   });
 
+  it('should have setArgs method', () => {
+    resolver.setArgs({
+      b1: { type: GraphQLString },
+      b2: { type: 'String' },
+      b3: 'String',
+    });
+    expect(resolver.getArg('b1').type).equal(GraphQLString);
+    expect(resolver.getArg('b2').type).equal(GraphQLString);
+    expect(resolver.getArg('b3').type).equal(GraphQLString);
+  });
+
+  it('should have setOutputType/getOutputType methods', () => {
+    resolver.setOutputType(GraphQLString);
+    expect(resolver.getOutputType()).equal(GraphQLString);
+
+    expect(() => {
+      resolver.setOutputType(new GraphQLInputObjectType({
+        name: 'MyInput',
+        fields: () => ({}),
+      }));
+    }).to.throw('provide correct OutputType');
+  });
+
+  it('should have getDescription/setDescription methods', () => {
+    resolver.setDescription('Find users');
+    expect(resolver.getDescription()).equal('Find users');
+  });
+
+  it('should have getKind/setKind methods', () => {
+    resolver.setKind('query');
+    expect(resolver.getKind()).equal('query');
+
+    expect(() => {
+      resolver.setKind('unproperKind');
+    }).to.throw('You provide incorrect value');
+  });
 
   it('should remove args and return undefined for non-existing arg', () => {
     const argName = 'argField';
@@ -106,6 +143,21 @@ describe('Resolver', () => {
     });
   });
 
+  it('should have wrapArgs() method', () => {
+    const newResolver = resolver.wrapArgs((prevArgs) => {
+      return { ...prevArgs, arg1: 'String' };
+    });
+
+    expect(newResolver.getArg('arg1').type).equal(GraphQLString);
+  });
+
+  it('should have wrapOutputType() method', () => {
+    const newResolver = resolver.wrapOutputType((prevOutputType) => { // eslint-disable-line
+      return 'String';
+    });
+
+    expect(newResolver.getOutputType()).equal(GraphQLString);
+  });
 
   describe('addFilterArg', () => {
     it('should add arg to filter and setup default value', () => {
@@ -153,6 +205,49 @@ describe('Resolver', () => {
 
       expect(rpSnap).property('rawQuery').deep.equal({ age: { $gt: 15 }, someKey: 16 });
     });
+
+    it('should extend default value', () => {
+      resolver.setArg('filter', {
+        type: new GraphQLInputObjectType({
+          name: 'MyFilterInput',
+          fields: {
+            name: 'String',
+          },
+        }),
+        defaultValue: {
+          name: 'User',
+        },
+      });
+
+      const newResolver = resolver.addFilterArg({
+        name: 'age',
+        type: 'Int',
+        defaultValue: 33,
+        filterTypeNameFallback: 'FilterUniqueNameInput',
+      });
+
+      expect(newResolver.getArg('filter').defaultValue)
+        .deep.equal({ name: 'User', age: 33 });
+    });
+
+    it('should throw errors if provided incorrect options', () => {
+      expect(() => {
+        resolver.addFilterArg({});
+      }).to.throw('`opts.name` is required');
+
+      expect(() => {
+        resolver.addFilterArg({
+          name: 'price',
+        });
+      }).to.throw('`opts.type` is required');
+
+      expect(() => {
+        resolver.addFilterArg({
+          name: 'price',
+          type: 'input {min: Int}',
+        });
+      }).to.throw('opts.filterTypeNameFallback: string');
+    });
   });
 
   it('should return nested name for Resolver', () => {
@@ -186,5 +281,85 @@ describe('Resolver', () => {
 
     expect(rsv.get('lat')).equal(GraphQLFloat);
     expect(rsv.get('@distance')).equal(GraphQLInt);
+  });
+
+
+  describe('addSortArg', () => {
+    it('should extend SortEnum by new value', () => {
+      resolver.setArg('sort', {
+        type: new GraphQLEnumType({
+          name: 'MySortEnum',
+          values: {
+            AGE_ASC: {},
+          },
+        }),
+      });
+
+      const newResolver = resolver.addSortArg({
+        name: 'PRICE_ASC',
+        description: 'Asc sort by non-null price',
+        value: { price: 1 },
+      });
+
+      const sortEnum = newResolver.getArg('sort').type;
+      expect(sortEnum.parseValue('AGE_ASC')).equal('AGE_ASC');
+      expect(sortEnum.parseValue('PRICE_ASC')).deep.equal({ price: 1 });
+    });
+
+    it('should prepare sort value when `resolve` called', () => {
+      let rpSnap;
+      const resolve = resolver.resolve;
+      resolver.resolve = (rp) => {
+        rpSnap = rp;
+        return resolve(rp);
+      };
+      let whereSnap;
+      const query = {
+        where: (condition) => {
+          whereSnap = condition;
+        },
+      };
+
+      const newResolver = resolver.addSortArg({
+        name: 'PRICE_ASC',
+        description: 'Asc sort by non-null price',
+        value: (resolveParams) => {
+          resolveParams.query.where({ price: { $gt: 0 } }); // eslint-disable-line no-param-reassign
+          return { price: 1 };
+        },
+        sortTypeNameFallback: 'SortEnum',
+      });
+
+      newResolver.resolve({ args: { sort: 'PRICE_ASC' }, query });
+      expect(rpSnap).deep.property('args.sort').deep.equal({ price: 1 });
+      expect(whereSnap).deep.equal({ price: { $gt: 0 } });
+    });
+
+    it('should throw errors if provided incorrect options', () => {
+      expect(() => {
+        resolver.addSortArg({});
+      }).to.throw('`opts.name` is required');
+
+      expect(() => {
+        resolver.addSortArg({
+          name: 'PRICE_ASC',
+        });
+      }).to.throw('`opts.value` is required');
+
+      expect(() => {
+        resolver.addSortArg({
+          name: 'PRICE_ASC',
+          value: 123,
+        });
+      }).to.throw('opts.sortTypeNameFallback: string');
+
+      expect(() => {
+        resolver.setArg('sort', { type: GraphQLInt });
+        resolver.addSortArg({
+          name: 'PRICE_ASC',
+          value: 123,
+        });
+      }).to.throw('should have `sort` arg with type GraphQLEnumType');
+    });
   });
 });

@@ -123,6 +123,16 @@ export type ResolverFilterArgConfig = {
   filterTypeNameFallback?: string,
 };
 
+export type ResolverSortArgFn = (resolveParams: ResolveParams) => any;
+
+export type ResolverSortArgConfig = {
+  name: string,
+  sortTypeNameFallback?: string,
+  value: ResolverSortArgFn | mixed;
+  deprecationReason?: ?string;
+  description?: ?string;
+};
+
 export type ResolverOpts = {
   outputType?: GraphQLOutputType,
   resolve?: ResolverMWResolveFn,

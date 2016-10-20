@@ -5,11 +5,11 @@ import objectPath from 'object-path';
 import util from 'util';
 import {
   GraphQLInputObjectType,
+  GraphQLEnumType,
   isOutputType,
 } from 'graphql';
 import TypeMapper from './typeMapper';
 import TypeComposer from './typeComposer';
-import MissingType from './type/missingType';
 import deepmerge from './utils/deepmerge';
 import { only } from './utils/misc';
 import { isFunction, isString } from './utils/is';
@@ -25,6 +25,7 @@ import type {
   ResolverKinds,
   ProjectionType,
   ResolverFilterArgConfig,
+  ResolverSortArgConfig,
   ResolverOpts,
   ResolverWrapFn,
   ResolverWrapArgsFn,
@@ -110,10 +111,7 @@ export default class Resolver {
   }
 
   getOutputType(): GraphQLOutputType {
-    if (this.outputType) {
-      return this.outputType;
-    }
-    return MissingType;
+    return this.outputType;
   }
 
   setOutputType(gqType: GraphQLOutputType | string) {
@@ -164,12 +162,24 @@ export default class Resolver {
     };
   }
 
-  getKind() {
+  getKind(): ?ResolverKinds {
     return this.kind;
   }
 
-  getDescription() {
+  setKind(kind: string) {
+    if (kind !== 'query' && kind !== 'mutation' && kind !== 'subscription') {
+      throw new Error('You provide incorrect value for Resolver.setKind method. '
+                    + 'Valid values are: query | mutation | subscription');
+    }
+    this.kind = kind;
+  }
+
+  getDescription(): ?string {
     return this.description;
+  }
+
+  setDescription(description: string) {
+    this.description = description;
   }
 
   get(path: string | Array<string>): mixed {
@@ -287,7 +297,7 @@ export default class Resolver {
       ...only(opts, ['name', 'type', 'defaultValue', 'description']),
     });
 
-    const resolve = resolver.getResolve();
+    const resolveNext = resolver.getResolve();
     if (isFunction(opts.query)) {
       resolver.setResolve((resolveParams: ResolveParams) => {
         const value = objectPath.get(resolveParams, ['args', 'filter', opts.name]);
@@ -297,7 +307,75 @@ export default class Resolver {
           }
           opts.query(resolveParams.rawQuery, value, resolveParams);
         }
-        return resolve(resolveParams);
+        return resolveNext(resolveParams);
+      });
+    }
+
+    return resolver;
+  }
+
+  addSortArg(opts: ResolverSortArgConfig): Resolver {
+    if (!opts.name) {
+      throw new Error('For Resolver.addSortArg the `opts.name` is required.');
+    }
+
+    if (!opts.value) {
+      throw new Error('For Resolver.addSortArg the `opts.value` is required.');
+    }
+
+    const resolver = this.wrap(null, { name: 'addSortArg' });
+
+    // get sortEnumType or create new one
+    const sort = resolver.getArg('sort');
+    let sortEnumType;
+    if (sort) {
+      if (sort.type instanceof GraphQLEnumType) {
+        sortEnumType = sort.type;
+      } else {
+        throw new Error('Resolver should have `sort` arg with type GraphQLEnumType. '
+                      + `But got: ${util.inspect(sort.type, { depth: 2 })} `);
+      }
+    } else {
+      if (!opts.sortTypeNameFallback || !isString(opts.sortTypeNameFallback)) {
+        throw new Error('For Resolver.addSortArg needs to provide `opts.sortTypeNameFallback: string`. '
+                      + 'This string will be used as unique name for `sort` type of input argument. '
+                      + 'Eg. SortXXXXXEnum');
+      }
+      sortEnumType = new GraphQLEnumType({
+        name: opts.sortTypeNameFallback,
+        values: {
+          [opts.name]: {},
+        },
+      });
+      resolver.setArg('sort', { type: sortEnumType });
+    }
+
+    // extend sortEnumType with new sorting value
+    const existedIdx = sortEnumType._values.findIndex(o => o.name === opts.name);
+    if (existedIdx >= 0) {
+      sortEnumType._values.splice(existedIdx, 1);
+    }
+    delete sortEnumType._nameLookup;
+    delete sortEnumType._valueLookup;
+    sortEnumType._values.push({
+      name: opts.name,
+      description: opts.description,
+      isDeprecated: Boolean(opts.deprecationReason),
+      deprecationReason: opts.deprecationReason,
+      value: isFunction(opts.value) ? opts.name : opts.value,
+    });
+
+    // If sort value is evaluable (function), then wrap resolve method
+    const resolveNext = resolver.getResolve();
+    if (isFunction(opts.value)) {
+      resolver.setResolve((resolveParams: ResolveParams) => {
+        const value = objectPath.get(resolveParams, ['args', 'sort']);
+        if (value === opts.name) {
+          // $FlowFixMe
+          const newSortValue = opts.value(resolveParams);
+          resolveParams.args.sort = newSortValue; // eslint-disable-line
+        }
+        return resolveNext(resolveParams);
       });
     }
 
