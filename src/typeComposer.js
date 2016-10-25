@@ -121,10 +121,15 @@ export default class TypeComposer {
     return !!fields[fieldName];
   }
 
+  setField(fieldName: string, fieldConfig: GraphQLFieldConfig) {
+    this.addFields({ [fieldName]: fieldConfig });
+  }
+
   /**
-   * Add field to a GraphQL type
-   */
+  * @deprecated 2.0.0
+  */
   addField(fieldName: string, fieldConfig: GraphQLFieldConfig) {
+    deprecate('Use TypeComposer.setField() or plural addFields({}) instead.');
     this.addFields({ [fieldName]: fieldConfig });
   }
 
@@ -256,7 +261,7 @@ export default class TypeComposer {
         : payload;
     };
 
-    this.addField(fieldName, {
+    this.setField(fieldName, {
       type: resolverFieldConfig.type,
       description: opts.description,
       deprecationReason: opts.deprecationReason,

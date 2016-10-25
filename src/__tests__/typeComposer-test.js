@@ -8,7 +8,6 @@ import {
   GraphQLFloat,
   GraphQLBoolean,
 } from 'graphql';
-import GQC from '../gqc';
 import TypeComposer from '../typeComposer';
 import Resolver from '../resolver';
 
@@ -37,14 +36,14 @@ describe('TypeComposer', () => {
 
 
     it('should has `addFields` method', () => {
-      tc.addField('field3', { type: GraphQLString });
+      tc.setField('field3', { type: GraphQLString });
       const fieldNames = Object.keys(objectType.getFields());
       expect(fieldNames).to.include('field3');
     });
 
 
     it('should add fields with converting types from string to object', () => {
-      tc.addField('field3', { type: 'String' });
+      tc.setField('field3', { type: 'String' });
       tc.addFields({
         field4: { type: '[Int]' },
         field5: { type: 'Boolean!' },
@@ -59,7 +58,7 @@ describe('TypeComposer', () => {
 
 
     it('should add fields with converting args types from string to object', () => {
-      tc.addField('field3', {
+      tc.setField('field3', {
         type: 'String',
         args: {
           arg1: { type: 'String!' },
@@ -74,8 +73,8 @@ describe('TypeComposer', () => {
     });
 
 
-    it('should add projection via addField and addFields', () => {
-      tc.addField('field3', {
+    it('should add projection via `setField` and `addFields`', () => {
+      tc.setField('field3', {
         type: GraphQLString,
         projection: { field1: true, field2: true },
       });
@@ -92,7 +91,7 @@ describe('TypeComposer', () => {
 
 
     it('should clone projection for fields', () => {
-      tc.addField('field3', {
+      tc.setField('field3', {
         type: GraphQLString,
         projection: { field1: true, field2: true },
       });

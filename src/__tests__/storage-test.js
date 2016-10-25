@@ -70,7 +70,7 @@ describe('Storage [Class]', () => {
     it('should not produce Maximum call stack size exceeded', () => {
       const storage = new Storage();
       const userTC = storage.get('User');
-      userTC.addField('friend', userTC);
+      userTC.setField('friend', userTC);
 
       storage.removeEmptyTypes(userTC);
     });
