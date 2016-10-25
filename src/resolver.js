@@ -101,6 +101,10 @@ export default class Resolver {
     this.args[argName] = TypeMapper.convertArgConfig(argConfig, argName, this.name, 'Resolver');
   }
 
+  addArgs(newArgs: GraphQLFieldConfigArgumentMap) {
+    this.setArgs(Object.assign({}, this.getArgs(), newArgs));
+  }
+
   removeArg(argName: string) {
     delete this.args[argName];
   }

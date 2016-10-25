@@ -122,12 +122,29 @@ describe('Resolver', () => {
       expect(resolver.getArgType('unexisted')).to.be.undefined;
     });
 
-    it('should remove args and return undefined for non-existing arg', () => {
+    it('should return undefined for non-existing arg', () => {
+      expect(resolver.getArg('unexisted')).to.be.undefined;
+    });
+
+    it('should remove args', () => {
       const argName = 'argField';
       const argConfig = { type: GraphQLString };
       resolver.setArg(argName, argConfig);
       resolver.removeArg(argName);
       expect(resolver.getArg(argName)).to.be.undefined;
+    });
+
+    it('should add args', () => {
+      resolver.setArgs({
+        b1: 'String',
+      });
+      resolver.addArgs({
+        b2: 'String',
+        b3: 'String',
+      });
+      expect(resolver.hasArg('b1')).to.be.true;
+      expect(resolver.hasArg('b2')).to.be.true;
+      expect(resolver.hasArg('b3')).to.be.true;
     });
 
     it('should have wrapArgs() method', () => {
