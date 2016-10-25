@@ -32,40 +32,6 @@ describe('Resolver', () => {
   });
 
 
-  it('should have setArg and getArg methods', () => {
-    resolver.setArg('a1', { type: GraphQLString });
-    expect(resolver.getArg('a1').type).equal(GraphQLString);
-
-    resolver.setArg('a2', { type: 'String' });
-    expect(resolver.getArg('a2').type).equal(GraphQLString);
-
-    resolver.setArg('a3', 'String');
-    expect(resolver.getArg('a3').type).equal(GraphQLString);
-  });
-
-  it('should have setArgs method', () => {
-    resolver.setArgs({
-      b1: { type: GraphQLString },
-      b2: { type: 'String' },
-      b3: 'String',
-    });
-    expect(resolver.getArg('b1').type).equal(GraphQLString);
-    expect(resolver.getArg('b2').type).equal(GraphQLString);
-    expect(resolver.getArg('b3').type).equal(GraphQLString);
-  });
-
-  it('should have setOutputType/getOutputType methods', () => {
-    resolver.setOutputType(GraphQLString);
-    expect(resolver.getOutputType()).equal(GraphQLString);
-
-    expect(() => {
-      resolver.setOutputType(new GraphQLInputObjectType({
-        name: 'MyInput',
-        fields: () => ({}),
-      }));
-    }).to.throw('provide correct OutputType');
-  });
-
   it('should have getDescription/setDescription methods', () => {
     resolver.setDescription('Find users');
     expect(resolver.getDescription()).equal('Find users');
@@ -80,41 +46,134 @@ describe('Resolver', () => {
     }).to.throw('You provide incorrect value');
   });
 
-  it('should remove args and return undefined for non-existing arg', () => {
-    const argName = 'argField';
-    const argConfig = { type: GraphQLString };
-    resolver.setArg(argName, argConfig);
-    resolver.removeArg(argName);
-    expect(resolver.getArg(argName)).to.be.undefined;
+  describe('`outputType` methods', () => {
+    it('should have setOutputType/getOutputType methods', () => {
+      resolver.setOutputType(GraphQLString);
+      expect(resolver.getOutputType()).equal(GraphQLString);
+
+      expect(() => {
+        resolver.setOutputType(new GraphQLInputObjectType({
+          name: 'MyInput',
+          fields: () => ({}),
+        }));
+      }).to.throw('provide correct OutputType');
+    });
+
+    it('should convert type as string to GraphQLType in outputType', () => {
+      const myResolver = new Resolver({
+        name: 'customResolver',
+        outputType: 'String!',
+      });
+      expect(myResolver.outputType).instanceof(GraphQLNonNull);
+      expect(myResolver.outputType.ofType).equal(GraphQLString);
+    });
+
+
+    it('should convert type definition to GraphQLType in outputType', () => {
+      const myResolver = new Resolver({
+        name: 'customResolver',
+        outputType: `
+          type SomeType {
+            name: String
+          }
+        `,
+      });
+      expect(myResolver.outputType).instanceof(GraphQLObjectType);
+      expect(myResolver.outputType.name).equal('SomeType');
+    });
+
+    it('should have wrapOutputType() method', () => {
+      const newResolver = resolver.wrapOutputType((prevOutputType) => { // eslint-disable-line
+        return 'String';
+      });
+
+      expect(newResolver.getOutputType()).equal(GraphQLString);
+    });
   });
 
+  describe('`args` methods', () => {
+    it('should have setArg and getArg methods', () => {
+      resolver.setArg('a1', { type: GraphQLString });
+      expect(resolver.getArg('a1').type).equal(GraphQLString);
 
-  it('should convert type as string to GraphQLType in outputType', () => {
-    const resolver = new Resolver({
-      name: 'customResolver',
-      outputType: `String!`,
+      resolver.setArg('a2', { type: 'String' });
+      expect(resolver.getArg('a2').type).equal(GraphQLString);
+
+      resolver.setArg('a3', 'String');
+      expect(resolver.getArg('a3').type).equal(GraphQLString);
     });
-    expect(resolver.outputType).instanceof(GraphQLNonNull);
-    expect(resolver.outputType.ofType).equal(GraphQLString);
-  });
 
-
-  it('should convert type definition to GraphQLType in outputType', () => {
-    const resolver = new Resolver({
-      name: 'customResolver',
-      outputType: `
-        type SomeType {
-          name: String
-        }
-      `,
+    it('should have setArgs method', () => {
+      resolver.setArgs({
+        b1: { type: GraphQLString },
+        b2: { type: 'String' },
+        b3: 'String',
+      });
+      expect(resolver.getArg('b1').type).equal(GraphQLString);
+      expect(resolver.getArg('b2').type).equal(GraphQLString);
+      expect(resolver.getArg('b3').type).equal(GraphQLString);
     });
-    expect(resolver.outputType).instanceof(GraphQLObjectType);
-    expect(resolver.outputType.name).equal('SomeType');
+
+    it('should have getArgType method', () => {
+      resolver.setArgs({
+        b1: 'String',
+      });
+      expect(resolver.getArgType('b1')).equal(GraphQLString);
+      expect(resolver.getArgType('unexisted')).to.be.undefined;
+    });
+
+    it('should remove args and return undefined for non-existing arg', () => {
+      const argName = 'argField';
+      const argConfig = { type: GraphQLString };
+      resolver.setArg(argName, argConfig);
+      resolver.removeArg(argName);
+      expect(resolver.getArg(argName)).to.be.undefined;
+    });
+
+    it('should have wrapArgs() method', () => {
+      const newResolver = resolver.wrapArgs((prevArgs) => {
+        return { ...prevArgs, arg1: 'String' };
+      });
+
+      expect(newResolver.getArg('arg1').type).equal(GraphQLString);
+    });
+
+    it('should make args required', () => {
+      resolver.setArgs({
+        b1: { type: GraphQLString },
+        b2: { type: 'String' },
+        b3: 'String',
+        b4: 'String',
+      });
+      resolver.makeRequired('b1');
+      resolver.makeRequired(['b2', 'b3']);
+      expect(resolver.isRequired('b1')).to.be.true;
+      expect(resolver.getArgType('b1')).instanceof(GraphQLNonNull);
+      expect(resolver.isRequired('b2')).to.be.true;
+      expect(resolver.isRequired('b3')).to.be.true;
+      expect(resolver.isRequired('b4')).to.be.false;
+    });
+
+    it('should make args optional', () => {
+      resolver.setArgs({
+        b1: { type: new GraphQLNonNull(GraphQLString) },
+        b2: { type: 'String!' },
+        b3: 'String!',
+        b4: 'String!',
+      });
+      resolver.makeOptional('b1');
+      resolver.makeOptional(['b2', 'b3']);
+      expect(resolver.isRequired('b1')).to.be.false;
+      expect(resolver.getArgType('b1')).equal(GraphQLString);
+      expect(resolver.isRequired('b2')).to.be.false;
+      expect(resolver.isRequired('b3')).to.be.false;
+      expect(resolver.isRequired('b4')).to.be.true;
+    });
   });
 
 
   it('should return data from resolve', async () => {
-    const resolver = new Resolver({
+    const myResolver = new Resolver({
       name: 'customResolver',
       resolve: () => ({ name: 'Nodkz' }),
       outputType: `
@@ -125,7 +184,7 @@ describe('Resolver', () => {
     });
 
     GQC.rootQuery().addRelation('resolveUser', () => ({
-      resolver: resolver,
+      resolver: myResolver,
       args: {},
       projection: { _id: true },
     }));
@@ -143,21 +202,6 @@ describe('Resolver', () => {
     });
   });
 
-  it('should have wrapArgs() method', () => {
-    const newResolver = resolver.wrapArgs((prevArgs) => {
-      return { ...prevArgs, arg1: 'String' };
-    });
-
-    expect(newResolver.getArg('arg1').type).equal(GraphQLString);
-  });
-
-  it('should have wrapOutputType() method', () => {
-    const newResolver = resolver.wrapOutputType((prevOutputType) => { // eslint-disable-line
-      return 'String';
-    });
-
-    expect(newResolver.getOutputType()).equal(GraphQLString);
-  });
 
   describe('addFilterArg', () => {
     it('should add arg to filter and setup default value', () => {

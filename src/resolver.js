@@ -5,6 +5,7 @@ import objectPath from 'object-path';
 import util from 'util';
 import {
   GraphQLInputObjectType,
+  GraphQLNonNull,
   GraphQLEnumType,
   isOutputType,
 } from 'graphql';
@@ -30,6 +31,7 @@ import type {
   ResolverWrapFn,
   ResolverWrapArgsFn,
   ResolverWrapOutputTypeFn,
+  GraphQLInputType,
 } from './definition';
 import InputTypeComposer from './inputTypeComposer';
 import { typeByPath } from './typeByPath';
@@ -79,6 +81,14 @@ export default class Resolver {
     return undefined;
   }
 
+  getArgType(argName: string): GraphQLInputType | void {
+    const arg = this.getArg(argName);
+    if (arg) {
+      return arg.type;
+    }
+    return undefined;
+  }
+
   getArgs(): GraphQLFieldConfigArgumentMap {
     return this.args;
   }
@@ -93,6 +103,36 @@ export default class Resolver {
 
   removeArg(argName: string) {
     delete this.args[argName];
+  }
+
+  isRequired(argName: string): boolean {
+    return this.getArgType(argName) instanceof GraphQLNonNull;
+  }
+
+  makeRequired(argNameOrArray: string | Array<string>) {
+    const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
+    const args = this.getArgs();
+    argNames.forEach((argName) => {
+      if (args[argName]) {
+        if (!(args[argName].type instanceof GraphQLNonNull)) {
+          args[argName].type = new GraphQLNonNull(args[argName].type);
+        }
+      }
+    });
+    this.setArgs(args);
+  }
+
+  makeOptional(argNameOrArray: string | Array<string>) {
+    const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
+    const args = this.getArgs();
+    argNames.forEach((argName) => {
+      if (argNames.includes(argName)) {
+        if (args[argName].type instanceof GraphQLNonNull) {
+          args[argName].type = args[argName].type.ofType;
+        }
+      }
+    });
+    this.setArgs(args);
   }
 
   /*
@@ -168,7 +208,7 @@ export default class Resolver {
 
   setKind(kind: string) {
     if (kind !== 'query' && kind !== 'mutation' && kind !== 'subscription') {
-      throw new Error('You provide incorrect value for Resolver.setKind method. '
+      throw new Error(`You provide incorrect value '${kind}' for Resolver.setKind method. `
                     + 'Valid values are: query | mutation | subscription');
     }
     this.kind = kind;
