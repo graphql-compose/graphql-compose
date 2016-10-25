@@ -38,7 +38,7 @@ import { typeByPath } from './typeByPath';
 
 
 export default class Resolver {
-  outputType: ?GraphQLOutputType;
+  outputType: GraphQLOutputType;
   args: GraphQLFieldConfigArgumentMap;
   resolve: ResolverMWResolveFn;
   name: string;
