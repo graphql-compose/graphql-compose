@@ -31,9 +31,9 @@ describe('InputTypeComposer', () => {
   });
 
 
-  it('should has `addFields` method', () => {
+  it('should has `setField` method', () => {
     const tc = new InputTypeComposer(objectType);
-    tc.addField('input3', { type: GraphQLString });
+    tc.setField('input3', { type: GraphQLString });
     const fieldNames = Object.keys(objectType.getFields());
     expect(fieldNames).to.include('input3');
   });
@@ -41,7 +41,7 @@ describe('InputTypeComposer', () => {
 
   it('should add fields with converting types from string to object', () => {
     const tc = new InputTypeComposer(objectType);
-    tc.addField('input3', { type: 'String' });
+    tc.setField('input3', { type: 'String' });
     tc.addFields({
       input4: { type: '[Int]' },
       input5: { type: 'Boolean!' },

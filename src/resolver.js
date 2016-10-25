@@ -333,7 +333,7 @@ export default class Resolver {
       defaultValue,
     });
 
-    filterITC.addField(opts.name, {
+    filterITC.setField(opts.name, {
       ...only(opts, ['name', 'type', 'defaultValue', 'description']),
     });
 

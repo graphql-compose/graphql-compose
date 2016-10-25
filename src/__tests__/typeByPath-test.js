@@ -15,7 +15,7 @@ describe('typeByPath', () => {
   const spotITC = InputTypeComposer.create(
     'input SpotInput { lon: Float, lat: Float, distance: Float }'
   );
-  spotITC.addField('subSpot', spotITC);
+  spotITC.setField('subSpot', spotITC);
   const tc = TypeComposer.create({
     name: 'Place',
     fields: {

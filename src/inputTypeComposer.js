@@ -109,10 +109,15 @@ export default class InputTypeComposer {
     delete this.gqType._fields; // if schema was builded, delete defineFieldMap
   }
 
+  setField(fieldName: string, fieldConfig: InputObjectFieldConfig) {
+    this.addFields({ [fieldName]: fieldConfig });
+  }
+
   /**
-   * Add field to a GraphQL type
-   */
+  * @deprecated 2.0.0
+  */
   addField(fieldName: string, fieldConfig: InputObjectFieldConfig) {
+    deprecate('Use InputTypeComposer.setField() or plural addFields({}) instead.');
     this.addFields({ [fieldName]: fieldConfig });
   }
 
