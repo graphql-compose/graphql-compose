@@ -227,7 +227,7 @@ export default class InputTypeComposer {
     this.makeRequired(fieldNameOrArray);
   }
 
-  makeFieldsOptional(fieldNameOrArray: string | Array<string>) {
+  makeOptional(fieldNameOrArray: string | Array<string>) {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     fieldNames.forEach((fieldName) => {
@@ -238,6 +238,14 @@ export default class InputTypeComposer {
       }
     });
     this.setFields(fields);
+  }
+
+  /**
+  * @deprecated 2.0.0
+  */
+  makeFieldsOptional(fieldNameOrArray: string | Array<string>) {
+    deprecate('Use InputTypeComposer.makeOptional() instead.');
+    this.makeOptional(fieldNameOrArray);
   }
 
   /**
