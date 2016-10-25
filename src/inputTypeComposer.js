@@ -206,7 +206,7 @@ export default class InputTypeComposer {
     return this.isRequired(fieldName);
   }
 
-  makeFieldsRequired(fieldNameOrArray: string | Array<string>) {
+  makeRequired(fieldNameOrArray: string | Array<string>) {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     fieldNames.forEach((fieldName) => {
@@ -217,6 +217,14 @@ export default class InputTypeComposer {
       }
     });
     this.setFields(fields);
+  }
+
+  /**
+  * @deprecated 2.0.0
+  */
+  makeFieldsRequired(fieldNameOrArray: string | Array<string>) {
+    deprecate('Use InputTypeComposer.makeRequired() instead.');
+    this.makeRequired(fieldNameOrArray);
   }
 
   makeFieldsOptional(fieldNameOrArray: string | Array<string>) {
