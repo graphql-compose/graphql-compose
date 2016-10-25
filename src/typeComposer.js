@@ -3,7 +3,6 @@
 import {
   GraphQLObjectType,
   GraphQLInputObjectType,
-  getNamedType,
 } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
@@ -32,7 +31,8 @@ import type {
   GraphQLArgumentConfig,
   ProjectionType,
   ProjectionMapType,
-} from './definition.js';
+  ResolverOpts,
+} from './definition';
 
 
 export default class TypeComposer {
@@ -409,17 +409,18 @@ export default class TypeComposer {
     this.gqType._gqcResolvers.set(name, resolver);
   }
 
-  addResolver(resolver: Resolver): void {
+  addResolver(resolver: Resolver | ResolverOpts): void {
+    if (!(resolver instanceof Resolver)) {
+      resolver = new Resolver(resolver); // eslint-disable-line no-param-reassign
+    }
+
     if (!resolver.name) {
       throw new Error('resolver should have non-empty name property');
     }
     this.setResolver(resolver.name, resolver);
   }
 
-  removeResolver(resolver: string|Resolver): void {
-    const resolverName = resolver instanceof Resolver
-      ? resolver.name
-      : resolver;
+  removeResolver(resolverName: string): void {
     if (resolverName) {
       this.getResolvers().delete(resolverName);
     }

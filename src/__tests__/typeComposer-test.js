@@ -10,32 +10,33 @@ import {
 } from 'graphql';
 import GQC from '../gqc';
 import TypeComposer from '../typeComposer';
+import Resolver from '../resolver';
 
 
 describe('TypeComposer', () => {
-  describe('fields manipulation', () => {
-    let objectType;
+  let objectType;
+  let tc;
 
-    beforeEach(() => {
-      objectType = new GraphQLObjectType({
-        name: 'Readable',
-        fields: {
-          field1: { type: GraphQLString },
-          field2: { type: GraphQLString },
-        },
-      });
+  beforeEach(() => {
+    objectType = new GraphQLObjectType({
+      name: 'Readable',
+      fields: {
+        field1: { type: GraphQLString },
+        field2: { type: GraphQLString },
+      },
     });
 
+    tc = new TypeComposer(objectType);
+  });
 
+  describe('fields manipulation', () => {
     it('should has `getFields` method', () => {
-      const tc = new TypeComposer(objectType);
       const fieldNames = Object.keys(tc.getFields());
       expect(fieldNames).to.have.members(['field1', 'field2']);
     });
 
 
     it('should has `addFields` method', () => {
-      const tc = new TypeComposer(objectType);
       tc.addField('field3', { type: GraphQLString });
       const fieldNames = Object.keys(objectType.getFields());
       expect(fieldNames).to.include('field3');
@@ -43,7 +44,6 @@ describe('TypeComposer', () => {
 
 
     it('should add fields with converting types from string to object', () => {
-      const tc = new TypeComposer(objectType);
       tc.addField('field3', { type: 'String' });
       tc.addFields({
         field4: { type: '[Int]' },
@@ -59,7 +59,6 @@ describe('TypeComposer', () => {
 
 
     it('should add fields with converting args types from string to object', () => {
-      const tc = new TypeComposer(objectType);
       tc.addField('field3', {
         type: 'String',
         args: {
@@ -76,7 +75,6 @@ describe('TypeComposer', () => {
 
 
     it('should add projection via addField and addFields', () => {
-      const tc = new TypeComposer(objectType);
       tc.addField('field3', {
         type: GraphQLString,
         projection: { field1: true, field2: true },
@@ -94,7 +92,6 @@ describe('TypeComposer', () => {
 
 
     it('should clone projection for fields', () => {
-      const tc = new TypeComposer(objectType);
       tc.addField('field3', {
         type: GraphQLString,
         projection: { field1: true, field2: true },
@@ -109,29 +106,29 @@ describe('TypeComposer', () => {
 
   describe('static method create()', () => {
     it('should create TC by typeName as a string', () => {
-      const TC = TypeComposer.create('TypeStub');
-      expect(TC).instanceof(TypeComposer);
-      expect(TC.getType()).instanceof(GraphQLObjectType);
-      expect(TC.getFields()).deep.equal({});
+      const myTC = TypeComposer.create('TypeStub');
+      expect(myTC).instanceof(TypeComposer);
+      expect(myTC.getType()).instanceof(GraphQLObjectType);
+      expect(myTC.getFields()).deep.equal({});
     });
 
     it('should create TC by type template string', () => {
-      const TC = TypeComposer.create(`
+      const myTC = TypeComposer.create(`
         type TestTypeTpl {
           f1: String
           # Description for some required Int field
           f2: Int!
         }
       `);
-      expect(TC).instanceof(TypeComposer);
-      expect(TC.getTypeName()).equal('TestTypeTpl');
-      expect(TC.getFieldType('f1')).equal(GraphQLString);
-      expect(TC.getFieldType('f2')).instanceof(GraphQLNonNull);
-      expect(TC.getFieldType('f2').ofType).equal(GraphQLInt);
+      expect(myTC).instanceof(TypeComposer);
+      expect(myTC.getTypeName()).equal('TestTypeTpl');
+      expect(myTC.getFieldType('f1')).equal(GraphQLString);
+      expect(myTC.getFieldType('f2')).instanceof(GraphQLNonNull);
+      expect(myTC.getFieldType('f2').ofType).equal(GraphQLInt);
     });
 
     it('should create TC by GraphQLObjectTypeConfig', () => {
-      const TC = TypeComposer.create({
+      const myTC = TypeComposer.create({
         name: 'TestType',
         fields: {
           f1: {
@@ -140,10 +137,10 @@ describe('TypeComposer', () => {
           f2: 'Int!',
         },
       });
-      expect(TC).instanceof(TypeComposer);
-      expect(TC.getFieldType('f1')).equal(GraphQLString);
-      expect(TC.getFieldType('f2')).instanceof(GraphQLNonNull);
-      expect(TC.getFieldType('f2').ofType).equal(GraphQLInt);
+      expect(myTC).instanceof(TypeComposer);
+      expect(myTC.getFieldType('f1')).equal(GraphQLString);
+      expect(myTC.getFieldType('f2')).instanceof(GraphQLNonNull);
+      expect(myTC.getFieldType('f2').ofType).equal(GraphQLInt);
     });
 
     it('should create TC by GraphQLObjectType', () => {
@@ -155,15 +152,15 @@ describe('TypeComposer', () => {
           },
         },
       });
-      const TC = TypeComposer.create(objType);
-      expect(TC).instanceof(TypeComposer);
-      expect(TC.getType()).equal(objType);
-      expect(TC.getFieldType('f1')).equal(GraphQLString);
+      const myTC = TypeComposer.create(objType);
+      expect(myTC).instanceof(TypeComposer);
+      expect(myTC.getType()).equal(objType);
+      expect(myTC.getFieldType('f1')).equal(GraphQLString);
     });
   });
 
   it('should return type by path', () => {
-    const tc = new TypeComposer(new GraphQLObjectType({
+    const myTC = new TypeComposer(new GraphQLObjectType({
       name: 'Readable',
       fields: {
         field1: {
@@ -177,7 +174,58 @@ describe('TypeComposer', () => {
       },
     }));
 
-    expect(tc.get('field1')).equal(GraphQLString);
-    expect(tc.get('field1.@arg1')).equal(GraphQLInt);
+    expect(myTC.get('field1')).equal(GraphQLString);
+    expect(myTC.get('field1.@arg1')).equal(GraphQLInt);
+  });
+
+  describe('Resolvers', () => {
+    it('addResolver() should accept Resolver instance', () => {
+      const resolver = new Resolver({
+        name: 'myResolver',
+      });
+      tc.addResolver(resolver);
+      expect(tc.getResolver('myResolver')).equal(resolver);
+      expect(tc.hasResolver('myResolver')).to.be.true;
+      expect(tc.hasResolver('myResolverXXX')).to.be.false;
+    });
+
+    it('addResolver() should accept Resolver options and create instance', () => {
+      const resolverOpts = {
+        name: 'myResolver2',
+      };
+      tc.addResolver(resolverOpts);
+      expect(tc.getResolver('myResolver2')).instanceof(Resolver);
+      expect(tc.getResolver('myResolver2').name).equal('myResolver2');
+    });
+
+    it('removeResolver() should work', () => {
+      const resolver = new Resolver({
+        name: 'myResolver3',
+      });
+      tc.addResolver(resolver);
+      expect(tc.hasResolver('myResolver3')).to.be.true;
+      tc.removeResolver('myResolver3');
+      expect(tc.hasResolver('myResolver3')).to.be.false;
+      expect(tc.getResolver('myResolver3')).to.be.undefined;
+    });
+
+    it('setResolver() should add resolver with specific name', () => {
+      const resolver = new Resolver({
+        name: 'myResolver4',
+      });
+      tc.setResolver('specName4', resolver);
+      expect(tc.hasResolver('specName4')).to.be.true;
+      expect(tc.hasResolver('myResolver4')).to.be.false;
+    });
+
+    it('getResolvers() should return Map', () => {
+      expect(tc.getResolvers()).instanceof(Map);
+      tc.addResolver({
+        name: 'myResolver5',
+      });
+      expect(
+        Array.from(tc.getResolvers().keys())
+      ).include('myResolver5');
+    });
   });
 });
