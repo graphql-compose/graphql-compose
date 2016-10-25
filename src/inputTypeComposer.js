@@ -194,8 +194,16 @@ export default class InputTypeComposer {
     this.gqType.description = description;
   }
 
-  isFieldRequired(fieldName: string): boolean {
+  isRequired(fieldName: string): boolean {
     return this.getFieldType(fieldName) instanceof GraphQLNonNull;
+  }
+
+  /**
+  * @deprecated 2.0.0
+  */
+  isFieldRequired(fieldName: string): boolean {
+    deprecate('Use InputTypeComposer.isRequired() instead.');
+    return this.isRequired(fieldName);
   }
 
   makeFieldsRequired(fieldNameOrArray: string | Array<string>) {
