@@ -27,6 +27,7 @@ describe('typeByPath', () => {
           size: 'Int',
         },
       },
+      points: '[LonLat]',
     },
   });
   const rsv = new Resolver({
@@ -74,6 +75,25 @@ describe('typeByPath', () => {
       expect(tc.get('$findSpots.title')).equal(GraphQLString);
       expect(tc.get('$findSpots.image.@size')).equal(GraphQLInt);
     });
+
+    it('should return same GraphQL type instances', () => {
+      expect(tc.get('lonLat').getType()).to.be.ok;
+      // via TypeComposer
+      expect(tc.get('lonLat').getType()).equal(tc.get('lonLat').getType());
+      // scalar type
+      expect(tc.get('lonLat.lat')).equal(tc.get('lonLat.lat'));
+    });
+
+    it('should return same GraphQL type instances via resolver', () => {
+      expect(tc.get('$findSpots.lonLat').getType()).to.be.ok;
+      expect(tc.get('$findSpots.lonLat').getType())
+        .equal(tc.get('$findSpots.lonLat').getType());
+
+      // for wrapped type eg Array
+      expect(tc.get('$findSpots.points').getType()).to.be.ok;
+      expect(tc.get('$findSpots.points').getType())
+        .equal(tc.get('$findSpots.points').getType());
+    });
   });
 
   describe('for InputTypeComposer', () => {
@@ -99,6 +119,14 @@ describe('typeByPath', () => {
     it('should return outputType fields types', () => {
       expect(rsv.get('title')).equal(GraphQLString);
       expect(rsv.get('image.@size')).equal(GraphQLInt);
+    });
+
+    it('should return same GraphQL type instances', () => {
+      expect(rsv.get('@spot').getType()).to.be.ok;
+      // via InputTypeComposer
+      expect(rsv.get('@spot').getType()).equal(rsv.get('@spot').getType());
+      // scalar type
+      expect(rsv.get('@spot.lat')).equal(rsv.get('@spot.lat'));
     });
   });
 });

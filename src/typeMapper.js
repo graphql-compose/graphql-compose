@@ -148,7 +148,6 @@ class TypeMapper {
     fieldName: string,
     typeName: string
   ): GraphQLFieldConfig {
-    let fieldTypeName;
     let type;
     let args;
 
@@ -164,12 +163,13 @@ class TypeMapper {
     }
 
     if (typeof fieldConfig === 'string') {
-      fieldTypeName = fieldConfig;
-    } else if (typeof fieldConfig.type === 'string') {
-      fieldTypeName = fieldConfig.type;
+      fieldConfig = { // eslint-disable-line no-param-reassign
+        type: fieldConfig,
+      };
     }
 
-    if (fieldTypeName) {
+    if (typeof fieldConfig.type === 'string') {
+      const fieldTypeName = fieldConfig.type;
       type = this.getWrapped(fieldTypeName);
       if (!isOutputType(type)) {
         throw new Error(`${typeName}.${fieldName} provided incorrect output type '${fieldTypeName}'`);
@@ -210,13 +210,11 @@ class TypeMapper {
   }
 
   convertArgConfig(
-    argConfig: GraphQLArgumentConfig,
+    argConfig: GraphQLArgumentConfig | string,
     argName: string,
     fieldName: string,
     typeName: string
   ): GraphQLArgumentConfig {
-    let argTypeName;
-
     if (argConfig instanceof InputTypeComposer) {
       return { type: argConfig.getType() };
     }
@@ -226,12 +224,14 @@ class TypeMapper {
     }
 
     if (typeof argConfig === 'string') {
-      argTypeName = argConfig;
-    } else if (typeof argConfig.type === 'string') {
-      argTypeName = argConfig.type;
+      argConfig = { // eslint-disable-line no-param-reassign
+        // $FlowFixMe
+        type: argConfig,
+      };
     }
 
-    if (argTypeName) {
+    if (typeof argConfig.type === 'string') {
+      const argTypeName = argConfig.type;
       const type = this.getWrapped(argTypeName);
       if (!isInputType(type)) {
         throw new Error(`${typeName}.${fieldName}@${argName} provided incorrect input type '${argTypeName}'`);
@@ -276,8 +276,6 @@ class TypeMapper {
     fieldName: string,
     typeName: string
   ): InputObjectFieldConfig {
-    let fieldTypeName;
-
     if (fieldConfig instanceof InputTypeComposer) {
       return { type: fieldConfig.getType() };
     }
@@ -287,12 +285,14 @@ class TypeMapper {
     }
 
     if (typeof fieldConfig === 'string') {
-      fieldTypeName = fieldConfig;
-    } else if (typeof fieldConfig.type === 'string') {
-      fieldTypeName = fieldConfig.type;
+      fieldConfig = { // eslint-disable-line no-param-reassign
+        type: fieldConfig,
+      };
     }
 
-    if (fieldTypeName) {
+
+    if (typeof fieldConfig.type === 'string') {
+      const fieldTypeName = fieldConfig.type;
       const type = this.getWrapped(fieldTypeName);
       if (!isInputType(type)) {
         throw new Error(`${typeName}.${fieldName} provided incorrect input type '${fieldTypeName}'`);

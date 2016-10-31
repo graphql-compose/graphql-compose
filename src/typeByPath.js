@@ -112,16 +112,16 @@ export function processType(
   restParts: Array<string>
 ): mixed {
   if (!type) return undefined;
-  const unwrappedInputType = getNamedType(type);
+  const unwrappedType = getNamedType(type);
 
-  if (unwrappedInputType instanceof GraphQLObjectType) {
-    const tc = new TypeComposer(unwrappedInputType);
+  if (unwrappedType instanceof GraphQLObjectType) {
+    const tc = new TypeComposer(unwrappedType);
     if (restParts.length > 0) {
       return typeByPathTC(tc, restParts);
     }
     return tc;
-  } else if (unwrappedInputType instanceof GraphQLInputObjectType) {
-    const itc = new InputTypeComposer(unwrappedInputType);
+  } else if (unwrappedType instanceof GraphQLInputObjectType) {
+    const itc = new InputTypeComposer(unwrappedType);
     if (restParts.length > 0) {
       return typeByPathITC(itc, restParts);
     }
@@ -131,5 +131,5 @@ export function processType(
   if (restParts.length > 0) {
     return undefined;
   }
-  return unwrappedInputType;
+  return unwrappedType;
 }
