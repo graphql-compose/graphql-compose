@@ -55,15 +55,18 @@ export default class ComposeStorage {
   buildSchema() {
     const roots = {};
 
+    const createdRelations = new Set();
+
     if (this.has('Query')) {
       const tc = this.get('Query');
-      this.buildRelations(tc, new Set());
+      this.buildRelations(tc, createdRelations);
       this.removeEmptyTypes(tc, new Set());
       roots.query = tc.getType();
     }
 
     if (this.has('Mutation')) {
       const tc = this.get('Mutation');
+      this.buildRelations(tc, createdRelations);
       this.removeEmptyTypes(tc, new Set());
       roots.mutation = tc.getType();
     }
