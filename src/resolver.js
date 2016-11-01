@@ -196,6 +196,7 @@ export default class Resolver {
     return {
       type: this.getOutputType(),
       args: this.getArgs(),
+      description: this.description,
       resolve: (source, args, context, info) => {
         let projection = getProjectionFromAST(info);
         if (opts.projection) {
