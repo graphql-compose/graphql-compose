@@ -166,6 +166,15 @@ export default class Resolver {
       return;
     }
 
+    if (gqType instanceof Resolver) {
+      this.outputType = gqType.getOutputType();
+      return;
+    }
+
+    if (gqType instanceof InputTypeComposer) {
+      throw new Error('You provide InputTypeComposer as OutputType for Resolver.outputType. It may by ScalarType or OutputObjectType.');
+    }
+
     if (isString(gqType)) {
       // $FlowFixMe
       if (gqType.indexOf('{') === -1) {

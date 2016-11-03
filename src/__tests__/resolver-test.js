@@ -61,7 +61,7 @@ describe('Resolver', () => {
 
     it('should convert type as string to GraphQLType in outputType', () => {
       const myResolver = new Resolver({
-        name: 'customResolver',
+        name: 'myResolver',
         outputType: 'String!',
       });
       expect(myResolver.outputType).instanceof(GraphQLNonNull);
@@ -71,12 +71,50 @@ describe('Resolver', () => {
 
     it('should convert type definition to GraphQLType in outputType', () => {
       const myResolver = new Resolver({
-        name: 'customResolver',
+        name: 'myResolver',
         outputType: `
           type SomeType {
             name: String
           }
         `,
+      });
+      expect(myResolver.outputType).instanceof(GraphQLObjectType);
+      expect(myResolver.outputType.name).equal('SomeType');
+    });
+
+    it('should accept TypeComposer for outputType', () => {
+      const typeTC = TypeComposer.create('type SomeType22 { test: String }');
+      const myResolver = new Resolver({
+        name: 'myResolver',
+        outputType: typeTC,
+      });
+      expect(myResolver.outputType).instanceof(GraphQLObjectType);
+      expect(myResolver.outputType.name).equal('SomeType22');
+    });
+
+    it('should throw error on InputTypeComposer for outputType', () => {
+      const someInputITC = InputTypeComposer.create('input SomeInputType { add: String }');
+      expect(() => {
+        new Resolver({
+          name: 'myResolver',
+          outputType: someInputITC,
+        });
+      }).to.throw('InputTypeComposer');
+    });
+
+    it('should accept Resolver for outputType', () => {
+      const someOtherResolver = new Resolver({
+        name: 'someOtherResolver',
+        outputType: `
+          type SomeType {
+            name: String
+          }
+        `,
+      });
+
+      const myResolver = new Resolver({
+        name: 'myResolver',
+        outputType: someOtherResolver,
       });
       expect(myResolver.outputType).instanceof(GraphQLObjectType);
       expect(myResolver.outputType.name).equal('SomeType');
