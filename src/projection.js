@@ -1,11 +1,11 @@
 /* eslint-disable no-param-reassign */
 
-export function getProjectionFromAST(context, fieldASTs)/* :ProjectionType */ {
+export function getProjectionFromAST(context, fieldNodes)/* :ProjectionType */ {
   if (!context) {
     return null;
   }
 
-  let asts = fieldASTs || context.fieldASTs;
+  let asts = fieldNodes || context.fieldNodes || context.fieldASTs;
   if (!Array.isArray(asts)) {
     asts = [asts];
   }
@@ -61,8 +61,8 @@ export function getProjectionFromAST(context, fieldASTs)/* :ProjectionType */ {
   return projection;
 }
 
-export function getFlatProjectionFromAST(context, fieldASTs) {
-  const projection = getProjectionFromAST(context, fieldASTs);
+export function getFlatProjectionFromAST(context, fieldNodes) {
+  const projection = getProjectionFromAST(context, fieldNodes);
   const flatProjection = {};
   Object.keys(projection).forEach(key => {
     flatProjection[key] = !!projection[key];
