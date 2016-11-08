@@ -7,6 +7,7 @@ import {
   GraphQLInt,
   GraphQLFloat,
   GraphQLBoolean,
+  GraphQLInterfaceType,
 } from 'graphql';
 import TypeComposer from '../typeComposer';
 import Resolver from '../resolver';
@@ -32,6 +33,9 @@ describe('TypeComposer', () => {
     it('should has `getFields` method', () => {
       const fieldNames = Object.keys(tc.getFields());
       expect(fieldNames).to.have.members(['field1', 'field2']);
+
+      const tc2 = TypeComposer.create('SomeType');
+      expect(tc2.getFields()).to.deep.equal({});
     });
 
 
@@ -102,6 +106,16 @@ describe('TypeComposer', () => {
       });
     });
 
+    it('should remove one field', () => {
+      tc.removeField('field1');
+      expect(tc.getFieldNames()).to.have.members(['field2']);
+    });
+
+    it('should remove list of fields', () => {
+      tc.removeField(['field1', 'field2']);
+      expect(tc.getFieldNames()).to.have.members([]);
+    });
+
     it('should extend field by name', () => {
       tc.setField('field3', {
         type: GraphQLString,
@@ -116,6 +130,43 @@ describe('TypeComposer', () => {
         type: 'Int',
       });
       expect(tc.getField('field3')).property('type').to.be.equal(GraphQLInt);
+    });
+  });
+
+  describe('interfaces manipulation', () => {
+    it('should has `getInterfaces` method', () => {
+      expect(tc.getInterfaces()).to.have.members([]);
+    });
+
+
+    it('should has working `addInterface`, `hasInterface`, `removeInterface` methods', () => {
+      const iface = new GraphQLInterfaceType({
+        name: 'Node',
+        description: '',
+        fields: () => ({}),
+        resolveType: () => {},
+      });
+      tc.addInterface(iface);
+      expect(tc.getInterfaces()).to.have.members([iface]);
+      expect(tc.hasInterface(iface)).to.be.true;
+      const iface2 = new GraphQLInterfaceType({
+        name: 'Node',
+        description: '',
+        fields: () => ({}),
+        resolveType: () => {},
+      });
+      tc.addInterface(iface2);
+      expect(tc.getInterfaces()).to.have.members([iface, iface2]);
+      expect(tc.hasInterface(iface2)).to.be.true;
+
+      tc.removeInterface(iface);
+      expect(tc.hasInterface(iface)).to.be.false;
+      expect(tc.hasInterface(iface2)).to.be.true;
+    });
+
+    it('should remove interface', () => {
+      tc.removeField('field1');
+      expect(tc.getFieldNames()).to.have.members(['field2']);
     });
   });
 
