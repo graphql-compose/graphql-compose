@@ -101,6 +101,22 @@ describe('TypeComposer', () => {
         field3: { field1: true, field2: true },
       });
     });
+
+    it('should extend field by name', () => {
+      tc.setField('field3', {
+        type: GraphQLString,
+        projection: { field1: true, field2: true },
+      });
+      tc.extendField('field3', {
+        description: 'this is field #3',
+      });
+      expect(tc.getField('field3')).property('type').to.be.equal(GraphQLString);
+      expect(tc.getField('field3')).property('description').to.equal('this is field #3');
+      tc.extendField('field3', {
+        type: 'Int',
+      });
+      expect(tc.getField('field3')).property('type').to.be.equal(GraphQLInt);
+    });
   });
 
   describe('static method create()', () => {

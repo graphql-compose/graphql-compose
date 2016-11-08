@@ -169,6 +169,12 @@ export default class TypeComposer {
     this.setFields(Object.assign({}, fields)); // immutability
   }
 
+  extendField(name: string, parialFieldConfig: GraphQLFieldConfig): GraphQLFieldConfig {
+    const fieldConfig = Object.assign({}, this.getField(name), parialFieldConfig);
+    this.setField(name, fieldConfig);
+    return fieldConfig;
+  }
+
   addRelation(fieldName: string, relationFn: RelationThunk): TypeComposer {
     if (!this.gqType._gqcRelations) {
       this.gqType._gqcRelations = {};
