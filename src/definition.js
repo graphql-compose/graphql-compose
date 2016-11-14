@@ -3,7 +3,7 @@
 
 import type {
   GraphQLFieldConfigArgumentMap as _GraphQLFieldConfigArgumentMap,
-  GraphQLFieldResolveFn as _GraphQLFieldResolveFn,
+  GraphQLFieldResolver as _GraphQLFieldResolver,
   GraphQLResolveInfo as _GraphQLResolveInfo,
   GraphQLArgumentConfig as _GraphQLArgumentConfig,
   GraphQLOutputType as _GraphQLOutputType,
@@ -14,21 +14,19 @@ import type {
   GraphQLFieldConfig as _GraphQLFieldConfig,
   GraphQLFieldConfigMap as _GraphQLFieldConfigMap,
   GraphQLType as _GraphQLType,
-  InputObjectConfig as _InputObjectConfig,
-  InputObjectField as _InputObjectField,
-  InputObjectFieldConfig as _InputObjectFieldConfig,
-  InputObjectConfigFieldMap as _InputObjectConfigFieldMap,
-  //  InputObjectConfigFieldMapThunk as _InputObjectConfigFieldMapThunk,
+  GraphQLInputObjectTypeConfig as _GraphQLInputObjectTypeConfig,
+  GraphQLInputField as _GraphQLInputField,
+  GraphQLInputFieldConfig as _GraphQLInputFieldConfig,
+  GraphQLInputFieldConfigMap as _GraphQLInputFieldConfigMap,
   GraphQLInterfaceType as _GraphQLInterfaceType,
   GraphQLInputType as _GraphQLInputType,
   GraphQLNullableType as _GraphQLNullableType,
 } from 'graphql/type/definition.js';
 
-import type Resolver from './resolver/resolver';
-import type ResolverList from './resolver/resolverList';
+import type Resolver from './resolver';
 import type InputTypeComposer from './inputTypeComposer';
 
-
+export type Thunk<T> = (() => T) | T;
 export type ObjectMap = { [optName: string]: mixed };
 export type ProjectionType = { [fieldName: string]: true | ProjectionType };
 export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
@@ -36,22 +34,20 @@ export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 // GRAPHQL RE-EXPORT --------------------
 export type GraphQLType = _GraphQLType;
 export type GraphQLObjectType = _GraphQLObjectType;
-export type GraphQLObjectTypeConfig = _GraphQLObjectTypeConfig;
+export type GraphQLObjectTypeConfig = _GraphQLObjectTypeConfig<*>;
 export type GraphQLNullableType = _GraphQLNullableType;
 export type GraphQLInterfaceType = _GraphQLInterfaceType;
-export type GraphQLInterfacesThunk = () => Array<GraphQLInterfaceType>;
 export type GraphQLOutputType = _GraphQLOutputType;
-export type InputObjectField = _InputObjectField;
+export type GraphQLInputField = _GraphQLInputField;
 export type GraphQLInputObjectType = _GraphQLInputObjectType;
-export type InputObjectConfig = _InputObjectConfig;
+export type GraphQLInputObjectTypeConfig = _GraphQLInputObjectTypeConfig;
 export type GraphQLFieldConfigArgumentMap = _GraphQLFieldConfigArgumentMap;
-export type GraphQLFieldResolveFn = _GraphQLFieldResolveFn<*>;
+export type GraphQLFieldResolver = _GraphQLFieldResolver<*>;
 export type GraphQLResolveInfo = _GraphQLResolveInfo;
 export type GraphQLArgumentConfig = _GraphQLArgumentConfig;
 export type GraphQLNamedType = _GraphQLNamedType;
 export type GraphQLFieldConfig = _GraphQLFieldConfig<*>;
 export type GraphQLFieldConfigMap = _GraphQLFieldConfigMap<*>;
-export type GraphQLFieldConfigMapThunk = () => GraphQLFieldConfigMap;
 export type ResolveParams = {
   source: mixed,
   args: {[argName: string]: mixed},
@@ -60,9 +56,8 @@ export type ResolveParams = {
   projection: ProjectionType,
   [opt: string]: mixed,
 };
-export type InputObjectFieldConfig = _InputObjectFieldConfig;
-export type InputObjectConfigFieldMap = _InputObjectConfigFieldMap;
-export type InputObjectConfigFieldMapThunk = () => InputObjectConfigFieldMap; // _InputObjectConfigFieldMapThunk;
+export type GraphQLInputFieldConfig = _GraphQLInputFieldConfig;
+export type GraphQLInputFieldConfigMap = _GraphQLInputFieldConfigMap;
 export type GraphQLInputType = _GraphQLInputType;
 
 export type GraphQLObjectTypeExtended = GraphQLObjectType & {
@@ -75,8 +70,7 @@ export type GraphQLObjectTypeExtended = GraphQLObjectType & {
 };
 
 // RELATION -----------------------------
-export type RelationThunkMap = { [fieldName: string]: RelationThunk };
-export type RelationThunk = () => RelationOpts;
+export type RelationThunkMap = { [fieldName: string]: Thunk<RelationOpts> };
 export type RelationOpts = {
   resolver: Resolver,
   args?: RelationArgsMapper,
@@ -107,7 +101,7 @@ export type ResolverMWOutputType = (next: ResolverMWOutputTypeFn) => ResolverMWO
 export type ResolverFieldConfig = {
   type: GraphQLOutputType,
   args: GraphQLFieldConfigArgumentMap,
-  resolve: GraphQLFieldResolveFn,
+  resolve: GraphQLFieldResolver,
   name?: ?string,
 };
 

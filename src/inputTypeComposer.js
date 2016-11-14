@@ -11,11 +11,11 @@ import TypeMapper from './typeMapper';
 import { typeByPath } from './typeByPath';
 
 import type {
-  InputObjectConfig,
-  InputObjectFieldConfig,
-  InputObjectConfigFieldMap,
-  InputObjectConfigFieldMapThunk,
-  InputObjectField,
+  Thunk,
+  GraphQLInputObjectTypeConfig,
+  GraphQLInputFieldConfig,
+  GraphQLInputFieldConfigMap,
+  GraphQLInputField,
   GraphQLInputType,
 } from './definition';
 
@@ -23,7 +23,7 @@ import type {
 export default class InputTypeComposer {
   gqType: GraphQLInputObjectType;
 
-  static create(opts: InputObjectConfig | string | GraphQLInputObjectType) {
+  static create(opts: GraphQLInputObjectTypeConfig | string | GraphQLInputObjectType) {
     let ITC;
 
     if (isString(opts)) {
@@ -54,6 +54,7 @@ export default class InputTypeComposer {
 
       // $FlowFixMe
       if (isObject(opts.fields)) {
+        // $FlowFixMe
         ITC.addFields(opts.fields);
       }
     } else {
@@ -74,8 +75,8 @@ export default class InputTypeComposer {
    * Get fields from a GraphQL type
    * WARNING: this method read an internal GraphQL instance variable.
    */
-  getFields(): InputObjectConfigFieldMap {
-    const fields: InputObjectConfigFieldMapThunk | InputObjectConfigFieldMap
+  getFields(): GraphQLInputFieldConfigMap {
+    const fields: Thunk<GraphQLInputFieldConfigMap>
       = this.gqType._typeConfig.fields;
 
     const fieldMap:mixed = resolveMaybeThunk(fields);
@@ -99,7 +100,7 @@ export default class InputTypeComposer {
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
-  setFields(fields: InputObjectConfigFieldMap): void {
+  setFields(fields: GraphQLInputFieldConfigMap): void {
     const prepearedFields = TypeMapper.convertInputFieldConfigMap(
       fields,
       this.getTypeName()
@@ -109,14 +110,14 @@ export default class InputTypeComposer {
     delete this.gqType._fields; // if schema was builded, delete defineFieldMap
   }
 
-  setField(fieldName: string, fieldConfig: InputObjectFieldConfig) {
+  setField(fieldName: string, fieldConfig: GraphQLInputFieldConfig) {
     this.addFields({ [fieldName]: fieldConfig });
   }
 
   /**
   * @deprecated 2.0.0
   */
-  addField(fieldName: string, fieldConfig: InputObjectFieldConfig) {
+  addField(fieldName: string, fieldConfig: GraphQLInputFieldConfig) {
     deprecate('Use InputTypeComposer.setField() or plural addFields({}) instead.');
     this.addFields({ [fieldName]: fieldConfig });
   }
@@ -124,14 +125,14 @@ export default class InputTypeComposer {
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  addFields(newFields: InputObjectConfigFieldMap) {
+  addFields(newFields: GraphQLInputFieldConfigMap) {
     this.setFields(Object.assign({}, this.getFields(), newFields));
   }
 
   /**
    * Get fieldConfig by name
    */
-  getField(fieldName: string): ?InputObjectField {
+  getField(fieldName: string): ?GraphQLInputFieldConfig {
     const fields = this.getFields();
 
     if (fields[fieldName]) {

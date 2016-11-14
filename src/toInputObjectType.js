@@ -18,7 +18,7 @@ import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
   GraphQLType,
-  InputObjectFieldConfig,
+  GraphQLInputFieldConfig,
   GraphQLInputType,
 } from './definition.js';
 
@@ -88,7 +88,7 @@ export type convertInputObjectFieldOpts = {
 export function convertInputObjectField(
   field: GraphQLFieldConfig,
   opts: convertInputObjectFieldOpts
-): InputObjectFieldConfig {
+): GraphQLInputFieldConfig {
   let fieldType: GraphQLType = field.type;
 
   const wrappers = [];

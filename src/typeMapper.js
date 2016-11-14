@@ -58,8 +58,8 @@ import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
-  InputObjectConfigFieldMap,
-  InputObjectFieldConfig,
+  GraphQLInputFieldConfigMap,
+  GraphQLInputFieldConfig,
 } from './definition';
 
 import TypeComposer from './typeComposer';
@@ -67,15 +67,15 @@ import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
 
 import type {
-  Document,
-  ObjectTypeDefinition,
-  InterfaceTypeDefinition,
-  Type,
-  NamedType,
-  Directive,
-  InputValueDefinition,
-  EnumTypeDefinition,
-  InputObjectTypeDefinition,
+  DocumentNode,
+  ObjectTypeDefinitionNode,
+  InterfaceTypeDefinitionNode,
+  TypeNode,
+  NamedTypeNode,
+  DirectiveNode,
+  InputValueDefinitionNode,
+  EnumTypeDefinitionNode,
+  InputObjectTypeDefinitionNode,
 } from 'graphql/language/ast';
 
 
@@ -119,12 +119,12 @@ class TypeMapper {
   }
 
   getWrapped(str: string): ?GraphQLType {
-    const inputTypeAST: Type = parseType(str);
+    const inputTypeAST: TypeNode = parseType(str);
     return typeFromAST(inputTypeAST);
   }
 
   createType(str: string): ?GraphQLNamedType {
-    const astDocument: Document = parse(str);
+    const astDocument: DocumentNode = parse(str);
 
     if (objectPath.get(astDocument, 'kind') !== 'Document') {
       throw new Error('You should provide correct type syntax. '
@@ -186,12 +186,12 @@ class TypeMapper {
 
     // For performance reason
     // return new object only of type or args is converted
-    if (type || (args && args !== fieldConfig.args)) {
+    if (type || (args && fieldConfig.args && args !== fieldConfig.args)) {
       return {
         ...fieldConfig,
         // $FlowFixMe
         type: type || fieldConfig.type,
-        args: args || fieldConfig.args,
+        args: args || fieldConfig.args || undefined,
       };
     }
 
@@ -272,10 +272,10 @@ class TypeMapper {
   }
 
   convertInputFieldConfig(
-    fieldConfig: InputObjectFieldConfig,
+    fieldConfig: GraphQLInputFieldConfig,
     fieldName: string,
     typeName: string
-  ): InputObjectFieldConfig {
+  ): GraphQLInputFieldConfig {
     if (fieldConfig instanceof InputTypeComposer) {
       return { type: fieldConfig.getType() };
     }
@@ -314,9 +314,9 @@ class TypeMapper {
   }
 
   convertInputFieldConfigMap(
-    fields: InputObjectConfigFieldMap,
+    fields: GraphQLInputFieldConfigMap,
     typeName: string
-  ): InputObjectConfigFieldMap {
+  ): GraphQLInputFieldConfigMap {
     Object.keys(fields).forEach((name) => {
       fields[name] = this.convertInputFieldConfig(fields[name], name, typeName); // eslint-disable-line
     });
@@ -328,7 +328,7 @@ class TypeMapper {
 const typeMapper = new TypeMapper();
 export default typeMapper;
 
-function parseTypes(astDocument: Document): Array<GraphQLNamedType> {
+function parseTypes(astDocument: DocumentNode): Array<GraphQLNamedType> {
   const types = [];
   for (let i = 0; i < astDocument.definitions.length; i++) {
     const def = astDocument.definitions[i];
@@ -337,7 +337,7 @@ function parseTypes(astDocument: Document): Array<GraphQLNamedType> {
   return types;
 }
 
-function typeFromAST(inputTypeAST: Type): ?GraphQLType {
+function typeFromAST(inputTypeAST: TypeNode): ?GraphQLType {
   let innerType;
   if (inputTypeAST.kind === LIST_TYPE) {
     innerType = typeFromAST(inputTypeAST.type);
@@ -384,7 +384,7 @@ function makeSchemaDef(def) {
   }
 }
 
-function makeInputValues(values: Array<InputValueDefinition>) {
+function makeInputValues(values: Array<InputValueDefinitionNode>) {
   return keyValMap(
     values,
     value => value.name.value,
@@ -400,7 +400,7 @@ function makeInputValues(values: Array<InputValueDefinition>) {
 }
 
 function makeFieldDefMap(
-  def: ObjectTypeDefinition | InterfaceTypeDefinition
+  def: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode
 ) {
   return keyValMap(
     def.fields,
@@ -414,7 +414,7 @@ function makeFieldDefMap(
   );
 }
 
-function makeEnumDef(def: EnumTypeDefinition) {
+function makeEnumDef(def: EnumTypeDefinitionNode) {
   const enumType = new GraphQLEnumType({
     name: def.name.value,
     description: getDescription(def),
@@ -431,7 +431,7 @@ function makeEnumDef(def: EnumTypeDefinition) {
   return enumType;
 }
 
-function makeInputObjectDef(def: InputObjectTypeDefinition) {
+function makeInputObjectDef(def: InputObjectTypeDefinitionNode) {
   return new GraphQLInputObjectType({
     name: def.name.value,
     description: getDescription(def),
@@ -439,7 +439,7 @@ function makeInputObjectDef(def: InputObjectTypeDefinition) {
   });
 }
 
-function getNamedTypeAST(typeAST: Type): NamedType {
+function getNamedTypeAST(typeAST: TypeNode): NamedTypeNode {
   let namedType = typeAST;
   while (namedType.kind === LIST_TYPE || namedType.kind === NON_NULL_TYPE) {
     namedType = namedType.type;
@@ -449,7 +449,7 @@ function getNamedTypeAST(typeAST: Type): NamedType {
 
 function buildWrappedType(
   innerType: GraphQLType,
-  inputTypeAST: Type
+  inputTypeAST: TypeNode
 ): GraphQLType {
   if (inputTypeAST.kind === LIST_TYPE) {
     return new GraphQLList(buildWrappedType(innerType, inputTypeAST.type));
@@ -462,36 +462,36 @@ function buildWrappedType(
   return innerType;
 }
 
-function produceOutputType(typeAST: Type): GraphQLOutputType {
+function produceOutputType(typeAST: TypeNode): GraphQLOutputType {
   const type = produceType(typeAST);
   invariant(isOutputType(type), 'Expected Output type.');
   return (type: any);
 }
 
-function produceType(typeAST: Type): GraphQLType {
+function produceType(typeAST: TypeNode): GraphQLType {
   const typeName = getNamedTypeAST(typeAST).name.value;
   const typeDef = typeDefNamed(typeName);
   return buildWrappedType(typeDef, typeAST);
 }
 
-function produceInputType(typeAST: Type): GraphQLInputType {
+function produceInputType(typeAST: TypeNode): GraphQLInputType {
   const type = produceType(typeAST);
   invariant(isInputType(type), 'Expected Input type.');
   return (type: any);
 }
 
-function produceInterfaceType(typeAST: Type): GraphQLInterfaceType {
+function produceInterfaceType(typeAST: TypeNode): GraphQLInterfaceType {
   const type = produceType(typeAST);
   invariant(type instanceof GraphQLInterfaceType, 'Expected Object type.');
   return type;
 }
 
-function makeImplementedInterfaces(def: ObjectTypeDefinition) {
+function makeImplementedInterfaces(def: ObjectTypeDefinitionNode) {
   return def.interfaces &&
     def.interfaces.map(iface => produceInterfaceType(iface));
 }
 
-function makeTypeDef(def: ObjectTypeDefinition) {
+function makeTypeDef(def: ObjectTypeDefinitionNode) {
   const typeName = def.name.value;
   return new GraphQLObjectType({
     name: typeName,
@@ -501,7 +501,7 @@ function makeTypeDef(def: ObjectTypeDefinition) {
   });
 }
 
-function getDeprecationReason(directives: ?Array<Directive>): ?string {
+function getDeprecationReason(directives: ?Array<DirectiveNode>): ?string {
   const deprecatedAST = directives && find(
     directives,
     directive => directive.name.value === GraphQLDeprecatedDirective.name
@@ -510,8 +510,8 @@ function getDeprecationReason(directives: ?Array<Directive>): ?string {
     return;
   }
   const { reason } = getArgumentValues(
-    GraphQLDeprecatedDirective.args,
-    deprecatedAST.arguments
+    GraphQLDeprecatedDirective,
+    deprecatedAST
   );
   return (reason: any);
 }

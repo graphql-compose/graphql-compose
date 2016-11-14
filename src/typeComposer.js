@@ -14,19 +14,17 @@ import TypeMapper from './typeMapper';
 import { typeByPath } from './typeByPath';
 
 import type {
+  Thunk,
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
-  GraphQLFieldConfigMapThunk,
   GraphQLOutputType,
   GraphQLObjectTypeConfig,
   GraphQLObjectTypeExtended,
   GraphQLInterfaceType,
-  GraphQLInterfacesThunk,
   GetRecordIdFn,
-  RelationThunk,
+  RelationOpts,
   RelationThunkMap,
   RelationArgsMapperFn,
-  RelationOpts,
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
   ProjectionType,
@@ -87,7 +85,7 @@ export default class TypeComposer {
    * WARNING: this method read an internal GraphQL instance variable.
    */
   getFields(): GraphQLFieldConfigMap {
-    const fields: GraphQLFieldConfigMapThunk | GraphQLFieldConfigMap
+    const fields: Thunk<GraphQLFieldConfigMap>
       = this.gqType._typeConfig.fields;
 
     const fieldMap:mixed = resolveMaybeThunk(fields);
@@ -136,6 +134,7 @@ export default class TypeComposer {
   /**
    * Add new fields or replace existed in a GraphQL type
    */
+  // $FlowFixMe
   addFields(newFields: GraphQLFieldConfigMap): void {
     this.setFields(Object.assign({}, this.getFields(), newFields));
 
@@ -175,7 +174,7 @@ export default class TypeComposer {
     return fieldConfig;
   }
 
-  addRelation(fieldName: string, relationFn: RelationThunk): TypeComposer {
+  addRelation(fieldName: string, relationFn: Thunk<RelationOpts>): TypeComposer {
     if (!this.gqType._gqcRelations) {
       this.gqType._gqcRelations = {};
     }
@@ -205,7 +204,8 @@ export default class TypeComposer {
       throw new Error(`Cannot call buildRelation() for type ${this.getTypeName()}. `
                     + `Relation with name '${fieldName}' does not exist.`);
     }
-    const relationFn: RelationThunk = this.gqType._gqcRelations[fieldName];
+    const relationFn: Thunk<RelationOpts> = this.gqType._gqcRelations[fieldName];
+    // $FlowFixMe
     const relationOpts: RelationOpts = relationFn();
     this.addRelationRaw(fieldName, relationOpts.resolver, relationOpts);
   }
@@ -285,11 +285,12 @@ export default class TypeComposer {
    * WARNING: this method read an internal GraphQL instance variable.
    */
   getInterfaces(): Array<GraphQLInterfaceType> {
-    const interfaces: Array<GraphQLInterfaceType> | ?GraphQLInterfacesThunk
+    const interfaces: Array<GraphQLInterfaceType> | Thunk<?Array<GraphQLInterfaceType>>
+      // $FlowFixMe
       = this.gqType._typeConfig.interfaces || [];
 
     if (typeof interfaces === 'function') {
-      return interfaces();
+      return interfaces() || [];
     }
 
     return interfaces || [];

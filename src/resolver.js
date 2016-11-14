@@ -158,7 +158,7 @@ export default class Resolver {
     return this.outputType;
   }
 
-  setOutputType(gqType: GraphQLOutputType | string) {
+  setOutputType(gqType: GraphQLOutputType | string | TypeComposer | Resolver | InputTypeComposer) {
     let type;
 
     if (gqType instanceof TypeComposer) {
@@ -253,7 +253,7 @@ export default class Resolver {
   }
 
   wrap(cb: ?ResolverWrapFn, opts: ?ResolverOpts = {}): Resolver {
-    const prevResolver = this;
+    const prevResolver: Resolver = this;
     const newResolver = this.clone({
       name: 'wrap',
       parent: prevResolver,
