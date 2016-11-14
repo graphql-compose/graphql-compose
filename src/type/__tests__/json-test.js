@@ -1,3 +1,5 @@
+// copied from https://github.com/taion/graphql-type-json
+
 import { expect } from 'chai';
 import { graphql, GraphQLObjectType, GraphQLSchema } from 'graphql';
 
@@ -73,7 +75,6 @@ describe('GraphQLJSON', () => {
 
   describe('parseLiteral', () => {
     it('should support parsing literals', (done) => {
-      // Null values are not supported in GraphQL literals.
       graphql(schema, `
         {
           value(arg: {
@@ -82,12 +83,14 @@ describe('GraphQLJSON', () => {
             float: 3.14,
             true: true,
             false: false,
+            null: null,
             object: {
               string: "string",
               int: 3,
               float: 3.14,
               true: true,
               false: false,
+              null: null,
             },
             array: [
               "string",
@@ -95,6 +98,7 @@ describe('GraphQLJSON', () => {
               3.14,
               true,
               false,
+              null,
             ],
           }),
         }
@@ -105,12 +109,14 @@ describe('GraphQLJSON', () => {
           float: 3.14,
           true: true,
           false: false,
+          null: null,
           object: {
             string: 'string',
             int: 3,
             float: 3.14,
             true: true,
             false: false,
+            null: null,
           },
           array: [
             'string',
@@ -118,6 +124,7 @@ describe('GraphQLJSON', () => {
             3.14,
             true,
             false,
+            null,
           ],
         });
         done();
