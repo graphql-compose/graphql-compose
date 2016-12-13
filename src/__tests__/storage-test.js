@@ -120,7 +120,7 @@ describe('Storage [Class]', () => {
       expect(UserTC.getField('lastArticle').type.name).to.equal('Article');
     });
 
-    it('should convert relations in relations to fieldConfigs', () => {
+    it('should convert relations in relation to fieldConfigs', () => {
       ArticleTC.addRelation('user',
         () => ({
           resolver: UserTC.getResolver('findById'),
