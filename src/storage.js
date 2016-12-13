@@ -98,7 +98,6 @@ export default class ComposeStorage {
                     + 'field before run the schema build.');
         }
       } else {
-        createdRelations.add(typeAndField);
         typeComposer.buildRelation(relationFieldName);
       }
     });
