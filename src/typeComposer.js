@@ -2,6 +2,7 @@
 
 import {
   GraphQLObjectType,
+  GraphQLList,
   GraphQLInputObjectType,
 } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
@@ -388,6 +389,10 @@ export default class TypeComposer {
 
   getType(): GraphQLObjectType {
     return this.gqType;
+  }
+
+  getTypePlural(): GraphQLObjectType {
+    return new GraphQLList(this.gqType);
   }
 
   getInputType(): GraphQLInputObjectType {

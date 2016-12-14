@@ -384,4 +384,11 @@ describe('TypeComposer', () => {
       });
     });
   });
+
+  describe('get type methods', () => {
+    it('getTypePlural() should return wrapped type in GraphQLList', () => {
+      expect(tc.getTypePlural()).instanceof(GraphQLList);
+      expect(tc.getTypePlural().ofType).to.equal(tc.getType());
+    });
+  });
 });
