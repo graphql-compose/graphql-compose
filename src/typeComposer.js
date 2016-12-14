@@ -67,6 +67,7 @@ export default class TypeComposer {
 
       // $FlowFixMe
       if (isObject(opts.fields)) {
+        // $FlowFixMe
         TC.addFields(opts.fields);
       }
     } else {
@@ -91,6 +92,7 @@ export default class TypeComposer {
     const fieldMap:mixed = resolveMaybeThunk(fields);
 
     if (isObject(fieldMap)) {
+      // $FlowFixMe
       return Object.assign({}, fieldMap);
     }
     return {};
@@ -134,7 +136,6 @@ export default class TypeComposer {
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  // $FlowFixMe
   addFields(newFields: GraphQLFieldConfigMap): void {
     this.setFields(Object.assign({}, this.getFields(), newFields));
 

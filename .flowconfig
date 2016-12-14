@@ -16,4 +16,4 @@ suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
 esproposal.class_instance_fields=enable
 
 [version]
-0.32.0
+0.37.0

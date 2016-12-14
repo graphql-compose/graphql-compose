@@ -4,7 +4,8 @@
   "rules": {
     "no-underscore-dangle": 0,
     "arrow-body-style": 0,
-    "no-unused-expressions": 0
+    "no-unused-expressions": 0,
+    "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*-test.js"]}]
   },
   "env": {
     "jasmine": true,

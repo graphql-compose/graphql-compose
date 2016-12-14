@@ -15,7 +15,6 @@ import type {
   GraphQLInputObjectTypeConfig,
   GraphQLInputFieldConfig,
   GraphQLInputFieldConfigMap,
-  GraphQLInputField,
   GraphQLInputType,
 } from './definition';
 
@@ -82,6 +81,7 @@ export default class InputTypeComposer {
     const fieldMap:mixed = resolveMaybeThunk(fields);
 
     if (isObject(fieldMap)) {
+      // $FlowFixMe
       return Object.assign({}, fieldMap);
     }
     return {};
