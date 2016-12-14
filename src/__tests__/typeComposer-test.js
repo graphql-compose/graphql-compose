@@ -170,7 +170,7 @@ describe('TypeComposer', () => {
     });
   });
 
-  describe('static method create()', () => {
+  describe('create() [static method]', () => {
     it('should create TC by typeName as a string', () => {
       const myTC = TypeComposer.create('TypeStub');
       expect(myTC).instanceof(TypeComposer);
@@ -225,26 +225,28 @@ describe('TypeComposer', () => {
     });
   });
 
-  it('should return type by path', () => {
-    const myTC = new TypeComposer(new GraphQLObjectType({
-      name: 'Readable',
-      fields: {
-        field1: {
-          type: GraphQLString,
-          args: {
-            arg1: {
-              type: GraphQLInt,
+  describe('get()', () => {
+    it('should return type by path', () => {
+      const myTC = new TypeComposer(new GraphQLObjectType({
+        name: 'Readable',
+        fields: {
+          field1: {
+            type: GraphQLString,
+            args: {
+              arg1: {
+                type: GraphQLInt,
+              },
             },
           },
         },
-      },
-    }));
+      }));
 
-    expect(myTC.get('field1')).equal(GraphQLString);
-    expect(myTC.get('field1.@arg1')).equal(GraphQLInt);
+      expect(myTC.get('field1')).equal(GraphQLString);
+      expect(myTC.get('field1.@arg1')).equal(GraphQLInt);
+    });
   });
 
-  describe('Resolvers', () => {
+  describe('Resolvers manipulation', () => {
     it('addResolver() should accept Resolver instance', () => {
       const resolver = new Resolver({
         name: 'myResolver',
@@ -292,6 +294,94 @@ describe('TypeComposer', () => {
       expect(
         Array.from(tc.getResolvers().keys())
       ).include('myResolver5');
+    });
+  });
+
+  describe('addRelation()', () => {
+    let UserTC;
+    let ArticleTC;
+
+    beforeEach(() => {
+      UserTC = TypeComposer.create(`
+        type User {
+          id: Int,
+          name: String,
+        }
+      `);
+      UserTC.addResolver({
+        name: 'findById',
+        outputType: UserTC,
+        resolve: () => null,
+      });
+
+      ArticleTC = TypeComposer.create(`
+        type Article {
+          id: Int,
+          userId: Int,
+          title: String,
+        }
+      `);
+    });
+
+    describe('thunk with Resolver', () => {
+      it('should create field via buildRelations()', () => {
+        ArticleTC.addRelation(
+          'user',
+          () => ({
+            resolver: UserTC.getResolver('findById'),
+          })
+        );
+        expect(ArticleTC.getField('user')).to.be.undefined;
+        ArticleTC.buildRelations();
+        expect(ArticleTC.getField('user').type.name).to.equal('User');
+      });
+
+      it('should throw error if provided incorrect Resolver instance', () => {
+        ArticleTC.addRelation(
+          'user',
+          () => ({
+            resolver: 'abc',
+          })
+        );
+        expect(() => { ArticleTC.buildRelations(); }).throw(/provide correct Resolver/);
+      });
+
+      it('should throw error if provided `type` property', () => {
+        ArticleTC.addRelation(
+          'user',
+          () => ({
+            resolver: UserTC.getResolver('findById'),
+            type: GraphQLInt,
+          })
+        );
+        expect(() => { ArticleTC.buildRelations(); }).throw(/use `resolver` and `type`/);
+      });
+
+      it('should throw error if provided `resolve` property', () => {
+        ArticleTC.addRelation(
+          'user',
+          () => ({
+            resolver: UserTC.getResolver('findById'),
+            resolve: () => {},
+          })
+        );
+        expect(() => { ArticleTC.buildRelations(); }).throw(/use `resolver` and `resolve`/);
+      });
+    });
+
+    describe('thunk with FieldConfig', () => {
+      it('should create field via buildRelations()', () => {
+        ArticleTC.addRelation(
+          'user',
+          () => ({
+            type: UserTC,
+            resolve: () => {},
+          })
+        );
+        expect(ArticleTC.getField('user')).to.be.undefined;
+        ArticleTC.buildRelations();
+        expect(ArticleTC.getField('user').type.name).to.equal('User');
+      });
     });
   });
 });

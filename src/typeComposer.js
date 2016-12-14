@@ -23,6 +23,7 @@ import type {
   GraphQLInterfaceType,
   GetRecordIdFn,
   RelationOpts,
+  RelationOptsWithResolver,
   RelationThunkMap,
   RelationArgsMapperFn,
   GraphQLFieldConfigArgumentMap,
@@ -208,19 +209,34 @@ export default class TypeComposer {
     const relationFn: Thunk<RelationOpts> = this.gqType._gqcRelations[fieldName];
     // $FlowFixMe
     const relationOpts: RelationOpts = relationFn();
-    this.addRelationRaw(fieldName, relationOpts.resolver, relationOpts);
+
+    if (relationOpts.resolver) {
+      if (!(relationOpts.resolver instanceof Resolver)) {
+        throw new Error('You should provide correct Resolver object for relation '
+                      + `${this.getTypeName()}.${fieldName}`);
+      }
+      if (relationOpts.type) {
+        throw new Error('You can not use `resolver` and `type` properties simultaneously for relation '
+                      + `${this.getTypeName()}.${fieldName}`);
+      }
+      if (relationOpts.resolve) {
+        throw new Error('You can not use `resolver` and `resolve` properties simultaneously for relation '
+                      + `${this.getTypeName()}.${fieldName}`);
+      }
+      this.addRelationWithResolver(fieldName, relationOpts.resolver, relationOpts);
+    } else if (relationOpts.type) {
+      this.setField(fieldName, {
+        ...relationOpts,
+        _gqcIsRelation: true,
+      });
+    }
   }
 
-  addRelationRaw(
+  addRelationWithResolver(
     fieldName: string,
     resolver: Resolver,
-    opts: RelationOpts
+    opts: RelationOptsWithResolver
   ): TypeComposer {
-    if (!(resolver instanceof Resolver)) {
-      throw new Error('You should provide correct Resolver object for relation '
-                    + `${this.getTypeName()}.${fieldName}`);
-    }
-
     const resolverFieldConfig = resolver.getFieldConfig();
     const argsConfig = Object.assign({}, resolverFieldConfig.args);
     const argsProto = {};

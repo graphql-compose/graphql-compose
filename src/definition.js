@@ -71,13 +71,22 @@ export type GraphQLObjectTypeExtended = GraphQLObjectType & {
 
 // RELATION -----------------------------
 export type RelationThunkMap = { [fieldName: string]: Thunk<RelationOpts> };
-export type RelationOpts = {
+export type RelationOpts = RelationOptsWithResolver | RelationOptsWithFieldConfig;
+export type RelationOptsWithResolver = {
   resolver: Resolver,
   args?: RelationArgsMapper,
   projection?: ProjectionType,
-  description?: string,
-  deprecationReason?: string,
+  description?: ?string,
+  deprecationReason?: ?string,
   catchErrors?: boolean,
+}
+export type RelationOptsWithFieldConfig = {
+  type: GraphQLOutputType,
+  args?: GraphQLFieldConfigArgumentMap,
+  resolve: GraphQLFieldResolver,
+  projection?: ProjectionType,
+  description?: ?string,
+  deprecationReason?: ?string,
 }
 export type ArgsType = { [argName: string]: mixed };
 export type RelationArgsMapperFn = (source: mixed, args: ArgsType, context: ?mixed) => ArgsType;
