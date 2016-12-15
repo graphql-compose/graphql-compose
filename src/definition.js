@@ -95,7 +95,7 @@ export type RelationArgsMapper = {
 };
 
 // RESOLVER -----------------------------
-export type ResolverMWMethodKeys = 'args' | 'resolve' | 'outputType';
+export type ResolverMWMethodKeys = 'args' | 'resolve' | 'type';
 export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 
 export type ResolverMWArgsFn = (args: GraphQLFieldConfigArgumentMap) => GraphQLFieldConfigArgumentMap;
@@ -137,7 +137,7 @@ export type ResolverSortArgConfig = {
 };
 
 export type ResolverOpts = {
-  outputType?: GraphQLOutputType,
+  type?: GraphQLOutputType,
   resolve?: ResolverMWResolveFn,
   args?: GraphQLFieldConfigArgumentMap,
   name?: string,
@@ -150,5 +150,5 @@ export type ResolverWrapFn =
   (newResolver: Resolver, prevResolver: Resolver) => Resolver;
 export type ResolverWrapArgsFn =
   (prevArgs: GraphQLFieldConfigArgumentMap) => GraphQLFieldConfigArgumentMap;
-export type ResolverWrapOutputTypeFn =
-  (prevOutputType: GraphQLOutputType) => GraphQLOutputType;
+export type ResolverWrapTypeFn =
+  (prevType: GraphQLOutputType) => GraphQLOutputType;

@@ -67,7 +67,7 @@ describe('Storage [Class]', () => {
       `);
       UserTC.addResolver({
         name: 'findById',
-        outputType: UserTC,
+        type: UserTC,
         resolve: () => null,
       });
 
@@ -80,7 +80,7 @@ describe('Storage [Class]', () => {
       `);
       ArticleTC.addResolver({
         name: 'findOne',
-        outputType: ArticleTC,
+        type: ArticleTC,
         resolve: () => null,
       });
     });

@@ -7,6 +7,7 @@ import {
   GraphQLInputObjectType,
   GraphQLNonNull,
   GraphQLEnumType,
+  GraphQLObjectType,
   isOutputType,
 } from 'graphql';
 import TypeMapper from './typeMapper';
@@ -30,7 +31,7 @@ import type {
   ResolverOpts,
   ResolverWrapFn,
   ResolverWrapArgsFn,
-  ResolverWrapOutputTypeFn,
+  ResolverWrapTypeFn,
   GraphQLInputType,
 } from './definition';
 import InputTypeComposer from './inputTypeComposer';
@@ -38,7 +39,7 @@ import { typeByPath } from './typeByPath';
 
 
 export default class Resolver {
-  outputType: GraphQLOutputType;
+  type: GraphQLOutputType;
   args: GraphQLFieldConfigArgumentMap;
   resolve: ResolverMWResolveFn;
   name: string;
@@ -55,8 +56,16 @@ export default class Resolver {
     this.kind = opts.kind || null;
     this.description = opts.description || '';
 
+    /**
+    * @deprecated 2.0.0
+    */
     if (opts.outputType) {
-      this.setOutputType(opts.outputType);
+      // $FlowFixMe
+      this.setType(opts.outputType);
+    }
+
+    if (opts.type) {
+      this.setType(opts.type);
     }
 
     if (opts.args) {
@@ -154,25 +163,67 @@ export default class Resolver {
     this.resolve = resolve;
   }
 
+  /**
+  * @deprecated 2.0.0
+  */
   getOutputType(): GraphQLOutputType {
-    return this.outputType;
+    return this.getType();
   }
 
+  /**
+  * @deprecated 2.0.0
+  */
   setOutputType(gqType: GraphQLOutputType | string | TypeComposer | Resolver | InputTypeComposer) {
+    this.setType(gqType);
+  }
+
+  /**
+  * @deprecated 2.0.0
+  */
+  wrapOutputType(cb: ResolverWrapTypeFn, wrapperName: string = 'wrapType'): Resolver {
+    return this.wrapType(cb, wrapperName);
+  }
+
+  /**
+  * @deprecated 2.0.0
+  */
+  get outputType(): GraphQLOutputType {
+    return this.type;
+  }
+
+  /**
+  * @deprecated 2.0.0
+  */
+  set outputType(gqType: GraphQLOutputType) {
+    this.type = gqType;
+  }
+
+  getType(): GraphQLOutputType {
+    return this.type;
+  }
+
+  getTypeComposer(): ?TypeComposer {
+    if (this.type instanceof GraphQLObjectType) {
+      return new TypeComposer(this.type);
+    }
+    return null;
+  }
+
+  setType(gqType: GraphQLOutputType | string | TypeComposer | Resolver | InputTypeComposer) {
     let type;
 
     if (gqType instanceof TypeComposer) {
-      this.outputType = gqType.getType();
+      this.type = gqType.getType();
       return;
     }
 
     if (gqType instanceof Resolver) {
-      this.outputType = gqType.getOutputType();
+      this.type = gqType.getType();
       return;
     }
 
     if (gqType instanceof InputTypeComposer) {
-      throw new Error('You provide InputTypeComposer as OutputType for Resolver.outputType. It may by ScalarType or OutputObjectType.');
+      throw new Error('You provide InputTypeComposer as OutputType for Resolver.type. It may by ScalarType or OutputObjectType.');
     }
 
     if (isString(gqType)) {
@@ -190,10 +241,10 @@ export default class Resolver {
 
     // $FlowFixMe
     if (!isOutputType(type)) {
-      throw new Error('You should provide correct OutputType for Resolver.outputType.');
+      throw new Error('You should provide correct OutputType for Resolver.type.');
     }
     // $FlowFixMe
-    this.outputType = type;
+    this.type = type;
   }
 
   getFieldConfig(
@@ -203,7 +254,7 @@ export default class Resolver {
   ): ResolverFieldConfig {
     const resolve = this.getResolve();
     return {
-      type: this.getOutputType(),
+      type: this.getType(),
       args: this.getArgs(),
       description: this.description,
       resolve: (source, args, context, info) => {
@@ -292,12 +343,12 @@ export default class Resolver {
     );
   }
 
-  wrapOutputType(cb: ResolverWrapOutputTypeFn, wrapperName: string = 'wrapOutputType'): Resolver {
+  wrapType(cb: ResolverWrapTypeFn, wrapperName: string = 'wrapType'): Resolver {
     return this.wrap(
       (newResolver, prevResolver) => {
-        const prevOutputType = prevResolver.getOutputType();
-        const newOutputType = cb(prevOutputType);
-        newResolver.setOutputType(newOutputType);
+        const prevType = prevResolver.getType();
+        const newType = cb(prevType);
+        newResolver.setType(newType);
         return newResolver;
       },
       { name: wrapperName }
@@ -448,7 +499,7 @@ export default class Resolver {
       return [
         'Resolver(',
         `  name: ${resolver.name},`,
-        `  outputType: ${util.inspect(resolver.outputType, { depth: 2 })},`,
+        `  type: ${util.inspect(resolver.type, { depth: 2 })},`,
         `  args: ${util.inspect(resolver.args, { depth: 3 }).replace('\n', `\n  ${spaces}`)},`,
         `  resolve: ${resolver.resolve ? resolver.resolve.toString().replace('\n', `\n  ${spaces}`) : 'undefined'},`,
         `  parent: ${resolver.parent ? extendedInfo(resolver.parent, `  ${spaces}`) : ''}`,

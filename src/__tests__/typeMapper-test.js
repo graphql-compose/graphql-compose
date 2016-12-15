@@ -138,7 +138,7 @@ describe('TypeMapper', () => {
       it('should accept Resolver', () => {
         const resolver = new Resolver({
           name: 'find',
-          outputType: 'Float',
+          type: 'Float',
           args: {
             a1: 'String',
           },

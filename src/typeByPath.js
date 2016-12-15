@@ -103,7 +103,7 @@ function typeByPathRSV(
     return processType(arg.type, parts.slice(1));
   }
 
-  return processType(rsv.getOutputType(), parts);
+  return processType(rsv.getType(), parts);
 }
 
 

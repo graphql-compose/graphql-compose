@@ -310,7 +310,7 @@ describe('TypeComposer', () => {
       `);
       UserTC.addResolver({
         name: 'findById',
-        outputType: UserTC,
+        type: UserTC,
         resolve: () => null,
       });
 

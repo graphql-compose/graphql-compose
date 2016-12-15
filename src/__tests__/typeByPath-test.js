@@ -37,7 +37,7 @@ describe('typeByPath', () => {
       search: 'String',
       spot: spotITC,
     },
-    outputType: tc,
+    type: tc,
   });
   tc.setResolver('findSpots', rsv);
 
@@ -71,7 +71,7 @@ describe('typeByPath', () => {
         .equal(spotITC.getType());
     });
 
-    it('should return resolver outputType fields', () => {
+    it('should return type of resolver outputType fields', () => {
       expect(tc.get('$findSpots.title')).equal(GraphQLString);
       expect(tc.get('$findSpots.image.@size')).equal(GraphQLInt);
     });
@@ -116,7 +116,7 @@ describe('typeByPath', () => {
         .equal(spotITC.getType());
     });
 
-    it('should return outputType fields types', () => {
+    it('should return type of outputType fields', () => {
       expect(rsv.get('title')).equal(GraphQLString);
       expect(rsv.get('image.@size')).equal(GraphQLInt);
     });

@@ -38,7 +38,7 @@ import type {
 export default class TypeComposer {
   gqType: GraphQLObjectTypeExtended;
 
-  static create(opts: GraphQLObjectTypeConfig | string | GraphQLOutputType) {
+  static create(opts: GraphQLObjectTypeConfig | string | GraphQLObjectType) {
     let TC;
 
     if (isString(opts)) {

@@ -18,11 +18,9 @@ import InputTypeComposer from '../inputTypeComposer';
 
 
 describe('Resolver', () => {
-  let someTC;
   let resolver;
 
   beforeEach(() => {
-    someTC = TypeComposer.create('ValidType');
     resolver = new Resolver({ name: 'find' });
   });
 
@@ -46,66 +44,66 @@ describe('Resolver', () => {
     }).to.throw('You provide incorrect value');
   });
 
-  describe('`outputType` methods', () => {
-    it('should have setOutputType/getOutputType methods', () => {
-      resolver.setOutputType(GraphQLString);
-      expect(resolver.getOutputType()).equal(GraphQLString);
+  describe('`type` methods', () => {
+    it('should have setType/getType methods', () => {
+      resolver.setType(GraphQLString);
+      expect(resolver.getType()).equal(GraphQLString);
 
       expect(() => {
-        resolver.setOutputType(new GraphQLInputObjectType({
+        resolver.setType(new GraphQLInputObjectType({
           name: 'MyInput',
           fields: () => ({}),
         }));
       }).to.throw('provide correct OutputType');
     });
 
-    it('should convert type as string to GraphQLType in outputType', () => {
+    it('should convert type as string to GraphQLType', () => {
       const myResolver = new Resolver({
         name: 'myResolver',
-        outputType: 'String!',
+        type: 'String!',
       });
-      expect(myResolver.outputType).instanceof(GraphQLNonNull);
-      expect(myResolver.outputType.ofType).equal(GraphQLString);
+      expect(myResolver.type).instanceof(GraphQLNonNull);
+      expect(myResolver.type.ofType).equal(GraphQLString);
     });
 
 
-    it('should convert type definition to GraphQLType in outputType', () => {
+    it('should convert type definition to GraphQLType', () => {
       const myResolver = new Resolver({
         name: 'myResolver',
-        outputType: `
+        type: `
           type SomeType {
             name: String
           }
         `,
       });
-      expect(myResolver.outputType).instanceof(GraphQLObjectType);
-      expect(myResolver.outputType.name).equal('SomeType');
+      expect(myResolver.type).instanceof(GraphQLObjectType);
+      expect(myResolver.type.name).equal('SomeType');
     });
 
-    it('should accept TypeComposer for outputType', () => {
+    it('should accept TypeComposer for `type` option', () => {
       const typeTC = TypeComposer.create('type SomeType22 { test: String }');
       const myResolver = new Resolver({
         name: 'myResolver',
-        outputType: typeTC,
+        type: typeTC,
       });
-      expect(myResolver.outputType).instanceof(GraphQLObjectType);
-      expect(myResolver.outputType.name).equal('SomeType22');
+      expect(myResolver.type).instanceof(GraphQLObjectType);
+      expect(myResolver.type.name).equal('SomeType22');
     });
 
-    it('should throw error on InputTypeComposer for outputType', () => {
+    it('should throw error on InputTypeComposer for `type` option', () => {
       const someInputITC = InputTypeComposer.create('input SomeInputType { add: String }');
       expect(() => {
         new Resolver({
           name: 'myResolver',
-          outputType: someInputITC,
+          type: someInputITC,
         });
       }).to.throw('InputTypeComposer');
     });
 
-    it('should accept Resolver for outputType', () => {
+    it('should accept Resolver for `type` option', () => {
       const someOtherResolver = new Resolver({
         name: 'someOtherResolver',
-        outputType: `
+        type: `
           type SomeType {
             name: String
           }
@@ -114,18 +112,18 @@ describe('Resolver', () => {
 
       const myResolver = new Resolver({
         name: 'myResolver',
-        outputType: someOtherResolver,
+        type: someOtherResolver,
       });
-      expect(myResolver.outputType).instanceof(GraphQLObjectType);
-      expect(myResolver.outputType.name).equal('SomeType');
+      expect(myResolver.type).instanceof(GraphQLObjectType);
+      expect(myResolver.type.name).equal('SomeType');
     });
 
-    it('should have wrapOutputType() method', () => {
-      const newResolver = resolver.wrapOutputType((prevOutputType) => { // eslint-disable-line
+    it('should have wrapType() method', () => {
+      const newResolver = resolver.wrapType((prevType) => { // eslint-disable-line
         return 'String';
       });
 
-      expect(newResolver.getOutputType()).equal(GraphQLString);
+      expect(newResolver.getType()).equal(GraphQLString);
     });
   });
 
@@ -231,7 +229,7 @@ describe('Resolver', () => {
     const myResolver = new Resolver({
       name: 'customResolver',
       resolve: () => ({ name: 'Nodkz' }),
-      outputType: `
+      type: `
         type SomeType {
           name: String
         }
@@ -372,7 +370,7 @@ describe('Resolver', () => {
   it('should return type by path', () => {
     const rsv = new Resolver({
       name: 'find',
-      outputType: 'type LonLat { lon: Float, lat: Float }',
+      type: 'type LonLat { lon: Float, lat: Float }',
       args: {
         distance: 'Int!',
       },
