@@ -3,6 +3,7 @@
 
 import objectPath from 'object-path';
 import GraphQLJSON from './type/json';
+import GraphQLDate from './type/date';
 import {
   GraphQLInt,
   GraphQLFloat,
@@ -116,6 +117,7 @@ class TypeMapper {
     this.set('ID', GraphQLID);
     this.set('JSON', GraphQLJSON);
     this.set('Json', GraphQLJSON);
+    this.set('Date', GraphQLDate);
   }
 
   getWrapped(str: string): ?GraphQLType {
