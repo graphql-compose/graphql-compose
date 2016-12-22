@@ -1,5 +1,5 @@
 /* @flow */
-/* eslint-disable no-use-before-define */
+/* eslint-disable no-use-before-define, class-methods-use-this */
 
 import objectPath from 'object-path';
 import GraphQLJSON from './type/json';
@@ -61,6 +61,9 @@ import type {
   GraphQLArgumentConfig,
   GraphQLInputFieldConfigMap,
   GraphQLInputFieldConfig,
+  TypeDefinitionString,
+  TypeNameString,
+  TypeWrappedString,
 } from './definition';
 
 import TypeComposer from './typeComposer';
@@ -105,7 +108,7 @@ class TypeMapper {
     return this.map.delete(name);
   }
 
-  keys(): Iterator<string> {
+  keys(): Iterator<string> { // eslint-disable-line no-undef
     return this.map.keys();
   }
 
@@ -120,12 +123,12 @@ class TypeMapper {
     this.set('Date', GraphQLDate);
   }
 
-  getWrapped(str: string): ?GraphQLType {
+  getWrapped(str: TypeWrappedString | TypeNameString): ?GraphQLType {
     const inputTypeAST: TypeNode = parseType(str);
     return typeFromAST(inputTypeAST);
   }
 
-  createType(str: string): ?GraphQLNamedType {
+  createType(str: TypeDefinitionString): ?GraphQLNamedType {
     const astDocument: DocumentNode = parse(str);
 
     if (objectPath.get(astDocument, 'kind') !== 'Document') {

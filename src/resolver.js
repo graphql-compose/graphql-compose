@@ -33,6 +33,9 @@ import type {
   ResolverWrapArgsFn,
   ResolverWrapTypeFn,
   GraphQLInputType,
+  TypeDefinitionString,
+  TypeWrappedString,
+  TypeNameString,
 } from './definition';
 import InputTypeComposer from './inputTypeComposer';
 import { typeByPath } from './typeByPath';
@@ -173,7 +176,9 @@ export default class Resolver {
   /**
   * @deprecated 2.0.0
   */
-  setOutputType(gqType: GraphQLOutputType | string | TypeComposer | Resolver | InputTypeComposer) {
+  setOutputType(
+    gqType: GraphQLOutputType | TypeDefinitionString | TypeNameString | TypeComposer | Resolver
+  ) {
     this.setType(gqType);
   }
 
@@ -209,7 +214,14 @@ export default class Resolver {
     return null;
   }
 
-  setType(gqType: GraphQLOutputType | string | TypeComposer | Resolver | InputTypeComposer) {
+  setType(
+    gqType: GraphQLOutputType |
+            TypeComposer |
+            TypeWrappedString |
+            TypeDefinitionString |
+            TypeNameString |
+            Resolver
+  ) {
     let type;
 
     if (gqType instanceof TypeComposer) {
@@ -222,6 +234,7 @@ export default class Resolver {
       return;
     }
 
+    // $FlowFixMe
     if (gqType instanceof InputTypeComposer) {
       throw new Error('You provide InputTypeComposer as OutputType for Resolver.type. It may by ScalarType or OutputObjectType.');
     }
@@ -303,12 +316,12 @@ export default class Resolver {
     return new Resolver(Object.assign({}, oldOpts, opts));
   }
 
-  wrap(cb: ?ResolverWrapFn, opts: ?ResolverOpts = {}): Resolver {
+  wrap(cb: ?ResolverWrapFn, newResolverOpts: ?ResolverOpts = {}): Resolver {
     const prevResolver: Resolver = this;
     const newResolver = this.clone({
       name: 'wrap',
       parent: prevResolver,
-      ...opts,
+      ...newResolverOpts,
     });
 
     if (isFunction(cb)) {

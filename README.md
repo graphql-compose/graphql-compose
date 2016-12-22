@@ -116,8 +116,11 @@ export default GQC.buildSchema();
 
 ## Documentation
 You can find out documentation here:
-
-[Current version](https://github.com/nodkz/graphql-compose/tree/master/docs)
+- [Installation](docs/02-installation)
+- [Quick Start Guide](docs/03-guide)
+- [API Reference](docs/04-api-reference)
+- [Plugins](docs/05-plugins)
+- [Advanced](docs/06-advanced)
 
 ## Live Demos
 - [graphql-compose.herokuapp.com](https://graphql-compose.herokuapp.com/) - Live demo of GraphQL Server (9 models, 14 files, ~750 LOC)

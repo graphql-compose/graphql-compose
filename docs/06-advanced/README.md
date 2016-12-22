@@ -1,30 +1,41 @@
 # Advanced
 
-## Middlewares
-TODO..
+### How `Resolver.wrapResolve` work internally
+- `capturing phase`, when you may change `resolveParams` before it will pass to next `resolve`
+- `bubbling phase`, when you may change response from underlying `resolve`
 
-### How `resolveMiddleware` work internally
-Will be executed for every request, if resolve needed for query serving.
-Works in `Resolver`. Resolver knows output type, needed args and how to fetch and process data.  Each Type can have several named resolvers for retrieving one object, array of objects, a graphql connection type or perform mutation.
 ```js
-export default function resolveMiddleware(opts = {}) {
-  // [SETUP PHASE]: here you can process `opts`, when you create Middleware
+Resolver.wrapResolve(next => rp => {
+  // [CAPTURING PHASE]:
+  // `rp` consist from { source, args, context, info, projection }
+  // you may change `source`, `args`, `context`, `info`, `projection` before it will pass to `next` underlying resolve function.
 
-  return next => resolveArgs => {
-    // [CAPTURING PHASE]:
-    // `resolveArgs` consist from { source, args, context, info }  (*type GraphQLFieldResolveFn*)
-    // you may change `source`, `args`, `context`, `info` before it will pass to `next` resolve function.
+  // ...some code which modify `rp` (resolveParams)
 
-    // ...some code which modify resolveParams
+  // ... or just stop propagation
+  //   throw new Error();
+  //   or
+  //   return Promise.resolve(null);
 
-    // pass request to following middleware and get response promise from it
-    const payloadPromise = next(resolveParams);
+  // pass request to underlying middleware and get result promise from it
+  const resultPromise = next(rp);
 
-    // [BUBBLING PHASE]: here you may change payload of underlying middlewares, via promise syntax
-    // ...some code, which may add `then()` or `catch()` to payload promise
-    //    payloadPromise.then(payload => { console.log(payload); return payload; })
+  // [BUBBLING PHASE]: here you may change payload of underlying resolve method, via promise syntax
+  // ...some code, which may add `then()` or `catch()` to result promise
+  //    resultPromise.then(payload => { console.log(payload); return payload; })
 
-    return payloadPromise; // return payload promise to upper middleware
-  };
-}
+  return resultPromise; // return payload promise to upper wrapper
+});
 ```
+
+Several sequential `wrapResolve`
+```js
+Resolver.wrapResolve(M1).wrapResolve(M2);
+```
+working work such way:
+- call capture phase of `M2` (changing rp)
+- call capture phase of `M1` (changing rp)
+- call initial `resolve` method e
+- call bubbling phase of `M1` (changing result)
+- call bubbling phase of `M2` (changing result)
+- pass result to `graphql` runner.

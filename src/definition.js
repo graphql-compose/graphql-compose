@@ -31,6 +31,11 @@ export type ObjectMap = { [optName: string]: mixed };
 export type ProjectionType = { [fieldName: string]: true | ProjectionType };
 export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 
+// TypeMapper
+export type TypeDefinitionString = string;
+export type TypeWrappedString = string; // eg. Int, Int!, [Int]
+export type TypeNameString = string; // eg. Int, Float
+
 // GRAPHQL RE-EXPORT --------------------
 export type GraphQLType = _GraphQLType;
 export type GraphQLObjectType = _GraphQLObjectType;

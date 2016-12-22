@@ -32,13 +32,17 @@ import type {
   ProjectionType,
   ProjectionMapType,
   ResolverOpts,
+  TypeNameString,
+  TypeDefinitionString,
 } from './definition';
 
 
 export default class TypeComposer {
   gqType: GraphQLObjectTypeExtended;
 
-  static create(opts: GraphQLObjectTypeConfig | string | GraphQLObjectType) {
+  static create(
+    opts: TypeNameString | TypeDefinitionString | GraphQLObjectTypeConfig | GraphQLObjectType
+  ) {
     let TC;
 
     if (isString(opts)) {

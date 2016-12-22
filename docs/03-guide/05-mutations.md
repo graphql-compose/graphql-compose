@@ -1,82 +1,78 @@
-##05 - Mutations 
+## 05 - Mutations
 Lets get into the CUD in the CRUD..
-Well graphql-composer ships with resolvers for create, update and remove. Could it be more simple? :)
+Well `graphql-composer` ships with resolvers for create, update and remove. Could it be more simple? :)
 
 Looking like this:
 ```js
-UsersTC.getResolver('createOne').getFieldConfig()
-UsersTC.getResolver('update').getFieldConfig()
-UsersTC.getResolver('remove').getFieldConfig()
+UserTC.getResolver('createOne').getFieldConfig()
+UserTC.getResolver('update').getFieldConfig()
+UserTC.getResolver('remove').getFieldConfig()
 ```
 
 
-Lets add a working example from the preview `UsersTC` we have created
+Lets add a working example from the preview `UserTC` we have created
 
-`mutations.js`
+`schema.js`
 ```js
-export const mutations = new GraphQLSchema({
-  query: rootTypeTC.getType(),
-  mutation: new GraphQLObjectType({
-    name: 'RootMutation',
-    fields: {
-      userCreate: resolvers.get('createOne').getFieldConfig(),
-      userUpdateById: resolvers.get('updateById').getFieldConfig(),
-      userUpdateOne: resolvers.get('updateOne').getFieldConfig(),
-      userUpdateMany: resolvers.get('updateMany').getFieldConfig(),
-      userRemoveById: resolvers.get('removeById').getFieldConfig(),
-      userRemoveOne: resolvers.get('removeOne').getFieldConfig(),
-      userRemoveMany: resolvers.get('removeMany').getFieldConfig(),
-    },
+import { GQC } from 'graphql-compose';
+import { UserTC } from './user.js';
+
+GQC.rootQuery().addFields({
+  ...
+});
+
+GQC.rootMutation().addFields({
+  userCreate: UserTC.get('$createOne'),
+  userUpdateById: UserTC.get('$updateById'),
+  userUpdateOne: UserTC.get('$updateOne'),
+  userUpdateMany: UserTC.get('$updateMany'),
+
+  // let add restriction for remove operations
+  ...adminAccess({
+    userRemoveById: UserTC.get('$removeById'),
+    userRemoveOne: UserTC.get('$removeOne'),
+    userRemoveMany: UserTC.get('$removeMany'),
   }),
 });
 
-export default graphqlSchema;
+function adminAccess(resolvers) {
+  Object.keys(resolvers).forEach((k) => {
+    resolvers[k] = resolvers[k].wrapResolve(next => (rp) => {
+      // rp = resolveParams = { source, args, context, info }
+      if (!rp.context.isAdmin) {
+        throw new Error('You should be admin, to have access to this action.');
+      }
+      return next(rp);
+    });
+  });
+  return resolvers;
+}
+
+export default GQC.buildSchema();
 ```
 
 
-###Custom mutations
-`UserMutation.js`
+### Custom mutations
+`user.js`
 ```js
-import {
-  GraphQLString
-} from 'graphql'
 
-import {UsersTC, User} from '../models'
-import {mutationWithClientMutationId} from 'graphql-relay'
-
-export default mutationWithClientMutationId({
-  name: 'UserUpdate',
-  inputFields: {
-    id: { type: GraphQLString},
-    firstName: { type: GraphQLString},
-    lastName: { type: GraphQLString},
+UserTC.addResolver({
+  name: 'myCustomUpdate',
+  kind: 'mutation',
+  args: {
+    id: 'String',
+    firstName: 'String',
+    lastName: 'String',
   },
-  outputFields: {
-    user: {
-      type: UsersTC.getType(),
-      resolve: user => user
-    }
-  },
-  mutateAndGetPayload: (input, context, info) => {
+  type: UserTC,
+  resolve: (_, args, context, info) => {
     //edit and do what you need..
-    return user
+    return user;
   }
-})
-```
-
-`schema.js` 
-```js
-import UserMutation from './UserMutation'
-
-export const mutations = new GraphQLSchema({
-  query: rootTypeTC.getType(),
-  mutation: new GraphQLObjectType({
-    name: 'RootMutation',
-    fields: {
-      userUpdate: UserMutation,
-    },
-  }),
 });
 
-export default graphqlSchema;
+// so now you may add you custom mutation to schema
+GQC.rootMutation().addFields({
+  customUserUpdate: UserTC.get('$myCustomUpdate'),
+});
 ```

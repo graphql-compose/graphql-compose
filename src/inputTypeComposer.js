@@ -16,13 +16,20 @@ import type {
   GraphQLInputFieldConfig,
   GraphQLInputFieldConfigMap,
   GraphQLInputType,
+  TypeNameString,
+  TypeDefinitionString,
 } from './definition';
 
 
 export default class InputTypeComposer {
   gqType: GraphQLInputObjectType;
 
-  static create(opts: GraphQLInputObjectTypeConfig | string | GraphQLInputObjectType) {
+  static create(
+    opts: TypeDefinitionString |
+          TypeNameString |
+          GraphQLInputObjectTypeConfig |
+          GraphQLInputObjectType
+  ) {
     let ITC;
 
     if (isString(opts)) {

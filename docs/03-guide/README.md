@@ -9,7 +9,6 @@ We always try to make our documentation better, so if you have feedback on the G
 
 ## Getting started
 
-- [GraphQL Compose basics](01-basics.md)
 - [Generate TypeComposers](02-generate-typecomposers.md)
 - [Edit TypeComposer](03-edit-typecomposer.md)
 - [Connections](04-relations-and-connections.md)
