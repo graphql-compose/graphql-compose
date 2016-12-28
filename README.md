@@ -51,6 +51,15 @@ CityTC.addFields({
     resolve: (source) => moment().tz(source.tz).format(),
     projection: { tz: true }, // load `tz` from database, when requested only `localTime` field
   },
+  counter: 'Int', // shortening for only type definition for field
+  complex: `type ComplexType {
+    subField1: String
+    subField2: Float
+    subField3: Boolean
+    subField4: ID
+    subField5: JSON
+    subField6: Date
+  }`
 });
 
 // Add relation between City and Country by `countryCode` field.
