@@ -82,6 +82,8 @@ import type {
   InputObjectTypeDefinitionNode,
 } from 'graphql/language/ast';
 
+const RegexpOutputTypeDefinition = /type\s[^{]+\{[^}]+\}/im;
+const RegexpInputTypeDefinition = /input\s[^{]+\{[^}]+\}/im;
 
 class TypeMapper {
   map: Map<string, GraphQLNamedType>;
@@ -174,10 +176,18 @@ class TypeMapper {
     }
 
     if (typeof fieldConfig.type === 'string') {
-      const fieldTypeName = fieldConfig.type;
-      type = this.getWrapped(fieldTypeName);
+      const fieldTypeDef = fieldConfig.type;
+
+      if (RegexpInputTypeDefinition.test(fieldTypeDef)) {
+        throw new Error(`${typeName}.${fieldName} should be OutputType, but got input type definition '${fieldTypeDef}'`);
+      }
+
+      type = RegexpOutputTypeDefinition.test(fieldTypeDef)
+        ? this.createType(fieldTypeDef)
+        : this.getWrapped(fieldTypeDef);
+
       if (!isOutputType(type)) {
-        throw new Error(`${typeName}.${fieldName} provided incorrect output type '${fieldTypeName}'`);
+        throw new Error(`${typeName}.${fieldName} provided incorrect output type '${fieldTypeDef}'`);
       }
     } else if (fieldConfig.type instanceof TypeComposer) {
       type = fieldConfig.type.getType();
@@ -236,10 +246,18 @@ class TypeMapper {
     }
 
     if (typeof argConfig.type === 'string') {
-      const argTypeName = argConfig.type;
-      const type = this.getWrapped(argTypeName);
+      const argTypeDef = argConfig.type;
+
+      if (RegexpOutputTypeDefinition.test(argTypeDef)) {
+        throw new Error(`${typeName}.${fieldName}@${argName} should be InputType, but got output type definition '${argTypeDef}'`);
+      }
+
+      const type = RegexpInputTypeDefinition.test(argTypeDef)
+        ? this.createType(argTypeDef)
+        : this.getWrapped(argTypeDef);
+
       if (!isInputType(type)) {
-        throw new Error(`${typeName}.${fieldName}@${argName} provided incorrect input type '${argTypeName}'`);
+        throw new Error(`${typeName}.${fieldName}@${argName} provided incorrect input type '${argTypeDef}'`);
       }
 
       return {
@@ -297,10 +315,18 @@ class TypeMapper {
 
 
     if (typeof fieldConfig.type === 'string') {
-      const fieldTypeName = fieldConfig.type;
-      const type = this.getWrapped(fieldTypeName);
+      const fieldTypeDef = fieldConfig.type;
+
+      if (RegexpOutputTypeDefinition.test(fieldTypeDef)) {
+        throw new Error(`${typeName}.${fieldName} should be InputType, but got output type definition '${fieldTypeDef}'`);
+      }
+
+      const type = RegexpInputTypeDefinition.test(fieldTypeDef)
+        ? this.createType(fieldTypeDef)
+        : this.getWrapped(fieldTypeDef);
+
       if (!isInputType(type)) {
-        throw new Error(`${typeName}.${fieldName} provided incorrect input type '${fieldTypeName}'`);
+        throw new Error(`${typeName}.${fieldName} provided incorrect input type '${fieldTypeDef}'`);
       }
 
       return {

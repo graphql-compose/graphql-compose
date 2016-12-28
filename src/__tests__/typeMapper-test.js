@@ -124,6 +124,25 @@ describe('TypeMapper', () => {
         expect(fc.type).equal(GraphQLString);
       });
 
+      it('should create field config from type definition string', () => {
+        const fc = typeMapper.convertOutputFieldConfig(`type MyOutputType {
+          a: String,
+          b: Int,
+        }`);
+        const tc = new TypeComposer(fc.type);
+        expect(tc.getTypeName()).equal('MyOutputType');
+        expect(tc.getFieldType('a')).equal(GraphQLString);
+        expect(tc.getFieldType('b')).equal(GraphQLInt);
+      });
+
+      it('should throw error if provided input type definition', () => {
+        expect(() => {
+          typeMapper.convertOutputFieldConfig(`input MyInputType {
+            a: String,
+          }`);
+        }).to.throw(/should be OutputType, but got input type definition/);
+      });
+
       it('should accept TypeComposer', () => {
         const tc = TypeComposer.create('type PriceRange { lon: Float, lat: Float }');
         const fc = typeMapper.convertOutputFieldConfig({
@@ -217,6 +236,25 @@ describe('TypeMapper', () => {
       expect(ic.type).equal(GraphQLString);
     });
 
+    it('should create field config from input type definition', () => {
+      const fc = typeMapper.convertInputFieldConfig(`input MyInputType {
+        a: String,
+        b: Int,
+      }`);
+      const itc = new InputTypeComposer(fc.type);
+      expect(itc.getTypeName()).equal('MyInputType');
+      expect(itc.getFieldType('a')).equal(GraphQLString);
+      expect(itc.getFieldType('b')).equal(GraphQLInt);
+    });
+
+    it('should throw error if provided output type definition', () => {
+      expect(() => {
+        typeMapper.convertInputFieldConfig(`type MyOutputType {
+          a: String,
+        }`);
+      }).to.throw(/should be InputType, but got output type definition/);
+    });
+
     it('should accept InputTypeComposer', () => {
       const itc = InputTypeComposer.create(
         'input PriceRangeInput { lon: Float, lat: Float }'
@@ -279,9 +317,28 @@ describe('TypeMapper', () => {
       expect(ac.type).equal(GraphQLString);
     });
 
-    it('should create field config from type name as string', () => {
+    it('should create arg config from type name as string', () => {
       const ac = typeMapper.convertArgConfig('String');
       expect(ac.type).equal(GraphQLString);
+    });
+
+    it('should create arg config from input type definition', () => {
+      const fc = typeMapper.convertArgConfig(`input MyInputArg {
+        a: String,
+        b: Int,
+      }`);
+      const itc = new InputTypeComposer(fc.type);
+      expect(itc.getTypeName()).equal('MyInputArg');
+      expect(itc.getFieldType('a')).equal(GraphQLString);
+      expect(itc.getFieldType('b')).equal(GraphQLInt);
+    });
+
+    it('should throw error if provided output type definition', () => {
+      expect(() => {
+        typeMapper.convertArgConfig(`type MyOutputType {
+          a: String,
+        }`);
+      }).to.throw(/should be InputType, but got output type definition/);
     });
 
     it('should accept InputTypeComposer', () => {
