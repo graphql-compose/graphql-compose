@@ -63,6 +63,10 @@ UserTC.addResolver({
     id: 'String',
     firstName: 'String',
     lastName: 'String',
+    complexArg: `input SomeComplexInput {
+      min: Int
+      max: Int
+    }`
   },
   type: UserTC,
   resolve: (_, args, context, info) => {

@@ -41,6 +41,25 @@ UserTC.addField(
     projection: { firstName: true, lastName: true },
   }
 )
+
+UserTC.addFields({
+  age: {
+    type: 'Int',
+    // other field config properties
+  }
+  ageShort: 'Int', // just type
+  complex: {
+    type: `type Address {
+      city: String
+      street: String
+    }`,
+    // other field config properties
+  },
+  complexShort: `type AddressShort {
+    city: String
+    street: String
+  }`
+});
 ```
 ___REMEMBER: If you do not provide projection result will be undefined undefined___
 
