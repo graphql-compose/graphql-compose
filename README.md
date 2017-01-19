@@ -23,6 +23,16 @@
 - [graphql-compose-relay](https://github.com/nodkz/graphql-compose-relay) - reassemble GraphQL types with `Relay` specific things, like `Node` type and interface, `globalId`, `clientMutationId`
 - [graphql-compose-connection](https://github.com/nodkz/graphql-compose-connection) - generate `connection` Resolver from `findMany` and `count` Resolvers.
 
+## Documentation
+- [Installation](docs/02-installation)
+- [Quick Start Guide](docs/03-guide)
+- [API Reference](docs/04-api-reference)
+- [Plugins](docs/05-plugins)
+- [Advanced](docs/06-advanced)
+
+## Live Demos
+- [graphql-compose.herokuapp.com](https://graphql-compose.herokuapp.com/) - Live demo of GraphQL Server (9 models, 14 files, ~750 LOC)
+- [nodkz.github.io/relay-northwind](https://nodkz.github.io/relay-northwind) - Live demo of Relay client working with the server above (8 crazy pages, 47 files, ~3000 LOC)
 
 ## Example
 city.js
@@ -122,19 +132,6 @@ function adminAccess(resolvers) {
 
 export default GQC.buildSchema();
 ```
-
-## Documentation
-You can find out documentation here:
-- [Installation](docs/02-installation)
-- [Quick Start Guide](docs/03-guide)
-- [API Reference](docs/04-api-reference)
-- [Plugins](docs/05-plugins)
-- [Advanced](docs/06-advanced)
-
-## Live Demos
-- [graphql-compose.herokuapp.com](https://graphql-compose.herokuapp.com/) - Live demo of GraphQL Server (9 models, 14 files, ~750 LOC)
-- [nodkz.github.io/relay-northwind](https://nodkz.github.io/relay-northwind) - Live demo of Relay client working with the server above (8 crazy pages, 47 files, ~3000 LOC)
-
 
 ## To-Do list
 - [ ] write [DataLoader](https://github.com/facebook/dataloader) resolver's wrapper for reducing number of queries
