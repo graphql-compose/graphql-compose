@@ -16,6 +16,7 @@ describe('InputTypeComposer', () => {
   beforeEach(() => {
     objectType = new GraphQLInputObjectType({
       name: 'InputType',
+      description: 'Mock type',
       fields: {
         input1: { type: GraphQLString },
         input2: { type: GraphQLString },
@@ -23,35 +24,136 @@ describe('InputTypeComposer', () => {
     });
   });
 
-
-  it('should has `getFields` method', () => {
-    const tc = new InputTypeComposer(objectType);
-    const fieldNames = Object.keys(tc.getFields());
-    expect(fieldNames).to.have.members(['input1', 'input2']);
-  });
-
-
-  it('should has `setField` method', () => {
-    const tc = new InputTypeComposer(objectType);
-    tc.setField('input3', { type: GraphQLString });
-    const fieldNames = Object.keys(objectType.getFields());
-    expect(fieldNames).to.include('input3');
-  });
-
-
-  it('should add fields with converting types from string to object', () => {
-    const tc = new InputTypeComposer(objectType);
-    tc.setField('input3', { type: 'String' });
-    tc.addFields({
-      input4: { type: '[Int]' },
-      input5: { type: 'Boolean!' },
+  describe('field manipulation methods', () => {
+    it('getFields()', () => {
+      const tc = new InputTypeComposer(objectType);
+      const fieldNames = Object.keys(tc.getFields());
+      expect(fieldNames).to.have.members(['input1', 'input2']);
     });
 
-    expect(tc.getField('input3').type).to.equal(GraphQLString);
-    expect(tc.getField('input4').type).instanceof(GraphQLList);
-    expect(tc.getField('input4').type.ofType).to.equal(GraphQLInt);
-    expect(tc.getField('input5').type).instanceof(GraphQLNonNull);
-    expect(tc.getField('input5').type.ofType).to.equal(GraphQLBoolean);
+    it('getFieldNames()', () => {
+      const tc = new InputTypeComposer(objectType);
+      expect(tc.getFieldNames()).to.have.members(['input1', 'input2']);
+    });
+
+    it('hasField()', () => {
+      const tc = new InputTypeComposer(objectType);
+      expect(tc.hasField('input1')).to.equal(true);
+      expect(tc.hasField('missing')).to.equal(false);
+    });
+
+    it('setField()', () => {
+      const tc = new InputTypeComposer(objectType);
+      tc.setField('input3', { type: GraphQLString });
+      const fieldNames = Object.keys(objectType.getFields());
+      expect(fieldNames).to.include('input3');
+    });
+
+    it('setFields()', () => {
+      const tc = new InputTypeComposer(objectType);
+      tc.setFields({
+        input3: { type: GraphQLString },
+        input4: { type: GraphQLString },
+      });
+      expect(tc.getFieldNames()).to.not.have.members(['input1', 'input2']);
+      expect(tc.getFieldNames()).to.have.members(['input3', 'input4']);
+    });
+
+    it('addFields()', () => {
+      const tc = new InputTypeComposer(objectType);
+      tc.addFields({
+        input3: { type: GraphQLString },
+        input4: { type: GraphQLString },
+      });
+      expect(tc.getFieldNames())
+        .to.have.members(['input1', 'input2', 'input3', 'input4']);
+    });
+
+    it('removeField()', () => {
+      const tc = new InputTypeComposer(objectType);
+      tc.removeField('input1');
+      expect(tc.getFieldNames()).to.not.include('input1');
+      expect(tc.getFieldNames()).to.include('input2');
+      tc.removeField(['input2', 'input3']);
+      expect(tc.getFieldNames()).to.not.include('input2');
+    });
+
+    it('getFieldType()', () => {
+      const tc = new InputTypeComposer(objectType);
+      expect(tc.getFieldType('input1')).to.equal(GraphQLString);
+    });
+
+    it('isRequired()', () => {
+      const tc = new InputTypeComposer(objectType);
+      expect(tc.isRequired('input1')).to.equal(false);
+    });
+
+    it('makeRequired()', () => {
+      const tc = new InputTypeComposer(objectType);
+      tc.makeRequired('input1');
+      expect(tc.getField('input1').type).instanceof(GraphQLNonNull);
+      expect(tc.getField('input1').type.ofType).to.equal(GraphQLString);
+      expect(tc.isRequired('input1')).to.equal(true);
+    });
+
+    it('makeOptional()', () => {
+      const tc = new InputTypeComposer(objectType);
+      tc.makeRequired('input1');
+      expect(tc.isRequired('input1')).to.equal(true);
+      tc.makeOptional('input1');
+      expect(tc.isRequired('input1')).to.equal(false);
+    });
+
+    it('should add fields with converting types from string to object', () => {
+      const tc = new InputTypeComposer(objectType);
+      tc.setField('input3', { type: 'String' });
+      tc.addFields({
+        input4: { type: '[Int]' },
+        input5: { type: 'Boolean!' },
+      });
+
+      expect(tc.getField('input3').type).to.equal(GraphQLString);
+      expect(tc.getField('input4').type).instanceof(GraphQLList);
+      expect(tc.getField('input4').type.ofType).to.equal(GraphQLInt);
+      expect(tc.getField('input5').type).instanceof(GraphQLNonNull);
+      expect(tc.getField('input5').type.ofType).to.equal(GraphQLBoolean);
+    });
+  });
+
+  describe('type manipulation methods', () => {
+    it('getType()', () => {
+      const tc = new InputTypeComposer(objectType);
+      expect(tc.getType()).instanceof(GraphQLInputObjectType);
+      expect(tc.getType().name).to.equal('InputType');
+    });
+
+    it('getTypeAsRequired()', () => {
+      const tc = new InputTypeComposer(objectType);
+      expect(tc.getTypeAsRequired()).instanceof(GraphQLNonNull);
+      expect(tc.getTypeAsRequired().ofType.name).to.equal('InputType');
+    });
+
+    it('getTypeName()', () => {
+      const tc = new InputTypeComposer(objectType);
+      expect(tc.getTypeName()).to.equal('InputType');
+    });
+
+    it('setTypeName()', () => {
+      const tc = new InputTypeComposer(objectType);
+      tc.setTypeName('OtherInputType');
+      expect(tc.getTypeName()).to.equal('OtherInputType');
+    });
+
+    it('getDescription()', () => {
+      const tc = new InputTypeComposer(objectType);
+      expect(tc.getDescription()).to.equal('Mock type');
+    });
+
+    it('setDescription()', () => {
+      const tc = new InputTypeComposer(objectType);
+      tc.setDescription('Changed description');
+      expect(tc.getDescription()).to.equal('Changed description');
+    });
   });
 
   describe('static method create()', () => {
@@ -109,7 +211,7 @@ describe('InputTypeComposer', () => {
     });
   });
 
-  it('should return type by path', () => {
+  it('get() should return type by path', () => {
     const tc = new InputTypeComposer(new GraphQLInputObjectType({
       name: 'Writable',
       fields: {

@@ -156,28 +156,10 @@ export default class InputTypeComposer {
     this.setFields(fields);
   }
 
-  clone(newTypeName: string): InputTypeComposer {
-    if (!newTypeName) {
-      throw new Error('You should provide new type name for clone() method');
-    }
-
-    const fields = this.getFields();
-    const newFields = {};
-    Object.keys(fields).forEach((fieldName) => {
-      newFields[fieldName] = Object.assign({}, fields[fieldName]);
-    });
-
-    return new InputTypeComposer(
-      new GraphQLInputObjectType({
-        name: newTypeName,
-        fields: newFields,
-      })
-    );
+  isRequired(fieldName: string): boolean {
+    return this.getFieldType(fieldName) instanceof GraphQLNonNull;
   }
 
-  /**
-   * Get fieldType by name
-   */
   getFieldType(fieldName: string): GraphQLInputType | void {
     const field = this.getField(fieldName);
     if (field) {
@@ -185,30 +167,6 @@ export default class InputTypeComposer {
     }
 
     return undefined;
-  }
-
-  getType(): GraphQLInputObjectType {
-    return this.gqType;
-  }
-
-  getTypeName(): string {
-    return this.gqType.name;
-  }
-
-  setTypeName(name: string): void {
-    this.gqType.name = name;
-  }
-
-  getDescription(): string {
-    return this.gqType.description || '';
-  }
-
-  setDescription(description: string): void {
-    this.gqType.description = description;
-  }
-
-  isRequired(fieldName: string): boolean {
-    return this.getFieldType(fieldName) instanceof GraphQLNonNull;
   }
 
   /**
@@ -259,6 +217,49 @@ export default class InputTypeComposer {
   makeFieldsOptional(fieldNameOrArray: string | Array<string>) {
     deprecate('Use InputTypeComposer.makeOptional() instead.');
     this.makeOptional(fieldNameOrArray);
+  }
+
+  clone(newTypeName: string): InputTypeComposer {
+    if (!newTypeName) {
+      throw new Error('You should provide new type name for clone() method');
+    }
+
+    const fields = this.getFields();
+    const newFields = {};
+    Object.keys(fields).forEach((fieldName) => {
+      newFields[fieldName] = Object.assign({}, fields[fieldName]);
+    });
+
+    return new InputTypeComposer(
+      new GraphQLInputObjectType({
+        name: newTypeName,
+        fields: newFields,
+      })
+    );
+  }
+
+  getType(): GraphQLInputObjectType {
+    return this.gqType;
+  }
+
+  getTypeAsRequired(): GraphQLNonNull<GraphQLInputObjectType> {
+    return new GraphQLNonNull(this.gqType);
+  }
+
+  getTypeName(): string {
+    return this.gqType.name;
+  }
+
+  setTypeName(name: string): void {
+    this.gqType.name = name;
+  }
+
+  getDescription(): string {
+    return this.gqType.description || '';
+  }
+
+  setDescription(description: string): void {
+    this.gqType.description = description;
   }
 
   /**

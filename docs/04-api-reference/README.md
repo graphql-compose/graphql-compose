@@ -147,6 +147,7 @@ LonLatITC.getField('lon'); // GraphQLInputFieldConfig
 LonLatITC.removeField('lon');
 LonLatITC.getFieldType('lat'); // GraphQLNonNull(GraphQLFloat)
 LonLatITC.getType(); // GraphQLInputObjectType({ name: 'LonLatInput', ... })
+LonLatITC.getTypeAsRequired(); // GraphQLNonNull(GraphQLInputObjectType(...))
 LonLatITC.getTypeName(); // 'LonLatInput'
 LonLatITC.setTypeName('LonLatRenamedInput');
 LonLatITC.setDescription('Input LonLat type');
