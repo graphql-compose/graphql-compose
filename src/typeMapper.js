@@ -1,9 +1,7 @@
 /* @flow */
-/* eslint-disable no-use-before-define, class-methods-use-this */
+/* eslint-disable no-use-before-define, class-methods-use-this, no-unused-vars */
 
 import objectPath from 'object-path';
-import GraphQLJSON from './type/json';
-import GraphQLDate from './type/date';
 import {
   GraphQLInt,
   GraphQLFloat,
@@ -50,6 +48,21 @@ import find from 'graphql/jsutils/find';
 import { getArgumentValues } from 'graphql/execution/values';
 
 import type {
+  DocumentNode,
+  ObjectTypeDefinitionNode,
+  InterfaceTypeDefinitionNode,
+  TypeNode,
+  NamedTypeNode,
+  DirectiveNode,
+  InputValueDefinitionNode,
+  EnumTypeDefinitionNode,
+  InputObjectTypeDefinitionNode,
+} from 'graphql/language/ast';
+
+import GraphQLJSON from './type/json';
+import GraphQLDate from './type/date';
+
+import type {
   GraphQLType,
   GraphQLNamedType,
   GraphQLOutputType,
@@ -70,17 +83,6 @@ import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
 
-import type {
-  DocumentNode,
-  ObjectTypeDefinitionNode,
-  InterfaceTypeDefinitionNode,
-  TypeNode,
-  NamedTypeNode,
-  DirectiveNode,
-  InputValueDefinitionNode,
-  EnumTypeDefinitionNode,
-  InputObjectTypeDefinitionNode,
-} from 'graphql/language/ast';
 
 const RegexpOutputTypeDefinition = /type\s[^{]+\{[^}]+\}/im;
 const RegexpInputTypeDefinition = /input\s[^{]+\{[^}]+\}/im;
@@ -150,11 +152,11 @@ class TypeMapper {
     return undefined;
   }
 
-  convertOutputFieldConfig(
-    fieldConfig: GraphQLFieldConfig,
+  convertOutputFieldConfig<TSource, TContext>(
+    fieldConfig: GraphQLFieldConfig<TSource, TContext>,
     fieldName: string,
     typeName: string
-  ): GraphQLFieldConfig {
+  ): GraphQLFieldConfig<TSource, TContext> {
     let type;
     let args;
 
@@ -213,10 +215,10 @@ class TypeMapper {
     return fieldConfig;
   }
 
-  convertOutputFieldConfigMap(
-    fields: GraphQLFieldConfigMap,
+  convertOutputFieldConfigMap<TSource, TContext>(
+    fields: GraphQLFieldConfigMap<TSource, TContext>,
     typeName: string
-  ): GraphQLFieldConfigMap {
+  ): GraphQLFieldConfigMap<TSource, TContext> {
     Object.keys(fields).forEach((name) => {
       fields[name] = this.convertOutputFieldConfig(fields[name], name, typeName); // eslint-disable-line
     });
@@ -544,5 +546,5 @@ function getDeprecationReason(directives: ?Array<DirectiveNode>): ?string {
     GraphQLDeprecatedDirective,
     deprecatedAST
   );
-  return (reason: any);
+  return (reason: any); // eslint-disable-line
 }

@@ -22,7 +22,7 @@ import type {
 * #resolver
 */
 export function typeByPath(
-  src: TypeComposer | InputTypeComposer | Resolver,
+  src: TypeComposer | InputTypeComposer | Resolver<*, *>,
   path: string | Array<string>
 ) {
   const parts = Array.isArray(path) ? path : String(path).split('.');
@@ -89,7 +89,7 @@ export function typeByPathITC(
 
 
 function typeByPathRSV(
-  rsv: Resolver,
+  rsv: Resolver<*, *>,
   parts: Array<string>
 ) {
   if (!rsv) return undefined;

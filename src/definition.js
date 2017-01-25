@@ -21,7 +21,7 @@ import type {
   GraphQLInterfaceType as _GraphQLInterfaceType,
   GraphQLInputType as _GraphQLInputType,
   GraphQLNullableType as _GraphQLNullableType,
-} from 'graphql/type/definition.js';
+} from 'graphql/type/definition';
 
 import type Resolver from './resolver';
 import type InputTypeComposer from './inputTypeComposer';
@@ -39,7 +39,7 @@ export type TypeNameString = string; // eg. Int, Float
 // GRAPHQL RE-EXPORT --------------------
 export type GraphQLType = _GraphQLType;
 export type GraphQLObjectType = _GraphQLObjectType;
-export type GraphQLObjectTypeConfig = _GraphQLObjectTypeConfig<*>;
+export type GraphQLObjectTypeConfig = _GraphQLObjectTypeConfig<*, *>;
 export type GraphQLNullableType = _GraphQLNullableType;
 export type GraphQLInterfaceType = _GraphQLInterfaceType;
 export type GraphQLOutputType = _GraphQLOutputType;
@@ -47,16 +47,16 @@ export type GraphQLInputField = _GraphQLInputField;
 export type GraphQLInputObjectType = _GraphQLInputObjectType;
 export type GraphQLInputObjectTypeConfig = _GraphQLInputObjectTypeConfig;
 export type GraphQLFieldConfigArgumentMap = _GraphQLFieldConfigArgumentMap;
-export type GraphQLFieldResolver = _GraphQLFieldResolver<*>;
+export type GraphQLFieldResolver<TSource, TContext> = _GraphQLFieldResolver<TSource, TContext>;
 export type GraphQLResolveInfo = _GraphQLResolveInfo;
 export type GraphQLArgumentConfig = _GraphQLArgumentConfig;
 export type GraphQLNamedType = _GraphQLNamedType;
-export type GraphQLFieldConfig = _GraphQLFieldConfig<*>;
-export type GraphQLFieldConfigMap = _GraphQLFieldConfigMap<*>;
-export type ResolveParams = {
-  source: mixed,
+export type GraphQLFieldConfig<TSource, TContext> = _GraphQLFieldConfig<TSource, TContext>;
+export type GraphQLFieldConfigMap<TSource, TContext> = _GraphQLFieldConfigMap<TSource, TContext>;
+export type ResolveParams<TSource, TContext> = {
+  source: TSource,
   args: {[argName: string]: mixed},
-  context: mixed,
+  context: TContext,
   info: GraphQLResolveInfo,
   projection: ProjectionType,
   [opt: string]: mixed,
@@ -67,36 +67,38 @@ export type GraphQLInputType = _GraphQLInputType;
 
 export type GraphQLObjectTypeExtended = GraphQLObjectType & {
   _gqcInputTypeComposer?: InputTypeComposer,
-  _gqcResolvers?: Map<string, Resolver>,
-  _gqcGetRecordIdFn?: GetRecordIdFn,
+  _gqcResolvers?: Map<string, Resolver<*, *>>,
+  _gqcGetRecordIdFn?: GetRecordIdFn<*, *>,
   _gqcProjectionMapper?: ProjectionMapType,
-  _gqcRelations?: RelationThunkMap,
+  _gqcRelations?: RelationThunkMap<*, *>,
   description: ?string,
 };
 
 // RELATION -----------------------------
-export type RelationThunkMap = { [fieldName: string]: Thunk<RelationOpts> };
-export type RelationOpts = RelationOptsWithResolver | RelationOptsWithFieldConfig;
-export type RelationOptsWithResolver = {
-  resolver: Resolver,
-  args?: RelationArgsMapper,
+export type RelationThunkMap<TSource, TContext> = { [fieldName: string]: Thunk<RelationOpts<TSource, TContext>> };
+export type RelationOpts<TSource, TContext> =
+  RelationOptsWithResolver<TSource, TContext> |
+  RelationOptsWithFieldConfig<TSource, TContext>;
+export type RelationOptsWithResolver<TSource, TContext> = {
+  resolver: Resolver<TSource, TContext>,
+  args?: RelationArgsMapper<TSource, TContext>,
   projection?: ProjectionType,
   description?: ?string,
   deprecationReason?: ?string,
   catchErrors?: boolean,
 }
-export type RelationOptsWithFieldConfig = {
+export type RelationOptsWithFieldConfig<TSource, TContext> = {
   type: GraphQLOutputType,
   args?: GraphQLFieldConfigArgumentMap,
-  resolve: GraphQLFieldResolver,
+  resolve: GraphQLFieldResolver<TSource, TContext>,
   projection?: ProjectionType,
   description?: ?string,
   deprecationReason?: ?string,
 }
 export type ArgsType = { [argName: string]: mixed };
-export type RelationArgsMapperFn = (source: mixed, args: ArgsType, context: ?mixed) => ArgsType;
-export type RelationArgsMapper = {
-  [argName: string]: RelationArgsMapperFn | null | void | mixed,
+export type RelationArgsMapperFn<TSource, TContext> = (source: TSource, args: ArgsType, context: TContext) => ArgsType;
+export type RelationArgsMapper<TSource, TContext> = {
+  [argName: string]: RelationArgsMapperFn<TSource, TContext> | null | void | mixed,
 };
 
 // RESOLVER -----------------------------
@@ -106,53 +108,56 @@ export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 export type ResolverMWArgsFn = (args: GraphQLFieldConfigArgumentMap) => GraphQLFieldConfigArgumentMap;
 export type ResolverMWArgs = (next: ResolverMWArgsFn) => ResolverMWArgsFn;
 
-export type ResolverMWResolveFn = (resolveParams: ResolveParams) => Promise<*>;
-export type ResolverMWResolve = (next: ResolverMWResolveFn) => ResolverMWResolveFn;
+export type ResolverMWResolveFn<TSource, TContext> = (resolveParams: ResolveParams<TSource, TContext>) => Promise<*>;
+export type ResolverMWResolve<TSource, TContext> = (next: ResolverMWResolveFn<TSource, TContext>) => ResolverMWResolveFn<TSource, TContext>;
 
 export type ResolverMWOutputTypeFn = (outputType: GraphQLOutputType) => GraphQLOutputType;
 export type ResolverMWOutputType = (next: ResolverMWOutputTypeFn) => ResolverMWOutputTypeFn;
 
-export type ResolverFieldConfig = {
+export type ResolverFieldConfig<TSource, TContext> = {
   type: GraphQLOutputType,
   args: GraphQLFieldConfigArgumentMap,
-  resolve: GraphQLFieldResolver,
+  resolve: GraphQLFieldResolver<TSource, TContext>,
   name?: ?string,
 };
 
-export type GetRecordIdFn = (source: mixed, args: ?mixed, context: ?mixed) => string;
+export type GetRecordIdFn<TSource, TContext> = (source: TSource, args: ?mixed, context: TContext) => string;
 
-export type ResolverFilterArgFn = (query: mixed, value: mixed, resolveParams: ResolveParams) => any;
+export type ResolverFilterArgFn<TSource, TContext> = (query: mixed, value: mixed, resolveParams: ResolveParams<TSource, TContext>) => any;
 
-export type ResolverFilterArgConfig = {
+export type ResolverFilterArgConfig<TSource, TContext> = {
   name: string,
   type: string | GraphQLInputObjectType,
   description: string,
-  query: ResolverFilterArgFn,
+  query: ResolverFilterArgFn<TSource, TContext>,
   filterTypeNameFallback?: string,
 };
 
-export type ResolverSortArgFn = (resolveParams: ResolveParams) => any;
+export type ResolverSortArgFn<TSource, TContext> = (resolveParams: ResolveParams<TSource, TContext>) => any;
 
-export type ResolverSortArgConfig = {
+export type ResolverSortArgConfig<TSource, TContext> = {
   name: string,
   sortTypeNameFallback?: string,
-  value: ResolverSortArgFn | mixed;
+  value: ResolverSortArgFn<TSource, TContext> | mixed;
   deprecationReason?: ?string;
   description?: ?string;
 };
 
-export type ResolverOpts = {
+export type ResolverOpts<TSource, TContext> = {
   type?: GraphQLOutputType,
-  resolve?: ResolverMWResolveFn,
+  resolve?: ResolverMWResolveFn<TSource, TContext>,
   args?: GraphQLFieldConfigArgumentMap,
   name?: string,
   kind?: ResolverKinds,
   description?: string,
-  parent?: Resolver,
+  parent?: Resolver<TSource, TContext>,
 };
 
-export type ResolverWrapFn =
-  (newResolver: Resolver, prevResolver: Resolver) => Resolver;
+export type ResolverWrapFn<TSource, TContext> = (
+  newResolver: Resolver<TSource, TContext>,
+  prevResolver: Resolver<TSource, TContext>
+) => Resolver<TSource, TContext>;
+
 export type ResolverWrapArgsFn =
   (prevArgs: GraphQLFieldConfigArgumentMap) => GraphQLFieldConfigArgumentMap;
 export type ResolverWrapTypeFn =

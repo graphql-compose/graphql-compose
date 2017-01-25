@@ -1,5 +1,5 @@
 /* @flow */
-/* eslint-disable no-use-before-define */
+/* eslint-disable no-use-before-define, prefer-template */
 
 import {
   GraphQLInputObjectType,
@@ -20,10 +20,12 @@ import type {
   GraphQLType,
   GraphQLInputFieldConfig,
   GraphQLInputType,
-} from './definition.js';
+} from './definition';
 
 
-export function removeWrongFields(fields: GraphQLFieldConfigMap): GraphQLFieldConfigMap {
+export function removeWrongFields<TSource, TContext>(
+  fields: GraphQLFieldConfigMap<TSource, TContext>
+): GraphQLFieldConfigMap<TSource, TContext> {
   const result = {};
   Object.keys(fields).forEach((key) => {
     const field = fields[key];
@@ -85,8 +87,8 @@ export type convertInputObjectFieldOpts = {
   outputTypeName?: string,
 }
 
-export function convertInputObjectField(
-  field: GraphQLFieldConfig,
+export function convertInputObjectField<TSource, TContext>(
+  field: GraphQLFieldConfig<TSource, TContext>,
   opts: convertInputObjectFieldOpts
 ): GraphQLInputFieldConfig {
   let fieldType: GraphQLType = field.type;
@@ -108,18 +110,21 @@ export function convertInputObjectField(
       const typeComposer = new TypeComposer(fieldType);
       fieldType = toInputObjectType(typeComposer, typeOpts).getType();
     } else {
+      // eslint-disable-next-line
       console.error(
-        `GQC: can not convert field '${opts.outputTypeName || ''}.${opts.fieldName || ''}' to InputType` // eslint-disable-line
-        + `\nIt should be GraphQLObjectType, but got \n`
-        + util.inspect(fieldType, { depth: 2, colors: true }
-        )
+        `GQC: can not convert field '${opts.outputTypeName || ''}.${opts.fieldName || ''}' to InputType`
+        + '\nIt should be GraphQLObjectType, but got \n'
+        + util.inspect(fieldType, { depth: 2, colors: true })
       );
       fieldType = GenericType;
     }
   }
 
   // $FlowFixMe
-  const inputFieldType: GraphQLInputType = wrappers.reduce((type, Wrapper) => new Wrapper(type), fieldType);
+  const inputFieldType: GraphQLInputType = wrappers.reduce(
+    (type, Wrapper) => new Wrapper(type),
+    fieldType
+  );
 
   return { type: inputFieldType, description: field.description };
 }

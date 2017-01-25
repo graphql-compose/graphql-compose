@@ -10,5 +10,5 @@ export function deprecate(msg) {
     stackStr = `\n    ${stack.slice(2, 7).join('\n    ')}`;
   }
 
-  console.log(`DEPRECATION: ${msg} \n${stackStr}`);
+  console.log(`DEPRECATION: ${msg} ${stackStr}\n\n`);
 }

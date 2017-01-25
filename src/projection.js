@@ -1,46 +1,56 @@
-/* eslint-disable no-param-reassign */
+/* @flow */
+/* eslint-disable no-param-reassign, no-lonely-if */
 
-export function getProjectionFromAST(context, fieldNodes)/* :ProjectionType */ {
+import type { FieldNode, FragmentDefinitionNode, FragmentSpreadNode, InlineFragmentNode } from 'graphql/language/ast';
+import type { GraphQLResolveInfo } from 'graphql/type/definition';
+import { FIELD, FRAGMENT_SPREAD, INLINE_FRAGMENT } from 'graphql/language/kinds';
+import type { ProjectionType } from './definition';
+
+export function getProjectionFromAST(
+  context: GraphQLResolveInfo,
+  fieldNode?: FieldNode | InlineFragmentNode | FragmentDefinitionNode
+): ProjectionType {
   if (!context) {
-    return null;
+    return {};
   }
 
-  let asts = fieldNodes || context.fieldNodes || context.fieldASTs;
-  if (!Array.isArray(asts)) {
-    asts = [asts];
-  }
-
-  // get all selectionSets
-  const selections = asts.reduce((result, source) => {
-    if (source.selectionSet) {
-      result.push(...source.selectionSet.selections);
+  let selections: Array<FieldNode | InlineFragmentNode | FragmentSpreadNode>;
+  if (fieldNode) {
+    if (fieldNode.selectionSet) {
+      selections = fieldNode.selectionSet.selections;
     }
+  } else {
+    // get all selectionSets
+    selections = context.fieldNodes.reduce((result, source) => {
+      if (source.selectionSet) {
+        result.push(...source.selectionSet.selections);
+      }
+      return result;
+    }, []);
+  }
 
-    return result;
-  }, []);
-
-  const projection = selections.reduce((list, ast) => {
-    const { name, kind } = ast;
-
-    switch (kind) {
-      case 'Field':
-        list = list || {};
-        list[name.value] = getProjectionFromAST(context, ast) || true;
+  const projection = (selections || []).reduce((
+    list,
+    ast: FieldNode | InlineFragmentNode | FragmentSpreadNode
+  ) => {
+    switch (ast.kind) {
+      case FIELD:
+        list[ast.name.value] = getProjectionFromAST(context, ast) || true;
         return list;
-      case 'InlineFragment':
+      case INLINE_FRAGMENT:
         return {
           ...list,
           ...getProjectionFromAST(context, ast),
         };
-      case 'FragmentSpread':
+      case FRAGMENT_SPREAD:
         return {
           ...list,
-          ...getProjectionFromAST(context, context.fragments[name.value]),
+          ...getProjectionFromAST(context, context.fragments[ast.name.value]),
         };
       default:
         throw new Error('Unsuported query selection');
     }
-  }, null);
+  }, {});
 
   // this type params are setup via TypeComposer.addProjectionMapper()
   // Sometimes, when you create relations you need query additional fields, that not in query.
@@ -50,10 +60,13 @@ export function getProjectionFromAST(context, fieldNodes)/* :ProjectionType */ {
     while (returnType.ofType) {
       returnType = returnType.ofType;
     }
-    if (typeof returnType._gqcProjectionMapper === 'object') {
-      Object.keys(returnType._gqcProjectionMapper).forEach(key => {
+
+    // $FlowFixMe
+    const mapper = returnType._gqcProjectionMapper;
+    if (mapper && typeof mapper === 'object') {
+      Object.keys(mapper).forEach((key) => {
         if (projection[key]) {
-          Object.assign(projection, returnType._gqcProjectionMapper[key]);
+          Object.assign(projection, mapper[key]);
         }
       });
     }
@@ -61,10 +74,13 @@ export function getProjectionFromAST(context, fieldNodes)/* :ProjectionType */ {
   return projection;
 }
 
-export function getFlatProjectionFromAST(context, fieldNodes) {
-  const projection = getProjectionFromAST(context, fieldNodes);
+export function getFlatProjectionFromAST(
+  context:GraphQLResolveInfo,
+  fieldNodes?: FieldNode | InlineFragmentNode | FragmentDefinitionNode
+) {
+  const projection = getProjectionFromAST(context, fieldNodes) || {};
   const flatProjection = {};
-  Object.keys(projection).forEach(key => {
+  Object.keys(projection).forEach((key) => {
     flatProjection[key] = !!projection[key];
   });
   return flatProjection;

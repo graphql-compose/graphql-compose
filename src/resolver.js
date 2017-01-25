@@ -10,6 +10,7 @@ import {
   GraphQLObjectType,
   isOutputType,
 } from 'graphql';
+import { deprecate } from './utils/debug';
 import TypeMapper from './typeMapper';
 import TypeComposer from './typeComposer';
 import deepmerge from './utils/deepmerge';
@@ -41,16 +42,16 @@ import InputTypeComposer from './inputTypeComposer';
 import { typeByPath } from './typeByPath';
 
 
-export default class Resolver {
+export default class Resolver<TSource, TContext> {
   type: GraphQLOutputType;
   args: GraphQLFieldConfigArgumentMap;
-  resolve: ResolverMWResolveFn;
+  resolve: ResolverMWResolveFn<TSource, TContext>;
   name: string;
   kind: ?ResolverKinds;
   description: ?string;
-  parent: ?Resolver;
+  parent: ?Resolver<TSource, TContext>;
 
-  constructor(opts: ResolverOpts = {}) {
+  constructor(opts: ResolverOpts<TSource, TContext> = {}) {
     if (!opts.name) {
       throw new Error('For Resolver constructor the `opts.name` is required option.');
     }
@@ -63,6 +64,7 @@ export default class Resolver {
     * @deprecated 2.0.0
     */
     if (opts.outputType) {
+      deprecate('Use opts.type instead.');
       // $FlowFixMe
       this.setType(opts.outputType);
     }
@@ -154,15 +156,15 @@ export default class Resolver {
   /*
   * This method should be overriden via constructor
   */
-  resolve(resolveParams: ResolveParams): Promise<any> { // eslint-disable-line
+  resolve(resolveParams: ResolveParams<TSource, TContext>): Promise<any> { // eslint-disable-line
     return Promise.resolve();
   }
 
-  getResolve():ResolverMWResolveFn {
+  getResolve():ResolverMWResolveFn<TSource, TContext> {
     return this.resolve;
   }
 
-  setResolve(resolve: ResolverMWResolveFn): void {
+  setResolve(resolve: ResolverMWResolveFn<TSource, TContext>): void {
     this.resolve = resolve;
   }
 
@@ -170,6 +172,7 @@ export default class Resolver {
   * @deprecated 2.0.0
   */
   getOutputType(): GraphQLOutputType {
+    deprecate('Use Resolver.getType() instead.');
     return this.getType();
   }
 
@@ -177,15 +180,21 @@ export default class Resolver {
   * @deprecated 2.0.0
   */
   setOutputType(
-    gqType: GraphQLOutputType | TypeDefinitionString | TypeNameString | TypeComposer | Resolver
+    gqType: GraphQLOutputType | TypeDefinitionString | TypeNameString
+            | TypeComposer | Resolver<TSource, TContext>
   ) {
+    deprecate('Use Resolver.setType() instead.');
     this.setType(gqType);
   }
 
   /**
   * @deprecated 2.0.0
   */
-  wrapOutputType(cb: ResolverWrapTypeFn, wrapperName: string = 'wrapType'): Resolver {
+  wrapOutputType(
+    cb: ResolverWrapTypeFn,
+    wrapperName: string = 'wrapType'
+  ): Resolver<TSource, TContext> {
+    deprecate('Use Resolver.wrapType() instead.');
     return this.wrapType(cb, wrapperName);
   }
 
@@ -193,6 +202,7 @@ export default class Resolver {
   * @deprecated 2.0.0
   */
   get outputType(): GraphQLOutputType {
+    deprecate('Use Resolver.getType() instead.');
     return this.type;
   }
 
@@ -200,6 +210,7 @@ export default class Resolver {
   * @deprecated 2.0.0
   */
   set outputType(gqType: GraphQLOutputType) {
+    deprecate('Use Resolver.setType() instead.');
     this.type = gqType;
   }
 
@@ -220,7 +231,7 @@ export default class Resolver {
             TypeWrappedString |
             TypeDefinitionString |
             TypeNameString |
-            Resolver
+            Resolver<TSource, TContext>
   ) {
     let type;
 
@@ -264,15 +275,16 @@ export default class Resolver {
     opts: {
       projection?: ProjectionType,
     } = {}
-  ): ResolverFieldConfig {
+  ): ResolverFieldConfig<TSource, TContext> {
     const resolve = this.getResolve();
     return {
       type: this.getType(),
       args: this.getArgs(),
       description: this.description,
       resolve: (source, args, context, info) => {
-        let projection = getProjectionFromAST(info);
+        let projection: ProjectionType = getProjectionFromAST(info);
         if (opts.projection) {
+          // $FlowFixMe
           projection = deepmerge(projection, opts.projection);
         }
         return resolve({ source, args, context, info, projection });
@@ -301,10 +313,11 @@ export default class Resolver {
   }
 
   get(path: string | Array<string>): mixed {
+    // $FlowFixMe
     return typeByPath(this, path);
   }
 
-  clone(opts: ResolverOpts = {}): Resolver {
+  clone(opts: ResolverOpts<TSource, TContext> = {}): Resolver<TSource, TContext> {
     const oldOpts = {};
     for (const key in this) { // eslint-disable-line no-restricted-syntax
       if ({}.hasOwnProperty.call(this, key)) {
@@ -316,8 +329,11 @@ export default class Resolver {
     return new Resolver(Object.assign({}, oldOpts, opts));
   }
 
-  wrap(cb: ?ResolverWrapFn, newResolverOpts: ?ResolverOpts = {}): Resolver {
-    const prevResolver: Resolver = this;
+  wrap(
+    cb: ?ResolverWrapFn<TSource, TContext>,
+    newResolverOpts: ?ResolverOpts<TSource, TContext> = {}
+  ): Resolver<TSource, TContext> {
+    const prevResolver: Resolver<TSource, TContext> = this;
     const newResolver = this.clone({
       name: 'wrap',
       parent: prevResolver,
@@ -332,7 +348,10 @@ export default class Resolver {
     return newResolver;
   }
 
-  wrapResolve(cb: ResolverMWResolve, wrapperName: string = 'wrapResolve'): Resolver {
+  wrapResolve(
+    cb: ResolverMWResolve<TSource, TContext>,
+    wrapperName: string = 'wrapResolve'
+  ): Resolver<TSource, TContext> {
     return this.wrap(
       (newResolver, prevResolver) => {
         const newResolve = cb(prevResolver.getResolve());
@@ -343,7 +362,10 @@ export default class Resolver {
     );
   }
 
-  wrapArgs(cb: ResolverWrapArgsFn, wrapperName: string = 'wrapArgs'): Resolver {
+  wrapArgs(
+    cb: ResolverWrapArgsFn,
+    wrapperName: string = 'wrapArgs'
+  ): Resolver<TSource, TContext> {
     return this.wrap(
       (newResolver, prevResolver) => {
         // clone prevArgs, to avoid changing args in callback
@@ -356,7 +378,10 @@ export default class Resolver {
     );
   }
 
-  wrapType(cb: ResolverWrapTypeFn, wrapperName: string = 'wrapType'): Resolver {
+  wrapType(
+    cb: ResolverWrapTypeFn,
+    wrapperName: string = 'wrapType'
+  ): Resolver<TSource, TContext> {
     return this.wrap(
       (newResolver, prevResolver) => {
         const prevType = prevResolver.getType();
@@ -368,7 +393,7 @@ export default class Resolver {
     );
   }
 
-  addFilterArg(opts: ResolverFilterArgConfig): Resolver {
+  addFilterArg(opts: ResolverFilterArgConfig<TSource, TContext>): Resolver<TSource, TContext> {
     if (!opts.name) {
       throw new Error('For Resolver.addFilterArg the arg name `opts.name` is required.');
     }
@@ -417,7 +442,7 @@ export default class Resolver {
 
     const resolveNext = resolver.getResolve();
     if (isFunction(opts.query)) {
-      resolver.setResolve((resolveParams: ResolveParams) => {
+      resolver.setResolve((resolveParams) => {
         const value = objectPath.get(resolveParams, ['args', 'filter', opts.name]);
         if (value) {
           if (!resolveParams.rawQuery) {
@@ -432,7 +457,7 @@ export default class Resolver {
     return resolver;
   }
 
-  addSortArg(opts: ResolverSortArgConfig): Resolver {
+  addSortArg(opts: ResolverSortArgConfig<TSource, TContext>): Resolver<TSource, TContext> {
     if (!opts.name) {
       throw new Error('For Resolver.addSortArg the `opts.name` is required.');
     }
@@ -486,7 +511,7 @@ export default class Resolver {
     // If sort value is evaluable (function), then wrap resolve method
     const resolveNext = resolver.getResolve();
     if (isFunction(opts.value)) {
-      resolver.setResolve((resolveParams: ResolveParams) => {
+      resolver.setResolve((resolveParams) => {
         const value = objectPath.get(resolveParams, ['args', 'sort']);
         if (value === opts.name) {
           // $FlowFixMe

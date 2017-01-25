@@ -3,8 +3,6 @@
 import { GraphQLObjectType, GraphQLSchema, getNamedType } from 'graphql';
 import TypeComposer from './typeComposer';
 import type Resolver from './resolver';
-import type InputTypeComposer from './inputTypeComposer';
-
 
 export default class ComposeStorage {
   types: { [typeName: string]: TypeComposer };
@@ -44,11 +42,11 @@ export default class ComposeStorage {
     return this.get('Mutation');
   }
 
-  resolvers(typeName: string): Map<string, Resolver> {
+  resolvers(typeName: string): Map<string, Resolver<*, *>> {
     return this.get(typeName).getResolvers();
   }
 
-  resolver(typeName: string, resolverName: string): Resolver | void {
+  resolver(typeName: string, resolverName: string): Resolver<*, *> | void {
     return this.get(typeName).getResolver(resolverName);
   }
 
@@ -92,6 +90,7 @@ export default class ComposeStorage {
       const existedField = typeComposer.getField(relationFieldName);
       if (existedField && !existedField._gqcIsRelation) {
         if (!createdRelations.has(typeAndField)) {
+          // eslint-disable-next-line
           console.log(`GQC: Skip building relation '${typeAndField}', `
                     + 'cause this type already has field with such name. '
                     + 'If you want create relation, you should remove this '
@@ -114,7 +113,7 @@ export default class ComposeStorage {
   }
 
   removeEmptyTypes(
-    typeComposer: TypeComposer | InputTypeComposer,
+    typeComposer: TypeComposer,
     passedTypes: Set<string> = new Set()
   ) {
     const fields = typeComposer.getFields();
@@ -128,6 +127,7 @@ export default class ComposeStorage {
           if (Object.keys(tc.getFields()).length > 0) {
             this.removeEmptyTypes(tc, passedTypes);
           } else {
+            // eslint-disable-next-line
             console.log(`GQC: Delete field '${typeComposer.getTypeName()}.${fieldName}' `
                       + `with type '${tc.getTypeName()}', cause it does not have fields.`);
             delete fields[fieldName];

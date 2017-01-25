@@ -91,8 +91,8 @@ export default class TypeComposer {
    * Get fields from a GraphQL type
    * WARNING: this method read an internal GraphQL instance variable.
    */
-  getFields(): GraphQLFieldConfigMap {
-    const fields: Thunk<GraphQLFieldConfigMap>
+  getFields(): GraphQLFieldConfigMap<*, *> {
+    const fields: Thunk<GraphQLFieldConfigMap<*, *>>
       = this.gqType._typeConfig.fields;
 
     const fieldMap:mixed = resolveMaybeThunk(fields);
@@ -112,7 +112,7 @@ export default class TypeComposer {
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
-  setFields(fields: GraphQLFieldConfigMap): void {
+  setFields(fields: GraphQLFieldConfigMap<*, *>): void {
     const prepearedFields = TypeMapper.convertOutputFieldConfigMap(
       fields,
       this.getTypeName()
@@ -127,14 +127,20 @@ export default class TypeComposer {
     return !!fields[fieldName];
   }
 
-  setField(fieldName: string, fieldConfig: GraphQLFieldConfig) {
+  setField<TSource, TContext>(
+    fieldName: string,
+    fieldConfig: GraphQLFieldConfig<TSource, TContext>
+  ) {
     this.addFields({ [fieldName]: fieldConfig });
   }
 
   /**
   * @deprecated 2.0.0
   */
-  addField(fieldName: string, fieldConfig: GraphQLFieldConfig) {
+  addField(
+    fieldName: string,
+    fieldConfig: GraphQLFieldConfig<*, *>
+  ) {
     deprecate('Use TypeComposer.setField() or plural addFields({}) instead.');
     this.addFields({ [fieldName]: fieldConfig });
   }
@@ -142,7 +148,7 @@ export default class TypeComposer {
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  addFields(newFields: GraphQLFieldConfigMap): void {
+  addFields(newFields: GraphQLFieldConfigMap<*, *>): void {
     this.setFields(Object.assign({}, this.getFields(), newFields));
 
     // if field has a projection option, then add it to projection mapper
@@ -158,7 +164,7 @@ export default class TypeComposer {
   /**
    * Get fieldConfig by name
    */
-  getField(fieldName: string): ?GraphQLFieldConfig {
+  getField(fieldName: string): ?GraphQLFieldConfig<*, *> {
     const fields = this.getFields();
 
     if (fields[fieldName]) {
@@ -175,13 +181,19 @@ export default class TypeComposer {
     this.setFields(Object.assign({}, fields)); // immutability
   }
 
-  extendField(name: string, parialFieldConfig: GraphQLFieldConfig): GraphQLFieldConfig {
+  extendField<TSource, TContext>(
+    name: string,
+    parialFieldConfig: GraphQLFieldConfig<TSource, TContext>
+  ): GraphQLFieldConfig<TSource, TContext> {
     const fieldConfig = Object.assign({}, this.getField(name), parialFieldConfig);
     this.setField(name, fieldConfig);
     return fieldConfig;
   }
 
-  addRelation(fieldName: string, relationFn: Thunk<RelationOpts>): TypeComposer {
+  addRelation(
+    fieldName: string,
+    relationFn: Thunk<RelationOpts<*, *>>
+  ): TypeComposer {
     if (!this.gqType._gqcRelations) {
       this.gqType._gqcRelations = {};
     }
@@ -190,7 +202,7 @@ export default class TypeComposer {
     return this;
   }
 
-  getRelations(): RelationThunkMap {
+  getRelations(): RelationThunkMap<*, *> {
     if (!this.gqType._gqcRelations) {
       this.gqType._gqcRelations = {};
     }
@@ -211,7 +223,7 @@ export default class TypeComposer {
       throw new Error(`Cannot call buildRelation() for type ${this.getTypeName()}. `
                     + `Relation with name '${fieldName}' does not exist.`);
     }
-    const relationFn: Thunk<RelationOpts> = this.gqType._gqcRelations[fieldName];
+    const relationFn: Thunk<RelationOpts<*, *>> = this.gqType._gqcRelations[fieldName];
     // $FlowFixMe
     const relationOpts: RelationOpts = relationFn();
 
@@ -237,15 +249,15 @@ export default class TypeComposer {
     }
   }
 
-  addRelationWithResolver(
+  addRelationWithResolver<TSource, TContext>(
     fieldName: string,
-    resolver: Resolver,
-    opts: RelationOptsWithResolver
+    resolver: Resolver<TSource, TContext>,
+    opts: RelationOptsWithResolver<TSource, TContext>
   ): TypeComposer {
     const resolverFieldConfig = resolver.getFieldConfig();
     const argsConfig = Object.assign({}, resolverFieldConfig.args);
     const argsProto = {};
-    const argsRuntime: ([string, RelationArgsMapperFn])[] = [];
+    const argsRuntime: ([string, RelationArgsMapperFn<TSource, TContext>])[] = [];
 
     // remove args from config, if arg name provided in args
     //    if `argMapVal`
@@ -280,10 +292,10 @@ export default class TypeComposer {
       const payload = resolverFieldConfig.resolve(source, newArgs, context, info);
       return catchErrors
         ? Promise.resolve(payload).catch((e) => {
-          console.log(
+          console.log( // eslint-disable-line
               `GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`
             );
-          console.log(e);
+          console.log(e); // eslint-disable-line
           return null;
         })
         : payload;
@@ -308,8 +320,7 @@ export default class TypeComposer {
    */
   getInterfaces(): Array<GraphQLInterfaceType> {
     const interfaces: Array<GraphQLInterfaceType> | Thunk<?Array<GraphQLInterfaceType>>
-      // $FlowFixMe
-      = this.gqType._typeConfig.interfaces || [];
+      = this.gqType._typeConfig.interfaces;
 
     if (typeof interfaces === 'function') {
       return interfaces() || [];
@@ -415,7 +426,7 @@ export default class TypeComposer {
     return this.gqType._gqcInputTypeComposer;
   }
 
-  getResolvers(): Map<string, Resolver> {
+  getResolvers(): Map<string, Resolver<*, *>> {
     if (!this.gqType._gqcResolvers) {
       this.gqType._gqcResolvers = new Map();
     }
@@ -429,7 +440,7 @@ export default class TypeComposer {
     return this.gqType._gqcResolvers.has(name);
   }
 
-  getResolver(name: string): Resolver | void {
+  getResolver(name: string): Resolver<*, *> | void {
     if (this.hasResolver(name) && this.gqType._gqcResolvers) {
       return this.gqType._gqcResolvers.get(name);
     }
@@ -437,7 +448,7 @@ export default class TypeComposer {
     return undefined;
   }
 
-  setResolver(name: string, resolver: Resolver): void {
+  setResolver(name: string, resolver: Resolver<*, *>): void {
     if (!this.gqType._gqcResolvers) {
       this.gqType._gqcResolvers = new Map();
     }
@@ -447,7 +458,7 @@ export default class TypeComposer {
     this.gqType._gqcResolvers.set(name, resolver);
   }
 
-  addResolver(resolver: Resolver | ResolverOpts): void {
+  addResolver(resolver: Resolver<*, *> | ResolverOpts<*, *>): void {
     if (!(resolver instanceof Resolver)) {
       resolver = new Resolver(resolver); // eslint-disable-line no-param-reassign
     }
@@ -480,7 +491,7 @@ export default class TypeComposer {
     this.gqType.description = description;
   }
 
-  setRecordIdFn(fn: GetRecordIdFn): void {
+  setRecordIdFn(fn: GetRecordIdFn<*, *>): void {
     this.gqType._gqcGetRecordIdFn = fn;
   }
 
@@ -488,7 +499,7 @@ export default class TypeComposer {
     return !!this.gqType._gqcGetRecordIdFn;
   }
 
-  getRecordIdFn(): GetRecordIdFn {
+  getRecordIdFn(): GetRecordIdFn<*, *> {
     if (!this.gqType._gqcGetRecordIdFn) {
       throw new Error(`Type ${this.getTypeName()} does not have RecordIdFn`);
     }
