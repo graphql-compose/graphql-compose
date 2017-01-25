@@ -12,9 +12,6 @@ export {
   GraphQLBuffer,
   GraphQLGeneric,
   GraphQLJSON,
-  MissingType,
-  MissingTypeResolver,
-  GQLReference,
 } from './type';
 
 export {
