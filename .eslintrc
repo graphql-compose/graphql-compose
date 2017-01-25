@@ -1,11 +1,19 @@
 {
-  "extends": "airbnb",
+  "extends": "airbnb-base",
   "parser": "babel-eslint",
   "rules": {
     "no-underscore-dangle": 0,
     "arrow-body-style": 0,
     "no-unused-expressions": 0,
-    "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*-test.js"]}]
+    "no-plusplus": 0,
+    "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*-test.js"]}],
+    "comma-dangle": ["error", {
+      "arrays": "always-multiline",
+      "objects": "always-multiline",
+      "imports": "always-multiline",
+      "exports": "always-multiline",
+      "functions": "ignore",
+    }]
   },
   "env": {
     "jasmine": true,
@@ -13,5 +21,8 @@
   },
   "plugins": [
     "flowtype"
-  ]
+  ],
+  "globals": {
+    "Class": true,
+  },
 }

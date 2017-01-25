@@ -40,11 +40,9 @@
     "chai-spies": "0.7.1",
     "cz-conventional-changelog": "^1.2.0",
     "eslint": "^3.14.0",
-    "eslint-config-airbnb": "12.0.0",
+    "eslint-config-airbnb-base": "^11.0.1",
     "eslint-plugin-flowtype": "^2.30.0",
     "eslint-plugin-import": "^2.2.0",
-    "eslint-plugin-jsx-a11y": "2.2.2",
-    "eslint-plugin-react": "6.3.0",
     "flow-bin": "^0.38.0",
     "graphql": "^0.9.0",
     "mocha": "^3.2.0",
@@ -84,7 +82,7 @@
     "test": "babel-node ./node_modules/.bin/_mocha --compilers js:babel-core/register --reporter dot --require ./resources/mocha-bootload src/**/__tests__/**/*-test.js",
     "watch": "babel-node ./resources/watch.js",
     "link": "yarn link graphql && yarn link",
-    "unlink": "yarn unlink graphql && yarn",
+    "unlink": "yarn unlink graphql && yarn add graphql",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   }
 }
