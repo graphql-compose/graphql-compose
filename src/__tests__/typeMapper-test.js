@@ -169,6 +169,37 @@ describe('TypeMapper', () => {
         expect(fc.resolve()).equal(123);
       });
 
+      it('should accept array with one element as type and wrap them with GraphQLList', () => {
+        const fc = typeMapper.convertOutputFieldConfig(['String']);
+        expect(fc.type).instanceof(GraphQLList);
+        expect(fc.type.ofType).to.equal(GraphQLString);
+
+        const fc2 = typeMapper.convertOutputFieldConfig({ type: ['String'] });
+        expect(fc2.type).instanceof(GraphQLList);
+        expect(fc2.type.ofType).to.equal(GraphQLString);
+
+        const fc3 = typeMapper.convertOutputFieldConfig({ type: [GraphQLString] });
+        expect(fc3.type).instanceof(GraphQLList);
+        expect(fc3.type.ofType).to.equal(GraphQLString);
+
+
+        const tc = TypeComposer.create(
+          'type PriceRange { lon: Float, lat: Float }'
+        );
+
+        const fc4 = typeMapper.convertOutputFieldConfig([tc]);
+        expect(fc4.type).instanceof(GraphQLList);
+        expect(fc4.type.ofType).to.equal(tc.getType());
+
+        const fc5 = typeMapper.convertOutputFieldConfig({ type: [tc] });
+        expect(fc5.type).instanceof(GraphQLList);
+        expect(fc5.type.ofType).to.equal(tc.getType());
+
+        expect(() => {
+          typeMapper.convertOutputFieldConfig([]);
+        }).to.throw(/can accept Array exact with one output type/);
+      });
+
       it('should throw error if provided InputTypeComposer', () => {
         const itc = InputTypeComposer
           .create('input LonLatInput { lon: Float, lat: Float }');
@@ -283,6 +314,37 @@ describe('TypeMapper', () => {
       }).to.throw(/\sTypeComposer/);
     });
 
+    it('should accept array with one element as type and wrap them with GraphQLList', () => {
+      const fc = typeMapper.convertInputFieldConfig(['String']);
+      expect(fc.type).instanceof(GraphQLList);
+      expect(fc.type.ofType).to.equal(GraphQLString);
+
+      const fc2 = typeMapper.convertInputFieldConfig({ type: ['String'] });
+      expect(fc2.type).instanceof(GraphQLList);
+      expect(fc2.type.ofType).to.equal(GraphQLString);
+
+      const fc3 = typeMapper.convertInputFieldConfig({ type: [GraphQLString] });
+      expect(fc3.type).instanceof(GraphQLList);
+      expect(fc3.type.ofType).to.equal(GraphQLString);
+
+
+      const itc = InputTypeComposer.create(
+        'input PriceRangeInput { lon: Float, lat: Float }'
+      );
+
+      const fc4 = typeMapper.convertInputFieldConfig([itc]);
+      expect(fc4.type).instanceof(GraphQLList);
+      expect(fc4.type.ofType).to.equal(itc.getType());
+
+      const fc5 = typeMapper.convertInputFieldConfig({ type: [itc] });
+      expect(fc5.type).instanceof(GraphQLList);
+      expect(fc5.type.ofType).to.equal(itc.getType());
+
+      expect(() => {
+        typeMapper.convertInputFieldConfig([]);
+      }).to.throw(/can accept Array exact with one input type/);
+    });
+
     it('should process inputFieldConfigMap()', () => {
       const icm = typeMapper.convertInputFieldConfigMap({
         i1: { type: 'String' },
@@ -351,6 +413,37 @@ describe('TypeMapper', () => {
       expect(ac.type).equal(itc.getType());
       const ac2 = typeMapper.convertArgConfig(itc);
       expect(ac2.type).equal(itc.getType());
+    });
+
+    it('should accept array with one element as type and wrap them with GraphQLList', () => {
+      const fc = typeMapper.convertArgConfig(['String']);
+      expect(fc.type).instanceof(GraphQLList);
+      expect(fc.type.ofType).to.equal(GraphQLString);
+
+      const fc2 = typeMapper.convertArgConfig({ type: ['String'] });
+      expect(fc2.type).instanceof(GraphQLList);
+      expect(fc2.type.ofType).to.equal(GraphQLString);
+
+      const fc3 = typeMapper.convertArgConfig({ type: [GraphQLString] });
+      expect(fc3.type).instanceof(GraphQLList);
+      expect(fc3.type.ofType).to.equal(GraphQLString);
+
+
+      const itc = InputTypeComposer.create(
+        'input PriceRangeInput { lon: Float, lat: Float }'
+      );
+
+      const fc4 = typeMapper.convertArgConfig([itc]);
+      expect(fc4.type).instanceof(GraphQLList);
+      expect(fc4.type.ofType).to.equal(itc.getType());
+
+      const fc5 = typeMapper.convertArgConfig({ type: [itc] });
+      expect(fc5.type).instanceof(GraphQLList);
+      expect(fc5.type.ofType).to.equal(itc.getType());
+
+      expect(() => {
+        typeMapper.convertArgConfig([]);
+      }).to.throw(/can accept Array exact with one input type/);
     });
 
     it('should throw error if provided TypeComposer', () => {
