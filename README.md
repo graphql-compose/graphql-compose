@@ -69,7 +69,15 @@ CityTC.addFields({
     subField4: ID
     subField5: JSON
     subField6: Date
-  }`
+  }`,
+  list0: {
+    type: '[String]',
+    description: 'Array of strings',
+  },
+  list1: '[String]',
+  list2: ['String'],
+  list3: [new GraphQLOutputType(...)],
+  list4: [`type Complex2Type { f1: Float, f2: Int }`],
 });
 
 // Add relation between City and Country by `countryCode` field.
