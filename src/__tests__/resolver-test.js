@@ -222,8 +222,87 @@ describe('Resolver', () => {
       expect(resolver.isRequired('b3')).to.be.false;
       expect(resolver.isRequired('b4')).to.be.true;
     });
+
+    describe('cloneArg()', () => {
+      beforeEach(() => {
+        resolver.setArgs({
+          scalar: 'String',
+          filter: {
+            type: `input FilterInput {
+              name: String,
+              age: Int,
+            }`,
+            description: 'Data filtering arg',
+          },
+        });
+      });
+
+      it('should throw error if arg does not exists', () => {
+        expect(() => {
+          resolver.cloneArg('missingArg', 'NewTypeNameInput');
+        }).to.throw('Argument does not exist');
+      });
+
+      it('should throw error if arg is scalar type', () => {
+        expect(() => {
+          resolver.cloneArg('scalar', 'NewTypeNameInput');
+        }).to.throw('should be GraphQLInputObjectType');
+      });
+
+      it('should throw error if provided incorrect new type name', () => {
+        expect(() => {
+          resolver.cloneArg('filter', '');
+        }).to.throw('should provide new type name');
+        expect(() => {
+          resolver.cloneArg('filter', '#3fdsf');
+        }).to.throw('should provide new type name');
+        expect(() => {
+          resolver.cloneArg('filter', 'FilterInput');
+        }).to.throw('It is equal to current name');
+      });
+
+      it('should clone arg type', () => {
+        resolver.cloneArg('filter', 'NewFilterInput');
+        expect(resolver.getArgType('filter').name)
+          .to.equal('NewFilterInput');
+        expect(resolver.getArg('filter').description)
+          .to.equal('Data filtering arg');
+      });
+    });
   });
 
+  describe('wrapCloneArg()', () => {
+    let newResolver;
+
+    beforeEach(() => {
+      resolver.setArgs({
+        other: '[String]',
+        filter: {
+          type: `input FilterInput {
+            name: String,
+            age: Int,
+          }`,
+          description: 'Data filtering arg',
+        },
+      });
+
+      newResolver = resolver.wrapCloneArg('filter', 'NewFilterInput');
+    });
+
+    it('should return new resolver', () => {
+      expect(newResolver).to.not.equal(resolver);
+    });
+
+    it('should clone type for argument', () => {
+      expect(newResolver.getArg('filter')).to.not.equal(resolver.getArg('filter'));
+      expect(newResolver.getArgType('filter')).to.not.equal(resolver.getArgType('filter'));
+    });
+
+    it('should keep untouched other args', () => {
+      expect(newResolver.getArg('other')).to.equal(resolver.getArg('other'));
+      expect(newResolver.getArgType('other')).to.equal(resolver.getArgType('other'));
+    });
+  });
 
   it('should return data from resolve', async () => {
     const myResolver = new Resolver({
@@ -349,7 +428,7 @@ describe('Resolver', () => {
 
   it('should return nested name for Resolver', () => {
     const r1 = new Resolver({ name: 'find' });
-    const r2 = r1.wrapResolve((next) => (resolveParams) => {
+    const r2 = r1.wrapResolve(next => (resolveParams) => { // eslint-disable-line
       return 'function code';
     });
 
@@ -359,7 +438,7 @@ describe('Resolver', () => {
 
   it('should on toString() call provide debug info with source code', () => {
     const r1 = new Resolver({ name: 'find' });
-    const r2 = r1.wrapResolve((next) => (resolveParams) => {
+    const r2 = r1.wrapResolve(next => (resolveParams) => { // eslint-disable-line
       return 'function code';
     });
 

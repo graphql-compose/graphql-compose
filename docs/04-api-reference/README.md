@@ -198,6 +198,7 @@ resolver.getArgs(); // GraphQLFieldConfigArgumentMap
 resolver.setArgs(GraphQLFieldConfigArgumentMap); // completely replace all args
 resolver.setArg('code', GraphQLArgumentConfig); // set or replace arg
 resolver.addArgs(GraphQLFieldConfigArgumentMap); // add new args, replace existed, rest args keep untouched
+resolver.cloneArg('filter', 'NewFilterInput'); // clone complex input argument (GraphQLInputObjectType) with new name
 resolver.removeArg('code');
 resolver.isRequired('id'); // true
 resolver.makeRequired('id'); // wrap field type by GraphQLNonNull (if not wrapped already)
@@ -229,7 +230,7 @@ resolver.wrapResolve((next) => (rp) => {
 
   return result;
 }); // returns new Resolver
-
+resolver.wrapCloneArg('filter', 'NewFilterInput'); // returns new Resolver with cloned argument type
 resolver.addFilterArg(...)  // see https://github.com/nodkz/graphql-compose/issues/22
 resolver.addSortArg(...)  // see https://github.com/nodkz/graphql-compose/issues/26
 

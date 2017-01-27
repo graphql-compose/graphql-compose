@@ -14,7 +14,7 @@ import { deprecate } from './utils/debug';
 import TypeMapper from './typeMapper';
 import TypeComposer from './typeComposer';
 import deepmerge from './utils/deepmerge';
-import { only } from './utils/misc';
+import { only, clearName } from './utils/misc';
 import { isFunction, isString } from './utils/is';
 import { getProjectionFromAST } from './projection';
 import type {
@@ -121,6 +121,27 @@ export default class Resolver<TSource, TContext> {
 
   removeArg(argName: string) {
     delete this.args[argName];
+  }
+
+  cloneArg(argName: string, newTypeName: string) {
+    if (!{}.hasOwnProperty.call(this.args, argName)) {
+      throw new Error(`Can not clone arg ${argName} for resolver ${this.name}. Argument does not exist.`);
+    }
+    if (!(this.args[argName].type instanceof GraphQLInputObjectType)) {
+      throw new Error(`Can not clone arg ${argName} for resolver ${this.name}.`
+                    + 'Argument should be GraphQLInputObjectType (complex input type).');
+    }
+    if (!newTypeName || newTypeName !== clearName(newTypeName)) {
+      throw new Error('You should provide new type name as second argument');
+    }
+    if (newTypeName === this.args[argName].type.name) {
+      throw new Error('You should provide new type name. It is equal to current name.');
+    }
+
+    this.args[argName] = {
+      ...this.args[argName],
+      type: InputTypeComposer.create(this.args[argName].type).clone(newTypeName).getType(),
+    };
   }
 
   isRequired(argName: string): boolean {
@@ -375,6 +396,16 @@ export default class Resolver<TSource, TContext> {
         return newResolver;
       },
       { name: wrapperName }
+    );
+  }
+
+  wrapCloneArg(argName: string, newTypeName: string) {
+    return this.wrap(
+      (newResolver) => {
+        newResolver.cloneArg(argName, newTypeName);
+        return newResolver;
+      },
+      { name: 'cloneFilterArg' }
     );
   }
 
