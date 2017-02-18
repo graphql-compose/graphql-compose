@@ -1,4 +1,4 @@
-## 06 - Relay
+## 07 - Relay
 Adding support for relay is done with the [Relay plugin](https://github.com/nodkz/graphql-compose-relay) For more detailed descriptions on how to use and reporting issues please use the link.
 
 ### Importing and installing
