@@ -46,7 +46,8 @@ export type toInputObjectTypeOpts = {
 
 export function toInputObjectType(
   typeComposer: TypeComposer,
-  opts: toInputObjectTypeOpts = {}
+  opts: toInputObjectTypeOpts = {},
+  cache: Map<GraphQLObjectType, InputTypeComposer> = new Map(),
 ): InputTypeComposer {
   if (typeComposer.hasInputTypeComposer()) {
     return typeComposer.getInputTypeComposer();
@@ -55,14 +56,19 @@ export function toInputObjectType(
   const prefix: string = opts.prefix || '';
   const postfix: string = opts.postfix || 'Input';
 
-  const name = `${prefix}${typeComposer.getTypeName()}${postfix}`;
+  const inputTypeName = `${prefix}${typeComposer.getTypeName()}${postfix}`;
+  if (cache.has(typeComposer.getType())) {
+    // $FlowFixMe
+    return cache.get(typeComposer.getType());
+  }
 
   const inputTypeComposer = new InputTypeComposer(
     new GraphQLInputObjectType({
-      name,
+      name: inputTypeName,
       fields: {},
     })
   );
+  cache.set(typeComposer.getType(), inputTypeComposer);
 
   const outputFields = removeWrongFields(typeComposer.getFields());
   const inputFields = {};
@@ -72,7 +78,7 @@ export function toInputObjectType(
       fieldName: key,
       outputTypeName: typeComposer.getTypeName(),
     };
-    inputFields[key] = convertInputObjectField(outputFields[key], fieldOpts);
+    inputFields[key] = convertInputObjectField(outputFields[key], fieldOpts, cache);
   });
   inputTypeComposer.addFields(inputFields);
 
@@ -89,7 +95,8 @@ export type convertInputObjectFieldOpts = {
 
 export function convertInputObjectField<TSource, TContext>(
   field: GraphQLFieldConfig<TSource, TContext>,
-  opts: convertInputObjectFieldOpts
+  opts: convertInputObjectFieldOpts,
+  cache: Map<GraphQLObjectType, InputTypeComposer>
 ): GraphQLInputFieldConfig {
   let fieldType: GraphQLType = field.type;
 
@@ -108,7 +115,7 @@ export function convertInputObjectField<TSource, TContext>(
         postfix: opts.postfix || 'Input',
       };
       const typeComposer = new TypeComposer(fieldType);
-      fieldType = toInputObjectType(typeComposer, typeOpts).getType();
+      fieldType = toInputObjectType(typeComposer, typeOpts, cache).getType();
     } else {
       // eslint-disable-next-line
       console.error(
