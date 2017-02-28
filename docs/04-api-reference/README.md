@@ -145,6 +145,7 @@ LonLatITC.setField('lon', GraphQLInputFieldConfig); // replace `lon` field
 LonLatITC.addFields(GraphQLInputFieldConfigMap); // add new fields, replace existed, rest fields keep untouched
 LonLatITC.getField('lon'); // GraphQLInputFieldConfig
 LonLatITC.removeField('lon');
+LonLatITC.extendField('lat', { defaultValue: 51.46, description: 'Prime Meridian' }); // override some field config values
 LonLatITC.getFieldType('lat'); // GraphQLNonNull(GraphQLFloat)
 LonLatITC.getType(); // GraphQLInputObjectType({ name: 'LonLatInput', ... })
 LonLatITC.getTypeAsRequired(); // GraphQLNonNull(GraphQLInputObjectType(...))

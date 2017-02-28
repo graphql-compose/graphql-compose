@@ -4,9 +4,7 @@ import {
   GraphQLInputObjectType,
   GraphQLString,
   GraphQLList,
-  GraphQLNonNull,
   GraphQLInt,
-  GraphQLBoolean,
 } from 'graphql';
 import TypeComposer from '../typeComposer';
 import InputTypeComposer from '../inputTypeComposer';

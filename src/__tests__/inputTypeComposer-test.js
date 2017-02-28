@@ -78,6 +78,22 @@ describe('InputTypeComposer', () => {
       expect(tc.getFieldNames()).to.not.include('input2');
     });
 
+    it('should extend field by name', () => {
+      const tc = new InputTypeComposer(objectType);
+      tc.setField('input3', {
+        type: GraphQLString,
+      });
+      tc.extendField('input3', {
+        description: 'this is input #3',
+      });
+      expect(tc.getField('input3')).property('type').to.be.equal(GraphQLString);
+      expect(tc.getField('input3')).property('description').to.equal('this is input #3');
+      tc.extendField('input3', {
+        type: 'Int',
+      });
+      expect(tc.getField('input3')).property('type').to.be.equal(GraphQLInt);
+    });
+
     it('getFieldType()', () => {
       const tc = new InputTypeComposer(objectType);
       expect(tc.getFieldType('input1')).to.equal(GraphQLString);

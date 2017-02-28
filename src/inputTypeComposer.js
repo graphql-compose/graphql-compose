@@ -156,6 +156,15 @@ export default class InputTypeComposer {
     this.setFields(fields);
   }
 
+  extendField(
+    name: string,
+    parialFieldConfig: GraphQLInputFieldConfig
+  ): GraphQLInputFieldConfig {
+    const fieldConfig = Object.assign({}, this.getField(name), parialFieldConfig);
+    this.setField(name, fieldConfig);
+    return fieldConfig;
+  }
+
   isRequired(fieldName: string): boolean {
     return this.getFieldType(fieldName) instanceof GraphQLNonNull;
   }
