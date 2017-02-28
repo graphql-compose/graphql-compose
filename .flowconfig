@@ -19,4 +19,4 @@ esproposal.class_instance_fields=enable
 unsafe.enable_getters_and_setters=true
 
 [version]
-0.38.0
+0.40.0
