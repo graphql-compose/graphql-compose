@@ -23,10 +23,7 @@ import {
   isInputType,
   valueFromAST,
 } from 'graphql';
-import {
-  parse,
-  parseType,
-} from 'graphql/language/parser';
+import { parse, parseType } from 'graphql/language/parser';
 import {
   LIST_TYPE,
   NON_NULL_TYPE,
@@ -84,7 +81,6 @@ import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
 
-
 const RegexpOutputTypeDefinition = /type\s[^{]+\{[^}]+\}/im;
 const RegexpInputTypeDefinition = /input\s[^{]+\{[^}]+\}/im;
 
@@ -113,7 +109,8 @@ class TypeMapper {
     return this.map.delete(name);
   }
 
-  keys(): Iterator<string> { // eslint-disable-line no-undef
+  keys(): Iterator<string> {
+    // eslint-disable-line no-undef
     return this.map.keys();
   }
 
@@ -137,8 +134,10 @@ class TypeMapper {
     const astDocument: DocumentNode = parse(str);
 
     if (objectPath.get(astDocument, 'kind') !== 'Document') {
-      throw new Error('You should provide correct type syntax. '
-                    + 'Eg. createType(\'type IntRange { min: Int, max: Int }\')');
+      throw new Error(
+        'You should provide correct type syntax. ' +
+          "Eg. createType('type IntRange { min: Int, max: Int }')"
+      );
     }
 
     const types = parseTypes(astDocument);
@@ -166,7 +165,9 @@ class TypeMapper {
     }
     if (Array.isArray(fieldConfig.type)) {
       if (fieldConfig.type.length !== 1) {
-        throw new Error(`${typeName}.${fieldName} can accept Array exact with one output type definition`);
+        throw new Error(
+          `${typeName}.${fieldName} can accept Array exact with one output type definition`
+        );
       }
       wrapWithList = true;
       fieldConfig.type = fieldConfig.type[0];
@@ -178,12 +179,20 @@ class TypeMapper {
     if (fieldConfig instanceof Resolver) {
       return fieldConfig.getFieldConfig();
     }
-    if (fieldConfig instanceof InputTypeComposer
-      || fieldConfig.type instanceof InputTypeComposer) {
-      throw new Error(`You cannot provide InputTypeComposer to the field '${typeName}.${fieldName}'. It should be OutputType.`);
+    if (
+      fieldConfig instanceof InputTypeComposer ||
+      fieldConfig.type instanceof InputTypeComposer
+    ) {
+      throw new Error(
+        `You cannot provide InputTypeComposer to the field '${typeName}.${fieldName}'. It should be OutputType.`
+      );
     }
 
-    if (typeof fieldConfig === 'string' || fieldConfig instanceof GraphQLScalarType || fieldConfig instanceof GraphQLObjectType) {
+    if (
+      typeof fieldConfig === 'string' ||
+      fieldConfig instanceof GraphQLScalarType ||
+      fieldConfig instanceof GraphQLObjectType
+    ) {
       fieldConfig = {
         type: fieldConfig,
       };
@@ -193,7 +202,9 @@ class TypeMapper {
       const fieldTypeDef = fieldConfig.type;
 
       if (RegexpInputTypeDefinition.test(fieldTypeDef)) {
-        throw new Error(`${typeName}.${fieldName} should be OutputType, but got input type definition '${fieldTypeDef}'`);
+        throw new Error(
+          `${typeName}.${fieldName} should be OutputType, but got input type definition '${fieldTypeDef}'`
+        );
       }
 
       const type = RegexpOutputTypeDefinition.test(fieldTypeDef)
@@ -201,20 +212,28 @@ class TypeMapper {
         : this.getWrapped(fieldTypeDef);
 
       if (!type) {
-        throw new Error(`${typeName}.${fieldName} can not conver to OutputType following string: '${fieldTypeDef}'`);
+        throw new Error(
+          `${typeName}.${fieldName} can not conver to OutputType following string: '${fieldTypeDef}'`
+        );
       }
       // $FlowFixMe
       fieldConfig.type = type;
 
       if (!isOutputType(type)) {
-        throw new Error(`${typeName}.${fieldName} provided incorrect output type '${fieldTypeDef}'`);
+        throw new Error(
+          `${typeName}.${fieldName} provided incorrect output type '${fieldTypeDef}'`
+        );
       }
     } else if (fieldConfig.type instanceof TypeComposer) {
       fieldConfig.type = fieldConfig.type.getType();
     }
 
     if (fieldConfig.args) {
-      fieldConfig.args = this.convertArgConfigMap(fieldConfig.args, fieldName, typeName);
+      fieldConfig.args = this.convertArgConfigMap(
+        fieldConfig.args,
+        fieldName,
+        typeName
+      );
     }
 
     if (wrapWithList) {
@@ -228,8 +247,12 @@ class TypeMapper {
     fields: GraphQLFieldConfigMap<TSource, TContext>,
     typeName: string
   ): GraphQLFieldConfigMap<TSource, TContext> {
-    Object.keys(fields).forEach((name) => {
-      fields[name] = this.convertOutputFieldConfig(fields[name], name, typeName); // eslint-disable-line
+    Object.keys(fields).forEach(name => {
+      fields[name] = this.convertOutputFieldConfig(
+        fields[name],
+        name,
+        typeName
+      ); // eslint-disable-line
     });
 
     return fields;
@@ -250,7 +273,9 @@ class TypeMapper {
     // $FlowFixMe
     if (Array.isArray(argConfig.type)) {
       if (argConfig.type.length !== 1) {
-        throw new Error(`${typeName}.${fieldName}@${argName} can accept Array exact with one input type definition`);
+        throw new Error(
+          `${typeName}.${fieldName}@${argName} can accept Array exact with one input type definition`
+        );
       }
       wrapWithList = true;
       // $FlowFixMe
@@ -260,12 +285,20 @@ class TypeMapper {
     if (argConfig instanceof InputTypeComposer) {
       return { type: argConfig.getType() };
     }
-    if (argConfig instanceof TypeComposer
-      || argConfig.type instanceof TypeComposer) {
-      throw new Error(`You cannot provide TypeComposer to the arg '${typeName}.${fieldName}.@${argName}'. It should be InputType.`);
+    if (
+      argConfig instanceof TypeComposer ||
+      argConfig.type instanceof TypeComposer
+    ) {
+      throw new Error(
+        `You cannot provide TypeComposer to the arg '${typeName}.${fieldName}.@${argName}'. It should be InputType.`
+      );
     }
 
-    if (typeof argConfig === 'string' || argConfig instanceof GraphQLScalarType || argConfig instanceof GraphQLInputObjectType) {
+    if (
+      typeof argConfig === 'string' ||
+      argConfig instanceof GraphQLScalarType ||
+      argConfig instanceof GraphQLInputObjectType
+    ) {
       argConfig = {
         // $FlowFixMe
         type: argConfig,
@@ -276,7 +309,9 @@ class TypeMapper {
       const argTypeDef = argConfig.type;
 
       if (RegexpOutputTypeDefinition.test(argTypeDef)) {
-        throw new Error(`${typeName}.${fieldName}@${argName} should be InputType, but got output type definition '${argTypeDef}'`);
+        throw new Error(
+          `${typeName}.${fieldName}@${argName} should be InputType, but got output type definition '${argTypeDef}'`
+        );
       }
 
       const type = RegexpInputTypeDefinition.test(argTypeDef)
@@ -284,7 +319,9 @@ class TypeMapper {
         : this.getWrapped(argTypeDef);
 
       if (!isInputType(type)) {
-        throw new Error(`${typeName}.${fieldName}@${argName} provided incorrect input type '${argTypeDef}'`);
+        throw new Error(
+          `${typeName}.${fieldName}@${argName} provided incorrect input type '${argTypeDef}'`
+        );
       }
 
       // $FlowFixMe
@@ -307,13 +344,14 @@ class TypeMapper {
     typeName: string
   ): GraphQLFieldConfigArgumentMap {
     if (argsConfigMap) {
-      Object.keys(argsConfigMap).forEach((argName) => {
+      Object.keys(argsConfigMap).forEach(argName => {
         argsConfigMap[argName] = this.convertArgConfig( // eslint-disable-line
-          argsConfigMap[argName],
-          argName,
-          fieldName,
-          typeName,
-        );
+            argsConfigMap[argName],
+            argName,
+            fieldName,
+            typeName
+          )
+          ;
       });
     }
 
@@ -333,7 +371,9 @@ class TypeMapper {
     }
     if (Array.isArray(fieldConfig.type)) {
       if (fieldConfig.type.length !== 1) {
-        throw new Error(`${typeName}.${fieldName} can accept Array exact with one input type definition`);
+        throw new Error(
+          `${typeName}.${fieldName} can accept Array exact with one input type definition`
+        );
       }
       wrapWithList = true;
       fieldConfig.type = fieldConfig.type[0];
@@ -342,12 +382,20 @@ class TypeMapper {
     if (fieldConfig instanceof InputTypeComposer) {
       return { type: fieldConfig.getType() };
     }
-    if (fieldConfig instanceof TypeComposer
-      || fieldConfig.type instanceof TypeComposer) {
-      throw new Error(`You cannot provide TypeComposer to the field '${typeName}.${fieldName}'. It should be InputType.`);
+    if (
+      fieldConfig instanceof TypeComposer ||
+      fieldConfig.type instanceof TypeComposer
+    ) {
+      throw new Error(
+        `You cannot provide TypeComposer to the field '${typeName}.${fieldName}'. It should be InputType.`
+      );
     }
 
-    if (typeof fieldConfig === 'string' || fieldConfig instanceof GraphQLScalarType || fieldConfig instanceof GraphQLInputObjectType) {
+    if (
+      typeof fieldConfig === 'string' ||
+      fieldConfig instanceof GraphQLScalarType ||
+      fieldConfig instanceof GraphQLInputObjectType
+    ) {
       fieldConfig = {
         type: fieldConfig,
       };
@@ -357,7 +405,9 @@ class TypeMapper {
       const fieldTypeDef = fieldConfig.type;
 
       if (RegexpOutputTypeDefinition.test(fieldTypeDef)) {
-        throw new Error(`${typeName}.${fieldName} should be InputType, but got output type definition '${fieldTypeDef}'`);
+        throw new Error(
+          `${typeName}.${fieldName} should be InputType, but got output type definition '${fieldTypeDef}'`
+        );
       }
 
       const type = RegexpInputTypeDefinition.test(fieldTypeDef)
@@ -365,7 +415,9 @@ class TypeMapper {
         : this.getWrapped(fieldTypeDef);
 
       if (!isInputType(type)) {
-        throw new Error(`${typeName}.${fieldName} provided incorrect input type '${fieldTypeDef}'`);
+        throw new Error(
+          `${typeName}.${fieldName} provided incorrect input type '${fieldTypeDef}'`
+        );
       }
 
       // $FlowFixMe
@@ -386,7 +438,7 @@ class TypeMapper {
     fields: GraphQLInputFieldConfigMap,
     typeName: string
   ): GraphQLInputFieldConfigMap {
-    Object.keys(fields).forEach((name) => {
+    Object.keys(fields).forEach(name => {
       fields[name] = this.convertInputFieldConfig(fields[name], name, typeName); // eslint-disable-line
     });
 
@@ -414,9 +466,8 @@ function typeFromAST(inputTypeAST: TypeNode): ?GraphQLType {
   }
   if (inputTypeAST.kind === NON_NULL_TYPE) {
     innerType = typeFromAST(inputTypeAST.type);
-    return innerType && new GraphQLNonNull(
-      ((innerType: any): GraphQLNullableType)
-    );
+    return innerType &&
+      new GraphQLNonNull(((innerType: any): GraphQLNullableType));
   }
   invariant(inputTypeAST.kind === NAMED_TYPE, 'Must be a named type.');
   return typeMapper.get(inputTypeAST.name.value);
@@ -454,33 +505,25 @@ function makeSchemaDef(def) {
 }
 
 function makeInputValues(values: Array<InputValueDefinitionNode>) {
-  return keyValMap(
-    values,
-    value => value.name.value,
-    (value) => {
-      const type = produceInputType(value.type);
-      return {
-        type,
-        description: getDescription(value),
-        defaultValue: valueFromAST(value.defaultValue, type),
-      };
-    }
-  );
+  return keyValMap(values, value => value.name.value, value => {
+    const type = produceInputType(value.type);
+    return {
+      type,
+      description: getDescription(value),
+      defaultValue: valueFromAST(value.defaultValue, type),
+    };
+  });
 }
 
 function makeFieldDefMap(
   def: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode
 ) {
-  return keyValMap(
-    def.fields,
-    field => field.name.value,
-    field => ({
-      type: produceOutputType(field.type),
-      description: getDescription(field),
-      args: makeInputValues(field.arguments),
-      deprecationReason: getDeprecationReason(field.directives),
-    })
-  );
+  return keyValMap(def.fields, field => field.name.value, field => ({
+    type: produceOutputType(field.type),
+    description: getDescription(field),
+    args: makeInputValues(field.arguments),
+    deprecationReason: getDeprecationReason(field.directives),
+  }));
 }
 
 function makeEnumDef(def: EnumTypeDefinitionNode) {
@@ -571,10 +614,11 @@ function makeTypeDef(def: ObjectTypeDefinitionNode) {
 }
 
 function getDeprecationReason(directives: ?Array<DirectiveNode>): ?string {
-  const deprecatedAST = directives && find(
-    directives,
-    directive => directive.name.value === GraphQLDeprecatedDirective.name
-  );
+  const deprecatedAST = directives &&
+    find(
+      directives,
+      directive => directive.name.value === GraphQLDeprecatedDirective.name
+    );
   if (!deprecatedAST) {
     return;
   }
