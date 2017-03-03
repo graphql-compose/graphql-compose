@@ -13,7 +13,8 @@
       "imports": "always-multiline",
       "exports": "always-multiline",
       "functions": "ignore",
-    }]
+    }],
+    "arrow-parens": 0
   },
   "env": {
     "jasmine": true,
@@ -24,5 +25,6 @@
   ],
   "globals": {
     "Class": true,
+    "Iterator": true,
   },
 }

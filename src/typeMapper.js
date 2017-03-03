@@ -7,6 +7,7 @@ import {
   GraphQLFloat,
   GraphQLString,
   GraphQLBoolean,
+  GraphQLScalarType,
   GraphQLID,
   GraphQLList,
   GraphQLNonNull,
@@ -182,7 +183,7 @@ class TypeMapper {
       throw new Error(`You cannot provide InputTypeComposer to the field '${typeName}.${fieldName}'. It should be OutputType.`);
     }
 
-    if (typeof fieldConfig === 'string') {
+    if (typeof fieldConfig === 'string' || fieldConfig instanceof GraphQLScalarType || fieldConfig instanceof GraphQLObjectType) {
       fieldConfig = {
         type: fieldConfig,
       };
@@ -264,7 +265,7 @@ class TypeMapper {
       throw new Error(`You cannot provide TypeComposer to the arg '${typeName}.${fieldName}.@${argName}'. It should be InputType.`);
     }
 
-    if (typeof argConfig === 'string') {
+    if (typeof argConfig === 'string' || argConfig instanceof GraphQLScalarType || argConfig instanceof GraphQLInputObjectType) {
       argConfig = {
         // $FlowFixMe
         type: argConfig,
@@ -346,7 +347,7 @@ class TypeMapper {
       throw new Error(`You cannot provide TypeComposer to the field '${typeName}.${fieldName}'. It should be InputType.`);
     }
 
-    if (typeof fieldConfig === 'string') {
+    if (typeof fieldConfig === 'string' || fieldConfig instanceof GraphQLScalarType || fieldConfig instanceof GraphQLInputObjectType) {
       fieldConfig = {
         type: fieldConfig,
       };

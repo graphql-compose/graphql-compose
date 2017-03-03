@@ -96,7 +96,7 @@ describe('TypeMapper', () => {
 
   describe('convertOutputFieldConfig()', () => {
     describe('converting field type', () => {
-      it('should accept GraphQLOutputType', () => {
+      it('should accept type with GraphQLOutputType', () => {
         const fc = typeMapper.convertOutputFieldConfig({
           type: GraphQLString,
         });
@@ -110,6 +110,20 @@ describe('TypeMapper', () => {
           type: objectType,
         });
         expect(fc2.type).equal(objectType);
+      });
+
+      it('should accept GraphQLScalarType', () => {
+        const fc = typeMapper.convertOutputFieldConfig(GraphQLString);
+        expect(fc.type).equal(GraphQLString);
+      });
+
+      it('should accept GraphQLObjectType', () => {
+        const type = new GraphQLObjectType({
+          name: 'Test',
+          fields: () => {},
+        });
+        const fc = typeMapper.convertOutputFieldConfig(type);
+        expect(fc.type).equal(type);
       });
 
       it('should accept type name as string', () => {
@@ -239,7 +253,7 @@ describe('TypeMapper', () => {
   });
 
   describe('convertInputFieldConfig()', () => {
-    it('should accept GraphQLInputObjectType', () => {
+    it('should accept type with GraphQLInputObjectType', () => {
       const ic = typeMapper.convertInputFieldConfig({
         type: GraphQLString,
       });
@@ -254,6 +268,21 @@ describe('TypeMapper', () => {
       });
       expect(ic2.type).equal(objectType);
     });
+
+    it('should accept GraphQLScalarType', () => {
+      const ic = typeMapper.convertInputFieldConfig(GraphQLString);
+      expect(ic.type).equal(GraphQLString);
+    });
+
+    it('should accept GraphQLInputObjectType', () => {
+      const type = new GraphQLInputObjectType({
+        name: 'InputType',
+        fields: () => {},
+      });
+      const ic = typeMapper.convertInputFieldConfig(type);
+      expect(ic.type).equal(type);
+    });
+
 
     it('should accept type name as string', () => {
       const ic = typeMapper.convertInputFieldConfig({
@@ -356,7 +385,7 @@ describe('TypeMapper', () => {
   });
 
   describe('convertArgConfig()', () => {
-    it('should accept GraphQLInputObjectType', () => {
+    it('should accept type with GraphQLInputObjectType', () => {
       const ac = typeMapper.convertArgConfig({
         type: GraphQLString,
       });
@@ -370,6 +399,20 @@ describe('TypeMapper', () => {
         type: objectType,
       });
       expect(ac2.type).equal(objectType);
+    });
+
+    it('should accept GraphQLScalarType', () => {
+      const ac = typeMapper.convertArgConfig(GraphQLString);
+      expect(ac.type).equal(GraphQLString);
+    });
+
+    it('should accept GraphQLInputObjectType', () => {
+      const type = new GraphQLInputObjectType({
+        name: 'InputType',
+        fields: () => {},
+      });
+      const ac = typeMapper.convertArgConfig(type);
+      expect(ac.type).equal(type);
     });
 
     it('should accept type name as string', () => {
