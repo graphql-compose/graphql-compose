@@ -29,6 +29,11 @@ describe('typeAsFn', () => {
       expect(unwrapped.f3._typeFn).to.be.ok;
       expect(unwrapped.f3._typeFn()).to.equal(GraphQLString);
     });
+
+    it('should pass null, undefined', () => {
+      expect(unwrapFieldsType(null)).to.equal(null);
+      expect(unwrapFieldsType(undefined)).to.equal(undefined);
+    });
   });
 
   describe('wrapFieldsType()', () => {
@@ -55,6 +60,11 @@ describe('typeAsFn', () => {
       expect(wrapped.f2.type).to.instanceOf(GraphQLObjectType);
       expect(wrapped.f3.type).to.be.ok;
       expect(wrapped.f3.type()).to.equal(GraphQLString);
+    });
+
+    it('should pass null, undefined', () => {
+      expect(wrapFieldsType(null)).to.equal(null);
+      expect(wrapFieldsType(undefined)).to.equal(undefined);
     });
   });
 });
