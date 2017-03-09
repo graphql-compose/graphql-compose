@@ -30,7 +30,7 @@ describe('TypeComposer', () => {
   });
 
   describe('fields manipulation', () => {
-    it('should has `getFields` method', () => {
+    it('getFields()', () => {
       const fieldNames = Object.keys(tc.getFields());
       expect(fieldNames).to.have.members(['field1', 'field2']);
 
@@ -39,20 +39,71 @@ describe('TypeComposer', () => {
     });
 
 
-    it('should has `addFields` method', () => {
-      tc.setField('field3', { type: GraphQLString });
-      const fieldNames = Object.keys(objectType.getFields());
-      expect(fieldNames).to.include('field3');
-    });
-
-
-    it('should add fields with converting types from string to object', () => {
-      tc.setField('field3', { type: 'String' });
-      tc.addFields({
-        field4: { type: '[Int]' },
-        field5: { type: 'Boolean!' },
+    describe('setFields()', () => {
+      it('should add field with standart config', () => {
+        tc.setFields({
+          field3: { type: GraphQLString },
+        });
+        const fields = objectType.getFields();
+        expect(Object.keys(fields)).to.include('field3');
+        expect(fields.field3.type).to.equal(GraphQLString);
       });
 
+      it('should add fields with converting types from string to object', () => {
+        tc.setFields({
+          field3: { type: 'String' },
+          field4: { type: '[Int]' },
+          field5: 'Boolean!',
+        });
+
+        expect(tc.getField('field3').type).to.equal(GraphQLString);
+        expect(tc.getField('field4').type).instanceof(GraphQLList);
+        expect(tc.getField('field4').type.ofType).to.equal(GraphQLInt);
+        expect(tc.getField('field5').type).instanceof(GraphQLNonNull);
+        expect(tc.getField('field5').type.ofType).to.equal(GraphQLBoolean);
+      });
+
+
+      it('should add fields with converting args types from string to object', () => {
+        tc.setFields({
+          field3: {
+            type: 'String',
+            args: {
+              arg1: { type: 'String!' },
+              arg2: '[Float]',
+            },
+          },
+        });
+
+        expect(tc.getFieldArg('field3', 'arg1').type).instanceof(GraphQLNonNull);
+        expect(tc.getFieldArg('field3', 'arg1').type.ofType).to.equal(GraphQLString);
+        expect(tc.getFieldArg('field3', 'arg2').type).instanceof(GraphQLList);
+        expect(tc.getFieldArg('field3', 'arg2').type.ofType).to.equal(GraphQLFloat);
+      });
+
+      it('should add projection via `setField` and `addFields`', () => {
+        tc.setFields({
+          field3: {
+            type: GraphQLString,
+            projection: { field1: true, field2: true },
+          },
+          field4: { type: GraphQLString },
+          field5: { type: GraphQLString, projection: { field4: true } },
+        });
+
+        expect(tc.getProjectionMapper()).to.deep.equal({
+          field3: { field1: true, field2: true },
+          field5: { field4: true },
+        });
+      });
+    });
+
+    it('addFields()', () => {
+      tc.addFields({
+        field3: { type: GraphQLString },
+        field4: { type: '[Int]' },
+        field5: 'Boolean!',
+      });
       expect(tc.getField('field3').type).to.equal(GraphQLString);
       expect(tc.getField('field4').type).instanceof(GraphQLList);
       expect(tc.getField('field4').type.ofType).to.equal(GraphQLInt);
@@ -60,63 +111,19 @@ describe('TypeComposer', () => {
       expect(tc.getField('field5').type.ofType).to.equal(GraphQLBoolean);
     });
 
-
-    it('should add fields with converting args types from string to object', () => {
-      tc.setField('field3', {
-        type: 'String',
-        args: {
-          arg1: { type: 'String!' },
-          arg2: '[Float]',
-        },
+    describe('removeField()', () => {
+      it('should remove one field', () => {
+        tc.removeField('field1');
+        expect(tc.getFieldNames()).to.have.members(['field2']);
       });
 
-      expect(tc.getFieldArg('field3', 'arg1').type).instanceof(GraphQLNonNull);
-      expect(tc.getFieldArg('field3', 'arg1').type.ofType).to.equal(GraphQLString);
-      expect(tc.getFieldArg('field3', 'arg2').type).instanceof(GraphQLList);
-      expect(tc.getFieldArg('field3', 'arg2').type.ofType).to.equal(GraphQLFloat);
-    });
-
-
-    it('should add projection via `setField` and `addFields`', () => {
-      tc.setField('field3', {
-        type: GraphQLString,
-        projection: { field1: true, field2: true },
-      });
-      tc.addFields({
-        field4: { type: GraphQLString },
-        field5: { type: GraphQLString, projection: { field4: true } },
-      });
-
-      expect(tc.getProjectionMapper()).to.deep.equal({
-        field3: { field1: true, field2: true },
-        field5: { field4: true },
+      it('should remove list of fields', () => {
+        tc.removeField(['field1', 'field2']);
+        expect(tc.getFieldNames()).to.have.members([]);
       });
     });
 
-
-    it('should clone projection for fields', () => {
-      tc.setField('field3', {
-        type: GraphQLString,
-        projection: { field1: true, field2: true },
-      });
-
-      const tc2 = tc.clone('newObject');
-      expect(tc2.getProjectionMapper()).to.deep.equal({
-        field3: { field1: true, field2: true },
-      });
-    });
-
-    it('should remove one field', () => {
-      tc.removeField('field1');
-      expect(tc.getFieldNames()).to.have.members(['field2']);
-    });
-
-    it('should remove list of fields', () => {
-      tc.removeField(['field1', 'field2']);
-      expect(tc.getFieldNames()).to.have.members([]);
-    });
-
-    it('should extend field by name', () => {
+    it('extendField()', () => {
       tc.setField('field3', {
         type: GraphQLString,
         projection: { field1: true, field2: true },
@@ -134,39 +141,45 @@ describe('TypeComposer', () => {
   });
 
   describe('interfaces manipulation', () => {
-    it('should has `getInterfaces` method', () => {
-      expect(tc.getInterfaces()).to.have.members([]);
+    const iface = new GraphQLInterfaceType({
+      name: 'Node',
+      description: '',
+      fields: () => ({}),
+      resolveType: () => {},
+    });
+    const iface2 = new GraphQLInterfaceType({
+      name: 'Node',
+      description: '',
+      fields: () => ({}),
+      resolveType: () => {},
     });
 
+    it('getInterfaces()', () => {
+      tc.gqType._typeConfig.interfaces = [iface];
+      expect(tc.getInterfaces()).to.have.members([iface]);
+    });
 
-    it('should has working `addInterface`, `hasInterface`, `removeInterface` methods', () => {
-      const iface = new GraphQLInterfaceType({
-        name: 'Node',
-        description: '',
-        fields: () => ({}),
-        resolveType: () => {},
-      });
+    it('hasInterface()', () => {
+      tc.gqType._typeConfig.interfaces = [iface];
+      expect(tc.hasInterface(iface)).to.be.true;
+    });
+
+    it('addInterface()', () => {
       tc.addInterface(iface);
       expect(tc.getInterfaces()).to.have.members([iface]);
       expect(tc.hasInterface(iface)).to.be.true;
-      const iface2 = new GraphQLInterfaceType({
-        name: 'Node',
-        description: '',
-        fields: () => ({}),
-        resolveType: () => {},
-      });
       tc.addInterface(iface2);
       expect(tc.getInterfaces()).to.have.members([iface, iface2]);
       expect(tc.hasInterface(iface2)).to.be.true;
+    });
 
+    it('removeInterface()', () => {
+      tc.addInterface(iface);
+      tc.addInterface(iface2);
+      expect(tc.getInterfaces()).to.have.members([iface, iface2]);
       tc.removeInterface(iface);
       expect(tc.hasInterface(iface)).to.be.false;
       expect(tc.hasInterface(iface2)).to.be.true;
-    });
-
-    it('should remove interface', () => {
-      tc.removeField('field1');
-      expect(tc.getFieldNames()).to.have.members(['field2']);
     });
   });
 
@@ -222,6 +235,20 @@ describe('TypeComposer', () => {
       expect(myTC).instanceof(TypeComposer);
       expect(myTC.getType()).equal(objType);
       expect(myTC.getFieldType('f1')).equal(GraphQLString);
+    });
+  });
+
+  describe('clone()', () => {
+    it('should clone projection for fields', () => {
+      tc.setField('field3', {
+        type: GraphQLString,
+        projection: { field1: true, field2: true },
+      });
+
+      const tc2 = tc.clone('newObject');
+      expect(tc2.getProjectionMapper()).to.deep.equal({
+        field3: { field1: true, field2: true },
+      });
     });
   });
 

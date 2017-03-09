@@ -119,6 +119,15 @@ export default class TypeComposer {
     );
 
     this.gqType._typeConfig.fields = () => prepearedFields;
+    // if field has a projection option, then add it to projection mapper
+    Object.keys(prepearedFields).forEach((name) => {
+      if (prepearedFields[name].projection) {
+        // $FlowFixMe
+        const projection: ProjectionType = prepearedFields[name].projection;
+        this.addProjectionMapper(name, projection);
+      }
+    });
+
     delete this.gqType._fields; // clear builded fields in type
   }
 
@@ -150,15 +159,6 @@ export default class TypeComposer {
    */
   addFields(newFields: GraphQLFieldConfigMap<*, *>): void {
     this.setFields(Object.assign({}, this.getFields(), newFields));
-
-    // if field has a projection option, then add it to projection mapper
-    Object.keys(newFields).forEach((name) => {
-      if (newFields[name].projection) {
-        // $FlowFixMe
-        const projection: ProjectionType = newFields[name].projection;
-        this.addProjectionMapper(name, projection);
-      }
-    });
   }
 
   /**
