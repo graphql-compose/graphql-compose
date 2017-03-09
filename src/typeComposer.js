@@ -7,6 +7,7 @@ import {
 } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
+import { unwrapFieldsType, wrapFieldsType } from './utils/typeAsFn';
 import { deprecate } from './utils/debug';
 import Resolver from './resolver';
 import { toInputObjectType } from './toInputObjectType';
@@ -95,7 +96,8 @@ export default class TypeComposer {
     const fields: Thunk<GraphQLFieldConfigMap<*, *>>
       = this.gqType._typeConfig.fields;
 
-    const fieldMap:mixed = resolveMaybeThunk(fields);
+    // $FlowFixMe
+    const fieldMap:mixed = wrapFieldsType(resolveMaybeThunk(fields));
 
     if (isObject(fieldMap)) {
       // $FlowFixMe
@@ -118,7 +120,6 @@ export default class TypeComposer {
       this.getTypeName()
     );
 
-    this.gqType._typeConfig.fields = () => prepearedFields;
     // if field has a projection option, then add it to projection mapper
     Object.keys(prepearedFields).forEach((name) => {
       if (prepearedFields[name].projection) {
@@ -128,6 +129,8 @@ export default class TypeComposer {
       }
     });
 
+    // $FlowFixMe
+    this.gqType._typeConfig.fields = () => unwrapFieldsType(prepearedFields);
     delete this.gqType._fields; // clear builded fields in type
   }
 

@@ -96,6 +96,18 @@ describe('TypeComposer', () => {
           field5: { field4: true },
         });
       });
+
+      it('accept types as function', () => {
+        const typeAsFn = () => GraphQLString;
+        tc.setFields({
+          input3: { type: typeAsFn },
+        });
+        expect(tc.getFieldType('input3')).to.equal(typeAsFn);
+
+        // show provide unwrapped/unhoisted type for graphql
+        expect(tc.getType()._typeConfig.fields().input3.type)
+          .to.equal(GraphQLString);
+      });
     });
 
     it('addFields()', () => {

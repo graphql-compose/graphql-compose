@@ -7,6 +7,7 @@ import {
 import { resolveMaybeThunk } from './utils/misc';
 import { deprecate } from './utils/debug';
 import { isObject, isString } from './utils/is';
+import { unwrapFieldsType, wrapFieldsType } from './utils/typeAsFn';
 import TypeMapper from './typeMapper';
 import { typeByPath } from './typeByPath';
 
@@ -85,7 +86,8 @@ export default class InputTypeComposer {
     const fields: Thunk<GraphQLInputFieldConfigMap>
       = this.gqType._typeConfig.fields;
 
-    const fieldMap:mixed = resolveMaybeThunk(fields);
+    // $FlowFixMe
+    const fieldMap:mixed = wrapFieldsType(resolveMaybeThunk(fields));
 
     if (isObject(fieldMap)) {
       // $FlowFixMe
@@ -113,7 +115,8 @@ export default class InputTypeComposer {
       this.getTypeName()
     );
 
-    this.gqType._typeConfig.fields = () => prepearedFields;
+    // $FlowFixMe
+    this.gqType._typeConfig.fields = () => unwrapFieldsType(prepearedFields);
     delete this.gqType._fields; // if schema was builded, delete defineFieldMap
   }
 

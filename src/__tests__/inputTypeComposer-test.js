@@ -49,14 +49,41 @@ describe('InputTypeComposer', () => {
       expect(fieldNames).to.include('input3');
     });
 
-    it('setFields()', () => {
-      const tc = new InputTypeComposer(objectType);
-      tc.setFields({
-        input3: { type: GraphQLString },
-        input4: { type: GraphQLString },
+    describe('setFields()', () => {
+      it('accept regular fields definition', () => {
+        const tc = new InputTypeComposer(objectType);
+        tc.setFields({
+          input3: { type: GraphQLString },
+          input4: { type: GraphQLString },
+        });
+        expect(tc.getFieldNames()).to.not.have.members(['input1', 'input2']);
+        expect(tc.getFieldNames()).to.have.members(['input3', 'input4']);
+        expect(tc.getFieldType('input3')).to.equal(GraphQLString);
+        expect(tc.getFieldType('input4')).to.equal(GraphQLString);
       });
-      expect(tc.getFieldNames()).to.not.have.members(['input1', 'input2']);
-      expect(tc.getFieldNames()).to.have.members(['input3', 'input4']);
+
+      it('accept shortand fields definition', () => {
+        const tc = new InputTypeComposer(objectType);
+        tc.setFields({
+          input3: GraphQLString,
+          input4: 'String',
+        });
+        expect(tc.getFieldType('input3')).to.equal(GraphQLString);
+        expect(tc.getFieldType('input4')).to.equal(GraphQLString);
+      });
+
+      it('accept types as function', () => {
+        const tc = new InputTypeComposer(objectType);
+        const typeAsFn = () => GraphQLString;
+        tc.setFields({
+          input3: { type: typeAsFn },
+        });
+        expect(tc.getFieldType('input3')).to.equal(typeAsFn);
+
+        // show provide unwrapped/unhoisted type for graphql
+        expect(tc.getType()._typeConfig.fields().input3.type)
+          .to.equal(GraphQLString);
+      });
     });
 
     it('addFields()', () => {
