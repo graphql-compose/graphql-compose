@@ -112,8 +112,9 @@ export default class InputTypeComposer {
   setFields(fields: GraphQLInputFieldConfigMap): void {
     const prepearedFields = TypeMapper.convertInputFieldConfigMap(fields, this.getTypeName());
 
-    // $FlowFixMe
-    this.gqType._typeConfig.fields = () => resolveInputConfigsAsThunk(prepearedFields);
+    this.gqType._typeConfig.fields = () =>
+      // $FlowFixMe
+      resolveInputConfigsAsThunk(prepearedFields, this.getTypeName());
     delete this.gqType._fields; // if schema was builded, delete defineFieldMap
   }
 

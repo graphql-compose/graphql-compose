@@ -30,7 +30,7 @@ describe('typeAsThunk', () => {
           description: 'Field3',
         },
         f5: () => ({
-          type: TypeComposer.create(`type LonLat { lon: Float, lat: Float}`),
+          type: TypeComposer.create('type LonLat { lon: Float, lat: Float}'),
           description: 'Field5',
         }),
       };
@@ -82,7 +82,7 @@ describe('typeAsThunk', () => {
           type: () => 'String',
         },
         f5: {
-          type: () => TypeComposer.create(`type LonLat { lon: Float, lat: Float}`),
+          type: () => TypeComposer.create('type LonLat { lon: Float, lat: Float}'),
           description: 'Field5',
         },
       };
@@ -133,6 +133,24 @@ describe('typeAsThunk', () => {
       expect(unwrapped.f4._typeAsThunk()).to.equal('String');
     });
 
+    it('should works with arg as function', () => {
+      const fieldMap = {
+        f6: {
+          type: GraphQLString,
+          args: {
+            a1: () => GraphQLString,
+            a2: () => ({ type: GraphQLString }),
+            a3: { type: () => GraphQLString },
+          },
+        },
+      };
+      const unwrapped = resolveOutputConfigsAsThunk(fieldMap);
+      const args = unwrapped.f6.args;
+      expect(args.a1.type).to.equal(GraphQLString);
+      expect(args.a2.type).to.equal(GraphQLString);
+      expect(args.a3.type).to.equal(GraphQLString);
+    });
+
     it('should pass null, undefined', () => {
       expect(resolveOutputConfigsAsThunk(null)).to.equal(null);
       expect(resolveOutputConfigsAsThunk(undefined)).to.equal(undefined);
@@ -161,7 +179,7 @@ describe('typeAsThunk', () => {
           description: 'Field3',
         },
         f5: () => ({
-          type: InputTypeComposer.create(`input LonLat { lon: Float, lat: Float}`),
+          type: InputTypeComposer.create('input LonLat { lon: Float, lat: Float}'),
           description: 'Field5',
         }),
       };
@@ -213,7 +231,7 @@ describe('typeAsThunk', () => {
           type: () => 'String',
         },
         f5: {
-          type: () => InputTypeComposer.create(`input LonLat { lon: Float, lat: Float}`),
+          type: () => InputTypeComposer.create('input LonLat { lon: Float, lat: Float}'),
           description: 'Field5',
         },
       };
@@ -277,6 +295,12 @@ describe('typeAsThunk', () => {
       const unwrapped = {
         f1: {
           type: GraphQLString,
+          args: {
+            a1: {
+              type: GraphQLString,
+              _typeAsThunk: () => GraphQLString,
+            },
+          },
         },
         f2: {
           type: new GraphQLObjectType({
@@ -290,12 +314,23 @@ describe('typeAsThunk', () => {
           type: GraphQLString,
           _typeAsThunk: () => GraphQLString,
         },
+        f4: {
+          type: GraphQLString,
+          _fieldAsThunk: () => GraphQLString,
+        },
+        f5: {
+          type: GraphQLString,
+          _fieldAsThunk: () => ({ type: GraphQLString }),
+        },
       };
       const wrapped = keepConfigsAsThunk(unwrapped);
       expect(wrapped.f1.type).to.equal(GraphQLString);
+      expect(wrapped.f1.args.a1.type()).to.equal(GraphQLString);
       expect(wrapped.f2.type).to.instanceOf(GraphQLObjectType);
       expect(wrapped.f3.type).to.be.ok;
       expect(wrapped.f3.type()).to.equal(GraphQLString);
+      expect(wrapped.f4()).to.equal(GraphQLString);
+      expect(wrapped.f5().type).to.equal(GraphQLString);
     });
 
     it('should pass null, undefined', () => {

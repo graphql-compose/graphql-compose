@@ -1,27 +1,17 @@
 /* @flow */
 /* eslint-disable no-param-reassign */
 
-import type {
-  GraphQLInputFieldMap,
-  GraphQLFieldMap,
-} from 'graphql/type/definition';
+import type { GraphQLInputFieldMap, GraphQLFieldMap } from 'graphql/type/definition';
 import TypeMapper from '../typeMapper';
 import { isFunction, isObject } from './is';
 
 export type FieldMaps = GraphQLInputFieldMap | GraphQLFieldMap<*, *>;
 
-export function resolveOutputConfigsAsThunk<T: FieldMaps>(
-  fieldMap: T,
-  typeName: string
-): T {
+export function resolveOutputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName: string): T {
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(name => {
       if (isFunction(fieldMap[name])) {
-        const fieldConfig = TypeMapper.convertOutputFieldConfig(
-          fieldMap[name](),
-          name,
-          typeName
-        );
+        const fieldConfig = TypeMapper.convertOutputFieldConfig(fieldMap[name](), name, typeName);
         // $FlowFixMe
         fieldConfig._fieldAsThunk = fieldMap[name];
         fieldMap[name] = fieldConfig;
@@ -37,23 +27,23 @@ export function resolveOutputConfigsAsThunk<T: FieldMaps>(
         );
         fieldMap[name].type = fieldConfig.type;
       }
+
+      if (isObject(fieldMap[name].args)) {
+        fieldMap[name].args = resolveInputConfigsAsThunk(
+          fieldMap[name].args,
+          `${typeName}.${name}.args`
+        );
+      }
     });
   }
   return fieldMap;
 }
 
-export function resolveInputConfigsAsThunk<T: FieldMaps>(
-  fieldMap: T,
-  typeName: string
-): T {
+export function resolveInputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName: string): T {
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(name => {
       if (isFunction(fieldMap[name])) {
-        const fieldConfig = TypeMapper.convertInputFieldConfig(
-          fieldMap[name](),
-          name,
-          typeName
-        );
+        const fieldConfig = TypeMapper.convertInputFieldConfig(fieldMap[name](), name, typeName);
         // $FlowFixMe
         fieldConfig._fieldAsThunk = fieldMap[name];
         fieldMap[name] = fieldConfig;
@@ -74,17 +64,20 @@ export function resolveInputConfigsAsThunk<T: FieldMaps>(
   return fieldMap;
 }
 
-export function keepConfigsAsThunk<T: FieldMaps>(
-  fieldMap: T
-): T {
+export function keepConfigsAsThunk<T: FieldMaps>(fieldMap: T): T {
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(key => {
       if (fieldMap[key]._fieldAsThunk) {
         // $FlowFixMe
         fieldMap[key] = fieldMap[key]._fieldAsThunk;
-      } else if (fieldMap[key]._typeAsThunk) {
-        // $FlowFixMe
-        fieldMap[key].type = fieldMap[key]._typeAsThunk;
+      } else {
+        if (fieldMap[key]._typeAsThunk) {
+          // $FlowFixMe
+          fieldMap[key].type = fieldMap[key]._typeAsThunk;
+        }
+        if (fieldMap[key].args) {
+          fieldMap[key].args = keepConfigsAsThunk(fieldMap[key].args);
+        }
       }
     });
   }
