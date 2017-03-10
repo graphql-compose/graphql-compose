@@ -132,14 +132,14 @@ describe('TypeMapper', () => {
         expect(fc.type).equal(type);
       });
 
-      it('should accept type name as string', () => {
+      it('should accept type as string', () => {
         const fc = typeMapper.convertOutputFieldConfig({
           type: 'String',
         });
         expect(fc.type).equal(GraphQLString);
       });
 
-      it('should create field config from type name as string', () => {
+      it('should create field config from type as string', () => {
         const fc = typeMapper.convertOutputFieldConfig('String');
         expect(fc.type).equal(GraphQLString);
       });

@@ -1,13 +1,10 @@
 /* @flow */
 
-import {
-  GraphQLInputObjectType,
-  GraphQLNonNull,
-} from 'graphql';
+import { GraphQLInputObjectType, GraphQLNonNull } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
 import { deprecate } from './utils/debug';
 import { isObject, isString } from './utils/is';
-import { unwrapFieldsType, wrapFieldsType } from './utils/typeAsFn';
+import { resolveInputConfigsAsThunk, keepConfigsAsThunk } from './utils/configAsThunk';
 import TypeMapper from './typeMapper';
 import { typeByPath } from './typeByPath';
 
@@ -21,15 +18,15 @@ import type {
   TypeDefinitionString,
 } from './definition';
 
-
 export default class InputTypeComposer {
   gqType: GraphQLInputObjectType;
 
   static create(
-    opts: TypeDefinitionString |
-          TypeNameString |
-          GraphQLInputObjectTypeConfig |
-          GraphQLInputObjectType
+    opts:
+      | TypeDefinitionString
+      | TypeNameString
+      | GraphQLInputObjectTypeConfig
+      | GraphQLInputObjectType
   ) {
     let ITC;
 
@@ -38,10 +35,12 @@ export default class InputTypeComposer {
       const typeName: string = opts;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
-        ITC = new InputTypeComposer(new GraphQLInputObjectType({
-          name: typeName,
-          fields: () => ({}),
-        }));
+        ITC = new InputTypeComposer(
+          new GraphQLInputObjectType({
+            name: typeName,
+            fields: () => ({}),
+          })
+        );
       } else {
         const type = TypeMapper.createType(typeName);
         if (!(type instanceof GraphQLInputObjectType)) {
@@ -65,7 +64,9 @@ export default class InputTypeComposer {
         ITC.addFields(opts.fields);
       }
     } else {
-      throw new Error('You should provide InputObjectConfig or string with type name to InputTypeComposer.create(opts)');
+      throw new Error(
+        'You should provide InputObjectConfig or string with type name to InputTypeComposer.create(opts)'
+      );
     }
 
     return ITC;
@@ -83,11 +84,10 @@ export default class InputTypeComposer {
    * WARNING: this method read an internal GraphQL instance variable.
    */
   getFields(): GraphQLInputFieldConfigMap {
-    const fields: Thunk<GraphQLInputFieldConfigMap>
-      = this.gqType._typeConfig.fields;
+    const fields: Thunk<GraphQLInputFieldConfigMap> = this.gqType._typeConfig.fields;
 
     // $FlowFixMe
-    const fieldMap:mixed = wrapFieldsType(resolveMaybeThunk(fields));
+    const fieldMap: mixed = keepConfigsAsThunk(resolveMaybeThunk(fields));
 
     if (isObject(fieldMap)) {
       // $FlowFixMe
@@ -110,13 +110,10 @@ export default class InputTypeComposer {
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
   setFields(fields: GraphQLInputFieldConfigMap): void {
-    const prepearedFields = TypeMapper.convertInputFieldConfigMap(
-      fields,
-      this.getTypeName()
-    );
+    const prepearedFields = TypeMapper.convertInputFieldConfigMap(fields, this.getTypeName());
 
     // $FlowFixMe
-    this.gqType._typeConfig.fields = () => unwrapFieldsType(prepearedFields);
+    this.gqType._typeConfig.fields = () => resolveInputConfigsAsThunk(prepearedFields);
     delete this.gqType._fields; // if schema was builded, delete defineFieldMap
   }
 
@@ -159,10 +156,7 @@ export default class InputTypeComposer {
     this.setFields(fields);
   }
 
-  extendField(
-    name: string,
-    parialFieldConfig: GraphQLInputFieldConfig
-  ): GraphQLInputFieldConfig {
+  extendField(name: string, parialFieldConfig: GraphQLInputFieldConfig): GraphQLInputFieldConfig {
     const fieldConfig = Object.assign({}, this.getField(name), parialFieldConfig);
     this.setField(name, fieldConfig);
     return fieldConfig;
@@ -192,7 +186,7 @@ export default class InputTypeComposer {
   makeRequired(fieldNameOrArray: string | Array<string>) {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
-    fieldNames.forEach((fieldName) => {
+    fieldNames.forEach(fieldName => {
       if (fields[fieldName]) {
         if (!(fields[fieldName].type instanceof GraphQLNonNull)) {
           fields[fieldName].type = new GraphQLNonNull(fields[fieldName].type);
@@ -213,7 +207,7 @@ export default class InputTypeComposer {
   makeOptional(fieldNameOrArray: string | Array<string>) {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
-    fieldNames.forEach((fieldName) => {
+    fieldNames.forEach(fieldName => {
       if (fieldNames.includes(fieldName)) {
         if (fields[fieldName].type instanceof GraphQLNonNull) {
           fields[fieldName].type = fields[fieldName].type.ofType;
@@ -238,7 +232,7 @@ export default class InputTypeComposer {
 
     const fields = this.getFields();
     const newFields = {};
-    Object.keys(fields).forEach((fieldName) => {
+    Object.keys(fields).forEach(fieldName => {
       newFields[fieldName] = Object.assign({}, fields[fieldName]);
     });
 
