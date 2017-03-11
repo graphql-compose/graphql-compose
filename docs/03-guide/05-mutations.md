@@ -69,7 +69,7 @@ UserTC.addResolver({
     }`
   },
   type: UserTC,
-  resolve: (_, args, context, info) => {
+  resolve: ({ _, args, context, info }) => {
     //edit and do what you need..
     return user;
   }
