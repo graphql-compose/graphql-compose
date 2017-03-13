@@ -9,6 +9,7 @@ import {
   GraphQLInputObjectType,
   GraphQLList,
   GraphQLNonNull,
+  GraphQLEnumType,
 } from 'graphql';
 import typeMapper from '../typeMapper';
 import TypeComposer from '../typeComposer';
@@ -144,7 +145,7 @@ describe('TypeMapper', () => {
         expect(fc.type).equal(GraphQLString);
       });
 
-      it('should create field config from type definition string', () => {
+      it('should create field config from GraphQL Schema Language', () => {
         const fc = typeMapper.convertOutputFieldConfig(
           `type MyOutputType {
           a: String,
@@ -155,6 +156,18 @@ describe('TypeMapper', () => {
         expect(tc.getTypeName()).equal('MyOutputType');
         expect(tc.getFieldType('a')).equal(GraphQLString);
         expect(tc.getFieldType('b')).equal(GraphQLInt);
+      });
+
+      it('should create field with Enum type from GraphQL Schema Language', () => {
+        const fc = typeMapper.convertOutputFieldConfig(
+          'enum MyEnum { AND OR }'
+        );
+        expect(fc.type).instanceof(GraphQLEnumType);
+        const enumValues = fc.type.getValues();
+        expect(enumValues[0].name).equal('AND');
+        expect(enumValues[0].value).equal('AND');
+        expect(enumValues[1].name).equal('OR');
+        expect(enumValues[1].value).equal('OR');
       });
 
       it('should throw error if provided input type definition', () => {
@@ -312,7 +325,7 @@ describe('TypeMapper', () => {
       expect(ic.type).equal(GraphQLString);
     });
 
-    it('should create field config from input type definition', () => {
+    it('should create field config from input type GraphQL Schema Language', () => {
       const fc = typeMapper.convertInputFieldConfig(
         `input MyInputType {
         a: String,
@@ -323,6 +336,18 @@ describe('TypeMapper', () => {
       expect(itc.getTypeName()).equal('MyInputType');
       expect(itc.getFieldType('a')).equal(GraphQLString);
       expect(itc.getFieldType('b')).equal(GraphQLInt);
+    });
+
+    it('should create field with Enum type from GraphQL Schema Language', () => {
+      const fc = typeMapper.convertInputFieldConfig(
+        'enum MyInputEnum { AND OR }'
+      );
+      expect(fc.type).instanceof(GraphQLEnumType);
+      const enumValues = fc.type.getValues();
+      expect(enumValues[0].name).equal('AND');
+      expect(enumValues[0].value).equal('AND');
+      expect(enumValues[1].name).equal('OR');
+      expect(enumValues[1].value).equal('OR');
     });
 
     it('should throw error if provided output type definition', () => {
@@ -445,12 +470,12 @@ describe('TypeMapper', () => {
       expect(ac.type).equal(GraphQLString);
     });
 
-    it('should create arg config from type name as string', () => {
+    it('should create arg config from GraphQL Schema Language', () => {
       const ac = typeMapper.convertArgConfig('String');
       expect(ac.type).equal(GraphQLString);
     });
 
-    it('should create arg config from input type definition', () => {
+    it('should create arg config from input type GraphQL Schema Language', () => {
       const fc = typeMapper.convertArgConfig(
         `input MyInputArg {
         a: String,
@@ -461,6 +486,18 @@ describe('TypeMapper', () => {
       expect(itc.getTypeName()).equal('MyInputArg');
       expect(itc.getFieldType('a')).equal(GraphQLString);
       expect(itc.getFieldType('b')).equal(GraphQLInt);
+    });
+
+    it('should create arg config with Enum type from GraphQL Schema Language', () => {
+      const fc = typeMapper.convertArgConfig(
+        'enum MyArgEnum { AND OR }'
+      );
+      expect(fc.type).instanceof(GraphQLEnumType);
+      const enumValues = fc.type.getValues();
+      expect(enumValues[0].name).equal('AND');
+      expect(enumValues[0].value).equal('AND');
+      expect(enumValues[1].name).equal('OR');
+      expect(enumValues[1].value).equal('OR');
     });
 
     it('should throw error if provided output type definition', () => {
