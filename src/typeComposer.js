@@ -125,7 +125,6 @@ export default class TypeComposer {
     });
 
     this.gqType._typeConfig.fields = () =>
-      // $FlowFixMe
       resolveOutputConfigsAsThunk(prepearedFields, this.getTypeName());
     delete this.gqType._fields; // clear builded fields in type
     return this;

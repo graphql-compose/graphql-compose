@@ -113,7 +113,6 @@ export default class InputTypeComposer {
     const prepearedFields = TypeMapper.convertInputFieldConfigMap(fields, this.getTypeName());
 
     this.gqType._typeConfig.fields = () =>
-      // $FlowFixMe
       resolveInputConfigsAsThunk(prepearedFields, this.getTypeName());
     delete this.gqType._fields; // if schema was builded, delete defineFieldMap
     return this;
