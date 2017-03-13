@@ -186,11 +186,7 @@ class TypeMapper {
       );
     }
 
-    if (
-      typeof fieldConfig === 'string' ||
-      fieldConfig instanceof GraphQLScalarType ||
-      fieldConfig instanceof GraphQLObjectType
-    ) {
+    if (typeof fieldConfig === 'string' || isOutputType(fieldConfig)) {
       fieldConfig = {
         type: fieldConfig,
       };
@@ -282,11 +278,8 @@ class TypeMapper {
       );
     }
 
-    if (
-      typeof argConfig === 'string' ||
-      argConfig instanceof GraphQLScalarType ||
-      argConfig instanceof GraphQLInputObjectType
-    ) {
+    // $FlowFixMe
+    if (typeof argConfig === 'string' || isInputType(argConfig)) {
       argConfig = {
         // $FlowFixMe
         type: argConfig,
@@ -377,12 +370,10 @@ class TypeMapper {
       );
     }
 
-    if (
-      typeof fieldConfig === 'string' ||
-      fieldConfig instanceof GraphQLScalarType ||
-      fieldConfig instanceof GraphQLInputObjectType
-    ) {
+    // $FlowFixMe
+    if (typeof fieldConfig === 'string' || isInputType(fieldConfig)) {
       fieldConfig = {
+        // $FlowFixMe
         type: fieldConfig,
       };
     }

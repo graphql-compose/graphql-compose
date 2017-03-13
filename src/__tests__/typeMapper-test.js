@@ -133,6 +133,18 @@ describe('TypeMapper', () => {
         expect(fc.type).equal(type);
       });
 
+      it('should accept GraphQLNonNull', () => {
+        const fc = typeMapper.convertOutputFieldConfig(new GraphQLNonNull(GraphQLString));
+        expect(fc.type).instanceof(GraphQLNonNull);
+        expect(fc.type.ofType).equal(GraphQLString);
+      });
+
+      it('should accept GraphQLList', () => {
+        const fc = typeMapper.convertOutputFieldConfig(new GraphQLList(GraphQLString));
+        expect(fc.type).instanceof(GraphQLList);
+        expect(fc.type.ofType).equal(GraphQLString);
+      });
+
       it('should accept type as string', () => {
         const fc = typeMapper.convertOutputFieldConfig({
           type: 'String',
@@ -313,6 +325,18 @@ describe('TypeMapper', () => {
       expect(ic.type).equal(type);
     });
 
+    it('should accept GraphQLNonNull', () => {
+      const ic = typeMapper.convertInputFieldConfig(new GraphQLNonNull(GraphQLString));
+      expect(ic.type).instanceof(GraphQLNonNull);
+      expect(ic.type.ofType).equal(GraphQLString);
+    });
+
+    it('should accept GraphQLList', () => {
+      const ic = typeMapper.convertInputFieldConfig(new GraphQLList(GraphQLString));
+      expect(ic.type).instanceof(GraphQLList);
+      expect(ic.type.ofType).equal(GraphQLString);
+    });
+
     it('should accept type name as string', () => {
       const ic = typeMapper.convertInputFieldConfig({
         type: 'String',
@@ -461,6 +485,18 @@ describe('TypeMapper', () => {
       });
       const ac = typeMapper.convertArgConfig(type);
       expect(ac.type).equal(type);
+    });
+
+    it('should accept GraphQLNonNull', () => {
+      const ac = typeMapper.convertArgConfig(new GraphQLNonNull(GraphQLString));
+      expect(ac.type).instanceof(GraphQLNonNull);
+      expect(ac.type.ofType).equal(GraphQLString);
+    });
+
+    it('should accept GraphQLList', () => {
+      const ac = typeMapper.convertArgConfig(new GraphQLList(GraphQLString));
+      expect(ac.type).instanceof(GraphQLList);
+      expect(ac.type.ofType).equal(GraphQLString);
     });
 
     it('should accept type name as string', () => {
