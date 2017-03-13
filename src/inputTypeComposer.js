@@ -109,17 +109,19 @@ export default class InputTypeComposer {
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
-  setFields(fields: GraphQLInputFieldConfigMap): void {
+  setFields(fields: GraphQLInputFieldConfigMap): InputTypeComposer {
     const prepearedFields = TypeMapper.convertInputFieldConfigMap(fields, this.getTypeName());
 
     this.gqType._typeConfig.fields = () =>
       // $FlowFixMe
       resolveInputConfigsAsThunk(prepearedFields, this.getTypeName());
     delete this.gqType._fields; // if schema was builded, delete defineFieldMap
+    return this;
   }
 
-  setField(fieldName: string, fieldConfig: GraphQLInputFieldConfig) {
+  setField(fieldName: string, fieldConfig: GraphQLInputFieldConfig): InputTypeComposer {
     this.addFields({ [fieldName]: fieldConfig });
+    return this;
   }
 
   /**
@@ -133,8 +135,9 @@ export default class InputTypeComposer {
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  addFields(newFields: GraphQLInputFieldConfigMap) {
+  addFields(newFields: GraphQLInputFieldConfigMap): InputTypeComposer {
     this.setFields(Object.assign({}, this.getFields(), newFields));
+    return this;
   }
 
   /**
@@ -150,17 +153,18 @@ export default class InputTypeComposer {
     return undefined;
   }
 
-  removeField(fieldNameOrArray: string | Array<string>) {
+  removeField(fieldNameOrArray: string | Array<string>): InputTypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     fieldNames.forEach(fieldName => delete fields[fieldName]);
     this.setFields(fields);
+    return this;
   }
 
-  extendField(name: string, parialFieldConfig: GraphQLInputFieldConfig): GraphQLInputFieldConfig {
+  extendField(name: string, parialFieldConfig: GraphQLInputFieldConfig): InputTypeComposer {
     const fieldConfig = Object.assign({}, this.getField(name), parialFieldConfig);
     this.setField(name, fieldConfig);
-    return fieldConfig;
+    return this;
   }
 
   isRequired(fieldName: string): boolean {
@@ -184,17 +188,18 @@ export default class InputTypeComposer {
     return this.isRequired(fieldName);
   }
 
-  makeRequired(fieldNameOrArray: string | Array<string>) {
+  makeRequired(fieldNameOrArray: string | Array<string>): InputTypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     fieldNames.forEach(fieldName => {
-      if (fields[fieldName]) {
+      if (fields[fieldName] && fields[fieldName].type) {
         if (!(fields[fieldName].type instanceof GraphQLNonNull)) {
           fields[fieldName].type = new GraphQLNonNull(fields[fieldName].type);
         }
       }
     });
     this.setFields(fields);
+    return this;
   }
 
   /**
@@ -205,7 +210,7 @@ export default class InputTypeComposer {
     this.makeRequired(fieldNameOrArray);
   }
 
-  makeOptional(fieldNameOrArray: string | Array<string>) {
+  makeOptional(fieldNameOrArray: string | Array<string>): InputTypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     fieldNames.forEach(fieldName => {
@@ -216,6 +221,7 @@ export default class InputTypeComposer {
       }
     });
     this.setFields(fields);
+    return this;
   }
 
   /**
@@ -257,16 +263,18 @@ export default class InputTypeComposer {
     return this.gqType.name;
   }
 
-  setTypeName(name: string): void {
+  setTypeName(name: string): InputTypeComposer {
     this.gqType.name = name;
+    return this;
   }
 
   getDescription(): string {
     return this.gqType.description || '';
   }
 
-  setDescription(description: string): void {
+  setDescription(description: string): InputTypeComposer {
     this.gqType.description = description;
+    return this;
   }
 
   /**

@@ -12,7 +12,6 @@ import {
 import TypeComposer from '../typeComposer';
 import Resolver from '../resolver';
 
-
 describe('TypeComposer', () => {
   let objectType;
   let tc;
@@ -38,7 +37,6 @@ describe('TypeComposer', () => {
       expect(tc2.getFields()).to.deep.equal({});
     });
 
-
     describe('setFields()', () => {
       it('should add field with standart config', () => {
         tc.setFields({
@@ -62,7 +60,6 @@ describe('TypeComposer', () => {
         expect(tc.getField('field5').type).instanceof(GraphQLNonNull);
         expect(tc.getField('field5').type.ofType).to.equal(GraphQLBoolean);
       });
-
 
       it('should add fields with converting args types from string to object', () => {
         tc.setFields({
@@ -105,8 +102,7 @@ describe('TypeComposer', () => {
         expect(tc.getFieldType('input3')).to.equal(typeAsFn);
 
         // show provide unwrapped/unhoisted type for graphql
-        expect(tc.getType()._typeConfig.fields().input3.type)
-          .to.equal(GraphQLString);
+        expect(tc.getType()._typeConfig.fields().input3.type).to.equal(GraphQLString);
       });
     });
 
@@ -204,13 +200,15 @@ describe('TypeComposer', () => {
     });
 
     it('should create TC by type template string', () => {
-      const myTC = TypeComposer.create(`
+      const myTC = TypeComposer.create(
+        `
         type TestTypeTpl {
           f1: String
           # Description for some required Int field
           f2: Int!
         }
-      `);
+      `
+      );
       expect(myTC).instanceof(TypeComposer);
       expect(myTC.getTypeName()).equal('TestTypeTpl');
       expect(myTC.getFieldType('f1')).equal(GraphQLString);
@@ -266,19 +264,21 @@ describe('TypeComposer', () => {
 
   describe('get()', () => {
     it('should return type by path', () => {
-      const myTC = new TypeComposer(new GraphQLObjectType({
-        name: 'Readable',
-        fields: {
-          field1: {
-            type: GraphQLString,
-            args: {
-              arg1: {
-                type: GraphQLInt,
+      const myTC = new TypeComposer(
+        new GraphQLObjectType({
+          name: 'Readable',
+          fields: {
+            field1: {
+              type: GraphQLString,
+              args: {
+                arg1: {
+                  type: GraphQLInt,
+                },
               },
             },
           },
-        },
-      }));
+        })
+      );
 
       expect(myTC.get('field1')).equal(GraphQLString);
       expect(myTC.get('field1.@arg1')).equal(GraphQLInt);
@@ -330,9 +330,7 @@ describe('TypeComposer', () => {
       tc.addResolver({
         name: 'myResolver5',
       });
-      expect(
-        Array.from(tc.getResolvers().keys())
-      ).include('myResolver5');
+      expect(Array.from(tc.getResolvers().keys())).include('myResolver5');
     });
   });
 
@@ -341,82 +339,77 @@ describe('TypeComposer', () => {
     let ArticleTC;
 
     beforeEach(() => {
-      UserTC = TypeComposer.create(`
+      UserTC = TypeComposer.create(
+        `
         type User {
           id: Int,
           name: String,
         }
-      `);
+      `
+      );
       UserTC.addResolver({
         name: 'findById',
         type: UserTC,
         resolve: () => null,
       });
 
-      ArticleTC = TypeComposer.create(`
+      ArticleTC = TypeComposer.create(
+        `
         type Article {
           id: Int,
           userId: Int,
           title: String,
         }
-      `);
+      `
+      );
     });
 
     describe('thunk with Resolver', () => {
       it('should create field via buildRelations()', () => {
-        ArticleTC.addRelation(
-          'user',
-          () => ({
-            resolver: UserTC.getResolver('findById'),
-          })
-        );
+        ArticleTC.addRelation('user', () => ({
+          resolver: UserTC.getResolver('findById'),
+        }));
         expect(ArticleTC.getField('user')).to.be.undefined;
         ArticleTC.buildRelations();
         expect(ArticleTC.getField('user').type.name).to.equal('User');
       });
 
       it('should throw error if provided incorrect Resolver instance', () => {
-        ArticleTC.addRelation(
-          'user',
-          () => ({
-            resolver: 'abc',
-          })
-        );
-        expect(() => { ArticleTC.buildRelations(); }).throw(/provide correct Resolver/);
+        ArticleTC.addRelation('user', () => ({
+          resolver: 'abc',
+        }));
+        expect(() => {
+          ArticleTC.buildRelations();
+        }).throw(/provide correct Resolver/);
       });
 
       it('should throw error if provided `type` property', () => {
-        ArticleTC.addRelation(
-          'user',
-          () => ({
-            resolver: UserTC.getResolver('findById'),
-            type: GraphQLInt,
-          })
-        );
-        expect(() => { ArticleTC.buildRelations(); }).throw(/use `resolver` and `type`/);
+        ArticleTC.addRelation('user', () => ({
+          resolver: UserTC.getResolver('findById'),
+          type: GraphQLInt,
+        }));
+        expect(() => {
+          ArticleTC.buildRelations();
+        }).throw(/use `resolver` and `type`/);
       });
 
       it('should throw error if provided `resolve` property', () => {
-        ArticleTC.addRelation(
-          'user',
-          () => ({
-            resolver: UserTC.getResolver('findById'),
-            resolve: () => {},
-          })
-        );
-        expect(() => { ArticleTC.buildRelations(); }).throw(/use `resolver` and `resolve`/);
+        ArticleTC.addRelation('user', () => ({
+          resolver: UserTC.getResolver('findById'),
+          resolve: () => {},
+        }));
+        expect(() => {
+          ArticleTC.buildRelations();
+        }).throw(/use `resolver` and `resolve`/);
       });
     });
 
     describe('thunk with FieldConfig', () => {
       it('should create field via buildRelations()', () => {
-        ArticleTC.addRelation(
-          'user',
-          () => ({
-            type: UserTC,
-            resolve: () => {},
-          })
-        );
+        ArticleTC.addRelation('user', () => ({
+          type: UserTC,
+          resolve: () => {},
+        }));
         expect(ArticleTC.getField('user')).to.be.undefined;
         ArticleTC.buildRelations();
         expect(ArticleTC.getField('user').type.name).to.equal('User');
@@ -429,5 +422,31 @@ describe('TypeComposer', () => {
       expect(tc.getTypePlural()).instanceof(GraphQLList);
       expect(tc.getTypePlural().ofType).to.equal(tc.getType());
     });
+  });
+
+  it('should have chainable methods', () => {
+    expect(tc.setFields({})).equal(tc);
+    expect(tc.setField('f1', {})).equal(tc);
+    expect(tc.addFields({})).equal(tc);
+    expect(tc.removeField('f1')).equal(tc);
+    expect(tc.extendField('f1', {})).equal(tc);
+
+    expect(tc.addRelation('user', () => ({}))).equal(tc);
+    expect(tc.buildRelations()).equal(tc);
+    expect(tc.buildRelation('user')).equal(tc);
+    expect(tc.addRelationWithResolver('user', new Resolver({ name: 'myResolver' }), {})).equal(tc);
+
+    expect(tc.setInterfaces([1, 2])).equal(tc);
+    expect(tc.addInterface(1)).equal(tc);
+    expect(tc.removeInterface(2)).equal(tc);
+
+    expect(tc.setResolver('myResolver', new Resolver({ name: 'myResolver' }))).equal(tc);
+    expect(tc.addResolver(new Resolver({ name: 'myResolver' }))).equal(tc);
+    expect(tc.removeResolver('myResolver')).equal(tc);
+
+    expect(tc.setTypeName('Type2')).equal(tc);
+    expect(tc.setDescription('Description')).equal(tc);
+    expect(tc.setRecordIdFn(() => {})).equal(tc);
+    expect(tc.addProjectionMapper('f1', { name: true })).equal(tc);
   });
 });

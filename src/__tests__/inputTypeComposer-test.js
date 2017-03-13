@@ -9,7 +9,6 @@ import {
 } from 'graphql';
 import InputTypeComposer from '../inputTypeComposer';
 
-
 describe('InputTypeComposer', () => {
   let objectType;
 
@@ -81,8 +80,7 @@ describe('InputTypeComposer', () => {
         expect(tc.getFieldType('input3')).to.equal(typeAsFn);
 
         // show provide unwrapped/unhoisted type for graphql
-        expect(tc.getType()._typeConfig.fields().input3.type)
-          .to.equal(GraphQLString);
+        expect(tc.getType()._typeConfig.fields().input3.type).to.equal(GraphQLString);
       });
     });
 
@@ -92,8 +90,7 @@ describe('InputTypeComposer', () => {
         input3: { type: GraphQLString },
         input4: { type: GraphQLString },
       });
-      expect(tc.getFieldNames())
-        .to.have.members(['input1', 'input2', 'input3', 'input4']);
+      expect(tc.getFieldNames()).to.have.members(['input1', 'input2', 'input3', 'input4']);
     });
 
     it('removeField()', () => {
@@ -208,13 +205,15 @@ describe('InputTypeComposer', () => {
     });
 
     it('should create ITC by type template string', () => {
-      const TC = InputTypeComposer.create(`
+      const TC = InputTypeComposer.create(
+        `
         input TestTypeTplInput {
           f1: String
           # Description for some required Int field
           f2: Int!
         }
-      `);
+      `
+      );
       expect(TC).instanceof(InputTypeComposer);
       expect(TC.getTypeName()).equal('TestTypeTplInput');
       expect(TC.getFieldType('f1')).equal(GraphQLString);
@@ -255,15 +254,30 @@ describe('InputTypeComposer', () => {
   });
 
   it('get() should return type by path', () => {
-    const tc = new InputTypeComposer(new GraphQLInputObjectType({
-      name: 'Writable',
-      fields: {
-        field1: {
-          type: GraphQLString,
+    const tc = new InputTypeComposer(
+      new GraphQLInputObjectType({
+        name: 'Writable',
+        fields: {
+          field1: {
+            type: GraphQLString,
+          },
         },
-      },
-    }));
+      })
+    );
 
     expect(tc.get('field1')).equal(GraphQLString);
+  });
+
+  it('should have chainable methods', () => {
+    const itc = InputTypeComposer.create('InputType');
+    expect(itc.setFields({})).equal(itc);
+    expect(itc.setField('f1', 'String')).equal(itc);
+    expect(itc.addFields({})).equal(itc);
+    expect(itc.removeField('f1')).equal(itc);
+    expect(itc.extendField('f1', {})).equal(itc);
+    expect(itc.makeRequired('f1')).equal(itc);
+    expect(itc.makeOptional('f1')).equal(itc);
+    expect(itc.setTypeName('InputType2')).equal(itc);
+    expect(itc.setDescription('Test')).equal(itc);
   });
 });

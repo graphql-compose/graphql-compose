@@ -1,4 +1,4 @@
-/* eslint-disable no-new */
+/* eslint-disable no-new, no-unused-vars */
 
 import { expect } from 'chai';
 import {
@@ -16,7 +16,6 @@ import Resolver from '../resolver';
 import TypeComposer from '../typeComposer';
 import InputTypeComposer from '../inputTypeComposer';
 
-
 describe('Resolver', () => {
   let resolver;
 
@@ -24,11 +23,11 @@ describe('Resolver', () => {
     resolver = new Resolver({ name: 'find' });
   });
 
-
   it('should throw error if not passed name in opts', () => {
-    expect(() => { new Resolver({}); }).to.throw();
+    expect(() => {
+      new Resolver({});
+    }).to.throw();
   });
-
 
   it('should have getDescription/setDescription methods', () => {
     resolver.setDescription('Find users');
@@ -50,10 +49,12 @@ describe('Resolver', () => {
       expect(resolver.getType()).equal(GraphQLString);
 
       expect(() => {
-        resolver.setType(new GraphQLInputObjectType({
-          name: 'MyInput',
-          fields: () => ({}),
-        }));
+        resolver.setType(
+          new GraphQLInputObjectType({
+            name: 'MyInput',
+            fields: () => ({}),
+          })
+        );
       }).to.throw('provide correct OutputType');
     });
 
@@ -65,7 +66,6 @@ describe('Resolver', () => {
       expect(myResolver.type).instanceof(GraphQLNonNull);
       expect(myResolver.type.ofType).equal(GraphQLString);
     });
-
 
     it('should convert type definition to GraphQLType', () => {
       const myResolver = new Resolver({
@@ -119,7 +119,8 @@ describe('Resolver', () => {
     });
 
     it('should have wrapType() method', () => {
-      const newResolver = resolver.wrapType((prevType) => { // eslint-disable-line
+      const newResolver = resolver.wrapType((prevType) => {
+        // eslint-disable-line
         return 'String';
       });
 
@@ -184,7 +185,7 @@ describe('Resolver', () => {
     });
 
     it('should have wrapArgs() method', () => {
-      const newResolver = resolver.wrapArgs((prevArgs) => {
+      const newResolver = resolver.wrapArgs(prevArgs => {
         return { ...prevArgs, arg1: 'String' };
       });
 
@@ -263,10 +264,8 @@ describe('Resolver', () => {
 
       it('should clone arg type', () => {
         resolver.cloneArg('filter', 'NewFilterInput');
-        expect(resolver.getArgType('filter').name)
-          .to.equal('NewFilterInput');
-        expect(resolver.getArg('filter').description)
-          .to.equal('Data filtering arg');
+        expect(resolver.getArgType('filter').name).to.equal('NewFilterInput');
+        expect(resolver.getArg('filter').description).to.equal('Data filtering arg');
       });
     });
   });
@@ -323,9 +322,7 @@ describe('Resolver', () => {
 
     const schema = GQC.buildSchema();
     const result = await graphql(schema, '{ resolveUser { name } }');
-    expect(
-      result
-    ).to.deep.equal({
+    expect(result).to.deep.equal({
       data: {
         resolveUser: {
           name: 'Nodkz',
@@ -333,7 +330,6 @@ describe('Resolver', () => {
       },
     });
   });
-
 
   describe('addFilterArg', () => {
     it('should add arg to filter and setup default value', () => {
@@ -361,7 +357,7 @@ describe('Resolver', () => {
     it('should prepare resolveParams.rawQuery when `resolve` called', () => {
       let rpSnap;
       const resolve = resolver.resolve;
-      resolver.resolve = (rp) => {
+      resolver.resolve = rp => {
         rpSnap = rp;
         return resolve(rp);
       };
@@ -402,8 +398,7 @@ describe('Resolver', () => {
         filterTypeNameFallback: 'FilterUniqueNameInput',
       });
 
-      expect(newResolver.getArg('filter').defaultValue)
-        .deep.equal({ name: 'User', age: 33 });
+      expect(newResolver.getArg('filter').defaultValue).deep.equal({ name: 'User', age: 33 });
     });
 
     it('should throw errors if provided incorrect options', () => {
@@ -428,9 +423,11 @@ describe('Resolver', () => {
 
   it('should return nested name for Resolver', () => {
     const r1 = new Resolver({ name: 'find' });
-    const r2 = r1.wrapResolve(next => (resolveParams) => { // eslint-disable-line
-      return 'function code';
-    });
+    const r2 = r1.wrapResolve(next =>
+      resolveParams => {
+        // eslint-disable-line
+        return 'function code';
+      });
 
     expect(r1.getNestedName()).equal('find');
     expect(r2.getNestedName()).equal('wrapResolve(find)');
@@ -438,13 +435,14 @@ describe('Resolver', () => {
 
   it('should on toString() call provide debug info with source code', () => {
     const r1 = new Resolver({ name: 'find' });
-    const r2 = r1.wrapResolve(next => (resolveParams) => { // eslint-disable-line
-      return 'function code';
-    });
+    const r2 = r1.wrapResolve(next =>
+      resolveParams => {
+        // eslint-disable-line
+        return 'function code';
+      });
 
     expect(r2.toString()).to.have.string('function code');
   });
-
 
   it('should return type by path', () => {
     const rsv = new Resolver({
@@ -458,7 +456,6 @@ describe('Resolver', () => {
     expect(rsv.get('lat')).equal(GraphQLFloat);
     expect(rsv.get('@distance')).equal(GraphQLInt);
   });
-
 
   describe('addSortArg', () => {
     it('should extend SortEnum by new value', () => {
@@ -485,13 +482,13 @@ describe('Resolver', () => {
     it('should prepare sort value when `resolve` called', () => {
       let rpSnap;
       const resolve = resolver.resolve;
-      resolver.resolve = (rp) => {
+      resolver.resolve = rp => {
         rpSnap = rp;
         return resolve(rp);
       };
       let whereSnap;
       const query = {
-        where: (condition) => {
+        where: condition => {
           whereSnap = condition;
         },
       };
@@ -499,7 +496,7 @@ describe('Resolver', () => {
       const newResolver = resolver.addSortArg({
         name: 'PRICE_ASC',
         description: 'Asc sort by non-null price',
-        value: (resolveParams) => {
+        value: resolveParams => {
           resolveParams.query.where({ price: { $gt: 0 } }); // eslint-disable-line no-param-reassign
           return { price: 1 };
         },
@@ -537,5 +534,19 @@ describe('Resolver', () => {
         });
       }).to.throw('should have `sort` arg with type GraphQLEnumType');
     });
+  });
+
+  it('should have chainable methods', () => {
+    expect(resolver.setArgs({})).equal(resolver);
+    expect(resolver.setArg('a1', 'String')).equal(resolver);
+    expect(resolver.addArgs({ a2: 'input LL { f1: Int, f2: Int }' })).equal(resolver);
+    expect(resolver.removeArg('a1')).equal(resolver);
+    expect(resolver.cloneArg('a2', 'a3')).equal(resolver);
+    expect(resolver.makeRequired('a2')).equal(resolver);
+    expect(resolver.makeOptional('a2')).equal(resolver);
+    expect(resolver.setResolve(() => {})).equal(resolver);
+    expect(resolver.setType('String')).equal(resolver);
+    expect(resolver.setKind('query')).equal(resolver);
+    expect(resolver.setDescription('Find method')).equal(resolver);
   });
 });

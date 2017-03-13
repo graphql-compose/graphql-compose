@@ -112,7 +112,7 @@ export default class TypeComposer {
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
-  setFields(fields: GraphQLFieldConfigMap<*, *>): void {
+  setFields(fields: GraphQLFieldConfigMap<*, *>): TypeComposer {
     const prepearedFields = TypeMapper.convertOutputFieldConfigMap(fields, this.getTypeName());
 
     // if field has a projection option, then add it to projection mapper
@@ -128,6 +128,7 @@ export default class TypeComposer {
       // $FlowFixMe
       resolveOutputConfigsAsThunk(prepearedFields, this.getTypeName());
     delete this.gqType._fields; // clear builded fields in type
+    return this;
   }
 
   hasField(fieldName: string): boolean {
@@ -138,8 +139,9 @@ export default class TypeComposer {
   setField<TSource, TContext>(
     fieldName: string,
     fieldConfig: GraphQLFieldConfig<TSource, TContext>
-  ) {
+  ): TypeComposer {
     this.addFields({ [fieldName]: fieldConfig });
+    return this;
   }
 
   /**
@@ -153,8 +155,9 @@ export default class TypeComposer {
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  addFields(newFields: GraphQLFieldConfigMap<*, *>): void {
+  addFields(newFields: GraphQLFieldConfigMap<*, *>): TypeComposer {
     this.setFields(Object.assign({}, this.getFields(), newFields));
+    return this;
   }
 
   /**
@@ -170,20 +173,18 @@ export default class TypeComposer {
     return undefined;
   }
 
-  removeField(fieldNameOrArray: string | Array<string>): void {
+  removeField(fieldNameOrArray: string | Array<string>): TypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     fieldNames.forEach(fieldName => delete fields[fieldName]);
     this.setFields(Object.assign({}, fields)); // immutability
+    return this;
   }
 
-  extendField<TSource, TContext>(
-    name: string,
-    parialFieldConfig: GraphQLFieldConfig<TSource, TContext>
-  ): GraphQLFieldConfig<TSource, TContext> {
+  extendField(name: string, parialFieldConfig: GraphQLFieldConfig<*, *>): TypeComposer {
     const fieldConfig = Object.assign({}, this.getField(name), parialFieldConfig);
     this.setField(name, fieldConfig);
-    return fieldConfig;
+    return this;
   }
 
   addRelation(fieldName: string, relationFn: Thunk<RelationOpts<*, *>>): TypeComposer {
@@ -202,16 +203,17 @@ export default class TypeComposer {
     return this.gqType._gqcRelations;
   }
 
-  buildRelations(): void {
+  buildRelations(): TypeComposer {
     const relationFields = {};
 
     const names = Object.keys(this.getRelations());
     names.forEach(fieldName => {
       relationFields[fieldName] = this.buildRelation(fieldName);
     });
+    return this;
   }
 
-  buildRelation(fieldName: string): void {
+  buildRelation(fieldName: string): TypeComposer {
     if (!this.gqType._gqcRelations || !isFunction(this.gqType._gqcRelations[fieldName])) {
       throw new Error(
         `Cannot call buildRelation() for type ${this.getTypeName()}. ` +
@@ -248,6 +250,7 @@ export default class TypeComposer {
         _gqcIsRelation: true,
       });
     }
+    return this;
   }
 
   addRelationWithResolver<TSource, TContext>(
@@ -336,28 +339,31 @@ export default class TypeComposer {
    * Completely replace all interfaces in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
-  setInterfaces(interfaces: Array<GraphQLInterfaceType>): void {
+  setInterfaces(interfaces: Array<GraphQLInterfaceType>): TypeComposer {
     this.gqType._typeConfig.interfaces = interfaces;
     delete this.gqType._interfaces; // if schema was builded, delete _interfaces
+    return this;
   }
 
   hasInterface(interfaceObj: GraphQLInterfaceType): boolean {
     return this.getInterfaces().indexOf(interfaceObj) > -1;
   }
 
-  addInterface(interfaceObj: GraphQLInterfaceType): void {
+  addInterface(interfaceObj: GraphQLInterfaceType): TypeComposer {
     if (!this.hasInterface(interfaceObj)) {
       this.setInterfaces([...this.getInterfaces(), interfaceObj]);
     }
+    return this;
   }
 
-  removeInterface(interfaceObj: GraphQLInterfaceType): void {
+  removeInterface(interfaceObj: GraphQLInterfaceType): TypeComposer {
     const interfaces = this.getInterfaces();
     const idx = interfaces.indexOf(interfaceObj);
     if (idx > -1) {
       interfaces.splice(idx, 1);
       this.setInterfaces(interfaces);
     }
+    return this;
   }
 
   clone(newTypeName: string): TypeComposer {
@@ -451,7 +457,7 @@ export default class TypeComposer {
     return undefined;
   }
 
-  setResolver(name: string, resolver: Resolver<*, *>): void {
+  setResolver(name: string, resolver: Resolver<*, *>): TypeComposer {
     if (!this.gqType._gqcResolvers) {
       this.gqType._gqcResolvers = new Map();
     }
@@ -459,9 +465,10 @@ export default class TypeComposer {
       throw new Error('setResolver() accept only Resolver instance');
     }
     this.gqType._gqcResolvers.set(name, resolver);
+    return this;
   }
 
-  addResolver(resolver: Resolver<*, *> | ResolverOpts<*, *>): void {
+  addResolver(resolver: Resolver<*, *> | ResolverOpts<*, *>): TypeComposer {
     if (!(resolver instanceof Resolver)) {
       resolver = new Resolver(resolver); // eslint-disable-line no-param-reassign
     }
@@ -470,32 +477,37 @@ export default class TypeComposer {
       throw new Error('resolver should have non-empty name property');
     }
     this.setResolver(resolver.name, resolver);
+    return this;
   }
 
-  removeResolver(resolverName: string): void {
+  removeResolver(resolverName: string): TypeComposer {
     if (resolverName) {
       this.getResolvers().delete(resolverName);
     }
+    return this;
   }
 
   getTypeName(): string {
     return this.gqType.name;
   }
 
-  setTypeName(name: string): void {
+  setTypeName(name: string): TypeComposer {
     this.gqType.name = name;
+    return this;
   }
 
   getDescription(): string {
     return this.gqType.description || '';
   }
 
-  setDescription(description: string): void {
+  setDescription(description: string): TypeComposer {
     this.gqType.description = description;
+    return this;
   }
 
-  setRecordIdFn(fn: GetRecordIdFn<*, *>): void {
+  setRecordIdFn(fn: GetRecordIdFn<*, *>): TypeComposer {
     this.gqType._gqcGetRecordIdFn = fn;
+    return this;
   }
 
   hasRecordIdFn(): boolean {
@@ -545,11 +557,12 @@ export default class TypeComposer {
   // E.g. for obtaining `friendList` you also should add `friendIds` to projection.
   //      or for `fullname` field you should request `firstname` and `lastname` from DB.
   // this _gqcProjectionMapper used in `projection` module
-  addProjectionMapper(fieldName: string, sourceProjection: ProjectionType): void {
+  addProjectionMapper(fieldName: string, sourceProjection: ProjectionType): TypeComposer {
     if (!this.gqType._gqcProjectionMapper) {
       this.gqType._gqcProjectionMapper = {};
     }
     this.gqType._gqcProjectionMapper[fieldName] = sourceProjection;
+    return this;
   }
 
   getProjectionMapper(): ProjectionMapType {

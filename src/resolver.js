@@ -1,5 +1,5 @@
 /* @flow */
-/* eslint-disable no-use-before-define */
+/* eslint-disable no-use-before-define, no-restricted-syntax */
 
 import objectPath from 'object-path';
 import util from 'util';
@@ -40,7 +40,6 @@ import type {
 } from './definition';
 import InputTypeComposer from './inputTypeComposer';
 import { typeByPath } from './typeByPath';
-
 
 export default class Resolver<TSource, TContext> {
   type: GraphQLOutputType;
@@ -107,29 +106,37 @@ export default class Resolver<TSource, TContext> {
     return this.args;
   }
 
-  setArgs(args: GraphQLFieldConfigArgumentMap): void {
+  setArgs(args: GraphQLFieldConfigArgumentMap): Resolver<TSource, TContext> {
     this.args = TypeMapper.convertArgConfigMap(args, this.name, 'Resolver');
+    return this;
   }
 
-  setArg(argName: string, argConfig: GraphQLArgumentConfig) {
+  setArg(argName: string, argConfig: GraphQLArgumentConfig): Resolver<TSource, TContext> {
     this.args[argName] = TypeMapper.convertArgConfig(argConfig, argName, this.name, 'Resolver');
+    return this;
   }
 
-  addArgs(newArgs: GraphQLFieldConfigArgumentMap) {
+  addArgs(newArgs: GraphQLFieldConfigArgumentMap): Resolver<TSource, TContext> {
     this.setArgs(Object.assign({}, this.getArgs(), newArgs));
+    return this;
   }
 
-  removeArg(argName: string) {
+  removeArg(argName: string): Resolver<TSource, TContext> {
     delete this.args[argName];
+    return this;
   }
 
-  cloneArg(argName: string, newTypeName: string) {
+  cloneArg(argName: string, newTypeName: string): Resolver<TSource, TContext> {
     if (!{}.hasOwnProperty.call(this.args, argName)) {
-      throw new Error(`Can not clone arg ${argName} for resolver ${this.name}. Argument does not exist.`);
+      throw new Error(
+        `Can not clone arg ${argName} for resolver ${this.name}. Argument does not exist.`
+      );
     }
     if (!(this.args[argName].type instanceof GraphQLInputObjectType)) {
-      throw new Error(`Can not clone arg ${argName} for resolver ${this.name}.`
-                    + 'Argument should be GraphQLInputObjectType (complex input type).');
+      throw new Error(
+        `Can not clone arg ${argName} for resolver ${this.name}.` +
+          'Argument should be GraphQLInputObjectType (complex input type).'
+      );
     }
     if (!newTypeName || newTypeName !== clearName(newTypeName)) {
       throw new Error('You should provide new type name as second argument');
@@ -142,16 +149,17 @@ export default class Resolver<TSource, TContext> {
       ...this.args[argName],
       type: InputTypeComposer.create(this.args[argName].type).clone(newTypeName).getType(),
     };
+    return this;
   }
 
   isRequired(argName: string): boolean {
     return this.getArgType(argName) instanceof GraphQLNonNull;
   }
 
-  makeRequired(argNameOrArray: string | Array<string>) {
+  makeRequired(argNameOrArray: string | Array<string>): Resolver<TSource, TContext> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     const args = this.getArgs();
-    argNames.forEach((argName) => {
+    argNames.forEach(argName => {
       if (args[argName]) {
         if (!(args[argName].type instanceof GraphQLNonNull)) {
           args[argName].type = new GraphQLNonNull(args[argName].type);
@@ -159,12 +167,13 @@ export default class Resolver<TSource, TContext> {
       }
     });
     this.setArgs(args);
+    return this;
   }
 
-  makeOptional(argNameOrArray: string | Array<string>) {
+  makeOptional(argNameOrArray: string | Array<string>): Resolver<TSource, TContext> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     const args = this.getArgs();
-    argNames.forEach((argName) => {
+    argNames.forEach(argName => {
       if (argNames.includes(argName)) {
         if (args[argName].type instanceof GraphQLNonNull) {
           args[argName].type = args[argName].type.ofType;
@@ -172,21 +181,24 @@ export default class Resolver<TSource, TContext> {
       }
     });
     this.setArgs(args);
+    return this;
   }
 
   /*
   * This method should be overriden via constructor
   */
-  resolve(resolveParams: ResolveParams<TSource, TContext>): Promise<any> { // eslint-disable-line
+  // eslint-disable-next-line
+  resolve(resolveParams: ResolveParams<TSource, TContext>): Promise<any> {
     return Promise.resolve();
   }
 
-  getResolve():ResolverMWResolveFn<TSource, TContext> {
+  getResolve(): ResolverMWResolveFn<TSource, TContext> {
     return this.resolve;
   }
 
-  setResolve(resolve: ResolverMWResolveFn<TSource, TContext>): void {
+  setResolve(resolve: ResolverMWResolveFn<TSource, TContext>): Resolver<TSource, TContext> {
     this.resolve = resolve;
+    return this;
   }
 
   /**
@@ -201,8 +213,12 @@ export default class Resolver<TSource, TContext> {
   * @deprecated 2.0.0
   */
   setOutputType(
-    gqType: GraphQLOutputType | TypeDefinitionString | TypeNameString
-            | TypeComposer | Resolver<TSource, TContext>
+    gqType:
+      | GraphQLOutputType
+      | TypeDefinitionString
+      | TypeNameString
+      | TypeComposer
+      | Resolver<TSource, TContext>
   ) {
     deprecate('Use Resolver.setType() instead.');
     this.setType(gqType);
@@ -247,28 +263,31 @@ export default class Resolver<TSource, TContext> {
   }
 
   setType(
-    gqType: GraphQLOutputType |
-            TypeComposer |
-            TypeWrappedString |
-            TypeDefinitionString |
-            TypeNameString |
-            Resolver<TSource, TContext>
-  ) {
+    gqType:
+      | GraphQLOutputType
+      | TypeComposer
+      | TypeWrappedString
+      | TypeDefinitionString
+      | TypeNameString
+      | Resolver<TSource, TContext>
+  ): Resolver<TSource, TContext> {
     let type;
 
     if (gqType instanceof TypeComposer) {
       this.type = gqType.getType();
-      return;
+      return this;
     }
 
     if (gqType instanceof Resolver) {
       this.type = gqType.getType();
-      return;
+      return this;
     }
 
     // $FlowFixMe
     if (gqType instanceof InputTypeComposer) {
-      throw new Error('You provide InputTypeComposer as OutputType for Resolver.type. It may by ScalarType or OutputObjectType.');
+      throw new Error(
+        'You provide InputTypeComposer as OutputType for Resolver.type. It may by ScalarType or OutputObjectType.'
+      );
     }
 
     if (isString(gqType)) {
@@ -290,6 +309,7 @@ export default class Resolver<TSource, TContext> {
     }
     // $FlowFixMe
     this.type = type;
+    return this;
   }
 
   getFieldConfig(
@@ -317,20 +337,24 @@ export default class Resolver<TSource, TContext> {
     return this.kind;
   }
 
-  setKind(kind: string) {
+  setKind(kind: string): Resolver<TSource, TContext> {
     if (kind !== 'query' && kind !== 'mutation' && kind !== 'subscription') {
-      throw new Error(`You provide incorrect value '${kind}' for Resolver.setKind method. `
-                    + 'Valid values are: query | mutation | subscription');
+      throw new Error(
+        `You provide incorrect value '${kind}' for Resolver.setKind method. ` +
+          'Valid values are: query | mutation | subscription'
+      );
     }
     this.kind = kind;
+    return this;
   }
 
   getDescription(): ?string {
     return this.description;
   }
 
-  setDescription(description: string) {
+  setDescription(description: string): Resolver<TSource, TContext> {
     this.description = description;
+    return this;
   }
 
   get(path: string | Array<string>): mixed {
@@ -340,7 +364,7 @@ export default class Resolver<TSource, TContext> {
 
   clone(opts: ResolverOpts<TSource, TContext> = {}): Resolver<TSource, TContext> {
     const oldOpts = {};
-    for (const key in this) { // eslint-disable-line no-restricted-syntax
+    for (const key in this) {
       if ({}.hasOwnProperty.call(this, key)) {
         // $FlowFixMe
         oldOpts[key] = this[key];
@@ -383,10 +407,7 @@ export default class Resolver<TSource, TContext> {
     );
   }
 
-  wrapArgs(
-    cb: ResolverWrapArgsFn,
-    wrapperName: string = 'wrapArgs'
-  ): Resolver<TSource, TContext> {
+  wrapArgs(cb: ResolverWrapArgsFn, wrapperName: string = 'wrapArgs'): Resolver<TSource, TContext> {
     return this.wrap(
       (newResolver, prevResolver) => {
         // clone prevArgs, to avoid changing args in callback
@@ -399,9 +420,9 @@ export default class Resolver<TSource, TContext> {
     );
   }
 
-  wrapCloneArg(argName: string, newTypeName: string) {
+  wrapCloneArg(argName: string, newTypeName: string): Resolver<TSource, TContext> {
     return this.wrap(
-      (newResolver) => {
+      newResolver => {
         newResolver.cloneArg(argName, newTypeName);
         return newResolver;
       },
@@ -409,10 +430,7 @@ export default class Resolver<TSource, TContext> {
     );
   }
 
-  wrapType(
-    cb: ResolverWrapTypeFn,
-    wrapperName: string = 'wrapType'
-  ): Resolver<TSource, TContext> {
+  wrapType(cb: ResolverWrapTypeFn, wrapperName: string = 'wrapType'): Resolver<TSource, TContext> {
     return this.wrap(
       (newResolver, prevResolver) => {
         const prevType = prevResolver.getType();
@@ -442,9 +460,11 @@ export default class Resolver<TSource, TContext> {
       filterITC = new InputTypeComposer(filter.type);
     } else {
       if (!opts.filterTypeNameFallback || !isString(opts.filterTypeNameFallback)) {
-        throw new Error('For Resolver.addFilterArg needs to provide `opts.filterTypeNameFallback: string`. '
-                      + 'This string will be used as unique name for `filter` type of input argument. '
-                      + 'Eg. FilterXXXXXInput');
+        throw new Error(
+          'For Resolver.addFilterArg needs to provide `opts.filterTypeNameFallback: string`. ' +
+            'This string will be used as unique name for `filter` type of input argument. ' +
+            'Eg. FilterXXXXXInput'
+        );
       }
       filterITC = InputTypeComposer.create(opts.filterTypeNameFallback);
     }
@@ -473,7 +493,7 @@ export default class Resolver<TSource, TContext> {
 
     const resolveNext = resolver.getResolve();
     if (isFunction(opts.query)) {
-      resolver.setResolve((resolveParams) => {
+      resolver.setResolve(resolveParams => {
         const value = objectPath.get(resolveParams, ['args', 'filter', opts.name]);
         if (value) {
           if (!resolveParams.rawQuery) {
@@ -506,14 +526,18 @@ export default class Resolver<TSource, TContext> {
       if (sort.type instanceof GraphQLEnumType) {
         sortEnumType = sort.type;
       } else {
-        throw new Error('Resolver should have `sort` arg with type GraphQLEnumType. '
-                      + `But got: ${util.inspect(sort.type, { depth: 2 })} `);
+        throw new Error(
+          'Resolver should have `sort` arg with type GraphQLEnumType. ' +
+            `But got: ${util.inspect(sort.type, { depth: 2 })} `
+        );
       }
     } else {
       if (!opts.sortTypeNameFallback || !isString(opts.sortTypeNameFallback)) {
-        throw new Error('For Resolver.addSortArg needs to provide `opts.sortTypeNameFallback: string`. '
-                      + 'This string will be used as unique name for `sort` type of input argument. '
-                      + 'Eg. SortXXXXXEnum');
+        throw new Error(
+          'For Resolver.addSortArg needs to provide `opts.sortTypeNameFallback: string`. ' +
+            'This string will be used as unique name for `sort` type of input argument. ' +
+            'Eg. SortXXXXXEnum'
+        );
       }
       sortEnumType = new GraphQLEnumType({
         name: opts.sortTypeNameFallback,
@@ -542,7 +566,7 @@ export default class Resolver<TSource, TContext> {
     // If sort value is evaluable (function), then wrap resolve method
     const resolveNext = resolver.getResolve();
     if (isFunction(opts.value)) {
-      resolver.setResolve((resolveParams) => {
+      resolver.setResolve(resolveParams => {
         const value = objectPath.get(resolveParams, ['args', 'sort']);
         if (value === opts.name) {
           // $FlowFixMe
@@ -570,10 +594,14 @@ export default class Resolver<TSource, TContext> {
         `  name: ${resolver.name},`,
         `  type: ${util.inspect(resolver.type, { depth: 2 })},`,
         `  args: ${util.inspect(resolver.args, { depth: 3 }).replace('\n', `\n  ${spaces}`)},`,
-        `  resolve: ${resolver.resolve ? resolver.resolve.toString().replace('\n', `\n  ${spaces}`) : 'undefined'},`,
+        `  resolve: ${resolver.resolve ? resolver.resolve
+              .toString()
+              .replace('\n', `\n  ${spaces}`) : 'undefined'},`,
         `  parent: ${resolver.parent ? extendedInfo(resolver.parent, `  ${spaces}`) : ''}`,
         ')',
-      ].filter(s => !!s).join(`\n  ${spaces}`);
+      ]
+        .filter(s => !!s)
+        .join(`\n  ${spaces}`);
     }
 
     return extendedInfo(this);
