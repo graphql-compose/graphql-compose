@@ -186,8 +186,10 @@ class TypeMapper {
       );
     }
 
+    // $FlowFixMe
     if (typeof fieldConfig === 'string' || isOutputType(fieldConfig)) {
       fieldConfig = {
+        // $FlowFixMe
         type: fieldConfig,
       };
     }
@@ -228,6 +230,7 @@ class TypeMapper {
     }
 
     if (wrapWithList) {
+      // $FlowFixMe
       fieldConfig.type = new GraphQLList(fieldConfig.type);
     }
 
