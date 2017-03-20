@@ -2,10 +2,16 @@ import { GraphQLScalarType } from 'graphql';
 import { GraphQLError } from 'graphql/error';
 import { Kind } from 'graphql/language';
 
-
 export default new GraphQLScalarType({
   name: 'Date',
   serialize(value) {
+    if (
+      typeof value === 'string' &&
+      /^(\d{4})-(\d{2})-(\d{2})T((\d{2}):(\d{2}):(\d{2}))\.(\d{3})Z$/.test(value)
+    ) {
+      return value;
+    }
+
     if (!(value instanceof Date)) {
       throw new TypeError('Field error: value is not an instance of Date');
     }
