@@ -10,7 +10,7 @@ export function getProjectionFromAST(
   context: GraphQLResolveInfo,
   fieldNode?: FieldNode | InlineFragmentNode | FragmentDefinitionNode
 ): ProjectionType {
-  if (!context || typeof context !== 'object') {
+  if (!context) {
     return {};
   }
 
@@ -19,7 +19,7 @@ export function getProjectionFromAST(
     if (fieldNode.selectionSet) {
       selections = fieldNode.selectionSet.selections;
     }
-  } else {
+  } else if (Array.isArray(context.fieldNodes)) {
     // get all selectionSets
     selections = context.fieldNodes.reduce((result, source) => {
       if (source.selectionSet) {
