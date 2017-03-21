@@ -54,6 +54,7 @@ LonLatTC.addFields(GraphQLFieldMapConfig); // add new fields, replace existed, r
 LonLatTC.hasField('lon'); // true
 LonLatTC.removeField('lon');
 LonLatTC.removeField(['lon', 'field2', 'field3']);
+LonLatTC.removeOtherFields(['lon', 'lat']); // will remove all other fields
 LonLatTC.getField('lon'); // undefined
 LonLatTC.extendField('lat', {
   description: 'Latitude',
@@ -145,6 +146,7 @@ LonLatITC.setField('lon', GraphQLInputFieldConfig); // replace `lon` field
 LonLatITC.addFields(GraphQLInputFieldConfigMap); // add new fields, replace existed, rest fields keep untouched
 LonLatITC.getField('lon'); // GraphQLInputFieldConfig
 LonLatITC.removeField('lon');
+LonLatITC.removeOtherFields(['lon', 'lat']); // will remove all other fields
 LonLatITC.extendField('lat', { defaultValue: 51.46, description: 'Prime Meridian' }); // override some field config values
 LonLatITC.getFieldType('lat'); // GraphQLNonNull(GraphQLFloat)
 LonLatITC.getType(); // GraphQLInputObjectType({ name: 'LonLatInput', ... })
@@ -201,6 +203,7 @@ resolver.setArg('code', GraphQLArgumentConfig); // set or replace arg
 resolver.addArgs(GraphQLFieldConfigArgumentMap); // add new args, replace existed, rest args keep untouched
 resolver.cloneArg('filter', 'NewFilterInput'); // clone complex input argument (GraphQLInputObjectType) with new name
 resolver.removeArg('code');
+resolver.removeOtherArgs(['arg1', 'arg2']); // will remove all other args
 resolver.isRequired('id'); // true
 resolver.makeRequired('id'); // wrap field type by GraphQLNonNull (if not wrapped already)
 resolver.makeOptional('id'); // unwrap from GraphQLNonNull (if not unwrapped already)
