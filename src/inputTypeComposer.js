@@ -160,6 +160,18 @@ export default class InputTypeComposer {
     return this;
   }
 
+  removeOtherFields(fieldNameOrArray: string | Array<string>): InputTypeComposer {
+    const keepFieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
+    const fields = this.getFields();
+    Object.keys(fields).forEach(fieldName => {
+      if (!keepFieldNames.includes(fieldName)) {
+        delete fields[fieldName];
+      }
+    });
+    this.setFields(fields);
+    return this;
+  }
+
   extendField(name: string, parialFieldConfig: GraphQLInputFieldConfig): InputTypeComposer {
     const fieldConfig = Object.assign({}, this.getField(name), parialFieldConfig);
     this.setField(name, fieldConfig);

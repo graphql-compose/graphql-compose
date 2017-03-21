@@ -102,6 +102,26 @@ describe('InputTypeComposer', () => {
       expect(tc.getFieldNames()).to.not.include('input2');
     });
 
+    it('removeOtherFields()', () => {
+      const cfg = {
+        name: 'MyInput',
+        fields: {
+          input1: 'String',
+          input2: 'String',
+          input3: 'String',
+        },
+      };
+      const tc = InputTypeComposer.create(cfg);
+      tc.removeOtherFields('input1');
+      expect(tc.getFieldNames()).to.have.members(['input1']);
+      expect(tc.getFieldNames()).to.not.have.members(['input2', 'input3']);
+
+      const tc2 = InputTypeComposer.create(cfg);
+      tc2.removeOtherFields(['input1', 'input2']);
+      expect(tc2.getFieldNames()).to.have.members(['input1', 'input2']);
+      expect(tc2.getFieldNames()).to.not.have.members(['input3']);
+    });
+
     it('should extend field by name', () => {
       const tc = new InputTypeComposer(objectType);
       tc.setField('input3', {

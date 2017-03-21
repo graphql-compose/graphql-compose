@@ -131,6 +131,21 @@ describe('TypeComposer', () => {
       });
     });
 
+    describe('removeOtherFields()', () => {
+      it('should remove one field', () => {
+        tc.removeOtherFields('field1');
+        expect(tc.getFieldNames()).to.not.have.members(['field2']);
+        expect(tc.getFieldNames()).to.have.members(['field1']);
+      });
+
+      it('should remove list of fields', () => {
+        tc.setField('field3', 'String');
+        tc.removeOtherFields(['field1', 'field2']);
+        expect(tc.getFieldNames()).to.have.members(['field1', 'field2']);
+        expect(tc.getFieldNames()).to.not.have.members(['field3']);
+      });
+    });
+
     it('extendField()', () => {
       tc.setField('field3', {
         type: GraphQLString,

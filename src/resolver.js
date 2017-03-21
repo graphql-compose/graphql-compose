@@ -129,6 +129,16 @@ export default class Resolver<TSource, TContext> {
     return this;
   }
 
+  removeOtherArgs(argNameOrArray: string | Array<string>): TypeComposer {
+    const keepArgNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
+    Object.keys(this.args).forEach(argName => {
+      if (!keepArgNames.includes(argName)) {
+        delete this.args[argName];
+      }
+    });
+    return this;
+  }
+
   cloneArg(argName: string, newTypeName: string): Resolver<TSource, TContext> {
     if (!{}.hasOwnProperty.call(this.args, argName)) {
       throw new Error(

@@ -179,6 +179,22 @@ describe('Resolver', () => {
       expect(resolver.getArg('a3')).to.be.ok;
     });
 
+    it('should remove other args', () => {
+      resolver.setArg('a1', 'String');
+      resolver.setArg('a2', 'String');
+      resolver.removeOtherArgs('a1');
+      expect(resolver.getArg('a1')).to.be.ok;
+      expect(resolver.getArg('a2')).to.be.undefined;
+
+      resolver.setArg('a1', 'String');
+      resolver.setArg('a2', 'String');
+      resolver.setArg('a3', 'String');
+      resolver.removeOtherArgs(['a1', 'a2']);
+      expect(resolver.getArg('a1')).to.be.ok;
+      expect(resolver.getArg('a2')).to.be.ok;
+      expect(resolver.getArg('a3')).to.be.undefined;
+    });
+
     it('should add args', () => {
       resolver.setArgs({
         b1: 'String',
