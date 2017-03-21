@@ -14,6 +14,7 @@ import { deprecate } from './utils/debug';
 import TypeMapper from './typeMapper';
 import TypeComposer from './typeComposer';
 import deepmerge from './utils/deepmerge';
+import { resolveInputConfigsAsThunk } from './utils/configAsThunk';
 import { only, clearName } from './utils/misc';
 import { isFunction, isString } from './utils/is';
 import { getProjectionFromAST } from './projection';
@@ -303,7 +304,7 @@ export default class Resolver<TSource, TContext> {
     const resolve = this.getResolve();
     return {
       type: this.getType(),
-      args: this.getArgs(),
+      args: resolveInputConfigsAsThunk(this.getArgs()),
       description: this.description,
       resolve: (source, args, context, info) => {
         let projection: ProjectionType = getProjectionFromAST(info);

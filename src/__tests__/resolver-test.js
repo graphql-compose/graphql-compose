@@ -304,6 +304,54 @@ describe('Resolver', () => {
     });
   });
 
+  describe('getFieldConfig()', () => {
+    it('should return fieldConfig', () => {
+      const fc = resolver.getFieldConfig();
+      expect(fc).to.have.property('type');
+      expect(fc).to.have.property('args');
+      expect(fc).to.have.property('description');
+      expect(fc).to.have.property('resolve');
+    });
+
+    it('should combine all resolve args to resolveParams', () => {
+      let rp;
+      resolver.resolve = (resolveParams) => {
+        rp = resolveParams;
+      };
+      const fc = resolver.getFieldConfig();
+      fc.resolve('sourceData', 'argsData', 'contextData', 'infoData');
+      expect(rp).to.have.property('source', 'sourceData');
+      expect(rp).to.have.property('args', 'argsData');
+      expect(rp).to.have.property('context', 'contextData');
+      expect(rp).to.have.property('info', 'infoData');
+    });
+
+    it('should create `projection` property', () => {
+      let rp;
+      resolver.resolve = (resolveParams) => {
+        rp = resolveParams;
+      };
+      const fc = resolver.getFieldConfig();
+      fc.resolve();
+      expect(rp).to.have.property('projection');
+    });
+
+    it('should resolve args configs as thunk', () => {
+      let rp;
+      resolver.setArgs({
+        arg1: 'String',
+        arg2: () => 'String',
+        arg3: {
+          type: () => 'String',
+        },
+      });
+      const fc = resolver.getFieldConfig();
+      expect(fc.args.arg1.type).to.equal(GraphQLString);
+      expect(fc.args.arg2.type).to.equal(GraphQLString);
+      expect(fc.args.arg3.type).to.equal(GraphQLString);
+    });
+  });
+
   describe('wrapCloneArg()', () => {
     let newResolver;
 

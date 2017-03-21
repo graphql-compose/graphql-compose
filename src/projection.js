@@ -10,7 +10,7 @@ export function getProjectionFromAST(
   context: GraphQLResolveInfo,
   fieldNode?: FieldNode | InlineFragmentNode | FragmentDefinitionNode
 ): ProjectionType {
-  if (!context) {
+  if (!context || typeof context !== 'object') {
     return {};
   }
 
