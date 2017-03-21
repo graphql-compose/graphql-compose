@@ -121,8 +121,11 @@ export default class Resolver<TSource, TContext> {
     return this;
   }
 
-  removeArg(argName: string): Resolver<TSource, TContext> {
-    delete this.args[argName];
+  removeArg(argNameOrArray: string | Array<string>): Resolver<TSource, TContext> {
+    const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
+    argNames.forEach(argName => {
+      delete this.args[argName];
+    });
     return this;
   }
 

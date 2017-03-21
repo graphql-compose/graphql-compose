@@ -169,6 +169,14 @@ describe('Resolver', () => {
       resolver.setArg(argName, argConfig);
       resolver.removeArg(argName);
       expect(resolver.getArg(argName)).to.be.undefined;
+
+      resolver.setArg('a1', 'String');
+      resolver.setArg('a2', 'String');
+      resolver.setArg('a3', 'String');
+      resolver.removeArg(['a1', 'a2']);
+      expect(resolver.getArg('a1')).to.be.undefined;
+      expect(resolver.getArg('a2')).to.be.undefined;
+      expect(resolver.getArg('a3')).to.be.ok;
     });
 
     it('should add args', () => {
