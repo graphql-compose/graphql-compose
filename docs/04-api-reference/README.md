@@ -185,7 +185,7 @@ const resolver = new Resolver({
   args: {
     id: 'Int!',
   },
-  resolve: (source, args, context, info) => {
+  resolve: ({ source, args, context, info }) => {
     return DB.findById(args.id);
   }
 });
