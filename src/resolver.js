@@ -284,44 +284,14 @@ export default class Resolver<TSource, TContext> {
       | TypeNameString
       | Resolver<TSource, TContext>
   ): Resolver<TSource, TContext> {
-    let type;
-
-    if (gqType instanceof TypeComposer) {
-      this.type = gqType.getType();
-      return this;
-    }
-
-    if (gqType instanceof Resolver) {
-      this.type = gqType.getType();
-      return this;
-    }
+    const fc = TypeMapper.convertOutputFieldConfig(gqType, 'setType', 'Resolver');
 
     // $FlowFixMe
-    if (gqType instanceof InputTypeComposer) {
-      throw new Error(
-        'You provide InputTypeComposer as OutputType for Resolver.type. It may by ScalarType or OutputObjectType.'
-      );
-    }
-
-    if (isString(gqType)) {
-      // $FlowFixMe
-      if (gqType.indexOf('{') === -1) {
-        // $FlowFixMe
-        type = TypeMapper.getWrapped(gqType);
-      } else {
-        // $FlowFixMe
-        type = TypeMapper.createType(gqType);
-      }
-    } else {
-      type = gqType;
-    }
-
-    // $FlowFixMe
-    if (!isOutputType(type)) {
+    if (!fc || !isOutputType(fc.type)) {
       throw new Error('You should provide correct OutputType for Resolver.type.');
     }
     // $FlowFixMe
-    this.type = type;
+    this.type = fc.type;
     return this;
   }
 

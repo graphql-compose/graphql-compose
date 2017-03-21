@@ -10,6 +10,7 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLEnumType,
+  GraphQLList,
 } from 'graphql';
 import GQC from '../__mocks__/gqc';
 import Resolver from '../resolver';
@@ -55,7 +56,7 @@ describe('Resolver', () => {
             fields: () => ({}),
           })
         );
-      }).to.throw('provide correct OutputType');
+      }).to.throw();
     });
 
     it('should convert type as string to GraphQLType', () => {
@@ -116,6 +117,15 @@ describe('Resolver', () => {
       });
       expect(myResolver.type).instanceof(GraphQLObjectType);
       expect(myResolver.type.name).equal('SomeType');
+    });
+
+    it('should accept array for `type` option', () => {
+      const myResolver = new Resolver({
+        name: 'myResolver',
+        type: ['String'],
+      });
+      expect(myResolver.type).instanceof(GraphQLList);
+      expect(myResolver.type.ofType).equal(GraphQLString);
     });
 
     it('should have wrapType() method', () => {
