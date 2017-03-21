@@ -258,6 +258,29 @@ describe('Resolver', () => {
       expect(resolver.isRequired('b4')).to.be.true;
     });
 
+    describe('reorderArgs()', () => {
+      it('should change args order', () => {
+        resolver.setArgs({ a1: 'Int', a2: 'Int', a3: 'Int' });
+        expect(resolver.getArgNames().join(',')).to.equal('a1,a2,a3');
+        resolver.reorderArgs(['a3', 'a2', 'a1']);
+        expect(resolver.getArgNames().join(',')).to.equal('a3,a2,a1');
+      });
+
+      it('should append not listed args', () => {
+        resolver.setArgs({ a1: 'Int', a2: 'Int', a3: 'Int' });
+        expect(resolver.getArgNames().join(',')).to.equal('a1,a2,a3');
+        resolver.reorderArgs(['a3']);
+        expect(resolver.getArgNames().join(',')).to.equal('a3,a1,a2');
+      });
+
+      it('should skip non existed args', () => {
+        resolver.setArgs({ a1: 'Int', a2: 'Int', a3: 'Int' });
+        expect(resolver.getArgNames().join(',')).to.equal('a1,a2,a3');
+        resolver.reorderArgs(['a22', 'a3', 'a55', 'a1', 'a2']);
+        expect(resolver.getArgNames().join(',')).to.equal('a3,a1,a2');
+      });
+    });
+
     describe('cloneArg()', () => {
       beforeEach(() => {
         resolver.setArgs({
@@ -623,6 +646,8 @@ describe('Resolver', () => {
     expect(resolver.setArg('a1', 'String')).equal(resolver);
     expect(resolver.addArgs({ a2: 'input LL { f1: Int, f2: Int }' })).equal(resolver);
     expect(resolver.removeArg('a1')).equal(resolver);
+    expect(resolver.removeOtherArgs('a2')).equal(resolver);
+    expect(resolver.reorderArgs(['a1'])).equal(resolver);
     expect(resolver.cloneArg('a2', 'a3')).equal(resolver);
     expect(resolver.makeRequired('a2')).equal(resolver);
     expect(resolver.makeOptional('a2')).equal(resolver);

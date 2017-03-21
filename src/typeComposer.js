@@ -198,6 +198,19 @@ export default class TypeComposer {
     return this;
   }
 
+  reorderFields(names: string[]): TypeComposer {
+    const orderedFields = {};
+    const fields = this.getFields();
+    names.forEach(name => {
+      if (fields[name]) {
+        orderedFields[name] = fields[name];
+        delete fields[name];
+      }
+    });
+    this.setFields({ ...orderedFields, ...fields });
+    return this;
+  }
+
   addRelation(fieldName: string, relationFn: Thunk<RelationOpts<*, *>>): TypeComposer {
     if (!this.gqType._gqcRelations) {
       this.gqType._gqcRelations = {};

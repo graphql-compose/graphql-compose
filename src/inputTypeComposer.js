@@ -178,6 +178,19 @@ export default class InputTypeComposer {
     return this;
   }
 
+  reorderFields(names: string[]): InputTypeComposer {
+    const orderedFields = {};
+    const fields = this.getFields();
+    names.forEach(name => {
+      if (fields[name]) {
+        orderedFields[name] = fields[name];
+        delete fields[name];
+      }
+    });
+    this.setFields({ ...orderedFields, ...fields });
+    return this;
+  }
+
   isRequired(fieldName: string): boolean {
     return this.getFieldType(fieldName) instanceof GraphQLNonNull;
   }

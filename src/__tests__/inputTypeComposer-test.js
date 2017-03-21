@@ -122,6 +122,38 @@ describe('InputTypeComposer', () => {
       expect(tc2.getFieldNames()).to.not.have.members(['input3']);
     });
 
+    describe('reorderFields()', () => {
+      it('should change fields order', () => {
+        const tcOrder = InputTypeComposer.create({
+          name: 'Type',
+          fields: { f1: 'Int', f2: 'Int', f3: 'Int ' },
+        });
+        expect(tcOrder.getFieldNames().join(',')).to.equal('f1,f2,f3');
+        tcOrder.reorderFields(['f3', 'f2', 'f1']);
+        expect(tcOrder.getFieldNames().join(',')).to.equal('f3,f2,f1');
+      });
+
+      it('should append not listed fields', () => {
+        const tcOrder = InputTypeComposer.create({
+          name: 'Type',
+          fields: { f1: 'Int', f2: 'Int', f3: 'Int ' },
+        });
+        expect(tcOrder.getFieldNames().join(',')).to.equal('f1,f2,f3');
+        tcOrder.reorderFields(['f3']);
+        expect(tcOrder.getFieldNames().join(',')).to.equal('f3,f1,f2');
+      });
+
+      it('should skip non existed fields', () => {
+        const tcOrder = InputTypeComposer.create({
+          name: 'Type',
+          fields: { f1: 'Int', f2: 'Int', f3: 'Int ' },
+        });
+        expect(tcOrder.getFieldNames().join(',')).to.equal('f1,f2,f3');
+        tcOrder.reorderFields(['f22', 'f3', 'f55', 'f1', 'f2']);
+        expect(tcOrder.getFieldNames().join(',')).to.equal('f3,f1,f2');
+      });
+    });
+
     it('should extend field by name', () => {
       const tc = new InputTypeComposer(objectType);
       tc.setField('input3', {
@@ -294,7 +326,9 @@ describe('InputTypeComposer', () => {
     expect(itc.setField('f1', 'String')).equal(itc);
     expect(itc.addFields({})).equal(itc);
     expect(itc.removeField('f1')).equal(itc);
+    expect(itc.removeOtherFields('f1')).equal(itc);
     expect(itc.extendField('f1', {})).equal(itc);
+    expect(itc.reorderFields(['f1'])).equal(itc);
     expect(itc.makeRequired('f1')).equal(itc);
     expect(itc.makeOptional('f1')).equal(itc);
     expect(itc.setTypeName('InputType2')).equal(itc);

@@ -107,6 +107,10 @@ export default class Resolver<TSource, TContext> {
     return this.args;
   }
 
+  getArgNames(): string[] {
+    return Object.keys(this.args);
+  }
+
   setArgs(args: GraphQLFieldConfigArgumentMap): Resolver<TSource, TContext> {
     this.args = TypeMapper.convertArgConfigMap(args, this.name, 'Resolver');
     return this;
@@ -130,13 +134,25 @@ export default class Resolver<TSource, TContext> {
     return this;
   }
 
-  removeOtherArgs(argNameOrArray: string | Array<string>): TypeComposer {
+  removeOtherArgs(argNameOrArray: string | Array<string>): Resolver<TSource, TContext> {
     const keepArgNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     Object.keys(this.args).forEach(argName => {
       if (!keepArgNames.includes(argName)) {
         delete this.args[argName];
       }
     });
+    return this;
+  }
+
+  reorderArgs(names: string[]): Resolver<TSource, TContext> {
+    const orderedArgs = {};
+    names.forEach(name => {
+      if (this.args[name]) {
+        orderedArgs[name] = this.args[name];
+        delete this.args[name];
+      }
+    });
+    this.args = { ...orderedArgs, ...this.args };
     return this;
   }
 

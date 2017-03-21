@@ -146,6 +146,29 @@ describe('TypeComposer', () => {
       });
     });
 
+    describe('reorderFields()', () => {
+      it('should change fields order', () => {
+        tc.setFields({ f1: 'Int', f2: 'Int', f3: 'Int' });
+        expect(tc.getFieldNames().join(',')).to.equal('f1,f2,f3');
+        tc.reorderFields(['f3', 'f2', 'f1']);
+        expect(tc.getFieldNames().join(',')).to.equal('f3,f2,f1');
+      });
+
+      it('should append not listed fields', () => {
+        tc.setFields({ f1: 'Int', f2: 'Int', f3: 'Int' });
+        expect(tc.getFieldNames().join(',')).to.equal('f1,f2,f3');
+        tc.reorderFields(['f3']);
+        expect(tc.getFieldNames().join(',')).to.equal('f3,f1,f2');
+      });
+
+      it('should skip non existed fields', () => {
+        tc.setFields({ f1: 'Int', f2: 'Int', f3: 'Int' });
+        expect(tc.getFieldNames().join(',')).to.equal('f1,f2,f3');
+        tc.reorderFields(['f22', 'f3', 'f55', 'f1', 'f2']);
+        expect(tc.getFieldNames().join(',')).to.equal('f3,f1,f2');
+      });
+    });
+
     it('extendField()', () => {
       tc.setField('field3', {
         type: GraphQLString,
@@ -444,7 +467,9 @@ describe('TypeComposer', () => {
     expect(tc.setField('f1', {})).equal(tc);
     expect(tc.addFields({})).equal(tc);
     expect(tc.removeField('f1')).equal(tc);
+    expect(tc.removeOtherFields('f1')).equal(tc);
     expect(tc.extendField('f1', {})).equal(tc);
+    expect(tc.reorderFields(['f1'])).equal(tc);
 
     expect(tc.addRelation('user', () => ({}))).equal(tc);
     expect(tc.buildRelations()).equal(tc);
