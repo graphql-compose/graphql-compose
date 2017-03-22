@@ -12,6 +12,6 @@ We always try to make our documentation better, so if you have feedback on the G
 - [Generate TypeComposers](02-generate-typecomposers.md)
 - [Edit TypeComposer](03-edit-typecomposer.md)
 - [Connections](04-relations-and-connections.md)
-- [Mutations](06-mutations.md)
+- [Mutations](05-mutations.md)
 - [Generate Schema](06-generating-schema.md)
 - [Relay support](07-relay.md)
