@@ -33,14 +33,13 @@ ___REMEMBER: This will remove the field in all objects where this TC is used___
 
 ### Adding fields
 ```js
-UserTC.addField(
-  'fullName',
-  {
+UserTC.addFields({
+  fullName: {
     type: 'String',
-    resolver: (source) => `${source.firstName} ${source.lastName}`,
+    resolve: (source) => `${source.firstName} ${source.lastName}`,
     projection: { firstName: true, lastName: true },
   }
-)
+});
 
 UserTC.addFields({
   age: {
