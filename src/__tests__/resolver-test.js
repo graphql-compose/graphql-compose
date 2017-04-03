@@ -476,11 +476,20 @@ describe('Resolver', () => {
           query.someKey = resolveParams.someKey; // eslint-disable-line no-param-reassign
         },
         filterTypeNameFallback: 'FilterUniqueNameInput',
+      })
+      .addFilterArg({
+        name: 'isActive',
+        type: 'Boolean!',
+        description: 'Active status filter',
+        query: (query, value, resolveParams) => {
+          query.isActive = value; // eslint-disable-line no-param-reassign
+        },
+        filterTypeNameFallback: 'FilterOtherUniqueNameInput',
       });
 
-      newResolver.resolve({ args: { filter: { age: 15 } }, someKey: 16 });
+      newResolver.resolve({ args: { filter: { age: 15, isActive: false } }, someKey: 16 });
 
-      expect(rpSnap).property('rawQuery').deep.equal({ age: { $gt: 15 }, someKey: 16 });
+      expect(rpSnap).property('rawQuery').deep.equal({ age: { $gt: 15 }, isActive: false, someKey: 16 });
     });
 
     it('should extend default value', () => {

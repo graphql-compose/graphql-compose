@@ -495,7 +495,7 @@ export default class Resolver<TSource, TContext> {
     if (isFunction(opts.query)) {
       resolver.setResolve(resolveParams => {
         const value = objectPath.get(resolveParams, ['args', 'filter', opts.name]);
-        if (value) {
+        if (value !== null && value !== undefined) {
           if (!resolveParams.rawQuery) {
             resolveParams.rawQuery = {}; // eslint-disable-line
           }
