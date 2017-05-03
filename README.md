@@ -22,6 +22,9 @@
 - [graphql-compose-mongoose](https://github.com/nodkz/graphql-compose-mongoose) - build graphql types from mongoose (MongoDB models) with Resolvers
 - [graphql-compose-relay](https://github.com/nodkz/graphql-compose-relay) - reassemble GraphQL types with `Relay` specific things, like `Node` type and interface, `globalId`, `clientMutationId`
 - [graphql-compose-connection](https://github.com/nodkz/graphql-compose-connection) - generate `connection` Resolver from `findMany` and `count` Resolvers.
+- [graphql-compose-elasticsearch](https://github.com/nodkz/graphql-compose-elasticsearch) - generate GraphQL types from elastic mappings; ElasticSearch REST API proxy via GraphQL.
+- [graphql-compose-dataloader](https://github.com/stoffern/graphql-compose-dataloader) - add DataLoader to graphql-composer resolvers..
+- [graphql-compose-recompose](https://github.com/digithun/graphql-compose-recompose) - utility that wrap GraphQL compose to high order functional pattern [work in process].
 
 ## Documentation
 - [Installation](docs/02-installation)
