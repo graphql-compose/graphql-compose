@@ -6,9 +6,9 @@
 [![Join the chat at https://gitter.im/graphql-compose/Lobby](https://badges.gitter.im/nodkz/graphql-compose.svg)](https://gitter.im/graphql-compose/Lobby)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
-[GraphQL](http://graphql.org/) – is a query language for APIs. [graphql-js](https://github.com/graphql/graphql-js) is the reference implementation of GraphQL for nodejs which introduce GraphQL type system for describing schema. [express-graphql](https://github.com/graphql/express-graphql) GraphQL HTTP server for fulfilling graphql queries.
+[GraphQL](http://graphql.org/) – is a query language for APIs. [graphql-js](https://github.com/graphql/graphql-js) is the reference implementation of GraphQL for nodejs which introduce GraphQL type system for describing schema *(definition over configuration)* and executes queries on the server side. [express-graphql](https://github.com/graphql/express-graphql) is a HTTP server which gets request data, passes it to `graphql-js` and returned result passes to response.
 
-**`graphql-compose`** – the tool which is build on top of `graphql-js`. It helps to construct graphql types and schema on the server. The main aim of `graphql-compose` to solve the problem of mash code in schema's files, and ridiculously simplify schema build process on the server.
+**`graphql-compose`** – the *imperative tool* which worked on top of `graphql-js`. It provides some methods for creating types and GraphQL Models (so I call types with a list of common resolvers) for further building of complex relations in your schema. 
 - provides methods for editing GraphQL output/input types (add/remove fields/args/interfaces)
 - introduces `Resolver`s – the named graphql fieldConfigs, which can be used for finding, updating, removing records
 - provides an easy way for creating relations between types via `Resolver`s
@@ -18,7 +18,7 @@
 - adds additional types `Date`, `Json`
 
 
-**`graphql-compose-[plugin]`** – plugins that build on top of `graphql-compose` and construct graphql types from some sources/models:
+**`graphql-compose-[plugin]`** – is a *declarative generators/plugins* that build on top of `graphql-compose`, which take some ORMs, schema definitions and creates GraphQL Models from them or modify existed GraphQL Types:
 - [graphql-compose-mongoose](https://github.com/nodkz/graphql-compose-mongoose) - build graphql types from mongoose (MongoDB models) with Resolvers
 - [graphql-compose-relay](https://github.com/nodkz/graphql-compose-relay) - reassemble GraphQL types with `Relay` specific things, like `Node` type and interface, `globalId`, `clientMutationId`
 - [graphql-compose-connection](https://github.com/nodkz/graphql-compose-connection) - generate `connection` Resolver from `findMany` and `count` Resolvers.
