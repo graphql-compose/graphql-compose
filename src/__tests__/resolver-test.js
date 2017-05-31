@@ -618,7 +618,7 @@ describe('Resolver', () => {
       });
 
       newResolver.resolve({ args: { sort: 'PRICE_ASC' }, query });
-      expect(rpSnap).deep.property('args.sort').deep.equal({ price: 1 });
+      expect(rpSnap).nested.property('args.sort').deep.equal({ price: 1 });
       expect(whereSnap).deep.equal({ price: { $gt: 0 } });
     });
 

@@ -42,7 +42,7 @@ export function resolveOutputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName:
   return fieldMap;
 }
 
-export function resolveInputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName: string): T {
+export function resolveInputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName?: string): T {
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(name => {
       if (isFunction(fieldMap[name])) {

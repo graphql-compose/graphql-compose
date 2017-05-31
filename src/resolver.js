@@ -36,7 +36,7 @@ import type {
   ResolverWrapTypeFn,
   GraphQLInputType,
   TypeDefinitionString,
-  TypeWrappedString,
+  GraphQLComposeOutputType,
   TypeNameString,
 } from './definition';
 import InputTypeComposer from './inputTypeComposer';
@@ -292,22 +292,12 @@ export default class Resolver<TSource, TContext> {
     return null;
   }
 
-  setType(
-    gqType:
-      | GraphQLOutputType
-      | TypeComposer
-      | TypeWrappedString
-      | TypeDefinitionString
-      | TypeNameString
-      | Resolver<TSource, TContext>
-  ): Resolver<TSource, TContext> {
+  setType(gqType: GraphQLComposeOutputType<TSource, TContext>): Resolver<TSource, TContext> {
     const fc = TypeMapper.convertOutputFieldConfig(gqType, 'setType', 'Resolver');
 
-    // $FlowFixMe
     if (!fc || !isOutputType(fc.type)) {
       throw new Error('You should provide correct OutputType for Resolver.type.');
     }
-    // $FlowFixMe
     this.type = fc.type;
     return this;
   }

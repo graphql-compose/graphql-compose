@@ -60,7 +60,6 @@ export default class InputTypeComposer {
 
       // $FlowFixMe
       if (isObject(opts.fields)) {
-        // $FlowFixMe
         ITC.addFields(opts.fields);
       }
     } else {
@@ -86,7 +85,6 @@ export default class InputTypeComposer {
   getFields(): GraphQLInputFieldConfigMap {
     const fields: Thunk<GraphQLInputFieldConfigMap> = this.gqType._typeConfig.fields;
 
-    // $FlowFixMe
     const fieldMap: mixed = keepConfigsAsThunk(resolveMaybeThunk(fields));
 
     if (isObject(fieldMap)) {

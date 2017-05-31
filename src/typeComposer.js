@@ -71,7 +71,6 @@ export default class TypeComposer {
 
       // $FlowFixMe
       if (isObject(opts.fields)) {
-        // $FlowFixMe
         TC.addFields(opts.fields);
       }
     } else {
@@ -94,7 +93,6 @@ export default class TypeComposer {
   getFields(): GraphQLFieldConfigMap<*, *> {
     const fields: Thunk<GraphQLFieldConfigMap<*, *>> = this.gqType._typeConfig.fields;
 
-    // $FlowFixMe
     const fieldMap: mixed = keepConfigsAsThunk(resolveMaybeThunk(fields));
 
     if (isObject(fieldMap)) {
@@ -439,7 +437,7 @@ export default class TypeComposer {
     return this.gqType;
   }
 
-  getTypePlural(): GraphQLObjectType {
+  getTypePlural(): GraphQLList<GraphQLObjectType> {
     return new GraphQLList(this.gqType);
   }
 

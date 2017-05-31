@@ -75,6 +75,7 @@ import type {
   TypeDefinitionString,
   TypeNameString,
   TypeWrappedString,
+  GraphQLComposeOutputType,
 } from './definition';
 
 import TypeComposer from './typeComposer';
@@ -154,16 +155,18 @@ class TypeMapper {
   }
 
   convertOutputFieldConfig<TSource, TContext>(
-    fieldConfig: GraphQLFieldConfig<TSource, TContext>,
+    fieldConfig: GraphQLComposeOutputType<TSource, TContext>,
     fieldName: string,
     typeName: string
   ): GraphQLFieldConfig<TSource, TContext> {
+    let fieldCfg;
     let wrapWithList = false;
     if (Array.isArray(fieldConfig)) {
       fieldConfig = {
         type: fieldConfig,
       };
     }
+    // $FlowFixMe
     if (Array.isArray(fieldConfig.type)) {
       if (fieldConfig.type.length !== 1) {
         throw new Error(
@@ -171,13 +174,21 @@ class TypeMapper {
         );
       }
       wrapWithList = true;
+      // $FlowFixMe
       fieldConfig.type = fieldConfig.type[0];
     }
 
+    if (fieldConfig instanceof GraphQLList || fieldConfig instanceof GraphQLNonNull) {
+      return { type: fieldConfig };
+    }
+
     if (fieldConfig instanceof TypeComposer) {
-      return { type: fieldConfig.getType() };
+      return {
+        type: wrapWithList ? new GraphQLList(fieldConfig.getType()) : fieldConfig.getType(),
+      };
     }
     if (fieldConfig instanceof Resolver) {
+      // $FlowFixMe
       return fieldConfig.getFieldConfig();
     }
     if (fieldConfig instanceof InputTypeComposer || fieldConfig.type instanceof InputTypeComposer) {
@@ -309,7 +320,6 @@ class TypeMapper {
         );
       }
 
-      // $FlowFixMe
       argConfig.type = type;
     } else if (argConfig.type instanceof InputTypeComposer) {
       argConfig.type = argConfig.type.getType();
@@ -346,7 +356,7 @@ class TypeMapper {
   convertInputFieldConfig(
     fieldConfig: GraphQLInputFieldConfig,
     fieldName: string,
-    typeName: string
+    typeName?: string = ''
   ): GraphQLInputFieldConfig {
     let wrapWithList = false;
     if (Array.isArray(fieldConfig)) {
@@ -376,7 +386,6 @@ class TypeMapper {
     // $FlowFixMe
     if (typeof fieldConfig === 'string' || isInputType(fieldConfig)) {
       fieldConfig = {
-        // $FlowFixMe
         type: fieldConfig,
       };
     }
@@ -399,14 +408,12 @@ class TypeMapper {
         throw new Error(`${typeName}.${fieldName} provided incorrect input type '${fieldTypeDef}'`);
       }
 
-      // $FlowFixMe
       fieldConfig.type = type;
     } else if (fieldConfig.type instanceof InputTypeComposer) {
       fieldConfig.type = fieldConfig.type.getType();
     }
 
     if (wrapWithList) {
-      // $FlowFixMe
       fieldConfig.type = new GraphQLList(fieldConfig.type);
     }
 
@@ -594,7 +601,8 @@ function makeTypeDef(def: ObjectTypeDefinitionNode) {
 }
 
 function getDeprecationReason(directives: ?Array<DirectiveNode>): ?string {
-  const deprecatedAST = directives &&
+  const deprecatedAST =
+    directives &&
     find(directives, directive => directive.name.value === GraphQLDeprecatedDirective.name);
   if (!deprecatedAST) {
     return;

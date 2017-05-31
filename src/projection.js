@@ -14,7 +14,7 @@ export function getProjectionFromAST(
     return {};
   }
 
-  let selections: Array<FieldNode | InlineFragmentNode | FragmentSpreadNode>;
+  let selections; // Array<FieldNode | InlineFragmentNode | FragmentSpreadNode>;
   if (fieldNode) {
     if (fieldNode.selectionSet) {
       selections = fieldNode.selectionSet.selections;

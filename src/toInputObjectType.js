@@ -129,6 +129,7 @@ export function convertInputObjectField<TSource, TContext>(
 
   // $FlowFixMe
   const inputFieldType: GraphQLInputType = wrappers.reduce(
+    // $FlowFixMe
     (type, Wrapper) => new Wrapper(type),
     fieldType
   );

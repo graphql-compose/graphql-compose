@@ -23,6 +23,7 @@ import type {
   GraphQLNullableType as _GraphQLNullableType,
 } from 'graphql/type/definition';
 
+import type TypeComposer from './typeComposer';
 import type Resolver from './resolver';
 import type InputTypeComposer from './inputTypeComposer';
 
@@ -64,6 +65,14 @@ export type ResolveParams<TSource, TContext> = {
 export type GraphQLInputFieldConfig = _GraphQLInputFieldConfig;
 export type GraphQLInputFieldConfigMap = _GraphQLInputFieldConfigMap;
 export type GraphQLInputType = _GraphQLInputType;
+export type GraphQLComposeOutputType<TSource, TContext> = GraphQLOutputType
+  | TypeComposer
+  | TypeWrappedString
+  | TypeDefinitionString
+  | TypeNameString
+  | Resolver<TSource, TContext>
+  | GraphQLFieldConfig<TSource, TContext>;
+
 
 export type GraphQLObjectTypeExtended = GraphQLObjectType & {
   _gqcInputTypeComposer?: InputTypeComposer,
@@ -96,7 +105,7 @@ export type RelationOptsWithFieldConfig<TSource, TContext> = {
   deprecationReason?: ?string,
 }
 export type ArgsType = { [argName: string]: mixed };
-export type RelationArgsMapperFn<TSource, TContext> = (source: TSource, args: ArgsType, context: TContext) => ArgsType;
+export type RelationArgsMapperFn<TSource, TContext> = (source: TSource, args: ArgsType, context: TContext, info: GraphQLResolveInfo) => ArgsType;
 export type RelationArgsMapper<TSource, TContext> = {
   [argName: string]: RelationArgsMapperFn<TSource, TContext> | null | void | mixed,
 };
@@ -118,7 +127,9 @@ export type ResolverFieldConfig<TSource, TContext> = {
   type: GraphQLOutputType,
   args: GraphQLFieldConfigArgumentMap,
   resolve: GraphQLFieldResolver<TSource, TContext>,
-  name?: ?string,
+  subscribe?: GraphQLFieldResolver<TSource, TContext>;
+  deprecationReason?: ?string;
+  description?: ?string;
 };
 
 export type GetRecordIdFn<TSource, TContext> = (source: TSource, args: ?mixed, context: TContext) => string;
