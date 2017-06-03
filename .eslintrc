@@ -7,6 +7,9 @@
     "no-unused-expressions": 0,
     "no-plusplus": 0,
     "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*-test.js"]}],
+    "no-prototype-builtins": 0,
+    "no-restricted-syntax": 0,
+    "no-mixed-operators": 0,
     "comma-dangle": ["error", {
       "arrays": "always-multiline",
       "objects": "always-multiline",
@@ -26,5 +29,6 @@
   "globals": {
     "Class": true,
     "Iterator": true,
+    "$Shape": true,
   },
 }
