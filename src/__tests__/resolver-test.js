@@ -403,7 +403,7 @@ describe('Resolver', () => {
     });
 
     it('should keep untouched other args', () => {
-      expect(newResolver.getArg('other')).to.equal(resolver.getArg('other'));
+      expect(newResolver.getArg('other')).to.not.equal(resolver.getArg('other'));
       expect(newResolver.getArgType('other')).to.equal(resolver.getArgType('other'));
     });
   });
@@ -657,7 +657,7 @@ describe('Resolver', () => {
     expect(resolver.removeArg('a1')).equal(resolver);
     expect(resolver.removeOtherArgs('a2')).equal(resolver);
     expect(resolver.reorderArgs(['a1'])).equal(resolver);
-    expect(resolver.cloneArg('a2', 'a3')).equal(resolver);
+    expect(resolver.cloneArg('a2', 'NewTypeName')).equal(resolver);
     expect(resolver.makeRequired('a2')).equal(resolver);
     expect(resolver.makeOptional('a2')).equal(resolver);
     expect(resolver.setResolve(() => {})).equal(resolver);

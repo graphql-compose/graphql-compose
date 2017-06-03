@@ -9,6 +9,7 @@ import {
   GraphQLEnumType,
   GraphQLObjectType,
   isOutputType,
+  isInputType,
 } from 'graphql';
 import { deprecate } from './utils/debug';
 import TypeMapper from './typeMapper';
@@ -22,7 +23,7 @@ import type {
   GraphQLArgumentConfig,
   GraphQLFieldConfigArgumentMap,
   GraphQLOutputType,
-  ResolverFieldConfig,
+  GraphQLFieldConfig,
   ResolverMWResolve,
   ResolverMWResolveFn,
   ResolveParams,
@@ -36,7 +37,9 @@ import type {
   ResolverWrapTypeFn,
   GraphQLInputType,
   TypeDefinitionString,
-  GraphQLComposeOutputType,
+  ComposeOutputType,
+  ComposeArgumentConfig,
+  ComposeFieldConfigArgumentMap,
   TypeNameString,
 } from './definition';
 import InputTypeComposer from './inputTypeComposer';
@@ -51,7 +54,7 @@ export default class Resolver<TSource, TContext> {
   description: ?string;
   parent: ?Resolver<TSource, TContext>;
 
-  constructor(opts: ResolverOpts<TSource, TContext> = {}) {
+  constructor(opts: ResolverOpts<TSource, TContext>) {
     if (!opts.name) {
       throw new Error('For Resolver constructor the `opts.name` is required option.');
     }
@@ -111,18 +114,25 @@ export default class Resolver<TSource, TContext> {
     return Object.keys(this.args);
   }
 
-  setArgs(args: GraphQLFieldConfigArgumentMap): Resolver<TSource, TContext> {
+  setArgs(
+    args: ComposeFieldConfigArgumentMap
+  ): Resolver<TSource, TContext> {
     this.args = TypeMapper.convertArgConfigMap(args, this.name, 'Resolver');
     return this;
   }
 
-  setArg(argName: string, argConfig: GraphQLArgumentConfig): Resolver<TSource, TContext> {
+  setArg(
+    argName: string,
+    argConfig: ComposeArgumentConfig
+  ): Resolver<TSource, TContext> {
     this.args[argName] = TypeMapper.convertArgConfig(argConfig, argName, this.name, 'Resolver');
     return this;
   }
 
-  addArgs(newArgs: GraphQLFieldConfigArgumentMap): Resolver<TSource, TContext> {
-    this.setArgs(Object.assign({}, this.getArgs(), newArgs));
+  addArgs(
+    newArgs: ComposeFieldConfigArgumentMap
+  ): Resolver<TSource, TContext> {
+    this.setArgs({ ...this.getArgs(), ...newArgs });
     return this;
   }
 
@@ -188,39 +198,45 @@ export default class Resolver<TSource, TContext> {
 
   makeRequired(argNameOrArray: string | Array<string>): Resolver<TSource, TContext> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    const args = this.getArgs();
     argNames.forEach(argName => {
-      if (args[argName]) {
-        if (!(args[argName].type instanceof GraphQLNonNull)) {
-          args[argName].type = new GraphQLNonNull(args[argName].type);
+      if (this.args[argName]) {
+        const argType = this.args[argName].type;
+        if (!isInputType(argType)) {
+          throw new Error(
+            `Cannot make argument ${argName} required. It should be InputType: ${JSON.stringify(argType)}`
+          );
+        }
+        if (!(argType instanceof GraphQLNonNull)) {
+          this.args[argName].type = new GraphQLNonNull(argType);
         }
       }
     });
-    this.setArgs(args);
     return this;
   }
 
   makeOptional(argNameOrArray: string | Array<string>): Resolver<TSource, TContext> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    const args = this.getArgs();
     argNames.forEach(argName => {
       if (argNames.includes(argName)) {
-        if (args[argName].type instanceof GraphQLNonNull) {
-          args[argName].type = args[argName].type.ofType;
+        const argType = this.args[argName].type;
+        if (argType instanceof GraphQLNonNull) {
+          this.args[argName].type = argType.ofType;
         }
       }
     });
-    this.setArgs(args);
     return this;
   }
 
   /*
   * This method should be overriden via constructor
   */
-  // eslint-disable-next-line
-  resolve(resolveParams: ResolveParams<TSource, TContext>): Promise<any> {
+  /* eslint-disable */
+  resolve(
+    resolveParams: ResolveParams<TSource, TContext> | $Shape<ResolveParams<TSource, TContext>>
+  ): Promise<any> {
     return Promise.resolve();
   }
+  /* eslint-enable */
 
   getResolve(): ResolverMWResolveFn<TSource, TContext> {
     return this.resolve;
@@ -292,7 +308,7 @@ export default class Resolver<TSource, TContext> {
     return null;
   }
 
-  setType(gqType: GraphQLComposeOutputType<TSource, TContext>): Resolver<TSource, TContext> {
+  setType(gqType: ComposeOutputType<TSource, TContext>): Resolver<TSource, TContext> {
     const fc = TypeMapper.convertOutputFieldConfig(gqType, 'setType', 'Resolver');
 
     if (!fc || !isOutputType(fc.type)) {
@@ -306,17 +322,16 @@ export default class Resolver<TSource, TContext> {
     opts: {
       projection?: ProjectionType,
     } = {}
-  ): ResolverFieldConfig<TSource, TContext> {
+  ): GraphQLFieldConfig<TSource, TContext> {
     const resolve = this.getResolve();
     return {
       type: this.getType(),
       args: resolveInputConfigsAsThunk(this.getArgs()),
       description: this.description,
       resolve: (source, args, context, info) => {
-        let projection: ProjectionType = getProjectionFromAST(info);
+        let projection = getProjectionFromAST(info);
         if (opts.projection) {
-          // $FlowFixMe
-          projection = deepmerge(projection, opts.projection);
+          projection = ((deepmerge(projection, opts.projection): any): ProjectionType);
         }
         return resolve({ source, args, context, info, projection });
       },
@@ -360,8 +375,8 @@ export default class Resolver<TSource, TContext> {
         oldOpts[key] = this[key];
       }
     }
-    oldOpts.args = Object.assign({}, this.args);
-    return new Resolver(Object.assign({}, oldOpts, opts));
+    oldOpts.args = { ...this.args };
+    return new Resolver({ ...oldOpts, ...opts });
   }
 
   wrap(
@@ -376,7 +391,6 @@ export default class Resolver<TSource, TContext> {
     });
 
     if (isFunction(cb)) {
-      // $FlowFixMe
       cb(newResolver, prevResolver);
     }
 
@@ -401,7 +415,7 @@ export default class Resolver<TSource, TContext> {
     return this.wrap(
       (newResolver, prevResolver) => {
         // clone prevArgs, to avoid changing args in callback
-        const prevArgs = Object.assign({}, prevResolver.getArgs());
+        const prevArgs = { ...prevResolver.getArgs() };
         const newArgs = cb(prevArgs);
         newResolver.setArgs(newArgs);
         return newResolver;

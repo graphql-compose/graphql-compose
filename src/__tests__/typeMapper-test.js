@@ -220,6 +220,21 @@ describe('TypeMapper', () => {
         expect(fc.resolve()).equal(123);
       });
 
+      it('should accept Resolver as type', () => {
+        const resolver = new Resolver({
+          name: 'find',
+          type: 'Float',
+          args: {
+            a1: 'String',
+          },
+          resolve: () => 123,
+        });
+        const fc = typeMapper.convertOutputFieldConfig({ type: resolver });
+        expect(fc.type).equal(GraphQLFloat);
+        expect(fc.args).equal(undefined);
+        expect(fc.resolve).equal(undefined);
+      });
+
       it(
         'should accept array with one element as type and wrap them with GraphQLList',
         () => {
