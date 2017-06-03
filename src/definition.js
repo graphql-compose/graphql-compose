@@ -147,6 +147,33 @@ export type ComposeInputFieldConfigMap = {
 //   | TypeNameString
 //   | (() => ComposeInputType);
 
+
+// Compose Args -----------------------------
+export type ComposeArgumentType = any;
+export type ComposeArgumentConfig = any;
+export type ComposeFieldConfigArgumentMap = {
+  [fieldName: string]: ComposeArgumentConfig,
+};
+// Flow 0.47 not ready for this, it fails with: *** Recursion limit exceeded ***
+// export type ComposeArgumentType =
+//   | GraphQLInputType
+//   | string
+//   | InputTypeComposer
+//   | GraphQLArgumentConfig
+//   | (() => ComposeArgumentType);
+// export type ComposeArgumentConfig =
+//   | {
+//       type: ComposeArgumentType,
+//       defaultValue?: mixed,
+//       description?: ?string,
+//     }
+//   | ComposeArgumentType
+//   | (() => ComposeArgumentConfig);
+// export type ComposeFieldConfigArgumentMap = {
+//   [argName: string]: ComposeArgumentConfig | ComposeArgumentConfig[],
+// };
+
+
 // Ext -----------------------------
 export type ComposeObjectTypeConfig<TSource, TContext> = {
   name: string;

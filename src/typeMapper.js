@@ -77,6 +77,8 @@ import type {
   TypeNameString,
   TypeWrappedString,
   ComposeOutputType,
+  ComposeArgumentConfig,
+  ComposeFieldConfigArgumentMap,
   ComposeFieldConfigMap,
   ComposeFieldConfig,
   ComposeInputFieldConfigMap,
@@ -278,89 +280,114 @@ class TypeMapper {
   }
 
   convertArgConfig(
-    argConfig: GraphQLArgumentConfig | string,
+    composeAC: ComposeArgumentConfig,
     argName: string,
     fieldName: string,
     typeName: string
   ): GraphQLArgumentConfig {
-    let wrapWithList = false;
-    if (Array.isArray(argConfig)) {
-      argConfig = {
-        type: argConfig,
-      };
+    let composeType;
+
+    if (composeAC instanceof GraphQLList || composeAC instanceof GraphQLNonNull) {
+      return { type: composeAC };
+    } else if (composeAC instanceof InputTypeComposer) {
+      return { type: composeAC.getType() };
+    } else if (Array.isArray(composeAC)) {
+      composeType = composeAC;
+      composeAC = {};
+    } else if (composeAC.type) {
+      composeType = composeAC.type;
+    } else {
+      composeType = composeAC;
+      composeAC = {};
     }
-    // $FlowFixMe
-    if (Array.isArray(argConfig.type)) {
-      if (argConfig.type.length !== 1) {
+
+    let wrapWithList = false;
+    if (Array.isArray(composeType)) {
+      if (composeType.length !== 1) {
         throw new Error(
           `${typeName}.${fieldName}@${argName} can accept Array exact with one input type definition`
         );
       }
       wrapWithList = true;
-      // $FlowFixMe
-      argConfig.type = argConfig.type[0];
+      composeType = composeType[0];
+
+      if (Array.isArray(composeType)) {
+        throw new Error(`${typeName}.${fieldName}@${argName} definition [[Type]] (array of array) does not supported`);
+      }
     }
 
-    if (argConfig instanceof InputTypeComposer) {
-      return { type: argConfig.getType() };
-    }
-    if (argConfig instanceof TypeComposer || argConfig.type instanceof TypeComposer) {
+    if (composeType instanceof TypeComposer) {
       throw new Error(
         `You cannot provide TypeComposer to the arg '${typeName}.${fieldName}.@${argName}'. It should be InputType.`
       );
     }
 
-    // $FlowFixMe
-    if (typeof argConfig === 'string' || isInputType(argConfig)) {
-      argConfig = {
-        // $FlowFixMe
-        type: argConfig,
-      };
-    }
-
-    if (typeof argConfig.type === 'string') {
-      const argTypeDef = argConfig.type;
-
-      if (RegexpOutputTypeDefinition.test(argTypeDef)) {
+    const argConfig = {};
+    if (typeof composeType === 'string') {
+      if (RegexpOutputTypeDefinition.test(composeType)) {
         throw new Error(
-          `${typeName}.${fieldName}@${argName} should be InputType, but got output type definition '${argTypeDef}'`
+          `${typeName}.${fieldName}@${argName} should be InputType, but got output type definition '${composeType}'`
         );
       }
 
-      const type = RegexpInputTypeDefinition.test(argTypeDef) ||
-        RegexpEnumTypeDefinition.test(argTypeDef)
-        ? this.createType(argTypeDef)
-        : this.getWrapped(argTypeDef);
+      const type = RegexpInputTypeDefinition.test(composeType) ||
+        RegexpEnumTypeDefinition.test(composeType)
+        ? this.createType(composeType)
+        : this.getWrapped(composeType);
 
-      if (!isInputType(type)) {
+      if (!type) {
         throw new Error(
-          `${typeName}.${fieldName}@${argName} provided incorrect input type '${argTypeDef}'`
+          `${typeName}.${fieldName}@${argName} cannot convert to InputType the following string: '${composeType}'`
         );
       }
 
-      argConfig.type = type;
-    } else if (argConfig.type instanceof InputTypeComposer) {
-      argConfig.type = argConfig.type.getType();
-    }
-
-    if (wrapWithList) {
       // $FlowFixMe
-      argConfig.type = new GraphQLList(argConfig.type);
+      argConfig.type = type;
+    } else if (composeType instanceof InputTypeComposer) {
+      argConfig.type = composeType.getType();
+    } else {
+      argConfig.type = composeType;
+    }
+
+    if (!argConfig.type) {
+      throw new Error(`${typeName}.${fieldName}@${argName} must have some 'type'`);
+    }
+
+    if (!isFunction(argConfig.type)) {
+      if (!isInputType(argConfig.type)) {
+        throw new Error(
+          `${typeName}.${fieldName}@${argName} provided incorrect InputType: '${JSON.stringify(composeType)}'`
+        );
+      }
+
+      if (wrapWithList) {
+        argConfig.type = new GraphQLList((argConfig.type: any));
+      }
+    }
+
+    if (isObject(composeAC)) {
+      // copy all other props
+      const doNotCopy = ['type'];
+      for (const prop in composeAC) {
+        if (composeAC.hasOwnProperty(prop) && !doNotCopy.includes(prop)) {
+          argConfig[prop] = composeAC[prop];
+        }
+      }
     }
 
     return argConfig;
   }
 
   convertArgConfigMap(
-    argsConfigMap: GraphQLFieldConfigArgumentMap,
+    composeArgsConfigMap: ComposeFieldConfigArgumentMap,
     fieldName: string,
     typeName: string
   ): GraphQLFieldConfigArgumentMap {
-    if (argsConfigMap) {
-      Object.keys(argsConfigMap).forEach(argName => {
+    const argsConfigMap = {};
+    if (composeArgsConfigMap) {
+      Object.keys(composeArgsConfigMap).forEach(argName => {
         argsConfigMap[argName] = this.convertArgConfig(
-          // eslint-disable-line
-          argsConfigMap[argName],
+          composeArgsConfigMap[argName],
           argName,
           fieldName,
           typeName
