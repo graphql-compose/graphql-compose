@@ -19,8 +19,9 @@ import {
   GraphQLSkipDirective,
   GraphQLIncludeDirective,
   GraphQLDeprecatedDirective,
-  isOutputType,
-  isInputType,
+  GraphQLUnionType,
+  // isOutputType,
+  // isInputType,
   valueFromAST,
 } from 'graphql';
 import { parse, parseType } from 'graphql/language/parser';
@@ -88,6 +89,28 @@ import type {
 import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
+
+export function isOutputType(type: ?GraphQLType): boolean {
+  return (
+    type instanceof GraphQLScalarType ||
+    type instanceof GraphQLObjectType ||
+    type instanceof GraphQLInterfaceType ||
+    type instanceof GraphQLUnionType ||
+    type instanceof GraphQLEnumType ||
+    type instanceof GraphQLNonNull && isOutputType(type.ofType) ||
+    type instanceof GraphQLList && isOutputType(type.ofType)
+  );
+}
+
+export function isInputType(type: ?GraphQLType): boolean {
+  return (
+    type instanceof GraphQLScalarType ||
+    type instanceof GraphQLEnumType ||
+    type instanceof GraphQLInputObjectType ||
+    type instanceof GraphQLNonNull && isInputType(type.ofType) ||
+    type instanceof GraphQLList && isInputType(type.ofType)
+  );
+}
 
 const RegexpOutputTypeDefinition = /type\s[^{]+\{[^}]+\}/im;
 const RegexpInputTypeDefinition = /input\s[^{]+\{[^}]+\}/im;
