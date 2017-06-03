@@ -16,7 +16,6 @@ import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
   GraphQLOutputType,
-  GraphQLObjectTypeConfig,
   GraphQLObjectTypeExtended,
   GraphQLInterfaceType,
   GetRecordIdFn,
@@ -31,18 +30,24 @@ import type {
   ResolverOpts,
   TypeNameString,
   TypeDefinitionString,
+  ComposeFieldConfigMap,
+  ComposeFieldConfig,
+  ComposeObjectTypeConfig,
 } from './definition';
 
 export default class TypeComposer {
   gqType: GraphQLObjectTypeExtended;
 
   static create(
-    opts: TypeNameString | TypeDefinitionString | GraphQLObjectTypeConfig | GraphQLObjectType
+    opts:
+     | TypeNameString
+     | TypeDefinitionString
+     | ComposeObjectTypeConfig<*, *>
+     | GraphQLObjectType
   ) {
     let TC;
 
     if (isString(opts)) {
-      // $FlowFixMe
       const typeName: string = opts;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
@@ -62,14 +67,12 @@ export default class TypeComposer {
     } else if (opts instanceof GraphQLObjectType) {
       TC = new TypeComposer(opts);
     } else if (isObject(opts)) {
-      // $FlowFixMe
       const type = new GraphQLObjectType({
         ...opts,
         fields: () => ({}),
       });
       TC = new TypeComposer(type);
 
-      // $FlowFixMe
       if (isObject(opts.fields)) {
         TC.addFields(opts.fields);
       }
@@ -96,8 +99,7 @@ export default class TypeComposer {
     const fieldMap: mixed = keepConfigsAsThunk(resolveMaybeThunk(fields));
 
     if (isObject(fieldMap)) {
-      // $FlowFixMe
-      return Object.assign({}, fieldMap);
+      return { ...fieldMap };
     }
     return {};
   }
@@ -110,8 +112,11 @@ export default class TypeComposer {
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
-  setFields(fields: GraphQLFieldConfigMap<*, *>): TypeComposer {
-    const prepearedFields = TypeMapper.convertOutputFieldConfigMap(fields, this.getTypeName());
+  setFields(fields: ComposeFieldConfigMap<*, *>): TypeComposer {
+    const prepearedFields: GraphQLFieldConfigMap<*, *> = TypeMapper.convertOutputFieldConfigMap(
+      fields,
+      this.getTypeName()
+    );
 
     // if field has a projection option, then add it to projection mapper
     Object.keys(prepearedFields).forEach(name => {
@@ -135,7 +140,7 @@ export default class TypeComposer {
 
   setField<TSource, TContext>(
     fieldName: string,
-    fieldConfig: GraphQLFieldConfig<TSource, TContext>
+    fieldConfig: ComposeFieldConfig<TSource, TContext>
   ): TypeComposer {
     this.addFields({ [fieldName]: fieldConfig });
     return this;
@@ -144,7 +149,7 @@ export default class TypeComposer {
   /**
   * @deprecated 2.0.0
   */
-  addField(fieldName: string, fieldConfig: GraphQLFieldConfig<*, *>) {
+  addField(fieldName: string, fieldConfig: ComposeFieldConfig<*, *>) {
     deprecate('Use TypeComposer.setField() or plural addFields({}) instead.');
     this.addFields({ [fieldName]: fieldConfig });
   }
@@ -152,8 +157,8 @@ export default class TypeComposer {
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  addFields(newFields: GraphQLFieldConfigMap<*, *>): TypeComposer {
-    this.setFields(Object.assign({}, this.getFields(), newFields));
+  addFields(newFields: ComposeFieldConfigMap<*, *>): TypeComposer {
+    this.setFields({ ...this.getFields(), ...newFields });
     return this;
   }
 
@@ -174,7 +179,7 @@ export default class TypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     fieldNames.forEach(fieldName => delete fields[fieldName]);
-    this.setFields(Object.assign({}, fields)); // immutability
+    this.setFields({ ...fields });
     return this;
   }
 
@@ -190,8 +195,14 @@ export default class TypeComposer {
     return this;
   }
 
-  extendField(name: string, parialFieldConfig: GraphQLFieldConfig<*, *>): TypeComposer {
-    const fieldConfig = Object.assign({}, this.getField(name), parialFieldConfig);
+  extendField(
+    name: string,
+    parialFieldConfig: ComposeFieldConfig<*, *>
+  ): TypeComposer {
+    const fieldConfig = {
+      ...this.getField(name),
+      ...parialFieldConfig,
+    };
     this.setField(name, fieldConfig);
     return this;
   }
@@ -280,8 +291,8 @@ export default class TypeComposer {
     resolver: Resolver<TSource, TContext>,
     opts: RelationOptsWithResolver<TSource, TContext>
   ): TypeComposer {
-    const resolverFieldConfig = resolver.getFieldConfig();
-    const argsConfig = Object.assign({}, resolverFieldConfig.args);
+    const fieldConfig = resolver.getFieldConfig();
+    const argsConfig = { ...fieldConfig.args };
     const argsProto = {};
     const argsRuntime: [string, RelationArgsMapperFn<TSource, TContext>][] = [];
 
@@ -298,7 +309,6 @@ export default class TypeComposer {
         delete argsConfig[argName];
 
         if (isFunction(argMapVal)) {
-          // $FlowFixMe
           argsRuntime.push([argName, argMapVal]);
         } else if (argMapVal !== null) {
           argsProto[argName] = argMapVal;
@@ -310,18 +320,18 @@ export default class TypeComposer {
     const { catchErrors = true } = opts;
 
     const resolve = (source, args, context, info) => {
-      const newArgs = Object.assign({}, args, argsProto);
+      const newArgs = { ...args, ...argsProto };
       argsRuntime.forEach(([argName, argFn]) => {
         newArgs[argName] = argFn(source, args, context, info);
       });
 
-      const payload = resolverFieldConfig.resolve(source, newArgs, context, info);
+      const payload = fieldConfig.resolve
+        ? fieldConfig.resolve(source, newArgs, context, info)
+        : null;
       return catchErrors
         ? Promise.resolve(payload).catch(e => {
-          console.log(
-              // eslint-disable-line
-              `GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`
-            );
+            // eslint-disable-next-line
+            console.log(`GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`);
             console.log(e); // eslint-disable-line
           return null;
         })
@@ -329,7 +339,7 @@ export default class TypeComposer {
     };
 
     this.setField(fieldName, {
-      type: resolverFieldConfig.type,
+      type: fieldConfig.type,
       description: opts.description,
       deprecationReason: opts.deprecationReason,
       args: argsConfig,
@@ -346,9 +356,8 @@ export default class TypeComposer {
    * WARNING: this method read an internal GraphQL instance variable.
    */
   getInterfaces(): Array<GraphQLInterfaceType> {
-    const interfaces:
-      | Array<GraphQLInterfaceType>
-      | Thunk<?Array<GraphQLInterfaceType>> = this.gqType._typeConfig.interfaces;
+    const interfaces: Array<GraphQLInterfaceType> | Thunk<?Array<GraphQLInterfaceType>> = this
+      .gqType._typeConfig.interfaces;
 
     if (typeof interfaces === 'function') {
       return interfaces() || [];
@@ -396,7 +405,7 @@ export default class TypeComposer {
     const fields = this.getFields();
     const newFields = {};
     Object.keys(fields).forEach(fieldName => {
-      newFields[fieldName] = Object.assign({}, fields[fieldName]);
+      newFields[fieldName] = { ...fields[fieldName] };
     });
 
     const cloned = new TypeComposer(
@@ -471,7 +480,7 @@ export default class TypeComposer {
     return this.gqType._gqcResolvers.has(name);
   }
 
-  getResolver(name: string): Resolver<*, *> | void {
+  getResolver(name: string): ?Resolver<*, *> {
     if (this.hasResolver(name) && this.gqType._gqcResolvers) {
       return this.gqType._gqcResolvers.get(name);
     }

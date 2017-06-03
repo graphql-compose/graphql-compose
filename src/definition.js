@@ -73,7 +73,58 @@ export type GraphQLComposeOutputType<TSource, TContext> = GraphQLOutputType
   | Resolver<TSource, TContext>
   | GraphQLFieldConfig<TSource, TContext>;
 
+// Compose OutputType -----------------------------
+// No type checks for inputs arguments, while waiting new Flow versions.
+export type ComposeOutputType<TSource, TContext> = any;
+export type ComposeFieldConfig<TSource, TContext> = any;
+export type ComposeFieldConfigMap<TSource, TContext> = {
+  [fieldName: string]: ComposeFieldConfig<TSource, TContext>,
+};
 
+// Flow 0.47 not ready for this, it fails with: *** Recursion limit exceeded ***
+// // extended GraphQLFieldConfigMap
+// export type ComposeFieldConfigMap<TSource, TContext> = {
+//   [fieldName: string]:
+//     | ComposeFieldConfig<TSource, TContext>
+//     | Array<ComposeFieldConfig<TSource, TContext>>
+//     | GraphQLFieldConfig<TSource, TContext>,
+// } | GraphQLFieldConfigMap<TSource, TContext>;
+//
+// // extended GraphQLFieldConfig
+// export type ComposeFieldConfig<TSource, TContext> =
+//   | {
+//       type:
+//         | ComposeOutputType<TSource, TContext>
+//         | Array<ComposeOutputType<TSource, TContext>>,
+//       args?: ComposeFieldConfigArgumentMap,
+//       resolve?: GraphQLFieldResolver<TSource, TContext>,
+//       subscribe?: GraphQLFieldResolver<TSource, TContext>,
+//       deprecationReason?: ?string,
+//       description?: ?string,
+//     }
+//   | ComposeOutputType<TSource, TContext>
+//   | GraphQLFieldConfig<TSource, TContext>;
+//
+// // extended GraphQLOutputType
+// export type ComposeOutputType<TSource, TContext> =
+//   | GraphQLOutputType
+//   | TypeComposer
+//   | TypeWrappedString
+//   | TypeDefinitionString
+//   | TypeNameString
+//   | Resolver<TSource, TContext>
+//   | (() => ComposeOutputType<TSource, TContext>);
+
+
+// Ext -----------------------------
+export type ComposeObjectTypeConfig<TSource, TContext> = {
+  name: string;
+  interfaces?: Thunk<?Array<GraphQLInterfaceType>>;
+  fields: Thunk<GraphQLFieldConfigMap<TSource, TContext>>;
+  isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>;
+  description?: ?string;
+  isIntrospection?: boolean;
+};
 export type GraphQLObjectTypeExtended = GraphQLObjectType & {
   _gqcInputTypeComposer?: InputTypeComposer,
   _gqcResolvers?: Map<string, Resolver<*, *>>,

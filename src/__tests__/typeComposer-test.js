@@ -104,6 +104,14 @@ describe('TypeComposer', () => {
         // show provide unwrapped/unhoisted type for graphql
         expect(tc.getType()._typeConfig.fields().input3.type).to.equal(GraphQLString);
       });
+
+      it('accept fieldConfig as function', () => {
+        tc.setFields({
+          input4: () => ({ type: 'String' }),
+        });
+        // show provide unwrapped/unhoisted type for graphql
+        expect(tc.getType()._typeConfig.fields().input4.type).to.equal(GraphQLString);
+      });
     });
 
     it('addFields()', () => {
@@ -464,17 +472,19 @@ describe('TypeComposer', () => {
 
   it('should have chainable methods', () => {
     expect(tc.setFields({})).equal(tc);
-    expect(tc.setField('f1', {})).equal(tc);
+    expect(tc.setField('f1', { type: 'Int' })).equal(tc);
+    expect(tc.extendField('f1', {})).equal(tc);
     expect(tc.addFields({})).equal(tc);
     expect(tc.removeField('f1')).equal(tc);
     expect(tc.removeOtherFields('f1')).equal(tc);
-    expect(tc.extendField('f1', {})).equal(tc);
     expect(tc.reorderFields(['f1'])).equal(tc);
 
     expect(tc.addRelation('user', () => ({}))).equal(tc);
     expect(tc.buildRelations()).equal(tc);
     expect(tc.buildRelation('user')).equal(tc);
-    expect(tc.addRelationWithResolver('user', new Resolver({ name: 'myResolver' }), {})).equal(tc);
+    expect(
+      tc.addRelationWithResolver('user', new Resolver({ name: 'myResolver', type: 'Int' }), {})
+    ).equal(tc);
 
     expect(tc.setInterfaces([1, 2])).equal(tc);
     expect(tc.addInterface(1)).equal(tc);
