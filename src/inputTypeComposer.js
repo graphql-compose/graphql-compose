@@ -10,12 +10,14 @@ import { typeByPath } from './typeByPath';
 
 import type {
   Thunk,
-  GraphQLInputObjectTypeConfig,
   GraphQLInputFieldConfig,
   GraphQLInputFieldConfigMap,
   GraphQLInputType,
   TypeNameString,
   TypeDefinitionString,
+  ComposeInputFieldConfig,
+  ComposeInputFieldConfigMap,
+  ComposeInputObjectTypeConfig,
 } from './definition';
 
 export default class InputTypeComposer {
@@ -25,13 +27,12 @@ export default class InputTypeComposer {
     opts:
       | TypeDefinitionString
       | TypeNameString
-      | GraphQLInputObjectTypeConfig
+      | ComposeInputObjectTypeConfig
       | GraphQLInputObjectType
   ) {
     let ITC;
 
     if (isString(opts)) {
-      // $FlowFixMe
       const typeName: string = opts;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
@@ -51,14 +52,13 @@ export default class InputTypeComposer {
     } else if (opts instanceof GraphQLInputObjectType) {
       ITC = new InputTypeComposer(opts);
     } else if (isObject(opts)) {
-      // $FlowFixMe
       const type = new GraphQLInputObjectType({
-        ...opts,
+        name: opts.name,
+        description: opts.description,
         fields: () => ({}),
       });
       ITC = new InputTypeComposer(type);
 
-      // $FlowFixMe
       if (isObject(opts.fields)) {
         ITC.addFields(opts.fields);
       }
@@ -88,8 +88,7 @@ export default class InputTypeComposer {
     const fieldMap: mixed = keepConfigsAsThunk(resolveMaybeThunk(fields));
 
     if (isObject(fieldMap)) {
-      // $FlowFixMe
-      return Object.assign({}, fieldMap);
+      return { ...fieldMap };
     }
     return {};
   }
@@ -107,8 +106,11 @@ export default class InputTypeComposer {
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
-  setFields(fields: GraphQLInputFieldConfigMap): InputTypeComposer {
-    const prepearedFields = TypeMapper.convertInputFieldConfigMap(fields, this.getTypeName());
+  setFields(fields: ComposeInputFieldConfigMap): InputTypeComposer {
+    const prepearedFields = TypeMapper.convertInputFieldConfigMap(
+      fields,
+      this.getTypeName()
+    );
 
     this.gqType._typeConfig.fields = () =>
       resolveInputConfigsAsThunk(prepearedFields, this.getTypeName());
@@ -116,7 +118,10 @@ export default class InputTypeComposer {
     return this;
   }
 
-  setField(fieldName: string, fieldConfig: GraphQLInputFieldConfig): InputTypeComposer {
+  setField(
+    fieldName: string,
+    fieldConfig: ComposeInputFieldConfig
+  ): InputTypeComposer {
     this.addFields({ [fieldName]: fieldConfig });
     return this;
   }
@@ -132,8 +137,8 @@ export default class InputTypeComposer {
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  addFields(newFields: GraphQLInputFieldConfigMap): InputTypeComposer {
-    this.setFields(Object.assign({}, this.getFields(), newFields));
+  addFields(newFields: ComposeInputFieldConfigMap): InputTypeComposer {
+    this.setFields({ ...this.getFields(), ...newFields });
     return this;
   }
 
@@ -170,8 +175,14 @@ export default class InputTypeComposer {
     return this;
   }
 
-  extendField(name: string, parialFieldConfig: GraphQLInputFieldConfig): InputTypeComposer {
-    const fieldConfig = Object.assign({}, this.getField(name), parialFieldConfig);
+  extendField(
+    name: string,
+    parialFieldConfig: ComposeInputFieldConfig
+  ): InputTypeComposer {
+    const fieldConfig: ComposeInputFieldConfig = {
+      ...this.getField(name),
+      ...parialFieldConfig,
+    };
     this.setField(name, fieldConfig);
     return this;
   }
@@ -237,7 +248,7 @@ export default class InputTypeComposer {
     const fields = this.getFields();
     fieldNames.forEach(fieldName => {
       if (fieldNames.includes(fieldName)) {
-        if (fields[fieldName].type instanceof GraphQLNonNull) {
+        if (fields[fieldName] && fields[fieldName].type instanceof GraphQLNonNull) {
           fields[fieldName].type = fields[fieldName].type.ofType;
         }
       }
@@ -262,7 +273,7 @@ export default class InputTypeComposer {
     const fields = this.getFields();
     const newFields = {};
     Object.keys(fields).forEach(fieldName => {
-      newFields[fieldName] = Object.assign({}, fields[fieldName]);
+      newFields[fieldName] = { ...fields[fieldName] };
     });
 
     return new InputTypeComposer(

@@ -324,10 +324,10 @@ describe('InputTypeComposer', () => {
     const itc = InputTypeComposer.create('InputType');
     expect(itc.setFields({})).equal(itc);
     expect(itc.setField('f1', 'String')).equal(itc);
+    expect(itc.extendField('f1', {})).equal(itc);
     expect(itc.addFields({})).equal(itc);
     expect(itc.removeField('f1')).equal(itc);
     expect(itc.removeOtherFields('f1')).equal(itc);
-    expect(itc.extendField('f1', {})).equal(itc);
     expect(itc.reorderFields(['f1'])).equal(itc);
     expect(itc.makeRequired('f1')).equal(itc);
     expect(itc.makeOptional('f1')).equal(itc);

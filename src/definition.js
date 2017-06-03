@@ -116,6 +116,37 @@ export type ComposeFieldConfigMap<TSource, TContext> = {
 //   | (() => ComposeOutputType<TSource, TContext>);
 
 
+// Compose InputType -----------------------------
+export type ComposeInputType = any;
+export type ComposeInputFieldConfig = any;
+export type ComposeInputFieldConfigMap = {
+  [fieldName: string]: ComposeInputFieldConfig,
+};
+// Flow 0.47 not ready for this, it fails with: *** Recursion limit exceeded ***
+// export type ComposeInputFieldConfigMap = {
+//   [fieldName: string]:
+//     | ComposeInputFieldConfig
+//     | Array<ComposeInputFieldConfig>
+//     | GraphQLInputFieldConfig,
+// } | GraphQLInputFieldConfigMap;
+//
+// export type ComposeInputFieldConfig =
+//   | {
+//       type: ComposeInputType | Array<ComposeInputType>,
+//       defaultValue?: mixed,
+//       description?: ?string,
+//     }
+//   | ComposeInputType
+//   | GraphQLInputFieldConfig;
+//
+// export type ComposeInputType =
+//   | InputTypeComposer
+//   | GraphQLInputType
+//   | TypeWrappedString
+//   | TypeDefinitionString
+//   | TypeNameString
+//   | (() => ComposeInputType);
+
 // Ext -----------------------------
 export type ComposeObjectTypeConfig<TSource, TContext> = {
   name: string;
@@ -124,6 +155,11 @@ export type ComposeObjectTypeConfig<TSource, TContext> = {
   isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>;
   description?: ?string;
   isIntrospection?: boolean;
+};
+export type ComposeInputObjectTypeConfig = {
+  name: string;
+  fields: ComposeInputFieldConfigMap;
+  description?: ?string;
 };
 export type GraphQLObjectTypeExtended = GraphQLObjectType & {
   _gqcInputTypeComposer?: InputTypeComposer,
