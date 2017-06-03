@@ -1,13 +1,16 @@
 /* @flow */
 
-export function isString(value: mixed): boolean {
+// $FlowFixMe
+export function isString(value: ?string) /* : boolean %checks */ {
   return typeof value === 'string';
 }
 
-export function isObject(value: mixed): boolean {
+// $FlowFixMe
+export function isObject(value: ?Object) /* : boolean %checks */ {
   return typeof value === 'object' && !Array.isArray(value) && value !== null;
 }
 
-export function isFunction(value: mixed): boolean {
+// $FlowFixMe
+export function isFunction(value: ?Function) /* : boolean %checks */ {
   return !!(value && value.constructor && value.call && typeof value === 'function' && value.apply);
 }

@@ -46,7 +46,7 @@ export default class ComposeStorage {
     return this.get(typeName).getResolvers();
   }
 
-  resolver(typeName: string, resolverName: string): Resolver<*, *> | void {
+  resolver(typeName: string, resolverName: string): ?Resolver<*, *> {
     return this.get(typeName).getResolver(resolverName);
   }
 

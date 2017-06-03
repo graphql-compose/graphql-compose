@@ -21,15 +21,17 @@ import type {
   GraphQLInterfaceType as _GraphQLInterfaceType,
   GraphQLInputType as _GraphQLInputType,
   GraphQLNullableType as _GraphQLNullableType,
+  GraphQLScalarType as _GraphQLScalarType,
+  GraphQLIsTypeOfFn,
 } from 'graphql/type/definition';
 
-import type TypeComposer from './typeComposer';
 import type Resolver from './resolver';
 import type InputTypeComposer from './inputTypeComposer';
 
 export type Thunk<T> = (() => T) | T;
 export type ObjectMap = { [optName: string]: mixed };
-export type ProjectionType = { [fieldName: string]: true | ProjectionType };
+export type ProjectionType = { [fieldName: string]: $Shape<ProjectionNode> | true };
+export type ProjectionNode = { [fieldName: string]: $Shape<ProjectionNode> } | true;
 export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 
 // TypeMapper
@@ -39,8 +41,9 @@ export type TypeNameString = string; // eg. Int, Float
 
 // GRAPHQL RE-EXPORT --------------------
 export type GraphQLType = _GraphQLType;
+export type GraphQLScalarType = _GraphQLScalarType;
 export type GraphQLObjectType = _GraphQLObjectType;
-export type GraphQLObjectTypeConfig = _GraphQLObjectTypeConfig<*, *>;
+export type GraphQLObjectTypeConfig<TSource, TContext> = _GraphQLObjectTypeConfig<TSource, TContext>;
 export type GraphQLNullableType = _GraphQLNullableType;
 export type GraphQLInterfaceType = _GraphQLInterfaceType;
 export type GraphQLOutputType = _GraphQLOutputType;
@@ -183,10 +186,12 @@ export type GraphQLObjectTypeExtended = GraphQLObjectType & {
 };
 
 // RELATION -----------------------------
-export type RelationThunkMap<TSource, TContext> = { [fieldName: string]: Thunk<RelationOpts<TSource, TContext>> };
+export type RelationThunkMap<TSource, TContext> = {
+  [fieldName: string]: Thunk<RelationOpts<TSource, TContext>>,
+};
 export type RelationOpts<TSource, TContext> =
-  RelationOptsWithResolver<TSource, TContext> |
-  RelationOptsWithFieldConfig<TSource, TContext>;
+  | RelationOptsWithResolver<TSource, TContext>
+  | RelationOptsWithFieldConfig<TSource, TContext>;
 export type RelationOptsWithResolver<TSource, TContext> = {
   resolver: Resolver<TSource, TContext>,
   args?: RelationArgsMapper<TSource, TContext>,
@@ -194,7 +199,7 @@ export type RelationOptsWithResolver<TSource, TContext> = {
   description?: ?string,
   deprecationReason?: ?string,
   catchErrors?: boolean,
-}
+};
 export type RelationOptsWithFieldConfig<TSource, TContext> = {
   type: GraphQLOutputType,
   args?: GraphQLFieldConfigArgumentMap,
@@ -202,9 +207,14 @@ export type RelationOptsWithFieldConfig<TSource, TContext> = {
   projection?: ProjectionType,
   description?: ?string,
   deprecationReason?: ?string,
-}
+};
 export type ArgsType = { [argName: string]: mixed };
-export type RelationArgsMapperFn<TSource, TContext> = (source: TSource, args: ArgsType, context: TContext, info: GraphQLResolveInfo) => ArgsType;
+export type RelationArgsMapperFn<TSource, TContext> = (
+  source: TSource,
+  args: ArgsType,
+  context: TContext,
+  info: GraphQLResolveInfo
+) => ArgsType;
 export type RelationArgsMapper<TSource, TContext> = {
   [argName: string]: RelationArgsMapperFn<TSource, TContext> | null | void | mixed,
 };
