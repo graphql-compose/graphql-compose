@@ -97,8 +97,8 @@ export function isOutputType(type: ?GraphQLType): boolean {
     type instanceof GraphQLInterfaceType ||
     type instanceof GraphQLUnionType ||
     type instanceof GraphQLEnumType ||
-    type instanceof GraphQLNonNull && isOutputType(type.ofType) ||
-    type instanceof GraphQLList && isOutputType(type.ofType)
+    (type instanceof GraphQLNonNull && isOutputType(type.ofType)) ||
+    (type instanceof GraphQLList && isOutputType(type.ofType))
   );
 }
 
@@ -107,8 +107,8 @@ export function isInputType(type: ?GraphQLType): boolean {
     type instanceof GraphQLScalarType ||
     type instanceof GraphQLEnumType ||
     type instanceof GraphQLInputObjectType ||
-    type instanceof GraphQLNonNull && isInputType(type.ofType) ||
-    type instanceof GraphQLList && isInputType(type.ofType)
+    (type instanceof GraphQLNonNull && isInputType(type.ofType)) ||
+    (type instanceof GraphQLList && isInputType(type.ofType))
   );
 }
 
@@ -196,7 +196,10 @@ class TypeMapper {
     } else if (composeFC instanceof Resolver) {
       return composeFC.getFieldConfig();
     } else if (composeFC instanceof TypeComposer) {
-      return { type: composeFC.getType() };
+      return {
+        type: composeFC.getType(),
+        description: composeFC.getDescription(),
+      };
     } else if (Array.isArray(composeFC)) {
       composeType = composeFC;
       composeFC = {};
@@ -218,7 +221,9 @@ class TypeMapper {
       composeType = composeType[0];
 
       if (Array.isArray(composeType)) {
-        throw new Error(`${typeName}.${fieldName} definition [[Type]] (array of array) does not supported`);
+        throw new Error(
+          `${typeName}.${fieldName} definition [[Type]] (array of array) does not supported`
+        );
       }
     }
 
@@ -313,7 +318,10 @@ class TypeMapper {
     if (composeAC instanceof GraphQLList || composeAC instanceof GraphQLNonNull) {
       return { type: composeAC };
     } else if (composeAC instanceof InputTypeComposer) {
-      return { type: composeAC.getType() };
+      return {
+        type: composeAC.getType(),
+        description: composeAC.getDescription(),
+      };
     } else if (Array.isArray(composeAC)) {
       composeType = composeAC;
       composeAC = {};
@@ -335,7 +343,9 @@ class TypeMapper {
       composeType = composeType[0];
 
       if (Array.isArray(composeType)) {
-        throw new Error(`${typeName}.${fieldName}@${argName} definition [[Type]] (array of array) does not supported`);
+        throw new Error(
+          `${typeName}.${fieldName}@${argName} definition [[Type]] (array of array) does not supported`
+        );
       }
     }
 
@@ -431,7 +441,10 @@ class TypeMapper {
     if (composeIFC instanceof GraphQLList || composeIFC instanceof GraphQLNonNull) {
       return { type: composeIFC };
     } else if (composeIFC instanceof InputTypeComposer) {
-      return { type: composeIFC.getType() };
+      return {
+        type: composeIFC.getType(),
+        description: composeIFC.getDescription(),
+      };
     } else if (Array.isArray(composeIFC)) {
       composeType = composeIFC;
       composeIFC = {};
@@ -453,7 +466,9 @@ class TypeMapper {
       composeType = composeType[0];
 
       if (Array.isArray(composeType)) {
-        throw new Error(`${typeName}.${fieldName} definition [[Type]] (array of array) does not supported`);
+        throw new Error(
+          `${typeName}.${fieldName} definition [[Type]] (array of array) does not supported`
+        );
       }
     }
 

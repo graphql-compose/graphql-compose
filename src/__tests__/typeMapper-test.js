@@ -196,13 +196,16 @@ describe('TypeMapper', () => {
         const tc = TypeComposer.create(
           'type PriceRange { lon: Float, lat: Float }'
         );
+        tc.setDescription('Description');
         const fc = typeMapper.convertOutputFieldConfig({
           type: tc,
         });
         expect(fc.type).equal(tc.getType());
+        expect(fc.description).equal(undefined);
 
         const fc2 = typeMapper.convertOutputFieldConfig(tc);
         expect(fc2.type).equal(tc.getType());
+        expect(fc2.description).equal('Description');
       });
 
       it('should accept Resolver', () => {
@@ -367,9 +370,9 @@ describe('TypeMapper', () => {
     it('should create field config from input type GraphQL Schema Language', () => {
       const fc = typeMapper.convertInputFieldConfig(
         `input MyInputType {
-        a: String,
-        b: Int,
-      }`
+          a: String,
+          b: Int,
+        }`
       );
       const itc = new InputTypeComposer(fc.type);
       expect(itc.getTypeName()).equal('MyInputType');
@@ -403,13 +406,16 @@ describe('TypeMapper', () => {
       const itc = InputTypeComposer.create(
         'input PriceRangeInput { lon: Float, lat: Float }'
       );
+      itc.setDescription('Description');
       const ic = typeMapper.convertInputFieldConfig({
         type: itc,
       });
       expect(ic.type).equal(itc.getType());
+      expect(ic.description).equal(undefined);
 
       const ic2 = typeMapper.convertInputFieldConfig(itc);
       expect(ic2.type).equal(itc.getType());
+      expect(ic2.description).equal('Description');
     });
 
     it('should throw error if provided TypeComposer', () => {
@@ -565,12 +571,16 @@ describe('TypeMapper', () => {
       const itc = InputTypeComposer.create(
         'input PriceRangeInput { lon: Float, lat: Float }'
       );
+      itc.setDescription('Description');
       const ac = typeMapper.convertArgConfig({
         type: itc,
       });
       expect(ac.type).equal(itc.getType());
+      expect(ac.description).equal(undefined);
+
       const ac2 = typeMapper.convertArgConfig(itc);
       expect(ac2.type).equal(itc.getType());
+      expect(ac2.description).equal('Description');
     });
 
     it(
