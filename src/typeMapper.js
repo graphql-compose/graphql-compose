@@ -203,6 +203,8 @@ class TypeMapper {
     } else if (Array.isArray(composeFC)) {
       composeType = composeFC;
       composeFC = {};
+    } else if (isFunction(composeFC)) {
+      return composeFC;
     } else if (composeFC.type) {
       composeType = composeFC.type;
     } else {
@@ -325,6 +327,8 @@ class TypeMapper {
     } else if (Array.isArray(composeAC)) {
       composeType = composeAC;
       composeAC = {};
+    } else if (isFunction(composeAC)) {
+      return composeAC;
     } else if (composeAC.type) {
       composeType = composeAC.type;
     } else {
@@ -448,6 +452,8 @@ class TypeMapper {
     } else if (Array.isArray(composeIFC)) {
       composeType = composeIFC;
       composeIFC = {};
+    } else if (isFunction(composeIFC)) {
+      return composeIFC;
     } else if (composeIFC.type) {
       composeType = composeIFC.type;
     } else {

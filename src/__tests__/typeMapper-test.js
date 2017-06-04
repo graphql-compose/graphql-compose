@@ -238,6 +238,12 @@ describe('TypeMapper', () => {
         expect(fc.resolve).equal(undefined);
       });
 
+      it('should pass unchanged thunk', () => {
+        const myTypeThunk = () => 'Int';
+        const fc = typeMapper.convertOutputFieldConfig(myTypeThunk);
+        expect(fc).equal(myTypeThunk);
+      });
+
       it(
         'should accept array with one element as type and wrap them with GraphQLList',
         () => {
@@ -432,6 +438,12 @@ describe('TypeMapper', () => {
       }).to.throw(/\sTypeComposer/);
     });
 
+    it('should pass unchanged thunk', () => {
+      const myTypeThunk = () => 'Int';
+      const tc = typeMapper.convertInputFieldConfig(myTypeThunk);
+      expect(tc).equal(myTypeThunk);
+    });
+
     it(
       'should accept array with one element as type and wrap them with GraphQLList',
       () => {
@@ -581,6 +593,12 @@ describe('TypeMapper', () => {
       const ac2 = typeMapper.convertArgConfig(itc);
       expect(ac2.type).equal(itc.getType());
       expect(ac2.description).equal('Description');
+    });
+
+    it('should pass unchanged thunk', () => {
+      const myTypeThunk = () => 'Int';
+      const ac = typeMapper.convertArgConfig(myTypeThunk);
+      expect(ac).equal(myTypeThunk);
     });
 
     it(

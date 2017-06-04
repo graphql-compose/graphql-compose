@@ -139,7 +139,7 @@ describe('typeAsThunk', () => {
           type: GraphQLString,
           args: {
             a1: () => GraphQLString,
-            a2: () => ({ type: GraphQLString }),
+            a2: () => ({ type: GraphQLString, description: 'Desc' }),
             a3: { type: () => GraphQLString },
           },
         },
@@ -148,6 +148,7 @@ describe('typeAsThunk', () => {
       const args = unwrapped.f6.args;
       expect(args.a1.type).to.equal(GraphQLString);
       expect(args.a2.type).to.equal(GraphQLString);
+      expect(args.a2.description).to.equal('Desc');
       expect(args.a3.type).to.equal(GraphQLString);
     });
 
@@ -271,12 +272,14 @@ describe('typeAsThunk', () => {
       const unwrapped = resolveInputConfigsAsThunk(fieldMap);
 
       expect(unwrapped.f3.type).to.equal(GraphQLString);
+      expect(unwrapped.f3.description).to.equal('Field3');
       expect(unwrapped.f3._fieldAsThunk).to.be.ok;
       expect(unwrapped.f3._fieldAsThunk()).to.have.all.keys('type', 'description');
       expect(unwrapped.f3._typeAsThunk).to.be.ok;
       expect(unwrapped.f3._typeAsThunk()).to.equal(GraphQLString);
 
       expect(unwrapped.f4.type).to.equal(GraphQLString);
+      expect(unwrapped.f4.description).to.equal('Field4');
       expect(unwrapped.f4._fieldAsThunk).to.be.ok;
       expect(unwrapped.f4._fieldAsThunk()).to.have.all.keys('type', 'description');
       expect(unwrapped.f4._typeAsThunk).to.be.ok;
