@@ -480,12 +480,12 @@ export default class TypeComposer {
     return this.gqType._gqcResolvers.has(name);
   }
 
-  getResolver(name: string): ?Resolver<*, *> {
-    if (this.hasResolver(name) && this.gqType._gqcResolvers) {
-      return this.gqType._gqcResolvers.get(name);
+  getResolver(name: string): Resolver<*, *> {
+    // $FlowFixMe
+    if (!this.hasResolver(name) || !this.gqType._gqcResolvers) {
+      throw new Error(`Type ${this.getTypeName()} does not have resolver with name '${name}'`);
     }
-
-    return undefined;
+    return this.gqType._gqcResolvers.get(name);
   }
 
   setResolver(name: string, resolver: Resolver<*, *>): TypeComposer {
