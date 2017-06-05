@@ -1,17 +1,11 @@
 import { expect } from 'chai';
-import {
-  GraphQLString,
-  GraphQLInt,
-  GraphQLFloat,
-} from 'graphql';
+import { GraphQLString, GraphQLInt, GraphQLFloat } from 'graphql';
 import TypeComposer from '../typeComposer';
 import InputTypeComposer from '../inputTypeComposer';
 import Resolver from '../resolver';
 
 describe('typeByPath', () => {
-  const lonLatTC = TypeComposer.create(
-    'type LonLat { lon: Float, lat: Float }'
-  );
+  const lonLatTC = TypeComposer.create('type LonLat { lon: Float, lat: Float }');
   const spotITC = InputTypeComposer.create(
     'input SpotInput { lon: Float, lat: Float, distance: Float }'
   );
@@ -67,8 +61,7 @@ describe('typeByPath', () => {
     it('should return resolver args', () => {
       expect(tc.get('$findSpots.@limit')).equal(GraphQLInt);
       expect(tc.get('$findSpots.@spot')).instanceof(InputTypeComposer);
-      expect(tc.get('$findSpots.@spot').getType())
-        .equal(spotITC.getType());
+      expect(tc.get('$findSpots.@spot').getType()).equal(spotITC.getType());
     });
 
     it('should return type of resolver outputType fields', () => {
@@ -86,13 +79,11 @@ describe('typeByPath', () => {
 
     it('should return same GraphQL type instances via resolver', () => {
       expect(tc.get('$findSpots.lonLat').getType()).to.be.ok;
-      expect(tc.get('$findSpots.lonLat').getType())
-        .equal(tc.get('$findSpots.lonLat').getType());
+      expect(tc.get('$findSpots.lonLat').getType()).equal(tc.get('$findSpots.lonLat').getType());
 
       // for wrapped type eg Array
       expect(tc.get('$findSpots.points').getType()).to.be.ok;
-      expect(tc.get('$findSpots.points').getType())
-        .equal(tc.get('$findSpots.points').getType());
+      expect(tc.get('$findSpots.points').getType()).equal(tc.get('$findSpots.points').getType());
     });
   });
 
@@ -112,8 +103,7 @@ describe('typeByPath', () => {
     it('should return args', () => {
       expect(rsv.get('@limit')).equal(GraphQLInt);
       expect(rsv.get('@spot')).instanceof(InputTypeComposer);
-      expect(rsv.get('@spot').getType())
-        .equal(spotITC.getType());
+      expect(rsv.get('@spot').getType()).equal(spotITC.getType());
     });
 
     it('should return type of outputType fields', () => {

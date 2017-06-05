@@ -393,7 +393,9 @@ class TypeMapper {
     if (!isFunction(argConfig.type)) {
       if (!isInputType(argConfig.type)) {
         throw new Error(
-          `${typeName}.${fieldName}@${argName} provided incorrect InputType: '${JSON.stringify(composeType)}'`
+          `${typeName}.${fieldName}@${argName} provided incorrect InputType: '${JSON.stringify(
+            composeType
+          )}'`
         );
       }
 

@@ -17,7 +17,7 @@ function parseLiteral(ast) {
       return parseFloat(ast.value);
     case Kind.OBJECT: {
       const value = Object.create(null);
-      ast.fields.forEach((field) => {
+      ast.fields.forEach(field => {
         value[field.name.value] = parseLiteral(field.value);
       });
 
@@ -34,8 +34,8 @@ export default new GraphQLScalarType({
   name: 'JSON',
   description:
     'The `JSON` scalar type represents JSON values as specified by ' +
-    '[ECMA-404](http://www.ecma-international.org/' +
-    'publications/files/ECMA-ST/ECMA-404.pdf).',
+      '[ECMA-404](http://www.ecma-international.org/' +
+      'publications/files/ECMA-ST/ECMA-404.pdf).',
   serialize: identity,
   parseValue: identity,
   parseLiteral,

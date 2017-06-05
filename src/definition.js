@@ -23,10 +23,10 @@ import type {
   GraphQLNullableType as _GraphQLNullableType,
   GraphQLScalarType as _GraphQLScalarType,
   GraphQLIsTypeOfFn,
-} from 'graphql/type/definition';
+} from "graphql/type/definition";
 
-import type Resolver from './resolver';
-import type InputTypeComposer from './inputTypeComposer';
+import type Resolver from "./resolver";
+import type InputTypeComposer from "./inputTypeComposer";
 
 export type Thunk<T> = (() => T) | T;
 export type ObjectMap = { [optName: string]: mixed };
@@ -46,7 +46,10 @@ export type TypeNameString = string; // eg. Int, Float
 export type GraphQLType = _GraphQLType;
 export type GraphQLScalarType = _GraphQLScalarType;
 export type GraphQLObjectType = _GraphQLObjectType;
-export type GraphQLObjectTypeConfig<TSource, TContext> = _GraphQLObjectTypeConfig<TSource, TContext>;
+export type GraphQLObjectTypeConfig<
+  TSource,
+  TContext
+> = _GraphQLObjectTypeConfig<TSource, TContext>;
 export type GraphQLNullableType = _GraphQLNullableType;
 export type GraphQLInterfaceType = _GraphQLInterfaceType;
 export type GraphQLOutputType = _GraphQLOutputType;
@@ -54,12 +57,21 @@ export type GraphQLInputField = _GraphQLInputField;
 export type GraphQLInputObjectType = _GraphQLInputObjectType;
 export type GraphQLInputObjectTypeConfig = _GraphQLInputObjectTypeConfig;
 export type GraphQLFieldConfigArgumentMap = _GraphQLFieldConfigArgumentMap;
-export type GraphQLFieldResolver<TSource, TContext> = _GraphQLFieldResolver<TSource, TContext>;
+export type GraphQLFieldResolver<TSource, TContext> = _GraphQLFieldResolver<
+  TSource,
+  TContext
+>;
 export type GraphQLResolveInfo = _GraphQLResolveInfo;
 export type GraphQLArgumentConfig = _GraphQLArgumentConfig;
 export type GraphQLNamedType = _GraphQLNamedType;
-export type GraphQLFieldConfig<TSource, TContext> = _GraphQLFieldConfig<TSource, TContext>;
-export type GraphQLFieldConfigMap<TSource, TContext> = _GraphQLFieldConfigMap<TSource, TContext>;
+export type GraphQLFieldConfig<TSource, TContext> = _GraphQLFieldConfig<
+  TSource,
+  TContext
+>;
+export type GraphQLFieldConfigMap<TSource, TContext> = _GraphQLFieldConfigMap<
+  TSource,
+  TContext
+>;
 export type GraphQLInputFieldConfig = _GraphQLInputFieldConfig;
 export type GraphQLInputFieldConfigMap = _GraphQLInputFieldConfigMap;
 export type GraphQLInputType = _GraphQLInputType;
@@ -106,7 +118,6 @@ export type ComposeFieldConfigMap<TSource, TContext> = {
 //   | Resolver<TSource, TContext>
 //   | (() => ComposeOutputType<TSource, TContext>);
 
-
 // Compose InputType -----------------------------
 export type ComposeInputType = any;
 export type ComposeInputFieldConfig = any;
@@ -138,7 +149,6 @@ export type ComposeInputFieldConfigMap = {
 //   | TypeNameString
 //   | (() => ComposeInputType);
 
-
 // Compose Args -----------------------------
 export type ComposeArgumentType = any;
 export type ComposeArgumentConfig = any;
@@ -164,20 +174,19 @@ export type ComposeFieldConfigArgumentMap = {
 //   [argName: string]: ComposeArgumentConfig | ComposeArgumentConfig[],
 // };
 
-
 // Ext -----------------------------
 export type ComposeObjectTypeConfig<TSource, TContext> = {
-  name: string;
-  interfaces?: Thunk<?Array<GraphQLInterfaceType>>;
-  fields: Thunk<GraphQLFieldConfigMap<TSource, TContext>>;
-  isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>;
-  description?: ?string;
-  isIntrospection?: boolean;
+  name: string,
+  interfaces?: Thunk<?Array<GraphQLInterfaceType>>,
+  fields: Thunk<GraphQLFieldConfigMap<TSource, TContext>>,
+  isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>,
+  description?: ?string,
+  isIntrospection?: boolean,
 };
 export type ComposeInputObjectTypeConfig = {
-  name: string;
-  fields: ComposeInputFieldConfigMap;
-  description?: ?string;
+  name: string,
+  fields: ComposeInputFieldConfigMap,
+  description?: ?string,
 };
 export type GraphQLObjectTypeExtended = GraphQLObjectType & {
   _gqcInputTypeComposer?: InputTypeComposer,
@@ -219,7 +228,11 @@ export type RelationArgsMapperFn<TSource, TContext> = (
   info: GraphQLResolveInfo
 ) => ArgsType;
 export type RelationArgsMapper<TSource, TContext> = {
-  [argName: string]: RelationArgsMapperFn<TSource, TContext> | null | void | mixed,
+  [argName: string]:
+    | RelationArgsMapperFn<TSource, TContext>
+    | null
+    | void
+    | mixed,
 };
 
 // RESOLVER -----------------------------
@@ -231,8 +244,8 @@ export type ResolveParams<TSource, TContext> = {
   projection: $Shape<ProjectionType>,
   [opt: string]: mixed,
 };
-export type ResolverMWMethodKeys = 'args' | 'resolve' | 'type';
-export type ResolverKinds = 'query' | 'mutation' | 'subscription';
+export type ResolverMWMethodKeys = "args" | "resolve" | "type";
+export type ResolverKinds = "query" | "mutation" | "subscription";
 
 export type ResolverMWArgsFn = (
   args: GraphQLFieldConfigArgumentMap
@@ -246,8 +259,12 @@ export type ResolverMWResolve<TSource, TContext> = (
   next: ResolverMWResolveFn<TSource, TContext>
 ) => ResolverMWResolveFn<TSource, TContext>;
 
-export type ResolverMWOutputTypeFn = (outputType: GraphQLOutputType) => GraphQLOutputType;
-export type ResolverMWOutputType = (next: ResolverMWOutputTypeFn) => ResolverMWOutputTypeFn;
+export type ResolverMWOutputTypeFn = (
+  outputType: GraphQLOutputType
+) => GraphQLOutputType;
+export type ResolverMWOutputType = (
+  next: ResolverMWOutputTypeFn
+) => ResolverMWOutputTypeFn;
 
 export type GetRecordIdFn<TSource, TContext> = (
   source: TSource,
@@ -300,4 +317,6 @@ export type ResolverWrapArgsFn = (
   prevArgs: GraphQLFieldConfigArgumentMap
 ) => ComposeFieldConfigArgumentMap;
 
-export type ResolverWrapTypeFn = (prevType: GraphQLOutputType) => GraphQLOutputType;
+export type ResolverWrapTypeFn = (
+  prevType: GraphQLOutputType
+) => GraphQLOutputType;

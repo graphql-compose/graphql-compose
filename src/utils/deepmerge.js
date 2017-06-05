@@ -22,11 +22,11 @@ export default function deepmerge(target: any, src: any) {
     });
   } else {
     if (target && typeof target === 'object') {
-      Object.keys(target).forEach((key) => {
+      Object.keys(target).forEach(key => {
         dst[key] = target[key];
       });
     }
-    Object.keys(src).forEach((key) => {
+    Object.keys(src).forEach(key => {
       if (typeof src[key] !== 'object' || !src[key]) {
         dst[key] = src[key];
       } else {

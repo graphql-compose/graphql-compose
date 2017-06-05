@@ -107,10 +107,7 @@ export default class InputTypeComposer {
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
   setFields(fields: ComposeInputFieldConfigMap): InputTypeComposer {
-    const prepearedFields = TypeMapper.convertInputFieldConfigMap(
-      fields,
-      this.getTypeName()
-    );
+    const prepearedFields = TypeMapper.convertInputFieldConfigMap(fields, this.getTypeName());
 
     this.gqType._typeConfig.fields = () =>
       resolveInputConfigsAsThunk(prepearedFields, this.getTypeName());
@@ -118,10 +115,7 @@ export default class InputTypeComposer {
     return this;
   }
 
-  setField(
-    fieldName: string,
-    fieldConfig: ComposeInputFieldConfig
-  ): InputTypeComposer {
+  setField(fieldName: string, fieldConfig: ComposeInputFieldConfig): InputTypeComposer {
     this.addFields({ [fieldName]: fieldConfig });
     return this;
   }
@@ -175,10 +169,7 @@ export default class InputTypeComposer {
     return this;
   }
 
-  extendField(
-    name: string,
-    parialFieldConfig: ComposeInputFieldConfig
-  ): InputTypeComposer {
+  extendField(name: string, parialFieldConfig: ComposeInputFieldConfig): InputTypeComposer {
     const fieldConfig: ComposeInputFieldConfig = {
       ...this.getField(name),
       ...parialFieldConfig,

@@ -114,24 +114,17 @@ export default class Resolver<TSource, TContext> {
     return Object.keys(this.args);
   }
 
-  setArgs(
-    args: ComposeFieldConfigArgumentMap
-  ): Resolver<TSource, TContext> {
+  setArgs(args: ComposeFieldConfigArgumentMap): Resolver<TSource, TContext> {
     this.args = TypeMapper.convertArgConfigMap(args, this.name, 'Resolver');
     return this;
   }
 
-  setArg(
-    argName: string,
-    argConfig: ComposeArgumentConfig
-  ): Resolver<TSource, TContext> {
+  setArg(argName: string, argConfig: ComposeArgumentConfig): Resolver<TSource, TContext> {
     this.args[argName] = TypeMapper.convertArgConfig(argConfig, argName, this.name, 'Resolver');
     return this;
   }
 
-  addArgs(
-    newArgs: ComposeFieldConfigArgumentMap
-  ): Resolver<TSource, TContext> {
+  addArgs(newArgs: ComposeFieldConfigArgumentMap): Resolver<TSource, TContext> {
     this.setArgs({ ...this.getArgs(), ...newArgs });
     return this;
   }
@@ -203,7 +196,9 @@ export default class Resolver<TSource, TContext> {
         const argType = this.args[argName].type;
         if (!isInputType(argType)) {
           throw new Error(
-            `Cannot make argument ${argName} required. It should be InputType: ${JSON.stringify(argType)}`
+            `Cannot make argument ${argName} required. It should be InputType: ${JSON.stringify(
+              argType
+            )}`
           );
         }
         if (!(argType instanceof GraphQLNonNull)) {
@@ -232,7 +227,9 @@ export default class Resolver<TSource, TContext> {
   */
   /* eslint-disable */
   resolve(
-    resolveParams: ResolveParams<TSource, TContext> | $Shape<ResolveParams<TSource, TContext>>
+    resolveParams:
+      | ResolveParams<TSource, TContext>
+      | $Shape<ResolveParams<TSource, TContext>>
   ): Promise<any> {
     return Promise.resolve();
   }
@@ -598,9 +595,9 @@ export default class Resolver<TSource, TContext> {
         `  name: ${resolver.name},`,
         `  type: ${util.inspect(resolver.type, { depth: 2 })},`,
         `  args: ${util.inspect(resolver.args, { depth: 3 }).replace('\n', `\n  ${spaces}`)},`,
-        `  resolve: ${resolver.resolve ? resolver.resolve
-              .toString()
-              .replace('\n', `\n  ${spaces}`) : 'undefined'},`,
+        `  resolve: ${resolver.resolve
+          ? resolver.resolve.toString().replace('\n', `\n  ${spaces}`)
+          : 'undefined'},`,
         `  parent: ${resolver.parent ? extendedInfo(resolver.parent, `  ${spaces}`) : ''}`,
         ')',
       ]

@@ -1,20 +1,12 @@
 /* @flow */
 /* eslint-disable no-use-before-define */
 
-import {
-  GraphQLObjectType,
-  GraphQLInputObjectType,
-  getNamedType,
-} from 'graphql';
+import { GraphQLObjectType, GraphQLInputObjectType, getNamedType } from 'graphql';
 import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
 
-import type {
-  GraphQLInputType,
-  GraphQLOutputType,
-} from './definition';
-
+import type { GraphQLInputType, GraphQLOutputType } from './definition';
 
 /**
 * fieldName
@@ -42,11 +34,7 @@ export function typeByPath(
   return src;
 }
 
-
-export function typeByPathTC(
-  tc: TypeComposer,
-  parts: Array<string>
-) {
+export function typeByPathTC(tc: TypeComposer, parts: Array<string>) {
   if (!tc) return undefined;
   if (parts.length === 0) return tc;
 
@@ -75,11 +63,7 @@ export function typeByPathTC(
   return processType(fieldType, parts.slice(1));
 }
 
-
-export function typeByPathITC(
-  itc: InputTypeComposer,
-  parts: Array<string>
-) {
+export function typeByPathITC(itc: InputTypeComposer, parts: Array<string>) {
   if (!itc) return undefined;
   if (parts.length === 0) return itc;
 
@@ -87,11 +71,7 @@ export function typeByPathITC(
   return processType(fieldType, parts.slice(1));
 }
 
-
-function typeByPathRSV(
-  rsv: Resolver<*, *>,
-  parts: Array<string>
-) {
+function typeByPathRSV(rsv: Resolver<*, *>, parts: Array<string>) {
   if (!rsv) return undefined;
   if (parts.length === 0) return rsv;
   const name = parts[0];
@@ -105,7 +85,6 @@ function typeByPathRSV(
 
   return processType(rsv.getType(), parts);
 }
-
 
 export function processType(
   type: GraphQLOutputType | GraphQLInputType | void | null,

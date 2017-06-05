@@ -158,7 +158,6 @@ describe('typeAsThunk', () => {
     });
   });
 
-
   describe('resolveInputConfigsAsThunk()', () => {
     it('should unwrap fields from functions', () => {
       const fieldMap = {
@@ -291,7 +290,6 @@ describe('typeAsThunk', () => {
       expect(resolveInputConfigsAsThunk(undefined)).to.equal(undefined);
     });
   });
-
 
   describe('keepConfigsAsThunk()', () => {
     it('should set _typeAsThunk to type', () => {

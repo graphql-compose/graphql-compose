@@ -11,17 +11,9 @@ export { default as TypeMapper } from './typeMapper';
 export { getProjectionFromAST, getFlatProjectionFromAST } from './projection';
 export { default as GQC } from './gqc';
 
-export {
-  GraphQLDate,
-  GraphQLBuffer,
-  GraphQLGeneric,
-  GraphQLJSON,
-} from './type';
+export { GraphQLDate, GraphQLBuffer, GraphQLGeneric, GraphQLJSON } from './type';
 
-export {
-  toInputObjectType,
-  convertInputObjectFieldOpts,
-} from './toInputObjectType';
+export { toInputObjectType, convertInputObjectFieldOpts } from './toInputObjectType';
 
 export * from './utils/misc';
 export * from './utils/is';

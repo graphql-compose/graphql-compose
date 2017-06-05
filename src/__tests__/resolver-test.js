@@ -129,7 +129,7 @@ describe('Resolver', () => {
     });
 
     it('should have wrapType() method', () => {
-      const newResolver = resolver.wrapType((prevType) => {
+      const newResolver = resolver.wrapType(prevType => {
         // eslint-disable-line
         return 'String';
       });
@@ -338,7 +338,7 @@ describe('Resolver', () => {
 
     it('should combine all resolve args to resolveParams', () => {
       let rp;
-      resolver.resolve = (resolveParams) => {
+      resolver.resolve = resolveParams => {
         rp = resolveParams;
       };
       const fc = resolver.getFieldConfig();
@@ -351,7 +351,7 @@ describe('Resolver', () => {
 
     it('should create `projection` property', () => {
       let rp;
-      resolver.resolve = (resolveParams) => {
+      resolver.resolve = resolveParams => {
         rp = resolveParams;
       };
       const fc = resolver.getFieldConfig();
@@ -467,29 +467,35 @@ describe('Resolver', () => {
         return resolve(rp);
       };
 
-      const newResolver = resolver.addFilterArg({
-        name: 'age',
-        type: 'Int!',
-        description: 'Age filter',
-        query: (query, value, resolveParams) => {
-          query.age = { $gt: value }; // eslint-disable-line no-param-reassign
-          query.someKey = resolveParams.someKey; // eslint-disable-line no-param-reassign
-        },
-        filterTypeNameFallback: 'FilterUniqueNameInput',
-      })
-      .addFilterArg({
-        name: 'isActive',
-        type: 'Boolean!',
-        description: 'Active status filter',
-        query: (query, value, resolveParams) => {
-          query.isActive = value; // eslint-disable-line no-param-reassign
-        },
-        filterTypeNameFallback: 'FilterOtherUniqueNameInput',
+      const newResolver = resolver
+        .addFilterArg({
+          name: 'age',
+          type: 'Int!',
+          description: 'Age filter',
+          query: (query, value, resolveParams) => {
+            query.age = { $gt: value }; // eslint-disable-line no-param-reassign
+            query.someKey = resolveParams.someKey; // eslint-disable-line no-param-reassign
+          },
+          filterTypeNameFallback: 'FilterUniqueNameInput',
+        })
+        .addFilterArg({
+          name: 'isActive',
+          type: 'Boolean!',
+          description: 'Active status filter',
+          query: (query, value, resolveParams) => {
+            query.isActive = value; // eslint-disable-line no-param-reassign
+          },
+          filterTypeNameFallback: 'FilterOtherUniqueNameInput',
+        });
+
+      newResolver.resolve({
+        args: { filter: { age: 15, isActive: false } },
+        someKey: 16,
       });
 
-      newResolver.resolve({ args: { filter: { age: 15, isActive: false } }, someKey: 16 });
-
-      expect(rpSnap).property('rawQuery').deep.equal({ age: { $gt: 15 }, isActive: false, someKey: 16 });
+      expect(rpSnap)
+        .property('rawQuery')
+        .deep.equal({ age: { $gt: 15 }, isActive: false, someKey: 16 });
     });
 
     it('should extend default value', () => {
@@ -512,7 +518,10 @@ describe('Resolver', () => {
         filterTypeNameFallback: 'FilterUniqueNameInput',
       });
 
-      expect(newResolver.getArg('filter').defaultValue).deep.equal({ name: 'User', age: 33 });
+      expect(newResolver.getArg('filter').defaultValue).deep.equal({
+        name: 'User',
+        age: 33,
+      });
     });
 
     it('should throw errors if provided incorrect options', () => {
@@ -537,11 +546,10 @@ describe('Resolver', () => {
 
   it('should return nested name for Resolver', () => {
     const r1 = new Resolver({ name: 'find' });
-    const r2 = r1.wrapResolve(next =>
-      resolveParams => {
-        // eslint-disable-line
-        return 'function code';
-      });
+    const r2 = r1.wrapResolve(next => resolveParams => {
+      // eslint-disable-line
+      return 'function code';
+    });
 
     expect(r1.getNestedName()).equal('find');
     expect(r2.getNestedName()).equal('wrapResolve(find)');
@@ -549,11 +557,10 @@ describe('Resolver', () => {
 
   it('should on toString() call provide debug info with source code', () => {
     const r1 = new Resolver({ name: 'find' });
-    const r2 = r1.wrapResolve(next =>
-      resolveParams => {
-        // eslint-disable-line
-        return 'function code';
-      });
+    const r2 = r1.wrapResolve(next => resolveParams => {
+      // eslint-disable-line
+      return 'function code';
+    });
 
     expect(r2.toString()).to.have.string('function code');
   });

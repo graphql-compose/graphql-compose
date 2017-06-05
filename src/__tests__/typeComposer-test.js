@@ -359,7 +359,9 @@ describe('TypeComposer', () => {
       expect(tc.hasResolver('myResolver3')).to.be.true;
       tc.removeResolver('myResolver3');
       expect(tc.hasResolver('myResolver3')).to.be.false;
-      expect(() => tc.getResolver('myResolver3')).throw(/does not have resolver with name 'myResolver3'/);
+      expect(() => tc.getResolver('myResolver3')).throw(
+        /does not have resolver with name 'myResolver3'/
+      );
     });
 
     it('setResolver() should add resolver with specific name', () => {

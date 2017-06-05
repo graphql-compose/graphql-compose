@@ -1,5 +1,3 @@
-
-
 export function deprecate(msg) {
   let stack;
   let stackStr = '';
@@ -10,5 +8,6 @@ export function deprecate(msg) {
     stackStr = `\n    ${stack.slice(2, 7).join('\n    ')}`;
   }
 
+  // eslint-disable-next-line
   console.log(`DEPRECATION: ${msg} ${stackStr}\n\n`);
 }

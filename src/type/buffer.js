@@ -2,7 +2,6 @@ import { GraphQLScalarType } from 'graphql';
 import { GraphQLError } from 'graphql/error';
 import { Kind } from 'graphql/language';
 
-
 function coerceBuffer(value) {
   if (!(value instanceof Buffer)) {
     throw new TypeError('Field error: value is not an instance of Buffer');
@@ -10,7 +9,6 @@ function coerceBuffer(value) {
 
   return value.toString();
 }
-
 
 export default new GraphQLScalarType({
   name: 'Buffer',
@@ -31,5 +29,5 @@ export default new GraphQLScalarType({
     }
 
     return result;
-  }
+  },
 });

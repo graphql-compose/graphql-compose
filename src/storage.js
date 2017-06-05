@@ -70,31 +70,32 @@ export default class ComposeStorage {
     }
 
     if (Object.keys(roots).length === 0) {
-      throw new Error('Can not build schema. Must be initialized at least one '
-      + 'of the following types: RootQuery, RootMutation.');
+      throw new Error(
+        'Can not build schema. Must be initialized at least one ' +
+          'of the following types: RootQuery, RootMutation.'
+      );
     }
 
     return new GraphQLSchema(roots);
   }
 
-  buildRelations(
-    typeComposer: TypeComposer,
-    createdRelations: Set<string>
-  ) {
+  buildRelations(typeComposer: TypeComposer, createdRelations: Set<string>) {
     const relations = typeComposer.getRelations();
     const relationFieldNames = Object.keys(relations);
 
-    relationFieldNames.forEach((relationFieldName) => {
+    relationFieldNames.forEach(relationFieldName => {
       const typeAndField = `${typeComposer.getTypeName()}.${relationFieldName}`;
 
       const existedField = typeComposer.getField(relationFieldName);
       if (existedField && !existedField._gqcIsRelation) {
         if (!createdRelations.has(typeAndField)) {
           // eslint-disable-next-line
-          console.log(`GQC: Skip building relation '${typeAndField}', `
-                    + 'cause this type already has field with such name. '
-                    + 'If you want create relation, you should remove this '
-                    + 'field before run the schema build.');
+          console.log(
+            `GQC: Skip building relation '${typeAndField}', ` +
+              'cause this type already has field with such name. ' +
+              'If you want create relation, you should remove this ' +
+              'field before run the schema build.'
+          );
         }
       } else {
         typeComposer.buildRelation(relationFieldName);
@@ -102,7 +103,7 @@ export default class ComposeStorage {
     });
 
     const fields = typeComposer.getFields();
-    Object.keys(fields).forEach((fieldName) => {
+    Object.keys(fields).forEach(fieldName => {
       const typeAndField = `${typeComposer.getTypeName()}.${fieldName}`;
       const fieldType = getNamedType(fields[fieldName].type);
       if (fieldType instanceof GraphQLObjectType && !createdRelations.has(typeAndField)) {
@@ -112,12 +113,9 @@ export default class ComposeStorage {
     });
   }
 
-  removeEmptyTypes(
-    typeComposer: TypeComposer,
-    passedTypes: Set<string> = new Set()
-  ) {
+  removeEmptyTypes(typeComposer: TypeComposer, passedTypes: Set<string> = new Set()) {
     const fields = typeComposer.getFields();
-    Object.keys(fields).forEach((fieldName) => {
+    Object.keys(fields).forEach(fieldName => {
       const fieldType = fields[fieldName].type;
       if (fieldType instanceof GraphQLObjectType) {
         const typeName = fieldType.name;
@@ -128,8 +126,10 @@ export default class ComposeStorage {
             this.removeEmptyTypes(tc, passedTypes);
           } else {
             // eslint-disable-next-line
-            console.log(`GQC: Delete field '${typeComposer.getTypeName()}.${fieldName}' `
-                      + `with type '${tc.getTypeName()}', cause it does not have fields.`);
+            console.log(
+              `GQC: Delete field '${typeComposer.getTypeName()}.${fieldName}' ` +
+                `with type '${tc.getTypeName()}', cause it does not have fields.`
+            );
             delete fields[fieldName];
           }
         }

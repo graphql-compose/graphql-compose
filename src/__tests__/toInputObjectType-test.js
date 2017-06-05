@@ -10,7 +10,6 @@ import TypeComposer from '../typeComposer';
 import InputTypeComposer from '../inputTypeComposer';
 import { toInputObjectType } from '../toInputObjectType';
 
-
 describe('toInputObjectType()', () => {
   let PersonType;
   let PersonTC;

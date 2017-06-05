@@ -20,14 +20,7 @@ const FIXTURE = {
     false: true,
     null: null,
   },
-  array: [
-    'string',
-    3,
-    Math.PI,
-    true,
-    false,
-    null,
-  ],
+  array: ['string', 3, Math.PI, true, false, null],
 };
 
 describe('GraphQLJSON', () => {
@@ -59,14 +52,10 @@ describe('GraphQLJSON', () => {
   });
 
   describe('parseValue', () => {
-    it('should support parsing values', (done) => {
-      graphql(
-        schema,
-        'query ($arg: JSON) { value(arg: $arg) }',
-        null,
-        null,
-        { arg: FIXTURE }
-      ).then(({ data }) => {
+    it('should support parsing values', done => {
+      graphql(schema, 'query ($arg: JSON) { value(arg: $arg) }', null, null, {
+        arg: FIXTURE,
+      }).then(({ data }) => {
         expect(data.value).to.eql(FIXTURE);
         done();
       });
@@ -74,8 +63,10 @@ describe('GraphQLJSON', () => {
   });
 
   describe('parseLiteral', () => {
-    it('should support parsing literals', (done) => {
-      graphql(schema, `
+    it('should support parsing literals', done => {
+      graphql(
+        schema,
+        `
         {
           value(arg: {
             string: "string",
@@ -102,7 +93,8 @@ describe('GraphQLJSON', () => {
             ],
           }),
         }
-      `).then(({ data }) => {
+      `
+      ).then(({ data }) => {
         expect(data.value).to.eql({
           string: 'string',
           int: 3,
@@ -118,14 +110,7 @@ describe('GraphQLJSON', () => {
             false: false,
             null: null,
           },
-          array: [
-            'string',
-            3,
-            3.14,
-            true,
-            false,
-            null,
-          ],
+          array: ['string', 3, 3.14, true, false, null],
         });
         done();
       });

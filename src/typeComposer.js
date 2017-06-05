@@ -39,11 +39,7 @@ export default class TypeComposer {
   gqType: GraphQLObjectTypeExtended;
 
   static create(
-    opts:
-     | TypeNameString
-     | TypeDefinitionString
-     | ComposeObjectTypeConfig<*, *>
-     | GraphQLObjectType
+    opts: TypeNameString | TypeDefinitionString | ComposeObjectTypeConfig<*, *> | GraphQLObjectType
   ) {
     let TC;
 
@@ -195,10 +191,7 @@ export default class TypeComposer {
     return this;
   }
 
-  extendField(
-    name: string,
-    parialFieldConfig: ComposeFieldConfig<*, *>
-  ): TypeComposer {
+  extendField(name: string, parialFieldConfig: ComposeFieldConfig<*, *>): TypeComposer {
     const fieldConfig = {
       ...this.getField(name),
       ...parialFieldConfig,
@@ -331,10 +324,12 @@ export default class TypeComposer {
       return catchErrors
         ? Promise.resolve(payload).catch(e => {
             // eslint-disable-next-line
-            console.log(`GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`);
+            console.log(
+              `GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`
+            );
             console.log(e); // eslint-disable-line
-          return null;
-        })
+            return null;
+          })
         : payload;
     };
 
