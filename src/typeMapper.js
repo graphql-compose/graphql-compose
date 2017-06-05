@@ -288,7 +288,7 @@ class TypeMapper {
       // copy all other props
       const doNotCopy = ['type', 'args'];
       for (const prop in composeFC) {
-        if (composeFC.hasOwnProperty(prop) && !doNotCopy.includes(prop)) {
+        if (composeFC.hasOwnProperty(prop) && doNotCopy.indexOf(prop) === -1) {
           fieldConfig[prop] = composeFC[prop];
         }
       }
@@ -408,7 +408,7 @@ class TypeMapper {
       // copy all other props
       const doNotCopy = ['type'];
       for (const prop in composeAC) {
-        if (composeAC.hasOwnProperty(prop) && !doNotCopy.includes(prop)) {
+        if (composeAC.hasOwnProperty(prop) && doNotCopy.indexOf(prop) === -1) {
           argConfig[prop] = composeAC[prop];
         }
       }
@@ -533,7 +533,7 @@ class TypeMapper {
       // copy all other props
       const doNotCopy = ['type'];
       for (const prop in composeIFC) {
-        if (composeIFC.hasOwnProperty(prop) && !doNotCopy.includes(prop)) {
+        if (composeIFC.hasOwnProperty(prop) && doNotCopy.indexOf(prop) === -1) {
           fieldConfig[prop] = composeIFC[prop];
         }
       }

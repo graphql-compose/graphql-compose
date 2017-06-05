@@ -161,7 +161,7 @@ export default class InputTypeComposer {
     const keepFieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     Object.keys(fields).forEach(fieldName => {
-      if (!keepFieldNames.includes(fieldName)) {
+      if (keepFieldNames.indexOf(fieldName) === -1) {
         delete fields[fieldName];
       }
     });
@@ -238,7 +238,7 @@ export default class InputTypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     fieldNames.forEach(fieldName => {
-      if (fieldNames.includes(fieldName)) {
+      if (fieldNames.indexOf(fieldName) > -1) {
         if (fields[fieldName] && fields[fieldName].type instanceof GraphQLNonNull) {
           fields[fieldName].type = fields[fieldName].type.ofType;
         }

@@ -140,7 +140,7 @@ export default class Resolver<TSource, TContext> {
   removeOtherArgs(argNameOrArray: string | Array<string>): Resolver<TSource, TContext> {
     const keepArgNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     Object.keys(this.args).forEach(argName => {
-      if (!keepArgNames.includes(argName)) {
+      if (keepArgNames.indexOf(argName) === -1) {
         delete this.args[argName];
       }
     });
@@ -212,7 +212,7 @@ export default class Resolver<TSource, TContext> {
   makeOptional(argNameOrArray: string | Array<string>): Resolver<TSource, TContext> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     argNames.forEach(argName => {
-      if (argNames.includes(argName)) {
+      if (argNames.indexOf(argName) > -1) {
         const argType = this.args[argName].type;
         if (argType instanceof GraphQLNonNull) {
           this.args[argName].type = argType.ofType;
