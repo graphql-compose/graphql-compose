@@ -1,3 +1,5 @@
+/* @flow */
+
 import { expect } from 'chai';
 import { GraphQLObjectType, GraphQLScalarType } from 'graphql';
 import Storage from '../storage';

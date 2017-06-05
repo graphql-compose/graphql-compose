@@ -1,3 +1,5 @@
+/* @flow */
+
 import { GraphQLScalarType, GraphQLError } from 'graphql';
 import { Kind } from 'graphql/language';
 

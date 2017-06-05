@@ -1,3 +1,5 @@
+/* @flow */
+
 import { expect } from 'chai';
 import { GraphQLString, GraphQLObjectType, GraphQLInputObjectType } from 'graphql';
 import TypeComposer from '../../typeComposer';

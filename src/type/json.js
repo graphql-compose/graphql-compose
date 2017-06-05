@@ -1,3 +1,5 @@
+/* @flow */
+
 // copied from https://github.com/taion/graphql-type-json
 
 import { GraphQLScalarType } from 'graphql';

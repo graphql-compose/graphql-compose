@@ -1,3 +1,5 @@
+/* @flow */
+
 import { GraphQLInt, GraphQLString } from 'graphql';
 import gqc from '../gqc';
 

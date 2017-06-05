@@ -1,4 +1,6 @@
-export function deprecate(msg) {
+/* @flow */
+
+export function deprecate(msg: string) {
   let stack;
   let stackStr = '';
   const error = new Error();

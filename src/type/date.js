@@ -1,3 +1,5 @@
+/* @flow */
+
 import { GraphQLScalarType } from 'graphql';
 import { GraphQLError } from 'graphql/error';
 import { Kind } from 'graphql/language';
@@ -23,7 +25,7 @@ export default new GraphQLScalarType({
     return value.toJSON();
   },
   parseValue(value) {
-    const date = new Date(value);
+    const date = new Date((value: any));
 
     if (isNaN(date.getTime())) {
       throw new TypeError('Field error: value is an invalid Date');
