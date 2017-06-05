@@ -1,35 +1,13 @@
 {
-  "env": {
-    "development": {
-      "passPerPreset": true,
-      "presets": [
-        { "plugins": [ "transform-runtime" ] },
-        {
-    			"passPerPreset": false,
-    			"presets": ["es2015"]
-    		}
-      ],
-      "plugins": [
-        "syntax-async-functions",
-        "transform-regenerator",
-        "transform-class-properties",
-        "transform-object-rest-spread",
-        "transform-flow-strip-types"
-      ]
-    },
-    "es": {
-      "presets": [
-        ["es2015", {"modules": false}]
-      ],
-      "plugins": [
-        "syntax-async-functions",
-        ["transform-regenerator", {
-            "async": false
-        }],
-        "transform-class-properties",
-        "transform-object-rest-spread",
-        "transform-flow-strip-types",
-      ]
-    }
-  }
+  "plugins": [
+    "transform-object-rest-spread",
+    "transform-flow-strip-types"
+  ],
+  "presets": [
+    ["env", {
+      "targets": {
+        "node": 4
+      },
+    }]
+  ],
 }
