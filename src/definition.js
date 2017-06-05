@@ -30,8 +30,11 @@ import type InputTypeComposer from './inputTypeComposer';
 
 export type Thunk<T> = (() => T) | T;
 export type ObjectMap = { [optName: string]: mixed };
-export type ProjectionType = { [fieldName: string]: $Shape<ProjectionNode> | true };
-export type ProjectionNode = { [fieldName: string]: $Shape<ProjectionNode> } | true;
+
+// export type ProjectionType = { [fieldName: string]: $Shape<ProjectionNode> | true };
+// export type ProjectionNode = { [fieldName: string]: $Shape<ProjectionNode> } | true;
+export type ProjectionType = { [fieldName: string]: mixed };
+export type ProjectionNode = { [fieldName: string]: mixed };
 export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 
 // TypeMapper
