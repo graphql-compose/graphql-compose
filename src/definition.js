@@ -29,12 +29,12 @@ import type Resolver from "./resolver";
 import type InputTypeComposer from "./inputTypeComposer";
 
 export type Thunk<T> = (() => T) | T;
-export type ObjectMap = { [optName: string]: mixed };
+export type ObjectMap = { [optName: string]: any };
 
 // export type ProjectionType = { [fieldName: string]: $Shape<ProjectionNode> | true };
 // export type ProjectionNode = { [fieldName: string]: $Shape<ProjectionNode> } | true;
-export type ProjectionType = { [fieldName: string]: mixed };
-export type ProjectionNode = { [fieldName: string]: mixed };
+export type ProjectionType = { [fieldName: string]: any };
+export type ProjectionNode = { [fieldName: string]: any };
 export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 
 // TypeMapper
@@ -220,7 +220,7 @@ export type RelationOptsWithFieldConfig<TSource, TContext> = {
   description?: ?string,
   deprecationReason?: ?string,
 };
-export type ArgsType = { [argName: string]: mixed };
+export type ArgsType = { [argName: string]: any };
 export type RelationArgsMapperFn<TSource, TContext> = (
   source: TSource,
   args: ArgsType,
@@ -242,7 +242,7 @@ export type ResolveParams<TSource, TContext> = {
   context: TContext,
   info: GraphQLResolveInfo,
   projection: $Shape<ProjectionType>,
-  [opt: string]: mixed,
+  [opt: string]: any,
 };
 export type ResolverMWMethodKeys = "args" | "resolve" | "type";
 export type ResolverKinds = "query" | "mutation" | "subscription";
