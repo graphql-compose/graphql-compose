@@ -2,11 +2,10 @@
   "plugins": [
     "transform-object-rest-spread",
     "transform-flow-strip-types",
-    "transform-runtime"
+    ["transform-runtime", { "polyfill": false }]
   ],
   "presets": [
     ["env", {
-      "loose": true,
       "targets": {
         "node": 4
       },
