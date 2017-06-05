@@ -25,12 +25,10 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-eslint": "^7.2.3",
+    "babel-jest": "^20.0.3",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-preset-env": "^1.5.1",
-    "chai": "^4.0.1",
-    "chai-as-promised": "6.0.0",
-    "chai-spies": "0.7.1",
     "cz-conventional-changelog": "^2.0.0",
     "eslint": "^3.19.0",
     "eslint-config-airbnb-base": "^11.2.0",
@@ -40,15 +38,12 @@
     "eslint-plugin-prettier": "^2.1.1",
     "flow-bin": "^0.47.0",
     "graphql": "^0.10.1",
-    "mocha": "^3.4.2",
-    "nyc": "^10.3.2",
+    "jest": "^20.0.4",
     "prettier": "^1.4.2",
     "rimraf": "^2.6.1",
-    "sane": "^1.7.0",
     "semantic-release": "^6.3.2"
   },
   "dependencies": {
-    "babel-runtime": "^6.23.0",
     "object-path": "^0.11.4"
   },
   "config": {
