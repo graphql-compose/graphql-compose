@@ -362,7 +362,7 @@ export default class Resolver<TSource, TContext> {
     return this;
   }
 
-  get(path: string | Array<string>): mixed {
+  get(path: string | Array<string>): any {
     // $FlowFixMe
     return typeByPath(this, path);
   }
