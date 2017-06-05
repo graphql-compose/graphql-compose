@@ -1,6 +1,5 @@
 /* @flow */
 
-import { expect } from 'chai';
 import {
   GraphQLObjectType,
   GraphQLInputObjectType,
@@ -38,42 +37,42 @@ describe('toInputObjectType()', () => {
 
   it('should return InputTypeComposer', () => {
     const itc = toInputObjectType(PersonTC);
-    expect(itc).instanceof(InputTypeComposer);
-    expect(itc.getTypeName()).to.equal('PersonInput');
+    expect(itc).toBeInstanceOf(InputTypeComposer);
+    expect(itc.getTypeName()).toBe('PersonInput');
   });
 
   it('should accept prefix in opts', () => {
     const itc = toInputObjectType(PersonTC, { prefix: 'SomePrefix' });
-    expect(itc.getTypeName()).to.equal('SomePrefixPersonInput');
+    expect(itc.getTypeName()).toBe('SomePrefixPersonInput');
   });
 
   it('should accept postfix in opts', () => {
     const itc = toInputObjectType(PersonTC, { postfix: 'PostfixInpt' });
-    expect(itc.getTypeName()).to.equal('PersonPostfixInpt');
+    expect(itc.getTypeName()).toBe('PersonPostfixInpt');
   });
 
   it('should keep scalar types', () => {
     const itc = toInputObjectType(PersonTC);
-    expect(itc.getFieldType('name')).to.equal(GraphQLString);
-    expect(itc.getFieldType('age')).to.equal(GraphQLInt);
+    expect(itc.getFieldType('name')).toBe(GraphQLString);
+    expect(itc.getFieldType('age')).toBe(GraphQLInt);
   });
 
   it('should convert field with ObjectType to InputType', () => {
     const itc = toInputObjectType(PersonTC);
     const addrType = itc.getFieldType('address');
-    expect(addrType).instanceof(GraphQLInputObjectType);
-    expect(addrType._typeConfig.name).to.equal('PersonAddressInput');
+    expect(addrType).toBeInstanceOf(GraphQLInputObjectType);
+    expect(addrType._typeConfig.name).toBe('PersonAddressInput');
   });
 
   it('should reuse generated input type for recursive types', () => {
     PersonTC.setField('spouce', { type: PersonType });
     const itc = toInputObjectType(PersonTC);
-    expect(itc.getFieldType('spouce')).to.equal(itc.getType());
+    expect(itc.getFieldType('spouce')).toBe(itc.getType());
   });
 
   it('should reuse generated input type for recursive types in List', () => {
     PersonTC.setField('friends', { type: new GraphQLList(PersonType) });
     const itc = toInputObjectType(PersonTC);
-    expect(itc.getFieldType('friends').ofType).to.equal(itc.getType());
+    expect(itc.getFieldType('friends').ofType).toBe(itc.getType());
   });
 });

@@ -1,6 +1,5 @@
 /* @flow */
 
-import { expect } from 'chai';
 import {
   GraphQLObjectType,
   GraphQLString,
@@ -33,10 +32,10 @@ describe('TypeComposer', () => {
   describe('fields manipulation', () => {
     it('getFields()', () => {
       const fieldNames = Object.keys(tc.getFields());
-      expect(fieldNames).to.have.members(['field1', 'field2']);
+      expect(fieldNames).toEqual(expect.arrayContaining(['field1', 'field2']));
 
       const tc2 = TypeComposer.create('SomeType');
-      expect(tc2.getFields()).to.deep.equal({});
+      expect(tc2.getFields()).toEqual({});
     });
 
     describe('setFields()', () => {
@@ -45,8 +44,8 @@ describe('TypeComposer', () => {
           field3: { type: GraphQLString },
         });
         const fields = objectType.getFields();
-        expect(Object.keys(fields)).to.include('field3');
-        expect(fields.field3.type).to.equal(GraphQLString);
+        expect(Object.keys(fields)).toContain('field3');
+        expect(fields.field3.type).toBe(GraphQLString);
       });
 
       it('should add fields with converting types from string to object', () => {
@@ -56,11 +55,11 @@ describe('TypeComposer', () => {
           field5: 'Boolean!',
         });
 
-        expect(tc.getField('field3').type).to.equal(GraphQLString);
-        expect(tc.getField('field4').type).instanceof(GraphQLList);
-        expect(tc.getField('field4').type.ofType).to.equal(GraphQLInt);
-        expect(tc.getField('field5').type).instanceof(GraphQLNonNull);
-        expect(tc.getField('field5').type.ofType).to.equal(GraphQLBoolean);
+        expect(tc.getField('field3').type).toBe(GraphQLString);
+        expect(tc.getField('field4').type).toBeInstanceOf(GraphQLList);
+        expect(tc.getField('field4').type.ofType).toBe(GraphQLInt);
+        expect(tc.getField('field5').type).toBeInstanceOf(GraphQLNonNull);
+        expect(tc.getField('field5').type.ofType).toBe(GraphQLBoolean);
       });
 
       it('should add fields with converting args types from string to object', () => {
@@ -74,10 +73,10 @@ describe('TypeComposer', () => {
           },
         });
 
-        expect(tc.getFieldArg('field3', 'arg1').type).instanceof(GraphQLNonNull);
-        expect(tc.getFieldArg('field3', 'arg1').type.ofType).to.equal(GraphQLString);
-        expect(tc.getFieldArg('field3', 'arg2').type).instanceof(GraphQLList);
-        expect(tc.getFieldArg('field3', 'arg2').type.ofType).to.equal(GraphQLFloat);
+        expect(tc.getFieldArg('field3', 'arg1').type).toBeInstanceOf(GraphQLNonNull);
+        expect(tc.getFieldArg('field3', 'arg1').type.ofType).toBe(GraphQLString);
+        expect(tc.getFieldArg('field3', 'arg2').type).toBeInstanceOf(GraphQLList);
+        expect(tc.getFieldArg('field3', 'arg2').type.ofType).toBe(GraphQLFloat);
       });
 
       it('should add projection via `setField` and `addFields`', () => {
@@ -90,7 +89,7 @@ describe('TypeComposer', () => {
           field5: { type: GraphQLString, projection: { field4: true } },
         });
 
-        expect(tc.getProjectionMapper()).to.deep.equal({
+        expect(tc.getProjectionMapper()).toEqual({
           field3: { field1: true, field2: true },
           field5: { field4: true },
         });
@@ -101,10 +100,10 @@ describe('TypeComposer', () => {
         tc.setFields({
           input3: { type: typeAsFn },
         });
-        expect(tc.getFieldType('input3')).to.equal(typeAsFn);
+        expect(tc.getFieldType('input3')).toBe(typeAsFn);
 
         // show provide unwrapped/unhoisted type for graphql
-        expect(tc.getType()._typeConfig.fields().input3.type).to.equal(GraphQLString);
+        expect(tc.getType()._typeConfig.fields().input3.type).toBe(GraphQLString);
       });
 
       it('accept fieldConfig as function', () => {
@@ -112,7 +111,7 @@ describe('TypeComposer', () => {
           input4: () => ({ type: 'String' }),
         });
         // show provide unwrapped/unhoisted type for graphql
-        expect(tc.getType()._typeConfig.fields().input4.type).to.equal(GraphQLString);
+        expect(tc.getType()._typeConfig.fields().input4.type).toBe(GraphQLString);
       });
     });
 
@@ -122,60 +121,60 @@ describe('TypeComposer', () => {
         field4: { type: '[Int]' },
         field5: 'Boolean!',
       });
-      expect(tc.getField('field3').type).to.equal(GraphQLString);
-      expect(tc.getField('field4').type).instanceof(GraphQLList);
-      expect(tc.getField('field4').type.ofType).to.equal(GraphQLInt);
-      expect(tc.getField('field5').type).instanceof(GraphQLNonNull);
-      expect(tc.getField('field5').type.ofType).to.equal(GraphQLBoolean);
+      expect(tc.getField('field3').type).toBe(GraphQLString);
+      expect(tc.getField('field4').type).toBeInstanceOf(GraphQLList);
+      expect(tc.getField('field4').type.ofType).toBe(GraphQLInt);
+      expect(tc.getField('field5').type).toBeInstanceOf(GraphQLNonNull);
+      expect(tc.getField('field5').type.ofType).toBe(GraphQLBoolean);
     });
 
     describe('removeField()', () => {
       it('should remove one field', () => {
         tc.removeField('field1');
-        expect(tc.getFieldNames()).to.have.members(['field2']);
+        expect(tc.getFieldNames()).toEqual(expect.arrayContaining(['field2']));
       });
 
       it('should remove list of fields', () => {
         tc.removeField(['field1', 'field2']);
-        expect(tc.getFieldNames()).to.have.members([]);
+        expect(tc.getFieldNames()).toEqual(expect.arrayContaining([]));
       });
     });
 
     describe('removeOtherFields()', () => {
       it('should remove one field', () => {
         tc.removeOtherFields('field1');
-        expect(tc.getFieldNames()).to.not.have.members(['field2']);
-        expect(tc.getFieldNames()).to.have.members(['field1']);
+        expect(tc.getFieldNames()).not.toEqual(expect.arrayContaining(['field2']));
+        expect(tc.getFieldNames()).toEqual(expect.arrayContaining(['field1']));
       });
 
       it('should remove list of fields', () => {
         tc.setField('field3', 'String');
         tc.removeOtherFields(['field1', 'field2']);
-        expect(tc.getFieldNames()).to.have.members(['field1', 'field2']);
-        expect(tc.getFieldNames()).to.not.have.members(['field3']);
+        expect(tc.getFieldNames()).toEqual(expect.arrayContaining(['field1', 'field2']));
+        expect(tc.getFieldNames()).not.toEqual(expect.arrayContaining(['field3']));
       });
     });
 
     describe('reorderFields()', () => {
       it('should change fields order', () => {
         tc.setFields({ f1: 'Int', f2: 'Int', f3: 'Int' });
-        expect(tc.getFieldNames().join(',')).to.equal('f1,f2,f3');
+        expect(tc.getFieldNames().join(',')).toBe('f1,f2,f3');
         tc.reorderFields(['f3', 'f2', 'f1']);
-        expect(tc.getFieldNames().join(',')).to.equal('f3,f2,f1');
+        expect(tc.getFieldNames().join(',')).toBe('f3,f2,f1');
       });
 
       it('should append not listed fields', () => {
         tc.setFields({ f1: 'Int', f2: 'Int', f3: 'Int' });
-        expect(tc.getFieldNames().join(',')).to.equal('f1,f2,f3');
+        expect(tc.getFieldNames().join(',')).toBe('f1,f2,f3');
         tc.reorderFields(['f3']);
-        expect(tc.getFieldNames().join(',')).to.equal('f3,f1,f2');
+        expect(tc.getFieldNames().join(',')).toBe('f3,f1,f2');
       });
 
       it('should skip non existed fields', () => {
         tc.setFields({ f1: 'Int', f2: 'Int', f3: 'Int' });
-        expect(tc.getFieldNames().join(',')).to.equal('f1,f2,f3');
+        expect(tc.getFieldNames().join(',')).toBe('f1,f2,f3');
         tc.reorderFields(['f22', 'f3', 'f55', 'f1', 'f2']);
-        expect(tc.getFieldNames().join(',')).to.equal('f3,f1,f2');
+        expect(tc.getFieldNames().join(',')).toBe('f3,f1,f2');
       });
     });
 
@@ -187,12 +186,12 @@ describe('TypeComposer', () => {
       tc.extendField('field3', {
         description: 'this is field #3',
       });
-      expect(tc.getField('field3')).property('type').to.be.equal(GraphQLString);
-      expect(tc.getField('field3')).property('description').to.equal('this is field #3');
+      expect(tc.getField('field3').type).toBe(GraphQLString);
+      expect(tc.getField('field3').description).toBe('this is field #3');
       tc.extendField('field3', {
         type: 'Int',
       });
-      expect(tc.getField('field3')).property('type').to.be.equal(GraphQLInt);
+      expect(tc.getField('field3').type).toBe(GraphQLInt);
     });
   });
 
@@ -212,39 +211,39 @@ describe('TypeComposer', () => {
 
     it('getInterfaces()', () => {
       tc.gqType._typeConfig.interfaces = [iface];
-      expect(tc.getInterfaces()).to.have.members([iface]);
+      expect(tc.getInterfaces()).toEqual(expect.arrayContaining([iface]));
     });
 
     it('hasInterface()', () => {
       tc.gqType._typeConfig.interfaces = [iface];
-      expect(tc.hasInterface(iface)).to.be.true;
+      expect(tc.hasInterface(iface)).toBe(true);
     });
 
     it('addInterface()', () => {
       tc.addInterface(iface);
-      expect(tc.getInterfaces()).to.have.members([iface]);
-      expect(tc.hasInterface(iface)).to.be.true;
+      expect(tc.getInterfaces()).toEqual(expect.arrayContaining([iface]));
+      expect(tc.hasInterface(iface)).toBe(true);
       tc.addInterface(iface2);
-      expect(tc.getInterfaces()).to.have.members([iface, iface2]);
-      expect(tc.hasInterface(iface2)).to.be.true;
+      expect(tc.getInterfaces()).toEqual(expect.arrayContaining([iface, iface2]));
+      expect(tc.hasInterface(iface2)).toBe(true);
     });
 
     it('removeInterface()', () => {
       tc.addInterface(iface);
       tc.addInterface(iface2);
-      expect(tc.getInterfaces()).to.have.members([iface, iface2]);
+      expect(tc.getInterfaces()).toEqual(expect.arrayContaining([iface, iface2]));
       tc.removeInterface(iface);
-      expect(tc.hasInterface(iface)).to.be.false;
-      expect(tc.hasInterface(iface2)).to.be.true;
+      expect(tc.hasInterface(iface)).toBe(false);
+      expect(tc.hasInterface(iface2)).toBe(true);
     });
   });
 
   describe('create() [static method]', () => {
     it('should create TC by typeName as a string', () => {
       const myTC = TypeComposer.create('TypeStub');
-      expect(myTC).instanceof(TypeComposer);
-      expect(myTC.getType()).instanceof(GraphQLObjectType);
-      expect(myTC.getFields()).deep.equal({});
+      expect(myTC).toBeInstanceOf(TypeComposer);
+      expect(myTC.getType()).toBeInstanceOf(GraphQLObjectType);
+      expect(myTC.getFields()).toEqual({});
     });
 
     it('should create TC by type template string', () => {
@@ -257,11 +256,11 @@ describe('TypeComposer', () => {
         }
       `
       );
-      expect(myTC).instanceof(TypeComposer);
-      expect(myTC.getTypeName()).equal('TestTypeTpl');
-      expect(myTC.getFieldType('f1')).equal(GraphQLString);
-      expect(myTC.getFieldType('f2')).instanceof(GraphQLNonNull);
-      expect(myTC.getFieldType('f2').ofType).equal(GraphQLInt);
+      expect(myTC).toBeInstanceOf(TypeComposer);
+      expect(myTC.getTypeName()).toBe('TestTypeTpl');
+      expect(myTC.getFieldType('f1')).toBe(GraphQLString);
+      expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      expect(myTC.getFieldType('f2').ofType).toBe(GraphQLInt);
     });
 
     it('should create TC by GraphQLObjectTypeConfig', () => {
@@ -274,10 +273,10 @@ describe('TypeComposer', () => {
           f2: 'Int!',
         },
       });
-      expect(myTC).instanceof(TypeComposer);
-      expect(myTC.getFieldType('f1')).equal(GraphQLString);
-      expect(myTC.getFieldType('f2')).instanceof(GraphQLNonNull);
-      expect(myTC.getFieldType('f2').ofType).equal(GraphQLInt);
+      expect(myTC).toBeInstanceOf(TypeComposer);
+      expect(myTC.getFieldType('f1')).toBe(GraphQLString);
+      expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      expect(myTC.getFieldType('f2').ofType).toBe(GraphQLInt);
     });
 
     it('should create TC by GraphQLObjectType', () => {
@@ -290,9 +289,9 @@ describe('TypeComposer', () => {
         },
       });
       const myTC = TypeComposer.create(objType);
-      expect(myTC).instanceof(TypeComposer);
-      expect(myTC.getType()).equal(objType);
-      expect(myTC.getFieldType('f1')).equal(GraphQLString);
+      expect(myTC).toBeInstanceOf(TypeComposer);
+      expect(myTC.getType()).toBe(objType);
+      expect(myTC.getFieldType('f1')).toBe(GraphQLString);
     });
   });
 
@@ -304,7 +303,7 @@ describe('TypeComposer', () => {
       });
 
       const tc2 = tc.clone('newObject');
-      expect(tc2.getProjectionMapper()).to.deep.equal({
+      expect(tc2.getProjectionMapper()).toEqual({
         field3: { field1: true, field2: true },
       });
     });
@@ -328,8 +327,8 @@ describe('TypeComposer', () => {
         })
       );
 
-      expect(myTC.get('field1')).equal(GraphQLString);
-      expect(myTC.get('field1.@arg1')).equal(GraphQLInt);
+      expect(myTC.get('field1')).toBe(GraphQLString);
+      expect(myTC.get('field1.@arg1')).toBe(GraphQLInt);
     });
   });
 
@@ -339,9 +338,9 @@ describe('TypeComposer', () => {
         name: 'myResolver',
       });
       tc.addResolver(resolver);
-      expect(tc.getResolver('myResolver')).equal(resolver);
-      expect(tc.hasResolver('myResolver')).to.be.true;
-      expect(tc.hasResolver('myResolverXXX')).to.be.false;
+      expect(tc.getResolver('myResolver')).toBe(resolver);
+      expect(tc.hasResolver('myResolver')).toBe(true);
+      expect(tc.hasResolver('myResolverXXX')).toBe(false);
     });
 
     it('addResolver() should accept Resolver options and create instance', () => {
@@ -349,8 +348,8 @@ describe('TypeComposer', () => {
         name: 'myResolver2',
       };
       tc.addResolver(resolverOpts);
-      expect(tc.getResolver('myResolver2')).instanceof(Resolver);
-      expect(tc.getResolver('myResolver2').name).equal('myResolver2');
+      expect(tc.getResolver('myResolver2')).toBeInstanceOf(Resolver);
+      expect(tc.getResolver('myResolver2').name).toBe('myResolver2');
     });
 
     it('removeResolver() should work', () => {
@@ -358,10 +357,10 @@ describe('TypeComposer', () => {
         name: 'myResolver3',
       });
       tc.addResolver(resolver);
-      expect(tc.hasResolver('myResolver3')).to.be.true;
+      expect(tc.hasResolver('myResolver3')).toBe(true);
       tc.removeResolver('myResolver3');
-      expect(tc.hasResolver('myResolver3')).to.be.false;
-      expect(() => tc.getResolver('myResolver3')).throw(
+      expect(tc.hasResolver('myResolver3')).toBe(false);
+      expect(() => tc.getResolver('myResolver3')).toThrowError(
         /does not have resolver with name 'myResolver3'/
       );
     });
@@ -371,16 +370,16 @@ describe('TypeComposer', () => {
         name: 'myResolver4',
       });
       tc.setResolver('specName4', resolver);
-      expect(tc.hasResolver('specName4')).to.be.true;
-      expect(tc.hasResolver('myResolver4')).to.be.false;
+      expect(tc.hasResolver('specName4')).toBe(true);
+      expect(tc.hasResolver('myResolver4')).toBe(false);
     });
 
     it('getResolvers() should return Map', () => {
-      expect(tc.getResolvers()).instanceof(Map);
+      expect(tc.getResolvers()).toBeInstanceOf(Map);
       tc.addResolver({
         name: 'myResolver5',
       });
-      expect(Array.from(tc.getResolvers().keys())).include('myResolver5');
+      expect(Array.from(tc.getResolvers().keys())).toContain('myResolver5');
     });
   });
 
@@ -419,9 +418,9 @@ describe('TypeComposer', () => {
         ArticleTC.addRelation('user', () => ({
           resolver: UserTC.getResolver('findById'),
         }));
-        expect(ArticleTC.getField('user')).to.be.undefined;
+        expect(ArticleTC.getField('user')).toBeUndefined();
         ArticleTC.buildRelations();
-        expect(ArticleTC.getField('user').type.name).to.equal('User');
+        expect(ArticleTC.getField('user').type.name).toBe('User');
       });
 
       it('should throw error if provided incorrect Resolver instance', () => {
@@ -430,7 +429,7 @@ describe('TypeComposer', () => {
         }));
         expect(() => {
           ArticleTC.buildRelations();
-        }).throw(/provide correct Resolver/);
+        }).toThrowError(/provide correct Resolver/);
       });
 
       it('should throw error if provided `type` property', () => {
@@ -440,7 +439,7 @@ describe('TypeComposer', () => {
         }));
         expect(() => {
           ArticleTC.buildRelations();
-        }).throw(/use `resolver` and `type`/);
+        }).toThrowError(/use `resolver` and `type`/);
       });
 
       it('should throw error if provided `resolve` property', () => {
@@ -450,7 +449,7 @@ describe('TypeComposer', () => {
         }));
         expect(() => {
           ArticleTC.buildRelations();
-        }).throw(/use `resolver` and `resolve`/);
+        }).toThrowError(/use `resolver` and `resolve`/);
       });
     });
 
@@ -460,47 +459,47 @@ describe('TypeComposer', () => {
           type: UserTC,
           resolve: () => {},
         }));
-        expect(ArticleTC.getField('user')).to.be.undefined;
+        expect(ArticleTC.getField('user')).toBeUndefined();
         ArticleTC.buildRelations();
-        expect(ArticleTC.getField('user').type.name).to.equal('User');
+        expect(ArticleTC.getField('user').type.name).toBe('User');
       });
     });
   });
 
   describe('get type methods', () => {
     it('getTypePlural() should return wrapped type in GraphQLList', () => {
-      expect(tc.getTypePlural()).instanceof(GraphQLList);
-      expect(tc.getTypePlural().ofType).to.equal(tc.getType());
+      expect(tc.getTypePlural()).toBeInstanceOf(GraphQLList);
+      expect(tc.getTypePlural().ofType).toBe(tc.getType());
     });
   });
 
   it('should have chainable methods', () => {
-    expect(tc.setFields({})).equal(tc);
-    expect(tc.setField('f1', { type: 'Int' })).equal(tc);
-    expect(tc.extendField('f1', {})).equal(tc);
-    expect(tc.addFields({})).equal(tc);
-    expect(tc.removeField('f1')).equal(tc);
-    expect(tc.removeOtherFields('f1')).equal(tc);
-    expect(tc.reorderFields(['f1'])).equal(tc);
+    expect(tc.setFields({})).toBe(tc);
+    expect(tc.setField('f1', { type: 'Int' })).toBe(tc);
+    expect(tc.extendField('f1', {})).toBe(tc);
+    expect(tc.addFields({})).toBe(tc);
+    expect(tc.removeField('f1')).toBe(tc);
+    expect(tc.removeOtherFields('f1')).toBe(tc);
+    expect(tc.reorderFields(['f1'])).toBe(tc);
 
-    expect(tc.addRelation('user', () => ({}))).equal(tc);
-    expect(tc.buildRelations()).equal(tc);
-    expect(tc.buildRelation('user')).equal(tc);
+    expect(tc.addRelation('user', () => ({}))).toBe(tc);
+    expect(tc.buildRelations()).toBe(tc);
+    expect(tc.buildRelation('user')).toBe(tc);
     expect(
       tc.addRelationWithResolver('user', new Resolver({ name: 'myResolver', type: 'Int' }), {})
-    ).equal(tc);
+    ).toBe(tc);
 
-    expect(tc.setInterfaces([1, 2])).equal(tc);
-    expect(tc.addInterface(1)).equal(tc);
-    expect(tc.removeInterface(2)).equal(tc);
+    expect(tc.setInterfaces([1, 2])).toBe(tc);
+    expect(tc.addInterface(1)).toBe(tc);
+    expect(tc.removeInterface(2)).toBe(tc);
 
-    expect(tc.setResolver('myResolver', new Resolver({ name: 'myResolver' }))).equal(tc);
-    expect(tc.addResolver(new Resolver({ name: 'myResolver' }))).equal(tc);
-    expect(tc.removeResolver('myResolver')).equal(tc);
+    expect(tc.setResolver('myResolver', new Resolver({ name: 'myResolver' }))).toBe(tc);
+    expect(tc.addResolver(new Resolver({ name: 'myResolver' }))).toBe(tc);
+    expect(tc.removeResolver('myResolver')).toBe(tc);
 
-    expect(tc.setTypeName('Type2')).equal(tc);
-    expect(tc.setDescription('Description')).equal(tc);
-    expect(tc.setRecordIdFn(() => {})).equal(tc);
-    expect(tc.addProjectionMapper('f1', { name: true })).equal(tc);
+    expect(tc.setTypeName('Type2')).toBe(tc);
+    expect(tc.setDescription('Description')).toBe(tc);
+    expect(tc.setRecordIdFn(() => {})).toBe(tc);
+    expect(tc.addProjectionMapper('f1', { name: true })).toBe(tc);
   });
 });

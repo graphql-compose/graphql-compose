@@ -1,6 +1,5 @@
 /* @flow */
 
-import { expect } from 'chai';
 import { GraphQLString, GraphQLInt, GraphQLFloat } from 'graphql';
 import TypeComposer from '../typeComposer';
 import InputTypeComposer from '../inputTypeComposer';
@@ -39,86 +38,86 @@ describe('typeByPath', () => {
 
   describe('for TypeComposer', () => {
     it('should return field type', () => {
-      expect(tc.get('title')).equal(GraphQLString);
+      expect(tc.get('title')).toBe(GraphQLString);
     });
 
     it('should return TypeCompose for complex type', () => {
-      expect(tc.get('lonLat')).instanceof(TypeComposer);
-      expect(tc.get('lonLat').getTypeName()).equal('LonLat');
+      expect(tc.get('lonLat')).toBeInstanceOf(TypeComposer);
+      expect(tc.get('lonLat').getTypeName()).toBe('LonLat');
     });
 
     it('should return sub field type', () => {
-      expect(tc.get('lonLat.lon')).equal(GraphQLFloat);
-      expect(tc.get('lonLat.lat')).equal(GraphQLFloat);
+      expect(tc.get('lonLat.lon')).toBe(GraphQLFloat);
+      expect(tc.get('lonLat.lat')).toBe(GraphQLFloat);
     });
 
     it('should return type of field arg', () => {
-      expect(tc.get('image.@size')).equal(GraphQLInt);
+      expect(tc.get('image.@size')).toBe(GraphQLInt);
     });
 
     it('should return resolver', () => {
-      expect(tc.get('$findSpots')).instanceof(Resolver);
+      expect(tc.get('$findSpots')).toBeInstanceOf(Resolver);
     });
 
     it('should return resolver args', () => {
-      expect(tc.get('$findSpots.@limit')).equal(GraphQLInt);
-      expect(tc.get('$findSpots.@spot')).instanceof(InputTypeComposer);
-      expect(tc.get('$findSpots.@spot').getType()).equal(spotITC.getType());
+      expect(tc.get('$findSpots.@limit')).toBe(GraphQLInt);
+      expect(tc.get('$findSpots.@spot')).toBeInstanceOf(InputTypeComposer);
+      expect(tc.get('$findSpots.@spot').getType()).toBe(spotITC.getType());
     });
 
     it('should return type of resolver outputType fields', () => {
-      expect(tc.get('$findSpots.title')).equal(GraphQLString);
-      expect(tc.get('$findSpots.image.@size')).equal(GraphQLInt);
+      expect(tc.get('$findSpots.title')).toBe(GraphQLString);
+      expect(tc.get('$findSpots.image.@size')).toBe(GraphQLInt);
     });
 
     it('should return same GraphQL type instances', () => {
-      expect(tc.get('lonLat').getType()).to.be.ok;
+      expect(tc.get('lonLat').getType()).toBeTruthy();
       // via TypeComposer
-      expect(tc.get('lonLat').getType()).equal(tc.get('lonLat').getType());
+      expect(tc.get('lonLat').getType()).toBe(tc.get('lonLat').getType());
       // scalar type
-      expect(tc.get('lonLat.lat')).equal(tc.get('lonLat.lat'));
+      expect(tc.get('lonLat.lat')).toBe(tc.get('lonLat.lat'));
     });
 
     it('should return same GraphQL type instances via resolver', () => {
-      expect(tc.get('$findSpots.lonLat').getType()).to.be.ok;
-      expect(tc.get('$findSpots.lonLat').getType()).equal(tc.get('$findSpots.lonLat').getType());
+      expect(tc.get('$findSpots.lonLat').getType()).toBeTruthy();
+      expect(tc.get('$findSpots.lonLat').getType()).toBe(tc.get('$findSpots.lonLat').getType());
 
       // for wrapped type eg Array
-      expect(tc.get('$findSpots.points').getType()).to.be.ok;
-      expect(tc.get('$findSpots.points').getType()).equal(tc.get('$findSpots.points').getType());
+      expect(tc.get('$findSpots.points').getType()).toBeTruthy();
+      expect(tc.get('$findSpots.points').getType()).toBe(tc.get('$findSpots.points').getType());
     });
   });
 
   describe('for InputTypeComposer', () => {
     it('should return field type', () => {
-      expect(spotITC.get('lon')).equal(GraphQLFloat);
-      expect(spotITC.get('distance')).equal(GraphQLFloat);
+      expect(spotITC.get('lon')).toBe(GraphQLFloat);
+      expect(spotITC.get('distance')).toBe(GraphQLFloat);
     });
 
     it('should return sub field type', () => {
-      expect(spotITC.get('subSpot.lon')).equal(GraphQLFloat);
-      expect(spotITC.get('subSpot.distance')).equal(GraphQLFloat);
+      expect(spotITC.get('subSpot.lon')).toBe(GraphQLFloat);
+      expect(spotITC.get('subSpot.distance')).toBe(GraphQLFloat);
     });
   });
 
   describe('for Resolver', () => {
     it('should return args', () => {
-      expect(rsv.get('@limit')).equal(GraphQLInt);
-      expect(rsv.get('@spot')).instanceof(InputTypeComposer);
-      expect(rsv.get('@spot').getType()).equal(spotITC.getType());
+      expect(rsv.get('@limit')).toBe(GraphQLInt);
+      expect(rsv.get('@spot')).toBeInstanceOf(InputTypeComposer);
+      expect(rsv.get('@spot').getType()).toBe(spotITC.getType());
     });
 
     it('should return type of outputType fields', () => {
-      expect(rsv.get('title')).equal(GraphQLString);
-      expect(rsv.get('image.@size')).equal(GraphQLInt);
+      expect(rsv.get('title')).toBe(GraphQLString);
+      expect(rsv.get('image.@size')).toBe(GraphQLInt);
     });
 
     it('should return same GraphQL type instances', () => {
-      expect(rsv.get('@spot').getType()).to.be.ok;
+      expect(rsv.get('@spot').getType()).toBeTruthy();
       // via InputTypeComposer
-      expect(rsv.get('@spot').getType()).equal(rsv.get('@spot').getType());
+      expect(rsv.get('@spot').getType()).toBe(rsv.get('@spot').getType());
       // scalar type
-      expect(rsv.get('@spot.lat')).equal(rsv.get('@spot.lat'));
+      expect(rsv.get('@spot.lat')).toBe(rsv.get('@spot.lat'));
     });
   });
 });

@@ -1,6 +1,5 @@
 /* @flow */
 
-import { expect } from 'chai';
 import { GraphQLObjectType, GraphQLScalarType } from 'graphql';
 import Storage from '../storage';
 import TypeComposer from '../typeComposer';
@@ -11,7 +10,7 @@ describe('Storage [Class]', () => {
   it('should implements `add` method that accepts only TypeComposer', () => {
     const storage = new Storage();
     storage.add(someTC);
-    expect(storage.get('validType')).to.equal(someTC);
+    expect(storage.get('validType')).toBe(someTC);
 
     const errTypeObj1 = new GraphQLScalarType({
       name: 'validType1',
@@ -19,25 +18,25 @@ describe('Storage [Class]', () => {
     });
     expect(() => {
       storage.add(errTypeObj1);
-    }).throw();
+    }).toThrowError();
 
     const errTypeObj2 = { name: '123' };
     expect(() => {
       storage.add(errTypeObj2);
-    }).throw();
+    }).toThrowError();
   });
 
   it('should implements `get` method', () => {
     const storage = new Storage();
     storage.add(someTC);
-    expect(storage.get('validType')).to.equal(someTC);
+    expect(storage.get('validType')).toBe(someTC);
   });
 
   it('should implements `has` method`', () => {
     const storage = new Storage();
     storage.add(someTC);
-    expect(storage.has('validType')).to.be.true;
-    expect(storage.has('unexistedType')).to.be.false;
+    expect(storage.has('validType')).toBe(true);
+    expect(storage.has('unexistedType')).toBe(false);
   });
 
   describe('buildSchema()', () => {
@@ -47,7 +46,7 @@ describe('Storage [Class]', () => {
 
       expect(() => {
         storage.buildSchema();
-      }).throw();
+      }).toThrowError();
     });
   });
 
@@ -89,10 +88,10 @@ describe('Storage [Class]', () => {
       ArticleTC.addRelation('user', () => ({
         resolver: UserTC.getResolver('findById'),
       }));
-      expect(ArticleTC.getField('user')).to.be.undefined;
+      expect(ArticleTC.getField('user')).toBeUndefined();
       storage.rootQuery().setField('acticles', ArticleTC);
       storage.buildSchema();
-      expect(ArticleTC.getField('user').type.name).to.equal('User');
+      expect(ArticleTC.getField('user').type.name).toBe('User');
     });
 
     it('should convert cross related relations to fieldConfigs', () => {
@@ -104,14 +103,14 @@ describe('Storage [Class]', () => {
         resolver: ArticleTC.getResolver('findOne'),
       }));
 
-      expect(ArticleTC.getField('user')).to.be.undefined;
-      expect(UserTC.getField('lastArticle')).to.be.undefined;
+      expect(ArticleTC.getField('user')).toBeUndefined();
+      expect(UserTC.getField('lastArticle')).toBeUndefined();
 
       storage.rootQuery().setField('acticle', ArticleTC);
       storage.rootQuery().setField('user', UserTC);
       storage.buildSchema();
-      expect(ArticleTC.getField('user').type.name).to.equal('User');
-      expect(UserTC.getField('lastArticle').type.name).to.equal('Article');
+      expect(ArticleTC.getField('user').type.name).toBe('User');
+      expect(UserTC.getField('lastArticle').type.name).toBe('Article');
     });
 
     it('should convert relations in relation to fieldConfigs', () => {
@@ -123,14 +122,14 @@ describe('Storage [Class]', () => {
         resolver: ArticleTC.getResolver('findOne'),
       }));
 
-      expect(ArticleTC.getField('user')).to.be.undefined;
-      expect(UserTC.getField('lastArticle')).to.be.undefined;
+      expect(ArticleTC.getField('user')).toBeUndefined();
+      expect(UserTC.getField('lastArticle')).toBeUndefined();
 
       storage.rootQuery().setField('acticle', ArticleTC);
       // we not add UserTC to schema explicitly
       storage.buildSchema();
-      expect(ArticleTC.getField('user').type.name).to.equal('User');
-      expect(UserTC.getField('lastArticle').type.name).to.equal('Article');
+      expect(ArticleTC.getField('user').type.name).toBe('User');
+      expect(UserTC.getField('lastArticle').type.name).toBe('Article');
     });
   });
 
@@ -147,7 +146,7 @@ describe('Storage [Class]', () => {
       });
 
       storage.removeEmptyTypes(viewerTC);
-      expect(viewerTC.hasField('stub')).to.be.false;
+      expect(viewerTC.hasField('stub')).toBe(false);
     });
 
     it('should not produce Maximum call stack size exceeded', () => {

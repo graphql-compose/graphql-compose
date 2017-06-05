@@ -1,6 +1,5 @@
 /* @flow */
 
-import { expect } from 'chai';
 import { GraphQLString, GraphQLObjectType, GraphQLInputObjectType } from 'graphql';
 import TypeComposer from '../../typeComposer';
 import InputTypeComposer from '../../inputTypeComposer';
@@ -37,29 +36,29 @@ describe('typeAsThunk', () => {
         }),
       };
       const unwrapped = resolveOutputConfigsAsThunk(fieldMap);
-      expect(unwrapped.f0.type).to.equal(GraphQLString);
-      expect(unwrapped.f0.description).to.equal('Field0');
-      expect(unwrapped.f0._fieldAsThunk).to.be.ok;
-      expect(unwrapped.f0._fieldAsThunk()).to.eql({
+      expect(unwrapped.f0.type).toBe(GraphQLString);
+      expect(unwrapped.f0.description).toBe('Field0');
+      expect(unwrapped.f0._fieldAsThunk).toBeTruthy();
+      expect(unwrapped.f0._fieldAsThunk()).toEqual({
         type: GraphQLString,
         description: 'Field0',
       });
 
-      expect(unwrapped.f1.type).to.equal(GraphQLString);
-      expect(unwrapped.f1.description).to.equal('Field1');
-      expect(unwrapped.f1._fieldAsThunk).to.be.ok;
-      expect(unwrapped.f1._fieldAsThunk()).to.eql({
+      expect(unwrapped.f1.type).toBe(GraphQLString);
+      expect(unwrapped.f1.description).toBe('Field1');
+      expect(unwrapped.f1._fieldAsThunk).toBeTruthy();
+      expect(unwrapped.f1._fieldAsThunk()).toEqual({
         type: 'String',
         description: 'Field1',
       });
 
-      expect(unwrapped.f3.type).to.instanceOf(GraphQLObjectType);
-      expect(unwrapped.f3.type.name).to.equal('MyType');
-      expect(unwrapped.f3.description).to.equal('Field3');
+      expect(unwrapped.f3.type).toBeInstanceOf(GraphQLObjectType);
+      expect(unwrapped.f3.type.name).toBe('MyType');
+      expect(unwrapped.f3.description).toBe('Field3');
 
-      expect(unwrapped.f5.type).to.instanceOf(GraphQLObjectType);
-      expect(unwrapped.f5.type.name).to.equal('LonLat');
-      expect(unwrapped.f5.description).to.equal('Field5');
+      expect(unwrapped.f5.type).toBeInstanceOf(GraphQLObjectType);
+      expect(unwrapped.f5.type.name).toBe('LonLat');
+      expect(unwrapped.f5.description).toBe('Field5');
     });
 
     it('should unwrap types from functions', () => {
@@ -90,23 +89,23 @@ describe('typeAsThunk', () => {
       };
       const unwrapped = resolveOutputConfigsAsThunk(fieldMap);
 
-      expect(unwrapped.f1.type).to.equal(GraphQLString);
+      expect(unwrapped.f1.type).toBe(GraphQLString);
 
-      expect(unwrapped.f2.type).to.equal(GraphQLString);
-      expect(unwrapped.f2._typeAsThunk).to.be.ok;
-      expect(unwrapped.f2._typeAsThunk()).to.equal(GraphQLString);
+      expect(unwrapped.f2.type).toBe(GraphQLString);
+      expect(unwrapped.f2._typeAsThunk).toBeTruthy();
+      expect(unwrapped.f2._typeAsThunk()).toBe(GraphQLString);
 
-      expect(unwrapped.f3.type).to.instanceOf(GraphQLObjectType);
-      expect(unwrapped.f3.type.name).to.equal('MyType');
-      expect(unwrapped.f3.description).to.equal('Field3');
+      expect(unwrapped.f3.type).toBeInstanceOf(GraphQLObjectType);
+      expect(unwrapped.f3.type.name).toBe('MyType');
+      expect(unwrapped.f3.description).toBe('Field3');
 
-      expect(unwrapped.f4.type).to.equal(GraphQLString);
-      expect(unwrapped.f4._typeAsThunk).to.be.ok;
-      expect(unwrapped.f4._typeAsThunk()).to.equal('String');
+      expect(unwrapped.f4.type).toBe(GraphQLString);
+      expect(unwrapped.f4._typeAsThunk).toBeTruthy();
+      expect(unwrapped.f4._typeAsThunk()).toBe('String');
 
-      expect(unwrapped.f5.type).to.instanceOf(GraphQLObjectType);
-      expect(unwrapped.f5.type.name).to.equal('LonLat');
-      expect(unwrapped.f5.description).to.equal('Field5');
+      expect(unwrapped.f5.type).toBeInstanceOf(GraphQLObjectType);
+      expect(unwrapped.f5.type.name).toBe('LonLat');
+      expect(unwrapped.f5.description).toBe('Field5');
     });
 
     it('should unwrap fields from functions and type from function', () => {
@@ -122,17 +121,21 @@ describe('typeAsThunk', () => {
       };
       const unwrapped = resolveOutputConfigsAsThunk(fieldMap);
 
-      expect(unwrapped.f3.type).to.equal(GraphQLString);
-      expect(unwrapped.f3._fieldAsThunk).to.be.ok;
-      expect(unwrapped.f3._fieldAsThunk()).to.have.all.keys('type', 'description');
-      expect(unwrapped.f3._typeAsThunk).to.be.ok;
-      expect(unwrapped.f3._typeAsThunk()).to.equal(GraphQLString);
+      expect(unwrapped.f3.type).toBe(GraphQLString);
+      expect(unwrapped.f3._fieldAsThunk).toBeTruthy();
+      expect(Object.keys(unwrapped.f3._fieldAsThunk())).toEqual(
+        expect.arrayContaining(['type', 'description'])
+      );
+      expect(unwrapped.f3._typeAsThunk).toBeTruthy();
+      expect(unwrapped.f3._typeAsThunk()).toBe(GraphQLString);
 
-      expect(unwrapped.f4.type).to.equal(GraphQLString);
-      expect(unwrapped.f4._fieldAsThunk).to.be.ok;
-      expect(unwrapped.f4._fieldAsThunk()).to.have.all.keys('type', 'description');
-      expect(unwrapped.f4._typeAsThunk).to.be.ok;
-      expect(unwrapped.f4._typeAsThunk()).to.equal('String');
+      expect(unwrapped.f4.type).toBe(GraphQLString);
+      expect(unwrapped.f4._fieldAsThunk).toBeTruthy();
+      expect(Object.keys(unwrapped.f4._fieldAsThunk())).toEqual(
+        expect.arrayContaining(['type', 'description'])
+      );
+      expect(unwrapped.f4._typeAsThunk).toBeTruthy();
+      expect(unwrapped.f4._typeAsThunk()).toBe('String');
     });
 
     it('should works with arg as function', () => {
@@ -148,15 +151,15 @@ describe('typeAsThunk', () => {
       };
       const unwrapped = resolveOutputConfigsAsThunk(fieldMap);
       const args = unwrapped.f6.args;
-      expect(args.a1.type).to.equal(GraphQLString);
-      expect(args.a2.type).to.equal(GraphQLString);
-      expect(args.a2.description).to.equal('Desc');
-      expect(args.a3.type).to.equal(GraphQLString);
+      expect(args.a1.type).toBe(GraphQLString);
+      expect(args.a2.type).toBe(GraphQLString);
+      expect(args.a2.description).toBe('Desc');
+      expect(args.a3.type).toBe(GraphQLString);
     });
 
     it('should pass null, undefined', () => {
-      expect(resolveOutputConfigsAsThunk(null)).to.equal(null);
-      expect(resolveOutputConfigsAsThunk(undefined)).to.equal(undefined);
+      expect(resolveOutputConfigsAsThunk(null)).toBe(null);
+      expect(resolveOutputConfigsAsThunk(undefined)).toBe(undefined);
     });
   });
 
@@ -186,29 +189,29 @@ describe('typeAsThunk', () => {
         }),
       };
       const unwrapped = resolveInputConfigsAsThunk(fieldMap);
-      expect(unwrapped.f0.type).to.equal(GraphQLString);
-      expect(unwrapped.f0.description).to.equal('Field0');
-      expect(unwrapped.f0._fieldAsThunk).to.be.ok;
-      expect(unwrapped.f0._fieldAsThunk()).to.eql({
+      expect(unwrapped.f0.type).toBe(GraphQLString);
+      expect(unwrapped.f0.description).toBe('Field0');
+      expect(unwrapped.f0._fieldAsThunk).toBeTruthy();
+      expect(unwrapped.f0._fieldAsThunk()).toEqual({
         type: GraphQLString,
         description: 'Field0',
       });
 
-      expect(unwrapped.f1.type).to.equal(GraphQLString);
-      expect(unwrapped.f1.description).to.equal('Field1');
-      expect(unwrapped.f1._fieldAsThunk).to.be.ok;
-      expect(unwrapped.f1._fieldAsThunk()).to.eql({
+      expect(unwrapped.f1.type).toBe(GraphQLString);
+      expect(unwrapped.f1.description).toBe('Field1');
+      expect(unwrapped.f1._fieldAsThunk).toBeTruthy();
+      expect(unwrapped.f1._fieldAsThunk()).toEqual({
         type: 'String',
         description: 'Field1',
       });
 
-      expect(unwrapped.f3.type).to.instanceOf(GraphQLInputObjectType);
-      expect(unwrapped.f3.type.name).to.equal('MyType');
-      expect(unwrapped.f3.description).to.equal('Field3');
+      expect(unwrapped.f3.type).toBeInstanceOf(GraphQLInputObjectType);
+      expect(unwrapped.f3.type.name).toBe('MyType');
+      expect(unwrapped.f3.description).toBe('Field3');
 
-      expect(unwrapped.f5.type).to.instanceOf(GraphQLInputObjectType);
-      expect(unwrapped.f5.type.name).to.equal('LonLat');
-      expect(unwrapped.f5.description).to.equal('Field5');
+      expect(unwrapped.f5.type).toBeInstanceOf(GraphQLInputObjectType);
+      expect(unwrapped.f5.type.name).toBe('LonLat');
+      expect(unwrapped.f5.description).toBe('Field5');
     });
 
     it('should unwrap types from functions', () => {
@@ -240,23 +243,23 @@ describe('typeAsThunk', () => {
 
       const unwrapped = resolveInputConfigsAsThunk(fieldMap);
 
-      expect(unwrapped.f1.type).to.equal(GraphQLString);
+      expect(unwrapped.f1.type).toBe(GraphQLString);
 
-      expect(unwrapped.f2.type).to.equal(GraphQLString);
-      expect(unwrapped.f2._typeAsThunk).to.be.ok;
-      expect(unwrapped.f2._typeAsThunk()).to.equal(GraphQLString);
+      expect(unwrapped.f2.type).toBe(GraphQLString);
+      expect(unwrapped.f2._typeAsThunk).toBeTruthy();
+      expect(unwrapped.f2._typeAsThunk()).toBe(GraphQLString);
 
-      expect(unwrapped.f3.type).to.instanceOf(GraphQLInputObjectType);
-      expect(unwrapped.f3.type.name).to.equal('MyType');
-      expect(unwrapped.f3.description).to.equal('Field3');
+      expect(unwrapped.f3.type).toBeInstanceOf(GraphQLInputObjectType);
+      expect(unwrapped.f3.type.name).toBe('MyType');
+      expect(unwrapped.f3.description).toBe('Field3');
 
-      expect(unwrapped.f4.type).to.equal(GraphQLString);
-      expect(unwrapped.f4._typeAsThunk).to.be.ok;
-      expect(unwrapped.f4._typeAsThunk()).to.equal('String');
+      expect(unwrapped.f4.type).toBe(GraphQLString);
+      expect(unwrapped.f4._typeAsThunk).toBeTruthy();
+      expect(unwrapped.f4._typeAsThunk()).toBe('String');
 
-      expect(unwrapped.f5.type).to.instanceOf(GraphQLInputObjectType);
-      expect(unwrapped.f5.type.name).to.equal('LonLat');
-      expect(unwrapped.f5.description).to.equal('Field5');
+      expect(unwrapped.f5.type).toBeInstanceOf(GraphQLInputObjectType);
+      expect(unwrapped.f5.type.name).toBe('LonLat');
+      expect(unwrapped.f5.description).toBe('Field5');
     });
 
     it('should unwrap fields from functions and type from function', () => {
@@ -272,24 +275,28 @@ describe('typeAsThunk', () => {
       };
       const unwrapped = resolveInputConfigsAsThunk(fieldMap);
 
-      expect(unwrapped.f3.type).to.equal(GraphQLString);
-      expect(unwrapped.f3.description).to.equal('Field3');
-      expect(unwrapped.f3._fieldAsThunk).to.be.ok;
-      expect(unwrapped.f3._fieldAsThunk()).to.have.all.keys('type', 'description');
-      expect(unwrapped.f3._typeAsThunk).to.be.ok;
-      expect(unwrapped.f3._typeAsThunk()).to.equal(GraphQLString);
+      expect(unwrapped.f3.type).toBe(GraphQLString);
+      expect(unwrapped.f3.description).toBe('Field3');
+      expect(unwrapped.f3._fieldAsThunk).toBeTruthy();
+      expect(Object.keys(unwrapped.f3._fieldAsThunk())).toEqual(
+        expect.arrayContaining(['type', 'description'])
+      );
+      expect(unwrapped.f3._typeAsThunk).toBeTruthy();
+      expect(unwrapped.f3._typeAsThunk()).toBe(GraphQLString);
 
-      expect(unwrapped.f4.type).to.equal(GraphQLString);
-      expect(unwrapped.f4.description).to.equal('Field4');
-      expect(unwrapped.f4._fieldAsThunk).to.be.ok;
-      expect(unwrapped.f4._fieldAsThunk()).to.have.all.keys('type', 'description');
-      expect(unwrapped.f4._typeAsThunk).to.be.ok;
-      expect(unwrapped.f4._typeAsThunk()).to.equal('String');
+      expect(unwrapped.f4.type).toBe(GraphQLString);
+      expect(unwrapped.f4.description).toBe('Field4');
+      expect(unwrapped.f4._fieldAsThunk).toBeTruthy();
+      expect(Object.keys(unwrapped.f4._fieldAsThunk())).toEqual(
+        expect.arrayContaining(['type', 'description'])
+      );
+      expect(unwrapped.f4._typeAsThunk).toBeTruthy();
+      expect(unwrapped.f4._typeAsThunk()).toBe('String');
     });
 
     it('should pass null, undefined', () => {
-      expect(resolveInputConfigsAsThunk(null)).to.equal(null);
-      expect(resolveInputConfigsAsThunk(undefined)).to.equal(undefined);
+      expect(resolveInputConfigsAsThunk(null)).toBe(null);
+      expect(resolveInputConfigsAsThunk(undefined)).toBe(undefined);
     });
   });
 
@@ -327,18 +334,18 @@ describe('typeAsThunk', () => {
         },
       };
       const wrapped = keepConfigsAsThunk(unwrapped);
-      expect(wrapped.f1.type).to.equal(GraphQLString);
-      expect(wrapped.f1.args.a1.type()).to.equal(GraphQLString);
-      expect(wrapped.f2.type).to.instanceOf(GraphQLObjectType);
-      expect(wrapped.f3.type).to.be.ok;
-      expect(wrapped.f3.type()).to.equal(GraphQLString);
-      expect(wrapped.f4()).to.equal(GraphQLString);
-      expect(wrapped.f5().type).to.equal(GraphQLString);
+      expect(wrapped.f1.type).toBe(GraphQLString);
+      expect(wrapped.f1.args.a1.type()).toBe(GraphQLString);
+      expect(wrapped.f2.type).toBeInstanceOf(GraphQLObjectType);
+      expect(wrapped.f3.type).toBeTruthy();
+      expect(wrapped.f3.type()).toBe(GraphQLString);
+      expect(wrapped.f4()).toBe(GraphQLString);
+      expect(wrapped.f5().type).toBe(GraphQLString);
     });
 
     it('should pass null, undefined', () => {
-      expect(keepConfigsAsThunk(null)).to.equal(null);
-      expect(keepConfigsAsThunk(undefined)).to.equal(undefined);
+      expect(keepConfigsAsThunk(null)).toBe(null);
+      expect(keepConfigsAsThunk(undefined)).toBe(undefined);
     });
   });
 });

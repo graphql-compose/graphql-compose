@@ -2,7 +2,6 @@
 
 // copied from https://github.com/taion/graphql-type-json
 
-import { expect } from 'chai';
 import { graphql, GraphQLObjectType, GraphQLSchema } from 'graphql';
 
 import GraphQLJSON from '../json';
@@ -49,7 +48,7 @@ describe('GraphQLJSON', () => {
 
   describe('serialize', () => {
     it('should support serialization', () => {
-      expect(GraphQLJSON.serialize(FIXTURE)).to.eql(FIXTURE);
+      expect(GraphQLJSON.serialize(FIXTURE)).toEqual(FIXTURE);
     });
   });
 
@@ -58,7 +57,7 @@ describe('GraphQLJSON', () => {
       graphql(schema, 'query ($arg: JSON) { value(arg: $arg) }', null, null, {
         arg: FIXTURE,
       }).then(({ data }) => {
-        expect(data.value).to.eql(FIXTURE);
+        expect(data.value).toEqual(FIXTURE);
         done();
       });
     });
@@ -97,7 +96,7 @@ describe('GraphQLJSON', () => {
         }
       `
       ).then(({ data }) => {
-        expect(data.value).to.eql({
+        expect(data.value).toEqual({
           string: 'string',
           int: 3,
           float: 3.14,
