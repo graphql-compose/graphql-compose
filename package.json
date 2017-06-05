@@ -56,16 +56,9 @@
       "path": "./node_modules/cz-conventional-changelog"
     }
   },
-  "nyc": {
-    "exclude": [
-      "**/__mocks__/**",
-      "**/__tests__/**",
-      "resources",
-      "node_modules"
-    ],
-    "reporter": [
-      "lcov",
-      "text"
+  "jest": {
+    "roots": [
+      "<rootDir>/src"
     ]
   },
   "scripts": {
