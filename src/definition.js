@@ -178,14 +178,14 @@ export type ComposeFieldConfigArgumentMap = {
 export type ComposeObjectTypeConfig<TSource, TContext> = {
   name: string,
   interfaces?: Thunk<?Array<GraphQLInterfaceType>>,
-  fields: Thunk<GraphQLFieldConfigMap<TSource, TContext>>,
+  fields: Thunk<ComposeFieldConfigMap<TSource, TContext>>,
   isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>,
   description?: ?string,
   isIntrospection?: boolean,
 };
 export type ComposeInputObjectTypeConfig = {
   name: string,
-  fields: ComposeInputFieldConfigMap,
+  fields: Thunk<ComposeInputFieldConfigMap>,
   description?: ?string,
 };
 export type GraphQLObjectTypeExtended = GraphQLObjectType & {
