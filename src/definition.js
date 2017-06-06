@@ -22,6 +22,11 @@ import type {
   GraphQLInputType as _GraphQLInputType,
   GraphQLNullableType as _GraphQLNullableType,
   GraphQLScalarType as _GraphQLScalarType,
+  GraphQLEnumType as _GraphQLEnumType,
+  GraphQLEnumTypeConfig as _GraphQLEnumTypeConfig,
+  GraphQLEnumValueConfigMap as _GraphQLEnumValueConfigMap,
+  GraphQLEnumValueConfig as _GraphQLEnumValueConfig,
+  GraphQLEnumValue as _GraphQLEnumValue,
   GraphQLIsTypeOfFn,
 } from "graphql/type/definition";
 
@@ -75,6 +80,12 @@ export type GraphQLFieldConfigMap<TSource, TContext> = _GraphQLFieldConfigMap<
 export type GraphQLInputFieldConfig = _GraphQLInputFieldConfig;
 export type GraphQLInputFieldConfigMap = _GraphQLInputFieldConfigMap;
 export type GraphQLInputType = _GraphQLInputType;
+
+export type GraphQLEnumType = _GraphQLEnumType;
+export type GraphQLEnumTypeConfig = _GraphQLEnumTypeConfig;
+export type GraphQLEnumValueConfigMap = _GraphQLEnumValueConfigMap;
+export type GraphQLEnumValueConfig = _GraphQLEnumValueConfig;
+export type GraphQLEnumValue = _GraphQLEnumValue;
 
 // Compose OutputType -----------------------------
 // No type checks for inputs arguments, while waiting new Flow versions.
