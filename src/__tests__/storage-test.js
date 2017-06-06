@@ -1,27 +1,27 @@
 /* @flow */
 
-import { GraphQLObjectType, GraphQLScalarType } from 'graphql';
 import Storage from '../storage';
 import TypeComposer from '../typeComposer';
 
 describe('Storage [Class]', () => {
-  const someTC = new TypeComposer(new GraphQLObjectType({ name: 'validType' }));
+  const someTC = TypeComposer.create({ name: 'validType' });
 
   it('should implements `add` method that accepts only TypeComposer', () => {
     const storage = new Storage();
     storage.add(someTC);
     expect(storage.get('validType')).toBe(someTC);
 
-    const errTypeObj1 = new GraphQLScalarType({
-      name: 'validType1',
-      serialize: () => {},
-    });
+    const errTypeObj1 = {
+      name: 'ValidType1',
+    };
     expect(() => {
+      // $FlowFixMe
       storage.add(errTypeObj1);
     }).toThrowError();
 
     const errTypeObj2 = { name: '123' };
     expect(() => {
+      // $FlowFixMe
       storage.add(errTypeObj2);
     }).toThrowError();
   });
@@ -145,7 +145,20 @@ describe('Storage [Class]', () => {
         stub: typeWithoutFieldsTC,
       });
 
+      /* eslint-disable */
+      const oldConsoleLog = console.log;
+      // $FlowFixMe
+      console.log = jest.fn();
+
       storage.removeEmptyTypes(viewerTC);
+
+      expect(console.log).lastCalledWith(
+        "GQC: Delete field 'Viewer.stub' with type 'Stub', cause it does not have fields.",
+      );
+      // $FlowFixMe
+      console.log = oldConsoleLog;
+      /* eslint-enable */
+
       expect(viewerTC.hasField('stub')).toBe(false);
     });
 

@@ -493,6 +493,7 @@ describe('Resolver', () => {
         someKey: 16,
       });
 
+      // $FlowFixMe
       expect(rpSnap.rawQuery).toEqual({
         age: { $gt: 15 },
         isActive: false,
@@ -505,7 +506,9 @@ describe('Resolver', () => {
         type: new GraphQLInputObjectType({
           name: 'MyFilterInput',
           fields: {
-            name: 'String',
+            name: {
+              type: GraphQLString,
+            },
           },
         }),
         defaultValue: {
@@ -627,6 +630,7 @@ describe('Resolver', () => {
       });
 
       newResolver.resolve({ args: { sort: 'PRICE_ASC' }, query });
+      // $FlowFixMe
       expect(rpSnap.args.sort).toEqual({ price: 1 });
       expect(whereSnap).toEqual({ price: { $gt: 0 } });
     });

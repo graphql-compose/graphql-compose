@@ -186,8 +186,8 @@ class TypeMapper {
 
   convertOutputFieldConfig<TSource, TContext>(
     composeFC: ComposeFieldConfig<TSource, TContext>,
-    fieldName: string,
-    typeName: string
+    fieldName?: string = '',
+    typeName?: string = ''
   ): GraphQLFieldConfig<TSource, TContext> {
     let composeType;
 
@@ -299,7 +299,7 @@ class TypeMapper {
 
   convertOutputFieldConfigMap<TSource, TContext>(
     composeFields: ComposeFieldConfigMap<TSource, TContext>,
-    typeName: string
+    typeName?: string = ''
   ): GraphQLFieldConfigMap<TSource, TContext> {
     const fields = {};
     Object.keys(composeFields).forEach(name => {
@@ -311,9 +311,9 @@ class TypeMapper {
 
   convertArgConfig(
     composeAC: ComposeArgumentConfig,
-    argName: string,
-    fieldName: string,
-    typeName: string
+    argName?: string = '',
+    fieldName?: string = '',
+    typeName?: string = ''
   ): GraphQLArgumentConfig {
     let composeType;
 
@@ -419,8 +419,8 @@ class TypeMapper {
 
   convertArgConfigMap(
     composeArgsConfigMap: ComposeFieldConfigArgumentMap,
-    fieldName: string,
-    typeName: string
+    fieldName?: string = '',
+    typeName?: string = ''
   ): GraphQLFieldConfigArgumentMap {
     const argsConfigMap = {};
     if (composeArgsConfigMap) {
@@ -439,7 +439,7 @@ class TypeMapper {
 
   convertInputFieldConfig(
     composeIFC: ComposeInputFieldConfig,
-    fieldName: string,
+    fieldName?: string = '',
     typeName?: string = ''
   ): GraphQLInputFieldConfig {
     let composeType;
@@ -544,7 +544,7 @@ class TypeMapper {
 
   convertInputFieldConfigMap(
     composeFields: ComposeInputFieldConfigMap,
-    typeName: string
+    typeName?: string = ''
   ): GraphQLInputFieldConfigMap {
     const fields = {};
     Object.keys(composeFields).forEach(name => {

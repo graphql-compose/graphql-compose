@@ -78,7 +78,7 @@ export type GraphQLInputType = _GraphQLInputType;
 
 // Compose OutputType -----------------------------
 // No type checks for inputs arguments, while waiting new Flow versions.
-export type ComposeOutputType<TSource, TContext> = any;
+export type ComposeOutputType = any;
 export type ComposeFieldConfig<TSource, TContext> = any;
 export type ComposeFieldConfigMap<TSource, TContext> = {
   [fieldName: string]: ComposeFieldConfig<TSource, TContext>,
@@ -97,26 +97,26 @@ export type ComposeFieldConfigMap<TSource, TContext> = {
 // export type ComposeFieldConfig<TSource, TContext> =
 //   | {
 //       type:
-//         | ComposeOutputType<TSource, TContext>
-//         | Array<ComposeOutputType<TSource, TContext>>,
+//         | ComposeOutputType
+//         | Array<ComposeOutputType>,
 //       args?: ComposeFieldConfigArgumentMap,
 //       resolve?: GraphQLFieldResolver<TSource, TContext>,
 //       subscribe?: GraphQLFieldResolver<TSource, TContext>,
 //       deprecationReason?: ?string,
 //       description?: ?string,
 //     }
-//   | ComposeOutputType<TSource, TContext>
+//   | ComposeOutputType
 //   | GraphQLFieldConfig<TSource, TContext>;
 //
 // // extended GraphQLOutputType
-// export type ComposeOutputType<TSource, TContext> =
+// export type ComposeOutputType =
 //   | GraphQLOutputType
 //   | TypeComposer
 //   | TypeWrappedString
 //   | TypeDefinitionString
 //   | TypeNameString
-//   | Resolver<TSource, TContext>
-//   | (() => ComposeOutputType<TSource, TContext>);
+//   | Resolver<*, *>
+//   | (() => ComposeOutputType);
 
 // Compose InputType -----------------------------
 export type ComposeInputType = any;
@@ -178,7 +178,7 @@ export type ComposeFieldConfigArgumentMap = {
 export type ComposeObjectTypeConfig<TSource, TContext> = {
   name: string,
   interfaces?: Thunk<?Array<GraphQLInterfaceType>>,
-  fields: Thunk<ComposeFieldConfigMap<TSource, TContext>>,
+  fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>,
   isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>,
   description?: ?string,
   isIntrospection?: boolean,
@@ -254,7 +254,7 @@ export type ResolverMWArgs = (next: ResolverMWArgsFn) => ResolverMWArgsFn;
 
 export type ResolverMWResolveFn<TSource, TContext> = (
   resolveParams: $Shape<ResolveParams<TSource, TContext>>
-) => Promise<*>;
+) => Promise<*> | *;
 export type ResolverMWResolve<TSource, TContext> = (
   next: ResolverMWResolveFn<TSource, TContext>
 ) => ResolverMWResolveFn<TSource, TContext>;
@@ -299,7 +299,7 @@ export type ResolverSortArgConfig<TSource, TContext> = {
 };
 
 export type ResolverOpts<TSource, TContext> = {
-  type?: GraphQLOutputType,
+  type?: ComposeOutputType,
   resolve?: ResolverMWResolveFn<TSource, TContext>,
   args?: ComposeFieldConfigArgumentMap,
   name?: string,

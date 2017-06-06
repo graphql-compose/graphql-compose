@@ -305,7 +305,7 @@ export default class Resolver<TSource, TContext> {
     return null;
   }
 
-  setType(gqType: ComposeOutputType<TSource, TContext>): Resolver<TSource, TContext> {
+  setType(gqType: ComposeOutputType): Resolver<TSource, TContext> {
     const fc = TypeMapper.convertOutputFieldConfig(gqType, 'setType', 'Resolver');
 
     if (!fc || !isOutputType(fc.type)) {

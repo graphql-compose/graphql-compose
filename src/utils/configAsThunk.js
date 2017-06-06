@@ -8,7 +8,7 @@ export type FieldMaps = {
   [fieldName: string]: any,
 };
 
-export function resolveOutputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName: string): T {
+export function resolveOutputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName?: string = ''): T {
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(name => {
       if (isFunction(fieldMap[name])) {

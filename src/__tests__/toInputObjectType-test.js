@@ -61,6 +61,7 @@ describe('toInputObjectType()', () => {
     const itc = toInputObjectType(PersonTC);
     const addrType = itc.getFieldType('address');
     expect(addrType).toBeInstanceOf(GraphQLInputObjectType);
+    // $FlowFixMe
     expect(addrType._typeConfig.name).toBe('PersonAddressInput');
   });
 
@@ -73,6 +74,7 @@ describe('toInputObjectType()', () => {
   it('should reuse generated input type for recursive types in List', () => {
     PersonTC.setField('friends', { type: new GraphQLList(PersonType) });
     const itc = toInputObjectType(PersonTC);
+    // $FlowFixMe
     expect(itc.getFieldType('friends').ofType).toBe(itc.getType());
   });
 });
