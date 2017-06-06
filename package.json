@@ -66,7 +66,7 @@
     "lint": "eslint src test *.js",
     "test": "jest",
     "watch": "jest --watch",
-    "flow": "./node_modules/.bin/flow",
+    "flow": "./node_modules/.bin/flow stop && ./node_modules/.bin/flow",
     "all": "npm run test && npm run lint && npm run flow",
     "link": "yarn link graphql && yarn link",
     "unlink": "yarn unlink graphql && yarn add graphql",
