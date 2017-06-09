@@ -91,6 +91,7 @@ describe('Storage [Class]', () => {
       expect(ArticleTC.getField('user')).toBeUndefined();
       storage.rootQuery().setField('acticles', ArticleTC);
       storage.buildSchema();
+      // $FlowFixMe
       expect(ArticleTC.getField('user').type.name).toBe('User');
     });
 
@@ -109,7 +110,9 @@ describe('Storage [Class]', () => {
       storage.rootQuery().setField('acticle', ArticleTC);
       storage.rootQuery().setField('user', UserTC);
       storage.buildSchema();
+      // $FlowFixMe
       expect(ArticleTC.getField('user').type.name).toBe('User');
+      // $FlowFixMe
       expect(UserTC.getField('lastArticle').type.name).toBe('Article');
     });
 
@@ -128,7 +131,9 @@ describe('Storage [Class]', () => {
       storage.rootQuery().setField('acticle', ArticleTC);
       // we not add UserTC to schema explicitly
       storage.buildSchema();
+      // $FlowFixMe
       expect(ArticleTC.getField('user').type.name).toBe('User');
+      // $FlowFixMe
       expect(UserTC.getField('lastArticle').type.name).toBe('Article');
     });
   });
