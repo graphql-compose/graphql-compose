@@ -12,6 +12,7 @@ import InputTypeComposer from '../inputTypeComposer';
 
 describe('InputTypeComposer', () => {
   let objectType;
+  let itc: InputTypeComposer;
 
   beforeEach(() => {
     objectType = new GraphQLInputObjectType({
@@ -22,87 +23,90 @@ describe('InputTypeComposer', () => {
         input2: { type: GraphQLString },
       },
     });
+    itc = new InputTypeComposer(objectType);
   });
 
   describe('field manipulation methods', () => {
     it('getFields()', () => {
-      const tc = new InputTypeComposer(objectType);
-      const fieldNames = Object.keys(tc.getFields());
+      const fieldNames = Object.keys(itc.getFields());
       expect(fieldNames).toEqual(expect.arrayContaining(['input1', 'input2']));
     });
 
     it('getFieldNames()', () => {
-      const tc = new InputTypeComposer(objectType);
-      expect(tc.getFieldNames()).toEqual(expect.arrayContaining(['input1', 'input2']));
+      expect(itc.getFieldNames()).toEqual(expect.arrayContaining(['input1', 'input2']));
+    });
+
+    describe('getField()', () => {
+      it('should return field config', () => {
+        expect(itc.getField('input1').type).toBe(GraphQLString);
+      });
+
+      it('should throw error if field does not exist', () => {
+        expect(() => itc.getField('unexisted')).toThrowError(/Cannot get field.*does not exist/);
+      });
     });
 
     it('hasField()', () => {
-      const tc = new InputTypeComposer(objectType);
-      expect(tc.hasField('input1')).toBe(true);
-      expect(tc.hasField('missing')).toBe(false);
+      expect(itc.hasField('input1')).toBe(true);
+      expect(itc.hasField('missing')).toBe(false);
     });
 
     it('setField()', () => {
-      const tc = new InputTypeComposer(objectType);
-      tc.setField('input3', { type: GraphQLString });
+      itc.setField('input3', { type: GraphQLString });
       const fieldNames = Object.keys(objectType.getFields());
       expect(fieldNames).toContain('input3');
     });
 
     describe('setFields()', () => {
       it('accept regular fields definition', () => {
-        const tc = new InputTypeComposer(objectType);
-        tc.setFields({
+        itc.setFields({
           input3: { type: GraphQLString },
           input4: { type: GraphQLString },
         });
-        expect(tc.getFieldNames()).not.toEqual(expect.arrayContaining(['input1', 'input2']));
-        expect(tc.getFieldNames()).toEqual(expect.arrayContaining(['input3', 'input4']));
-        expect(tc.getFieldType('input3')).toBe(GraphQLString);
-        expect(tc.getFieldType('input4')).toBe(GraphQLString);
+        expect(itc.getFieldNames()).not.toEqual(expect.arrayContaining(['input1', 'input2']));
+        expect(itc.getFieldNames()).toEqual(expect.arrayContaining(['input3', 'input4']));
+        expect(itc.getFieldType('input3')).toBe(GraphQLString);
+        expect(itc.getFieldType('input4')).toBe(GraphQLString);
       });
 
       it('accept shortand fields definition', () => {
-        const tc = new InputTypeComposer(objectType);
-        tc.setFields({
+        itc.setFields({
           input3: GraphQLString,
           input4: 'String',
         });
-        expect(tc.getFieldType('input3')).toBe(GraphQLString);
-        expect(tc.getFieldType('input4')).toBe(GraphQLString);
+        expect(itc.getFieldType('input3')).toBe(GraphQLString);
+        expect(itc.getFieldType('input4')).toBe(GraphQLString);
       });
 
       it('accept types as function', () => {
-        const tc = new InputTypeComposer(objectType);
         const typeAsFn = () => GraphQLString;
-        tc.setFields({
+        itc.setFields({
           input3: { type: typeAsFn },
         });
-        expect(tc.getFieldType('input3')).toBe(typeAsFn);
+        expect(itc.getFieldType('input3')).toBe(typeAsFn);
 
         // show provide unwrapped/unhoisted type for graphql
-        expect(tc.getType()._typeConfig.fields().input3.type).toBe(GraphQLString);
+        // $FlowFixMe
+        expect(itc.getType()._typeConfig.fields().input3.type).toBe(GraphQLString);
       });
     });
 
     it('addFields()', () => {
-      const tc = new InputTypeComposer(objectType);
-      tc.addFields({
+      itc.addFields({
         input3: { type: GraphQLString },
         input4: { type: GraphQLString },
       });
-      expect(tc.getFieldNames()).toEqual(
+      expect(itc.getFieldNames()).toEqual(
         expect.arrayContaining(['input1', 'input2', 'input3', 'input4'])
       );
     });
 
     it('removeField()', () => {
-      const tc = new InputTypeComposer(objectType);
-      tc.removeField('input1');
-      expect(tc.getFieldNames()).not.toContain('input1');
-      expect(tc.getFieldNames()).toContain('input2');
-      tc.removeField(['input2', 'input3']);
-      expect(tc.getFieldNames()).not.toContain('input2');
+      itc.removeField('input1');
+      expect(itc.getFieldNames()).not.toContain('input1');
+      expect(itc.getFieldNames()).toContain('input2');
+      itc.removeField(['input2', 'input3']);
+      expect(itc.getFieldNames()).not.toContain('input2');
     });
 
     it('removeOtherFields()', () => {
@@ -114,153 +118,152 @@ describe('InputTypeComposer', () => {
           input3: 'String',
         },
       };
-      const tc = InputTypeComposer.create(cfg);
-      tc.removeOtherFields('input1');
-      expect(tc.getFieldNames()).toEqual(expect.arrayContaining(['input1']));
-      expect(tc.getFieldNames()).not.toEqual(expect.arrayContaining(['input2', 'input3']));
+      const itc1 = InputTypeComposer.create(cfg);
+      itc1.removeOtherFields('input1');
+      expect(itc1.getFieldNames()).toEqual(expect.arrayContaining(['input1']));
+      expect(itc1.getFieldNames()).not.toEqual(expect.arrayContaining(['input2', 'input3']));
 
-      const tc2 = InputTypeComposer.create(cfg);
-      tc2.removeOtherFields(['input1', 'input2']);
-      expect(tc2.getFieldNames()).toEqual(expect.arrayContaining(['input1', 'input2']));
-      expect(tc2.getFieldNames()).not.toEqual(expect.arrayContaining(['input3']));
+      const itc2 = InputTypeComposer.create(cfg);
+      itc2.removeOtherFields(['input1', 'input2']);
+      expect(itc2.getFieldNames()).toEqual(expect.arrayContaining(['input1', 'input2']));
+      expect(itc2.getFieldNames()).not.toEqual(expect.arrayContaining(['input3']));
     });
 
     describe('reorderFields()', () => {
       it('should change fields order', () => {
-        const tcOrder = InputTypeComposer.create({
+        const itcOrder = InputTypeComposer.create({
           name: 'Type',
           fields: { f1: 'Int', f2: 'Int', f3: 'Int ' },
         });
-        expect(tcOrder.getFieldNames().join(',')).toBe('f1,f2,f3');
-        tcOrder.reorderFields(['f3', 'f2', 'f1']);
-        expect(tcOrder.getFieldNames().join(',')).toBe('f3,f2,f1');
+        expect(itcOrder.getFieldNames().join(',')).toBe('f1,f2,f3');
+        itcOrder.reorderFields(['f3', 'f2', 'f1']);
+        expect(itcOrder.getFieldNames().join(',')).toBe('f3,f2,f1');
       });
 
       it('should append not listed fields', () => {
-        const tcOrder = InputTypeComposer.create({
+        const itcOrder = InputTypeComposer.create({
           name: 'Type',
           fields: { f1: 'Int', f2: 'Int', f3: 'Int ' },
         });
-        expect(tcOrder.getFieldNames().join(',')).toBe('f1,f2,f3');
-        tcOrder.reorderFields(['f3']);
-        expect(tcOrder.getFieldNames().join(',')).toBe('f3,f1,f2');
+        expect(itcOrder.getFieldNames().join(',')).toBe('f1,f2,f3');
+        itcOrder.reorderFields(['f3']);
+        expect(itcOrder.getFieldNames().join(',')).toBe('f3,f1,f2');
       });
 
       it('should skip non existed fields', () => {
-        const tcOrder = InputTypeComposer.create({
+        const itcOrder = InputTypeComposer.create({
           name: 'Type',
           fields: { f1: 'Int', f2: 'Int', f3: 'Int ' },
         });
-        expect(tcOrder.getFieldNames().join(',')).toBe('f1,f2,f3');
-        tcOrder.reorderFields(['f22', 'f3', 'f55', 'f1', 'f2']);
-        expect(tcOrder.getFieldNames().join(',')).toBe('f3,f1,f2');
+        expect(itcOrder.getFieldNames().join(',')).toBe('f1,f2,f3');
+        itcOrder.reorderFields(['f22', 'f3', 'f55', 'f1', 'f2']);
+        expect(itcOrder.getFieldNames().join(',')).toBe('f3,f1,f2');
       });
     });
 
-    it('should extend field by name', () => {
-      const tc = new InputTypeComposer(objectType);
-      tc.setField('input3', {
-        type: GraphQLString,
+    describe('should extend field by name', () => {
+      it('should extend existed fields', () => {
+        itc.setField('input3', {
+          type: GraphQLString,
+        });
+        itc.extendField('input3', {
+          description: 'this is input #3',
+        });
+        expect(itc.getField('input3').type).toBe(GraphQLString);
+        expect(itc.getField('input3').description).toBe('this is input #3');
+        itc.extendField('input3', {
+          type: 'Int',
+        });
+        expect(itc.getField('input3').type).toBe(GraphQLInt);
       });
-      tc.extendField('input3', {
-        description: 'this is input #3',
+
+      it('should throw error if field does not exists', () => {
+        expect(() => itc.extendField('unexisted', { description: '123' })).toThrow(
+          /Cannot extend field.*Field does not exist/
+        );
       });
-      expect(tc.getField('input3').type).toBe(GraphQLString);
-      expect(tc.getField('input3').description).toBe('this is input #3');
-      tc.extendField('input3', {
-        type: 'Int',
-      });
-      expect(tc.getField('input3').type).toBe(GraphQLInt);
     });
 
     it('getFieldType()', () => {
-      const tc = new InputTypeComposer(objectType);
-      expect(tc.getFieldType('input1')).toBe(GraphQLString);
+      expect(itc.getFieldType('input1')).toBe(GraphQLString);
     });
 
     it('isRequired()', () => {
-      const tc = new InputTypeComposer(objectType);
-      expect(tc.isRequired('input1')).toBe(false);
+      expect(itc.isRequired('input1')).toBe(false);
     });
 
     it('makeRequired()', () => {
-      const tc = new InputTypeComposer(objectType);
-      tc.makeRequired('input1');
-      expect(tc.getField('input1').type).toBeInstanceOf(GraphQLNonNull);
-      expect(tc.getField('input1').type.ofType).toBe(GraphQLString);
-      expect(tc.isRequired('input1')).toBe(true);
+      itc.makeRequired('input1');
+      expect(itc.getField('input1').type).toBeInstanceOf(GraphQLNonNull);
+      // $FlowFixMe
+      expect(itc.getField('input1').type.ofType).toBe(GraphQLString);
+      expect(itc.isRequired('input1')).toBe(true);
     });
 
     it('makeOptional()', () => {
-      const tc = new InputTypeComposer(objectType);
-      tc.makeRequired('input1');
-      expect(tc.isRequired('input1')).toBe(true);
-      tc.makeOptional('input1');
-      expect(tc.isRequired('input1')).toBe(false);
+      itc.makeRequired('input1');
+      expect(itc.isRequired('input1')).toBe(true);
+      itc.makeOptional('input1');
+      expect(itc.isRequired('input1')).toBe(false);
     });
 
     it('should add fields with converting types from string to object', () => {
-      const tc = new InputTypeComposer(objectType);
-      tc.setField('input3', { type: 'String' });
-      tc.addFields({
+      itc.setField('input3', { type: 'String' });
+      itc.addFields({
         input4: { type: '[Int]' },
         input5: { type: 'Boolean!' },
       });
 
-      expect(tc.getField('input3').type).toBe(GraphQLString);
-      expect(tc.getField('input4').type).toBeInstanceOf(GraphQLList);
-      expect(tc.getField('input4').type.ofType).toBe(GraphQLInt);
-      expect(tc.getField('input5').type).toBeInstanceOf(GraphQLNonNull);
-      expect(tc.getField('input5').type.ofType).toBe(GraphQLBoolean);
+      expect(itc.getField('input3').type).toBe(GraphQLString);
+      expect(itc.getField('input4').type).toBeInstanceOf(GraphQLList);
+      // $FlowFixMe
+      expect(itc.getField('input4').type.ofType).toBe(GraphQLInt);
+      expect(itc.getField('input5').type).toBeInstanceOf(GraphQLNonNull);
+      // $FlowFixMe
+      expect(itc.getField('input5').type.ofType).toBe(GraphQLBoolean);
     });
   });
 
   describe('type manipulation methods', () => {
     it('getType()', () => {
-      const tc = new InputTypeComposer(objectType);
-      expect(tc.getType()).toBeInstanceOf(GraphQLInputObjectType);
-      expect(tc.getType().name).toBe('InputType');
+      expect(itc.getType()).toBeInstanceOf(GraphQLInputObjectType);
+      expect(itc.getType().name).toBe('InputType');
     });
 
     it('getTypeAsRequired()', () => {
-      const tc = new InputTypeComposer(objectType);
-      expect(tc.getTypeAsRequired()).toBeInstanceOf(GraphQLNonNull);
-      expect(tc.getTypeAsRequired().ofType.name).toBe('InputType');
+      expect(itc.getTypeAsRequired()).toBeInstanceOf(GraphQLNonNull);
+      expect(itc.getTypeAsRequired().ofType.name).toBe('InputType');
     });
 
     it('getTypeName()', () => {
-      const tc = new InputTypeComposer(objectType);
-      expect(tc.getTypeName()).toBe('InputType');
+      expect(itc.getTypeName()).toBe('InputType');
     });
 
     it('setTypeName()', () => {
-      const tc = new InputTypeComposer(objectType);
-      tc.setTypeName('OtherInputType');
-      expect(tc.getTypeName()).toBe('OtherInputType');
+      itc.setTypeName('OtherInputType');
+      expect(itc.getTypeName()).toBe('OtherInputType');
     });
 
     it('getDescription()', () => {
-      const tc = new InputTypeComposer(objectType);
-      expect(tc.getDescription()).toBe('Mock type');
+      expect(itc.getDescription()).toBe('Mock type');
     });
 
     it('setDescription()', () => {
-      const tc = new InputTypeComposer(objectType);
-      tc.setDescription('Changed description');
-      expect(tc.getDescription()).toBe('Changed description');
+      itc.setDescription('Changed description');
+      expect(itc.getDescription()).toBe('Changed description');
     });
   });
 
   describe('static method create()', () => {
     it('should create ITC by typeName as a string', () => {
-      const TC = InputTypeComposer.create('TypeStub');
-      expect(TC).toBeInstanceOf(InputTypeComposer);
-      expect(TC.getType()).toBeInstanceOf(GraphQLInputObjectType);
-      expect(TC.getFields()).toEqual({});
+      const itc1 = InputTypeComposer.create('TypeStub');
+      expect(itc1).toBeInstanceOf(InputTypeComposer);
+      expect(itc1.getType()).toBeInstanceOf(GraphQLInputObjectType);
+      expect(itc1.getFields()).toEqual({});
     });
 
     it('should create ITC by type template string', () => {
-      const TC = InputTypeComposer.create(
+      const itc1 = InputTypeComposer.create(
         `
         input TestTypeTplInput {
           f1: String
@@ -269,15 +272,16 @@ describe('InputTypeComposer', () => {
         }
       `
       );
-      expect(TC).toBeInstanceOf(InputTypeComposer);
-      expect(TC.getTypeName()).toBe('TestTypeTplInput');
-      expect(TC.getFieldType('f1')).toBe(GraphQLString);
-      expect(TC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
-      expect(TC.getFieldType('f2').ofType).toBe(GraphQLInt);
+      expect(itc1).toBeInstanceOf(InputTypeComposer);
+      expect(itc1.getTypeName()).toBe('TestTypeTplInput');
+      expect(itc1.getFieldType('f1')).toBe(GraphQLString);
+      expect(itc1.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      // $FlowFixMe
+      expect(itc1.getFieldType('f2').ofType).toBe(GraphQLInt);
     });
 
     it('should create ITC by GraphQLObjectTypeConfig', () => {
-      const TC = InputTypeComposer.create({
+      const itc1 = InputTypeComposer.create({
         name: 'TestTypeInput',
         fields: {
           f1: {
@@ -286,10 +290,11 @@ describe('InputTypeComposer', () => {
           f2: 'Int!',
         },
       });
-      expect(TC).toBeInstanceOf(InputTypeComposer);
-      expect(TC.getFieldType('f1')).toBe(GraphQLString);
-      expect(TC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
-      expect(TC.getFieldType('f2').ofType).toBe(GraphQLInt);
+      expect(itc1).toBeInstanceOf(InputTypeComposer);
+      expect(itc1.getFieldType('f1')).toBe(GraphQLString);
+      expect(itc1.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      // $FlowFixMe
+      expect(itc1.getFieldType('f2').ofType).toBe(GraphQLInt);
     });
 
     it('should create ITC by GraphQLInputObjectType', () => {
@@ -301,15 +306,15 @@ describe('InputTypeComposer', () => {
           },
         },
       });
-      const TC = InputTypeComposer.create(objType);
-      expect(TC).toBeInstanceOf(InputTypeComposer);
-      expect(TC.getType()).toBe(objType);
-      expect(TC.getFieldType('f1')).toBe(GraphQLString);
+      const itc1 = InputTypeComposer.create(objType);
+      expect(itc1).toBeInstanceOf(InputTypeComposer);
+      expect(itc1.getType()).toBe(objType);
+      expect(itc1.getFieldType('f1')).toBe(GraphQLString);
     });
   });
 
   it('get() should return type by path', () => {
-    const tc = new InputTypeComposer(
+    const itc1 = new InputTypeComposer(
       new GraphQLInputObjectType({
         name: 'Writable',
         fields: {
@@ -320,21 +325,21 @@ describe('InputTypeComposer', () => {
       })
     );
 
-    expect(tc.get('field1')).toBe(GraphQLString);
+    expect(itc1.get('field1')).toBe(GraphQLString);
   });
 
   it('should have chainable methods', () => {
-    const itc = InputTypeComposer.create('InputType');
-    expect(itc.setFields({})).toBe(itc);
-    expect(itc.setField('f1', 'String')).toBe(itc);
-    expect(itc.extendField('f1', {})).toBe(itc);
-    expect(itc.addFields({})).toBe(itc);
-    expect(itc.removeField('f1')).toBe(itc);
-    expect(itc.removeOtherFields('f1')).toBe(itc);
-    expect(itc.reorderFields(['f1'])).toBe(itc);
-    expect(itc.makeRequired('f1')).toBe(itc);
-    expect(itc.makeOptional('f1')).toBe(itc);
-    expect(itc.setTypeName('InputType2')).toBe(itc);
-    expect(itc.setDescription('Test')).toBe(itc);
+    const itc1 = InputTypeComposer.create('InputType');
+    expect(itc1.setFields({})).toBe(itc1);
+    expect(itc1.setField('f1', 'String')).toBe(itc1);
+    expect(itc1.extendField('f1', {})).toBe(itc1);
+    expect(itc1.addFields({})).toBe(itc1);
+    expect(itc1.removeField('f1')).toBe(itc1);
+    expect(itc1.removeOtherFields('f1')).toBe(itc1);
+    expect(itc1.reorderFields(['f1'])).toBe(itc1);
+    expect(itc1.makeRequired('f1')).toBe(itc1);
+    expect(itc1.makeOptional('f1')).toBe(itc1);
+    expect(itc1.setTypeName('InputType2')).toBe(itc1);
+    expect(itc1.setDescription('Test')).toBe(itc1);
   });
 });
