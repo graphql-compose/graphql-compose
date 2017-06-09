@@ -224,7 +224,7 @@ export type RelationOptsWithResolver<TSource, TContext> = {
   catchErrors?: boolean,
 };
 export type RelationOptsWithFieldConfig<TSource, TContext> = {
-  type: GraphQLOutputType,
+  type: ComposeOutputType,
   args?: GraphQLFieldConfigArgumentMap,
   resolve: GraphQLFieldResolver<TSource, TContext>,
   projection?: ProjectionType,
