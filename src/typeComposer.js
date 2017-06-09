@@ -564,6 +564,10 @@ export default class TypeComposer {
   getFieldArg(fieldName: string, argName: string): ?GraphQLArgumentConfig {
     const fieldArgs = this.getFieldArgs(fieldName) || {};
     return fieldArgs[argName] ? fieldArgs[argName] : undefined;
+  hasFieldArg(fieldName: string, argName: string): boolean {
+    const fieldArgs = this.getFieldArgs(fieldName);
+    return !!fieldArgs[argName];
+  }
   }
 
   /**
