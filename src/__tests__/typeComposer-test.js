@@ -15,7 +15,7 @@ import Resolver from '../resolver';
 
 describe('TypeComposer', () => {
   let objectType;
-  let tc;
+  let tc: TypeComposer;
 
   beforeEach(() => {
     objectType = new GraphQLObjectType({
@@ -38,6 +38,16 @@ describe('TypeComposer', () => {
       expect(tc2.getFields()).toEqual({});
     });
 
+    describe('getField()', () => {
+      it('should return field config', () => {
+        expect(tc.getField('field1').type).toBe(GraphQLString);
+      });
+
+      it('should throw error if field does not exist', () => {
+        expect(() => tc.getField('unexisted')).toThrowError(/Cannot get field.*does not exist/);
+      });
+    });
+
     describe('setFields()', () => {
       it('should add field with standart config', () => {
         tc.setFields({
@@ -57,8 +67,10 @@ describe('TypeComposer', () => {
 
         expect(tc.getField('field3').type).toBe(GraphQLString);
         expect(tc.getField('field4').type).toBeInstanceOf(GraphQLList);
+        // $FlowFixMe
         expect(tc.getField('field4').type.ofType).toBe(GraphQLInt);
         expect(tc.getField('field5').type).toBeInstanceOf(GraphQLNonNull);
+        // $FlowFixMe
         expect(tc.getField('field5').type.ofType).toBe(GraphQLBoolean);
       });
 
@@ -74,8 +86,10 @@ describe('TypeComposer', () => {
         });
 
         expect(tc.getFieldArg('field3', 'arg1').type).toBeInstanceOf(GraphQLNonNull);
+        // $FlowFixMe
         expect(tc.getFieldArg('field3', 'arg1').type.ofType).toBe(GraphQLString);
         expect(tc.getFieldArg('field3', 'arg2').type).toBeInstanceOf(GraphQLList);
+        // $FlowFixMe
         expect(tc.getFieldArg('field3', 'arg2').type.ofType).toBe(GraphQLFloat);
       });
 
@@ -103,6 +117,7 @@ describe('TypeComposer', () => {
         expect(tc.getFieldType('input3')).toBe(typeAsFn);
 
         // show provide unwrapped/unhoisted type for graphql
+        // $FlowFixMe
         expect(tc.getType()._typeConfig.fields().input3.type).toBe(GraphQLString);
       });
 
@@ -111,6 +126,7 @@ describe('TypeComposer', () => {
           input4: () => ({ type: 'String' }),
         });
         // show provide unwrapped/unhoisted type for graphql
+        // $FlowFixMe
         expect(tc.getType()._typeConfig.fields().input4.type).toBe(GraphQLString);
       });
     });
@@ -123,8 +139,10 @@ describe('TypeComposer', () => {
       });
       expect(tc.getField('field3').type).toBe(GraphQLString);
       expect(tc.getField('field4').type).toBeInstanceOf(GraphQLList);
+      // $FlowFixMe
       expect(tc.getField('field4').type.ofType).toBe(GraphQLInt);
       expect(tc.getField('field5').type).toBeInstanceOf(GraphQLNonNull);
+      // $FlowFixMe
       expect(tc.getField('field5').type.ofType).toBe(GraphQLBoolean);
     });
 
@@ -178,25 +196,60 @@ describe('TypeComposer', () => {
       });
     });
 
-    it('extendField()', () => {
-      tc.setField('field3', {
-        type: GraphQLString,
-        projection: { field1: true, field2: true },
+    describe('field arguments', () => {
+      beforeEach(() => {
+        tc.extendField('field1', {
+          args: {
+            arg1: 'Int',
+            arg2: 'String',
+          },
+        });
       });
-      tc.extendField('field3', {
-        description: 'this is field #3',
+
+      it('getFieldArgs()', () => {
+        const args = tc.getFieldArgs('field1');
+        expect(Object.keys(args)).toEqual(['arg1', 'arg2']);
+        expect(args.arg1.type).toBe(GraphQLInt);
+        expect(() => tc.getFieldArgs('unexistedField')).toThrow();
       });
-      expect(tc.getField('field3').type).toBe(GraphQLString);
-      expect(tc.getField('field3').description).toBe('this is field #3');
-      tc.extendField('field3', {
-        type: 'Int',
+
       it('hasFieldArg()', () => {
         expect(tc.hasFieldArg('field1', 'arg1')).toBeTruthy();
         expect(tc.hasFieldArg('field1', 'arg222')).toBeFalsy();
         expect(() => tc.hasFieldArg('unexistedField', 'arg1')).toThrow();
       });
+
+      it('getFieldArg()', () => {
+        expect(tc.getFieldArg('field1', 'arg1')).toBeTruthy();
+        expect(() => tc.getFieldArg('field1', 'arg222')).toThrow(
+          /Cannot get arg.*Argument does not exist/
+        );
+        expect(() => tc.hasFieldArg('unexistedField', 'arg1')).toThrow();
       });
-      expect(tc.getField('field3').type).toBe(GraphQLInt);
+    });
+
+    describe('extendField()', () => {
+      it('should extend existed fields', () => {
+        tc.setField('field3', {
+          type: GraphQLString,
+          projection: { field1: true, field2: true },
+        });
+        tc.extendField('field3', {
+          description: 'this is field #3',
+        });
+        expect(tc.getField('field3').type).toBe(GraphQLString);
+        expect(tc.getField('field3').description).toBe('this is field #3');
+        tc.extendField('field3', {
+          type: 'Int',
+        });
+        expect(tc.getField('field3').type).toBe(GraphQLInt);
+      });
+
+      it('should throw error if field does not exists', () => {
+        expect(() => tc.extendField('unexisted', { description: '123' })).toThrow(
+          /Cannot extend field.*Field does not exist/
+        );
+      });
     });
   });
 
@@ -265,6 +318,7 @@ describe('TypeComposer', () => {
       expect(myTC.getTypeName()).toBe('TestTypeTpl');
       expect(myTC.getFieldType('f1')).toBe(GraphQLString);
       expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      // $FlowFixMe
       expect(myTC.getFieldType('f2').ofType).toBe(GraphQLInt);
     });
 
@@ -281,6 +335,7 @@ describe('TypeComposer', () => {
       expect(myTC).toBeInstanceOf(TypeComposer);
       expect(myTC.getFieldType('f1')).toBe(GraphQLString);
       expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      // $FlowFixMe
       expect(myTC.getFieldType('f2').ofType).toBe(GraphQLInt);
     });
 
@@ -423,14 +478,16 @@ describe('TypeComposer', () => {
         ArticleTC.addRelation('user', () => ({
           resolver: UserTC.getResolver('findById'),
         }));
-        expect(ArticleTC.getField('user')).toBeUndefined();
+        expect(() => ArticleTC.getField('user')).toThrow();
+
         ArticleTC.buildRelations();
+        // $FlowFixMe
         expect(ArticleTC.getField('user').type.name).toBe('User');
       });
 
       it('should throw error if provided incorrect Resolver instance', () => {
         ArticleTC.addRelation('user', () => ({
-          resolver: 'abc',
+          resolver: ('abc': any),
         }));
         expect(() => {
           ArticleTC.buildRelations();
@@ -464,8 +521,9 @@ describe('TypeComposer', () => {
           type: UserTC,
           resolve: () => {},
         }));
-        expect(ArticleTC.getField('user')).toBeUndefined();
+        expect(() => ArticleTC.getField('user')).toThrowError();
         ArticleTC.buildRelations();
+        // $FlowFixMe
         expect(ArticleTC.getField('user').type.name).toBe('User');
       });
     });
@@ -488,16 +546,18 @@ describe('TypeComposer', () => {
     expect(tc.removeOtherFields('f1')).toBe(tc);
     expect(tc.reorderFields(['f1'])).toBe(tc);
 
-    expect(tc.addRelation('user', () => ({}))).toBe(tc);
+    expect(tc.addRelation('user', () => ({}: any))).toBe(tc);
     expect(tc.buildRelations()).toBe(tc);
     expect(tc.buildRelation('user')).toBe(tc);
     expect(
-      tc.addRelationWithResolver('user', new Resolver({ name: 'myResolver', type: 'Int' }), {})
+      tc.addRelationWithResolver('user', new Resolver({ name: 'myResolver', type: 'Int' }), {
+        resolver: (1: any),
+      })
     ).toBe(tc);
 
-    expect(tc.setInterfaces([1, 2])).toBe(tc);
-    expect(tc.addInterface(1)).toBe(tc);
-    expect(tc.removeInterface(2)).toBe(tc);
+    expect(tc.setInterfaces(([1, 2]: any))).toBe(tc);
+    expect(tc.addInterface((1: any))).toBe(tc);
+    expect(tc.removeInterface((2: any))).toBe(tc);
 
     expect(tc.setResolver('myResolver', new Resolver({ name: 'myResolver' }))).toBe(tc);
     expect(tc.addResolver(new Resolver({ name: 'myResolver' }))).toBe(tc);
@@ -505,7 +565,7 @@ describe('TypeComposer', () => {
 
     expect(tc.setTypeName('Type2')).toBe(tc);
     expect(tc.setDescription('Description')).toBe(tc);
-    expect(tc.setRecordIdFn(() => {})).toBe(tc);
+    expect(tc.setRecordIdFn(() => ({}: any))).toBe(tc);
     expect(tc.addProjectionMapper('f1', { name: true })).toBe(tc);
   });
 

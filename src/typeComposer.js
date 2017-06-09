@@ -40,7 +40,7 @@ export default class TypeComposer {
 
   static create(
     opts: TypeNameString | TypeDefinitionString | ComposeObjectTypeConfig<*, *> | GraphQLObjectType
-  ) {
+  ): TypeComposer {
     let TC;
 
     if (isString(opts)) {
@@ -161,14 +161,16 @@ export default class TypeComposer {
   /**
    * Get fieldConfig by name
    */
-  getField(fieldName: string): ?GraphQLFieldConfig<*, *> {
+  getField(fieldName: string): GraphQLFieldConfig<*, *> {
     const fields = this.getFields();
 
-    if (fields[fieldName]) {
-      return fields[fieldName];
+    if (!fields[fieldName]) {
+      throw new Error(
+        `Cannot get field '${fieldName}' from type '${this.getTypeName()}'. Field does not exist.`
+      );
     }
 
-    return undefined;
+    return fields[fieldName];
   }
 
   removeField(fieldNameOrArray: string | Array<string>): TypeComposer {
@@ -191,12 +193,21 @@ export default class TypeComposer {
     return this;
   }
 
-  extendField(name: string, parialFieldConfig: ComposeFieldConfig<*, *>): TypeComposer {
+  extendField(fieldName: string, parialFieldConfig: ComposeFieldConfig<*, *>): TypeComposer {
+    let prevFieldConfig;
+    try {
+      prevFieldConfig = this.getField(fieldName);
+    } catch (e) {
+      throw new Error(
+        `Cannot extend field '${fieldName}' from type '${this.getTypeName()}'. Field does not exist.`
+      );
+    }
+
     const fieldConfig = {
-      ...this.getField(name),
+      ...prevFieldConfig,
       ...parialFieldConfig,
     };
-    this.setField(name, fieldConfig);
+    this.setField(fieldName, fieldConfig);
     return this;
   }
 
@@ -553,21 +564,32 @@ export default class TypeComposer {
     return this.getRecordIdFn()(source, args, context);
   }
 
-  getFieldArgs(fieldName: string): ?GraphQLFieldConfigArgumentMap {
-    const field = this.getField(fieldName);
-    if (field) {
-      return field.args;
+  getFieldArgs(fieldName: string): GraphQLFieldConfigArgumentMap {
+    try {
+      const field = this.getField(fieldName);
+      return field.args || {};
+    } catch (e) {
+      throw new Error(
+        `Cannot get field args. Field '${fieldName}' from type '${this.getTypeName()}' does not exist.`
+      );
     }
-    return null;
   }
 
-  getFieldArg(fieldName: string, argName: string): ?GraphQLArgumentConfig {
-    const fieldArgs = this.getFieldArgs(fieldName) || {};
-    return fieldArgs[argName] ? fieldArgs[argName] : undefined;
   hasFieldArg(fieldName: string, argName: string): boolean {
     const fieldArgs = this.getFieldArgs(fieldName);
     return !!fieldArgs[argName];
   }
+
+  getFieldArg(fieldName: string, argName: string): GraphQLArgumentConfig {
+    const fieldArgs = this.getFieldArgs(fieldName);
+
+    if (!fieldArgs[argName]) {
+      throw new Error(
+        `Cannot get arg '${argName}' from type.field '${this.getTypeName()}.${fieldName}'. Argument does not exist.`
+      );
+    }
+
+    return fieldArgs[argName];
   }
 
   /**
