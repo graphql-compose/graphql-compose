@@ -70,7 +70,10 @@ LonLatTC.setTypeName('LonLatRenamed');
 LonLatTC.setDescription('Object type with Longitude and Latitude');
 LonLatTC.getDescription(); // 'Object type with Longitude and Latitude'
 LonLatTC.clone('newTypeName'); // new TypeComposer with cloned fields and resolvers
-LonLatITC.get('dotted.path'); // described below in `typeByPath` section
+LonLatTC.get('dotted.path'); // described below in `typeByPath` section
+LonLatTC.getFieldArgs('lat'); // returns map of args config or empty {} if no args
+LonLatTC.hasFieldArg('lat', 'arg1'); // false
+LonLatTC.getFieldArg('lat', 'arg1'); // returns arg config
 
 // And bunch of other methods (which will be described in future):
 // getInterfaces

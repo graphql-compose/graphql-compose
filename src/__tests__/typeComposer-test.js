@@ -190,6 +190,11 @@ describe('TypeComposer', () => {
       expect(tc.getField('field3').description).toBe('this is field #3');
       tc.extendField('field3', {
         type: 'Int',
+      it('hasFieldArg()', () => {
+        expect(tc.hasFieldArg('field1', 'arg1')).toBeTruthy();
+        expect(tc.hasFieldArg('field1', 'arg222')).toBeFalsy();
+        expect(() => tc.hasFieldArg('unexistedField', 'arg1')).toThrow();
+      });
       });
       expect(tc.getField('field3').type).toBe(GraphQLInt);
     });
