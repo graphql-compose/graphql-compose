@@ -476,7 +476,8 @@ describe('TypeComposer', () => {
   it('should have chainable methods', () => {
     expect(tc.setFields({})).toBe(tc);
     expect(tc.setField('f1', { type: 'Int' })).toBe(tc);
-    expect(tc.extendField('f1', {})).toBe(tc);
+    expect(tc.extendField('f1', { description: 'Ok' })).toBe(tc);
+    expect(tc.deprecateFields('f1')).toBe(tc);
     expect(tc.addFields({})).toBe(tc);
     expect(tc.removeField('f1')).toBe(tc);
     expect(tc.removeOtherFields('f1')).toBe(tc);
@@ -501,5 +502,43 @@ describe('TypeComposer', () => {
     expect(tc.setDescription('Description')).toBe(tc);
     expect(tc.setRecordIdFn(() => {})).toBe(tc);
     expect(tc.addProjectionMapper('f1', { name: true })).toBe(tc);
+  });
+
+  describe('deprecateFields()', () => {
+    let tc1;
+
+    beforeEach(() => {
+      tc1 = TypeComposer.create(`
+        type MyType {
+          name: String
+          age: Int
+          dob: Date
+        }
+        `);
+    });
+
+    it('should accept string', () => {
+      tc1.deprecateFields('name');
+      expect(tc1.getField('name').deprecationReason).toBe('deprecated');
+      expect(tc1.getField('age').deprecationReason).toBeUndefined();
+      expect(tc1.getField('dob').deprecationReason).toBeUndefined();
+    });
+
+    it('should accept array of string', () => {
+      tc1.deprecateFields(['name', 'age']);
+      expect(tc1.getField('name').deprecationReason).toBe('deprecated');
+      expect(tc1.getField('age').deprecationReason).toBe('deprecated');
+      expect(tc1.getField('dob').deprecationReason).toBeUndefined();
+    });
+
+    it('should accept object with fields and reasons', () => {
+      tc1.deprecateFields({
+        age: 'dont use',
+        dob: 'old field',
+      });
+      expect(tc1.getField('name').deprecationReason).toBeUndefined();
+      expect(tc1.getField('age').deprecationReason).toBe('dont use');
+      expect(tc1.getField('dob').deprecationReason).toBe('old field');
+    });
   });
 });

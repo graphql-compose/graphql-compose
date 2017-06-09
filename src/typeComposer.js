@@ -594,4 +594,20 @@ export default class TypeComposer {
   getProjectionMapper(): ProjectionMapType {
     return this.gqType._gqcProjectionMapper || {};
   }
+
+  deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this {
+    if (typeof fields === 'string') {
+      this.extendField(fields, { deprecationReason: 'deprecated' });
+    } else if (Array.isArray(fields)) {
+      fields.forEach(field => this.extendField(field, { deprecationReason: 'deprecated' }));
+    } else {
+      Object.keys(fields).forEach(field => {
+        // $FlowFixMe
+        const deprecationReason: string = fields[field];
+        this.extendField(field, { deprecationReason });
+      });
+    }
+
+    return this;
+  }
 }

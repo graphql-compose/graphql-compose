@@ -57,6 +57,7 @@ LonLatTC.removeField(['lon', 'field2', 'field3']);
 LonLatTC.removeOtherFields(['lon', 'lat']); // will remove all other fields
 LonLatTC.reorderFields(['lat', 'lon']); // reorder fields, lat becomes first
 LonLatTC.getField('lon'); // undefined
+LonLatTC.deprecateFields({ 'lat': 'deprecation reason' }); // mark field as deprecated
 LonLatTC.extendField('lat', {
   description: 'Latitude',
   resolve: (source) => (source.lat ? source.lat : 61.1),
