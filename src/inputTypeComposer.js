@@ -29,7 +29,7 @@ export default class InputTypeComposer {
       | TypeNameString
       | ComposeInputObjectTypeConfig
       | GraphQLInputObjectType
-  ) {
+  ): InputTypeComposer {
     let ITC;
 
     if (isString(opts)) {
@@ -139,14 +139,16 @@ export default class InputTypeComposer {
   /**
    * Get fieldConfig by name
    */
-  getField(fieldName: string): ?GraphQLInputFieldConfig {
+  getField(fieldName: string): GraphQLInputFieldConfig {
     const fields = this.getFields();
 
-    if (fields[fieldName]) {
-      return fields[fieldName];
+    if (!fields[fieldName]) {
+      throw new Error(
+        `Cannot get field '${fieldName}' from input type '${this.getTypeName()}'. Field does not exist.`
+      );
     }
 
-    return undefined;
+    return fields[fieldName];
   }
 
   removeField(fieldNameOrArray: string | Array<string>): InputTypeComposer {
@@ -169,12 +171,21 @@ export default class InputTypeComposer {
     return this;
   }
 
-  extendField(name: string, parialFieldConfig: ComposeInputFieldConfig): InputTypeComposer {
+  extendField(fieldName: string, parialFieldConfig: ComposeInputFieldConfig): InputTypeComposer {
+    let prevFieldConfig;
+    try {
+      prevFieldConfig = this.getField(fieldName);
+    } catch (e) {
+      throw new Error(
+        `Cannot extend field '${fieldName}' from input type '${this.getTypeName()}'. Field does not exist.`
+      );
+    }
+
     const fieldConfig: ComposeInputFieldConfig = {
-      ...this.getField(name),
+      ...prevFieldConfig,
       ...parialFieldConfig,
     };
-    this.setField(name, fieldConfig);
+    this.setField(fieldName, fieldConfig);
     return this;
   }
 
