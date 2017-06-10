@@ -224,8 +224,8 @@ export type RelationOptsWithResolver<TSource, TContext> = {
   catchErrors?: boolean,
 };
 export type RelationOptsWithFieldConfig<TSource, TContext> = {
-  type: GraphQLOutputType,
-  args?: GraphQLFieldConfigArgumentMap,
+  type: ComposeOutputType,
+  args?: ComposeFieldConfigArgumentMap,
   resolve: GraphQLFieldResolver<TSource, TContext>,
   projection?: ProjectionType,
   description?: ?string,
@@ -237,13 +237,16 @@ export type RelationArgsMapperFn<TSource, TContext> = (
   args: ArgsType,
   context: TContext,
   info: GraphQLResolveInfo
-) => ArgsType;
+) => any;
 export type RelationArgsMapper<TSource, TContext> = {
   [argName: string]:
     | RelationArgsMapperFn<TSource, TContext>
     | null
     | void
-    | mixed,
+    | string
+    | number
+    | Array<any>
+    | Object
 };
 
 // RESOLVER -----------------------------
@@ -284,8 +287,8 @@ export type GetRecordIdFn<TSource, TContext> = (
 ) => string;
 
 export type ResolverFilterArgFn<TSource, TContext> = (
-  query: mixed,
-  value: mixed,
+  query: any,
+  value: any,
   resolveParams: ResolveParams<TSource, TContext>
 ) => any;
 

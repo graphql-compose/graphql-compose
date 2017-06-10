@@ -50,7 +50,7 @@ export default class ComposeStorage {
     return this.get(typeName).getResolver(resolverName);
   }
 
-  buildSchema() {
+  buildSchema(): GraphQLSchema {
     const roots = {};
 
     const createdRelations = new Set();
