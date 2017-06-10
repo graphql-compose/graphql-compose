@@ -1,4 +1,6 @@
 # GraphQL-compose
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/nodkz/graphql-compose.svg)](https://greenkeeper.io/)
 [![](https://img.shields.io/npm/v/graphql-compose.svg)](https://www.npmjs.com/package/graphql-compose)
 [![codecov coverage](https://img.shields.io/codecov/c/github/nodkz/graphql-compose.svg)](https://codecov.io/github/nodkz/graphql-compose)
 [![Travis](https://img.shields.io/travis/nodkz/graphql-compose.svg?maxAge=2592000)](https://travis-ci.org/nodkz/graphql-compose)
