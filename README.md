@@ -1,16 +1,16 @@
 # GraphQL-compose
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/nodkz/graphql-compose.svg)](https://greenkeeper.io/)
 [![](https://img.shields.io/npm/v/graphql-compose.svg)](https://www.npmjs.com/package/graphql-compose)
 [![codecov coverage](https://img.shields.io/codecov/c/github/nodkz/graphql-compose.svg)](https://codecov.io/github/nodkz/graphql-compose)
 [![Travis](https://img.shields.io/travis/nodkz/graphql-compose.svg?maxAge=2592000)](https://travis-ci.org/nodkz/graphql-compose)
 [![npm](https://img.shields.io/npm/dt/graphql-compose.svg)](http://www.npmtrends.com/graphql-compose)
 [![Join the chat at https://gitter.im/graphql-compose/Lobby](https://badges.gitter.im/nodkz/graphql-compose.svg)](https://gitter.im/graphql-compose/Lobby)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+[![Greenkeeper badge](https://badges.greenkeeper.io/nodkz/graphql-compose.svg)](https://greenkeeper.io/)
 
 [GraphQL](http://graphql.org/) – is a query language for APIs. [graphql-js](https://github.com/graphql/graphql-js) is the reference implementation of GraphQL for nodejs which introduce GraphQL type system for describing schema *(definition over configuration)* and executes queries on the server side. [express-graphql](https://github.com/graphql/express-graphql) is a HTTP server which gets request data, passes it to `graphql-js` and returned result passes to response.
 
-**`graphql-compose`** – the *imperative tool* which worked on top of `graphql-js`. It provides some methods for creating types and GraphQL Models (so I call types with a list of common resolvers) for further building of complex relations in your schema. 
+**`graphql-compose`** – the *imperative tool* which worked on top of `graphql-js`. It provides some methods for creating types and GraphQL Models (so I call types with a list of common resolvers) for further building of complex relations in your schema.
 - provides methods for editing GraphQL output/input types (add/remove fields/args/interfaces)
 - introduces `Resolver`s – the named graphql fieldConfigs, which can be used for finding, updating, removing records
 - provides an easy way for creating relations between types via `Resolver`s
