@@ -2,7 +2,7 @@
 
 import { GraphQLInputObjectType, GraphQLNonNull } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
-import { deprecate } from './utils/debug';
+// import { deprecate } from './utils/debug';
 import { isObject, isString } from './utils/is';
 import { resolveInputConfigsAsThunk, keepConfigsAsThunk } from './utils/configAsThunk';
 import TypeMapper from './typeMapper';
@@ -121,14 +121,6 @@ export default class InputTypeComposer {
   }
 
   /**
-  * @deprecated 2.0.0
-  */
-  addField(fieldName: string, fieldConfig: GraphQLInputFieldConfig) {
-    deprecate('Use InputTypeComposer.setField() or plural addFields({}) instead.');
-    this.addFields({ [fieldName]: fieldConfig });
-  }
-
-  /**
    * Add new fields or replace existed in a GraphQL type
    */
   addFields(newFields: ComposeInputFieldConfigMap): InputTypeComposer {
@@ -215,14 +207,6 @@ export default class InputTypeComposer {
     return undefined;
   }
 
-  /**
-  * @deprecated 2.0.0
-  */
-  isFieldRequired(fieldName: string): boolean {
-    deprecate('Use InputTypeComposer.isRequired() instead.');
-    return this.isRequired(fieldName);
-  }
-
   makeRequired(fieldNameOrArray: string | Array<string>): InputTypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
@@ -237,14 +221,6 @@ export default class InputTypeComposer {
     return this;
   }
 
-  /**
-  * @deprecated 2.0.0
-  */
-  makeFieldsRequired(fieldNameOrArray: string | Array<string>) {
-    deprecate('Use InputTypeComposer.makeRequired() instead.');
-    this.makeRequired(fieldNameOrArray);
-  }
-
   makeOptional(fieldNameOrArray: string | Array<string>): InputTypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
@@ -257,14 +233,6 @@ export default class InputTypeComposer {
     });
     this.setFields(fields);
     return this;
-  }
-
-  /**
-  * @deprecated 2.0.0
-  */
-  makeFieldsOptional(fieldNameOrArray: string | Array<string>) {
-    deprecate('Use InputTypeComposer.makeOptional() instead.');
-    this.makeOptional(fieldNameOrArray);
   }
 
   clone(newTypeName: string): InputTypeComposer {
@@ -310,14 +278,6 @@ export default class InputTypeComposer {
   setDescription(description: string): InputTypeComposer {
     this.gqType.description = description;
     return this;
-  }
-
-  /**
-  * @deprecated 2.0.0
-  */
-  getByPath(path: string | Array<string>): any {
-    deprecate('Use InputTypeComposer.get() instead.');
-    return this.get(path);
   }
 
   get(path: string | Array<string>): any {

@@ -144,14 +144,6 @@ export default class TypeComposer {
   }
 
   /**
-  * @deprecated 2.0.0
-  */
-  addField(fieldName: string, fieldConfig: ComposeFieldConfig<*, *>) {
-    deprecate('Use TypeComposer.setField() or plural addFields({}) instead.');
-    this.addFields({ [fieldName]: fieldConfig });
-  }
-
-  /**
    * Add new fields or replace existed in a GraphQL type
    */
   addFields(newFields: ComposeFieldConfigMap<*, *>): TypeComposer {
@@ -608,14 +600,6 @@ export default class TypeComposer {
     }
 
     return fieldArgs[argName];
-  }
-
-  /**
-  * @deprecated 2.0.0
-  */
-  getByPath(path: string | Array<string>): any {
-    deprecate('Use TypeComposer.get() instead.');
-    return this.get(path);
   }
 
   get(path: string | Array<string>): any {
