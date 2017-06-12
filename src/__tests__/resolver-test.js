@@ -421,7 +421,6 @@ describe('Resolver', () => {
 
     GQC.rootQuery().addRelation('resolveUser', () => ({
       resolver: myResolver,
-      args: {},
       projection: { _id: true },
     }));
 

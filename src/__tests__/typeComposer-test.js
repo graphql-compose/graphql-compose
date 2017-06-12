@@ -471,47 +471,75 @@ describe('TypeComposer', () => {
         }
       `
       );
+
+      ArticleTC.addResolver({
+        name: 'findOne',
+        type: ArticleTC,
+        resolve: () => null,
+      });
     });
 
-    describe('thunk with Resolver', () => {
-      it('should create field via buildRelations()', () => {
-        ArticleTC.addRelation('user', () => ({
+    describe('_relationWithResolverToFC()', () => {
+      it('should return FieldConfig', () => {
+        const fc = ArticleTC._relationWithResolverToFC({
           resolver: UserTC.getResolver('findById'),
-        }));
-        expect(() => ArticleTC.getField('user')).toThrow();
-
-        ArticleTC.buildRelations();
-        // $FlowFixMe
-        expect(ArticleTC.getField('user').type.name).toBe('User');
+        });
+        expect(fc.type.name).toBe('User');
       });
 
       it('should throw error if provided incorrect Resolver instance', () => {
-        ArticleTC.addRelation('user', () => ({
-          resolver: ('abc': any),
-        }));
-        expect(() => {
-          ArticleTC.buildRelations();
-        }).toThrowError(/provide correct Resolver/);
+        expect(() =>
+          ArticleTC._relationWithResolverToFC({
+            resolver: ('abc': any),
+          })
+        ).toThrowError(/provide correct Resolver/);
       });
 
       it('should throw error if provided `type` property', () => {
-        ArticleTC.addRelation('user', () => ({
-          resolver: UserTC.getResolver('findById'),
-          type: GraphQLInt,
-        }));
-        expect(() => {
-          ArticleTC.buildRelations();
-        }).toThrowError(/use `resolver` and `type`/);
+        expect(() =>
+          ArticleTC._relationWithResolverToFC({
+            resolver: UserTC.getResolver('findById'),
+            type: GraphQLInt,
+          })
+        ).toThrowError(/use `resolver` and `type`/);
       });
 
       it('should throw error if provided `resolve` property', () => {
+        expect(() =>
+          ArticleTC._relationWithResolverToFC({
+            resolver: UserTC.getResolver('findById'),
+            resolve: () => {},
+          })
+        ).toThrowError(/use `resolver` and `resolve`/);
+      });
+    });
+
+    describe('thunk with Resolver', () => {
+      it('should convert simple relation to fieldConfig', () => {
         ArticleTC.addRelation('user', () => ({
           resolver: UserTC.getResolver('findById'),
-          resolve: () => {},
         }));
-        expect(() => {
-          ArticleTC.buildRelations();
-        }).toThrowError(/use `resolver` and `resolve`/);
+        const fc = ArticleTC.getType().getFields().user;
+        // $FlowFixMe
+        expect(fc.type.name).toBe('User');
+      });
+
+      it('should convert cross related relations to fieldConfigs', () => {
+        ArticleTC.addRelation('user', () => ({
+          resolver: UserTC.getResolver('findById'),
+        }));
+
+        UserTC.addRelation('lastArticle', () => ({
+          resolver: ArticleTC.getResolver('findOne'),
+        }));
+
+        const fc1 = ArticleTC.getType().getFields().user;
+        // $FlowFixMe
+        expect(fc1.type.name).toBe('User');
+
+        const fc2 = UserTC.getType().getFields().lastArticle;
+        // $FlowFixMe
+        expect(fc2.type.name).toBe('Article');
       });
     });
 
@@ -521,10 +549,11 @@ describe('TypeComposer', () => {
           type: UserTC,
           resolve: () => {},
         }));
-        expect(() => ArticleTC.getField('user')).toThrowError();
-        ArticleTC.buildRelations();
+
+        const fc = ArticleTC.getType().getFields().user;
+        expect(fc.type).toBeInstanceOf(GraphQLObjectType);
         // $FlowFixMe
-        expect(ArticleTC.getField('user').type.name).toBe('User');
+        expect(fc.type.name).toBe('User');
       });
     });
   });
@@ -547,13 +576,6 @@ describe('TypeComposer', () => {
     expect(tc.reorderFields(['f1'])).toBe(tc);
 
     expect(tc.addRelation('user', () => ({}: any))).toBe(tc);
-    expect(tc.buildRelations()).toBe(tc);
-    expect(tc.buildRelation('user')).toBe(tc);
-    expect(
-      tc.addRelationWithResolver('user', new Resolver({ name: 'myResolver', type: 'Int' }), {
-        resolver: (1: any),
-      })
-    ).toBe(tc);
 
     expect(tc.setInterfaces(([1, 2]: any))).toBe(tc);
     expect(tc.addInterface((1: any))).toBe(tc);

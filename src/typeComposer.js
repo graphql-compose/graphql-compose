@@ -22,6 +22,7 @@ import type {
   RelationOpts,
   RelationOptsWithResolver,
   RelationThunkMap,
+  RelationArgsMapper,
   RelationArgsMapperFn,
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
@@ -230,6 +231,28 @@ export default class TypeComposer {
     }
     this.gqType._gqcRelations[fieldName] = relationFn;
 
+    if (!isFunction(relationFn)) {
+      throw new Error(
+        `TC.addRelation() for type ${this.getTypeName()} field ${fieldName} ` +
+          `should obtain 'relationFn' as a function for second argument.`
+      );
+    }
+    // $FlowFixMe
+    const relationOpts: RelationOpts = relationFn();
+
+    if (relationOpts.hasOwnProperty('resolver')) {
+      this.setField(fieldName, () => {
+        const fc = this._relationWithResolverToFC(relationOpts, fieldName);
+        return { ...fc, _gqcIsRelation: true };
+      });
+    } else if (relationOpts.hasOwnProperty('type')) {
+      this.setField(fieldName, () => {
+        // $FlowFixMe
+        const fc: ComposeFieldConfig<*, *> = relationFn();
+        return { ...fc, _gqcIsRelation: true };
+      });
+    }
+
     return this;
   }
 
@@ -240,61 +263,46 @@ export default class TypeComposer {
     return this.gqType._gqcRelations;
   }
 
+  /**
+  * @deprecated 3.0.0
+  */
   buildRelations(): TypeComposer {
-    const relationFields = {};
-
-    const names = Object.keys(this.getRelations());
-    names.forEach(fieldName => {
-      relationFields[fieldName] = this.buildRelation(fieldName);
-    });
+    deprecate('No need in calling TC.buildRelations(). You may safely remove call of this method.');
     return this;
   }
 
-  buildRelation(fieldName: string): TypeComposer {
-    if (!this.gqType._gqcRelations || !isFunction(this.gqType._gqcRelations[fieldName])) {
+  /**
+  * @deprecated 3.0.0
+  */
+  buildRelation(): TypeComposer {
+    deprecate('No need in calling TC.buildRelation(). You may safely remove call of this method.');
+    return this;
+  }
+
+  _relationWithResolverToFC<TSource, TContext>(
+    opts: RelationOptsWithResolver<TSource, TContext>,
+    fieldName?: string = ''
+  ): ComposeFieldConfig<TSource, TContext> {
+    if (!(opts.resolver instanceof Resolver)) {
       throw new Error(
-        `Cannot call buildRelation() for type ${this.getTypeName()}. ` +
-          `Relation with name '${fieldName}' does not exist.`
+        'You should provide correct Resolver object for relation ' +
+          `${this.getTypeName()}.${fieldName}`
       );
     }
-    const relationFn: Thunk<RelationOpts<*, *>> = this.gqType._gqcRelations[fieldName];
-    // $FlowFixMe
-    const relationOpts: RelationOpts = relationFn();
-
-    if (relationOpts.resolver) {
-      if (!(relationOpts.resolver instanceof Resolver)) {
-        throw new Error(
-          'You should provide correct Resolver object for relation ' +
-            `${this.getTypeName()}.${fieldName}`
-        );
-      }
-      if (relationOpts.type) {
-        throw new Error(
-          'You can not use `resolver` and `type` properties simultaneously for relation ' +
-            `${this.getTypeName()}.${fieldName}`
-        );
-      }
-      if (relationOpts.resolve) {
-        throw new Error(
-          'You can not use `resolver` and `resolve` properties simultaneously for relation ' +
-            `${this.getTypeName()}.${fieldName}`
-        );
-      }
-      this.addRelationWithResolver(fieldName, relationOpts.resolver, relationOpts);
-    } else if (relationOpts.type) {
-      this.setField(fieldName, {
-        ...relationOpts,
-        _gqcIsRelation: true,
-      });
+    if (opts.type) {
+      throw new Error(
+        'You can not use `resolver` and `type` properties simultaneously for relation ' +
+          `${this.getTypeName()}.${fieldName}`
+      );
     }
-    return this;
-  }
+    if (opts.resolve) {
+      throw new Error(
+        'You can not use `resolver` and `resolve` properties simultaneously for relation ' +
+          `${this.getTypeName()}.${fieldName}`
+      );
+    }
 
-  addRelationWithResolver<TSource, TContext>(
-    fieldName: string,
-    resolver: Resolver<TSource, TContext>,
-    opts: RelationOptsWithResolver<TSource, TContext>
-  ): TypeComposer {
+    const resolver = opts.resolver;
     const fieldConfig = resolver.getFieldConfig();
     const argsConfig = { ...fieldConfig.args };
     const argsProto = {};
@@ -306,7 +314,20 @@ export default class TypeComposer {
     //       is `null`, then just remove arg field from config
     //       is `function`, then remove arg field and run it in resolve
     //       is any other value, then put it to args prototype for resolve
-    const optsArgs = opts.args || {};
+    let optsArgs = opts.prepareArgs || {};
+
+    /*
+    * It's done for better naming. Cause `args` name should be reserver under GraphQLArgConfigMap
+    * In terms of graphql-compose `args` is map of preparation functions, so better name is `prepareArgs`
+    * @deprecated 3.0.0
+    */
+    if (opts.args) {
+      optsArgs = ((opts.args: any): RelationArgsMapper<TSource, TContext>);
+      deprecate(
+        `Please rename 'args' option to 'prepareArgs' in type '${this.getTypeName()}' ` +
+          `method addRelation(${fieldName}, <here>).`
+      );
+    }
     Object.keys(optsArgs).forEach(argName => {
       const argMapVal = optsArgs[argName];
       if (argMapVal !== undefined) {
@@ -344,17 +365,14 @@ export default class TypeComposer {
         : payload;
     };
 
-    this.setField(fieldName, {
+    return {
       type: fieldConfig.type,
       description: opts.description,
       deprecationReason: opts.deprecationReason,
       args: argsConfig,
       resolve,
       projection: opts.projection,
-      _gqcIsRelation: true,
-    });
-
-    return this;
+    };
   }
 
   /**

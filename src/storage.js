@@ -1,6 +1,7 @@
 /* @flow */
 
-import { GraphQLObjectType, GraphQLSchema, getNamedType } from 'graphql';
+import { GraphQLObjectType, GraphQLSchema } from 'graphql';
+import { deprecate } from './utils/debug';
 import TypeComposer from './typeComposer';
 import type Resolver from './resolver';
 
@@ -53,18 +54,14 @@ export default class ComposeStorage {
   buildSchema(): GraphQLSchema {
     const roots = {};
 
-    const createdRelations = new Set();
-
     if (this.has('Query')) {
       const tc = this.get('Query');
-      this.buildRelations(tc, createdRelations);
       this.removeEmptyTypes(tc, new Set());
       roots.query = tc.getType();
     }
 
     if (this.has('Mutation')) {
       const tc = this.get('Mutation');
-      this.buildRelations(tc, createdRelations);
       this.removeEmptyTypes(tc, new Set());
       roots.mutation = tc.getType();
     }
@@ -79,43 +76,14 @@ export default class ComposeStorage {
     return new GraphQLSchema(roots);
   }
 
-  buildRelations(typeComposer: TypeComposer, createdRelations: Set<string>) {
-    const relations = typeComposer.getRelations();
-    const relationFieldNames = Object.keys(relations);
-
-    relationFieldNames.forEach(relationFieldName => {
-      const typeAndField = `${typeComposer.getTypeName()}.${relationFieldName}`;
-
-      let existedField;
-      try {
-        existedField = typeComposer.getField(relationFieldName);
-      } catch (e) {
-        // ok
-      }
-      if (existedField && !existedField._gqcIsRelation) {
-        if (!createdRelations.has(typeAndField)) {
-          // eslint-disable-next-line
-          console.log(
-            `GQC: Skip building relation '${typeAndField}', ` +
-              'cause this type already has field with such name. ' +
-              'If you want create relation, you should remove this ' +
-              'field before run the schema build.'
-          );
-        }
-      } else {
-        typeComposer.buildRelation(relationFieldName);
-      }
-    });
-
-    const fields = typeComposer.getFields();
-    Object.keys(fields).forEach(fieldName => {
-      const typeAndField = `${typeComposer.getTypeName()}.${fieldName}`;
-      const fieldType = getNamedType(fields[fieldName].type);
-      if (fieldType instanceof GraphQLObjectType && !createdRelations.has(typeAndField)) {
-        createdRelations.add(typeAndField);
-        this.buildRelations(new TypeComposer(fieldType), createdRelations);
-      }
-    });
+  /**
+  * @deprecated 3.0.0
+  */
+  buildRelations() {
+    deprecate(
+      'No need in calling buildRelations() any more. You may safely remove call of this method.'
+    );
+    return this;
   }
 
   removeEmptyTypes(typeComposer: TypeComposer, passedTypes: Set<string> = new Set()) {

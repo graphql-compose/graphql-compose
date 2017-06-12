@@ -217,7 +217,7 @@ export type RelationOpts<TSource, TContext> =
   | RelationOptsWithFieldConfig<TSource, TContext>;
 export type RelationOptsWithResolver<TSource, TContext> = {
   resolver: Resolver<TSource, TContext>,
-  args?: RelationArgsMapper<TSource, TContext>,
+  prepareArgs?: RelationArgsMapper<TSource, TContext>,
   projection?: ProjectionType,
   description?: ?string,
   deprecationReason?: ?string,
