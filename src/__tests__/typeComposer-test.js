@@ -487,6 +487,13 @@ describe('TypeComposer', () => {
         expect(fc.type.name).toBe('User');
       });
 
+      it('should accept resolver as thunk and return FieldConfig', () => {
+        const fc = ArticleTC._relationWithResolverToFC({
+          resolver: () => UserTC.getResolver('findById'),
+        });
+        expect(fc.type.name).toBe('User');
+      });
+
       it('should throw error if provided incorrect Resolver instance', () => {
         expect(() =>
           ArticleTC._relationWithResolverToFC({
@@ -519,6 +526,24 @@ describe('TypeComposer', () => {
         ArticleTC.addRelation('user', () => ({
           resolver: UserTC.getResolver('findById'),
         }));
+        const fc = ArticleTC.getType().getFields().user;
+        // $FlowFixMe
+        expect(fc.type.name).toBe('User');
+      });
+
+      it('should convert simple relation to fieldConfig with resolver thunk', () => {
+        ArticleTC.addRelation('user', () => ({
+          resolver: () => UserTC.getResolver('findById'),
+        }));
+        const fc = ArticleTC.getType().getFields().user;
+        // $FlowFixMe
+        expect(fc.type.name).toBe('User');
+      });
+
+      it('should convert unthunked simple relation to fieldConfig with resolver thunk', () => {
+        ArticleTC.addRelation('user', {
+          resolver: () => UserTC.getResolver('findById'),
+        });
         const fc = ArticleTC.getType().getFields().user;
         // $FlowFixMe
         expect(fc.type.name).toBe('User');

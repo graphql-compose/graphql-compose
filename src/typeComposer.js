@@ -223,17 +223,17 @@ export default class TypeComposer {
     }
     this.gqType._gqcRelations[fieldName] = relationFn;
 
-    if (!isFunction(relationFn)) {
-      throw new Error(
-        `TC.addRelation() for type ${this.getTypeName()} field ${fieldName} ` +
-          `should obtain 'relationFn' as a function for second argument.`
-      );
+    let relationOpts: RelationOpts<*, *>;
+    if (isFunction(relationFn)) {
+      relationOpts = relationFn();
+    } else {
+      // $FlowFixMe
+      relationOpts = relationFn;
     }
-    // $FlowFixMe
-    const relationOpts: RelationOpts = relationFn();
 
     if (relationOpts.hasOwnProperty('resolver')) {
       this.setField(fieldName, () => {
+        // $FlowFixMe
         const fc = this._relationWithResolverToFC(relationOpts, fieldName);
         return { ...fc, _gqcIsRelation: true };
       });
@@ -275,7 +275,9 @@ export default class TypeComposer {
     opts: RelationOptsWithResolver<TSource, TContext>,
     fieldName?: string = ''
   ): ComposeFieldConfig<TSource, TContext> {
-    if (!(opts.resolver instanceof Resolver)) {
+    const resolver = isFunction(opts.resolver) ? opts.resolver() : opts.resolver;
+
+    if (!(resolver instanceof Resolver)) {
       throw new Error(
         'You should provide correct Resolver object for relation ' +
           `${this.getTypeName()}.${fieldName}`
@@ -294,7 +296,6 @@ export default class TypeComposer {
       );
     }
 
-    const resolver = opts.resolver;
     const fieldConfig = resolver.getFieldConfig();
     const argsConfig = { ...fieldConfig.args };
     const argsProto = {};
