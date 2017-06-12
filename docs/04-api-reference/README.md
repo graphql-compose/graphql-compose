@@ -74,6 +74,14 @@ LonLatTC.get('dotted.path'); // described below in `typeByPath` section
 LonLatTC.getFieldArgs('lat'); // returns map of args config or empty {} if no args
 LonLatTC.hasFieldArg('lat', 'arg1'); // false
 LonLatTC.getFieldArg('lat', 'arg1'); // returns arg config
+LonLatTC.addRelation('facilities', { // add relation with some other TypeComposer
+  resolver: () => FacilitiesTC.getResolver('findMany'),
+  prepareArgs: {
+    filter: (source) => ({ lon: source.lon, lat: source.lat }),
+    limit: 100,
+  },
+  projection: { lon: true, lat: true },
+})
 
 // And bunch of other methods (which will be described in future):
 // getInterfaces
@@ -84,9 +92,6 @@ LonLatTC.getFieldArg('lat', 'arg1'); // returns arg config
 //
 // getInputType
 // getInputTypeComposer
-//
-// addRelation
-// getRelations
 //
 // getResolvers
 // hasResolver
@@ -285,7 +290,6 @@ LonLatITC2.makeRequired(['lon', 'lat']);
 This is `GraphQLSchema` builder.
 - creates `Query` and `Mutation` types
 - provide `buildSchema()` method for obtaining `GraphQLSchema`
-- traverse by type tree and converts relations to field configs
 - remove types without fields
 
 ```js

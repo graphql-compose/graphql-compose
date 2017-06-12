@@ -1,9 +1,9 @@
 ## 07 - Relay
-Adding support for relay is done with the [Relay plugin](https://github.com/nodkz/graphql-compose-relay) For more detailed descriptions on how to use and reporting issues please use the link.
+Adding support for Relay is done via plugin [graphql-compose-relay](https://github.com/nodkz/graphql-compose-relay) For more detailed descriptions on how to use and reporting issues please use the link.
 
 ### Importing and installing
 Installation:
-```js
+```
 npm i -S graphql-compose-relay
 ```
 Importing:
