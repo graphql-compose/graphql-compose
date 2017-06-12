@@ -3,7 +3,7 @@
 import { GraphQLObjectType, GraphQLList, GraphQLInputObjectType } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
-import { resolveOutputConfigsAsThunk, keepConfigsAsThunk } from './utils/configAsThunk';
+import { resolveOutputConfigsAsThunk } from './utils/configAsThunk';
 import { deprecate } from './utils/debug';
 import Resolver from './resolver';
 import { toInputObjectType } from './toInputObjectType';
@@ -38,6 +38,7 @@ import type {
 
 export default class TypeComposer {
   gqType: GraphQLObjectTypeExtended;
+  _fields: ComposeFieldConfigMap<*, *>;
 
   static create(
     opts: TypeNameString | TypeDefinitionString | ComposeObjectTypeConfig<*, *> | GraphQLObjectType
@@ -91,14 +92,12 @@ export default class TypeComposer {
    * WARNING: this method read an internal GraphQL instance variable.
    */
   getFields(): GraphQLFieldConfigMap<*, *> {
-    const fields: Thunk<GraphQLFieldConfigMap<*, *>> = this.gqType._typeConfig.fields;
-
-    const fieldMap: mixed = keepConfigsAsThunk(resolveMaybeThunk(fields));
-
-    if (isObject(fieldMap)) {
-      return { ...fieldMap };
+    if (!this._fields) {
+      const fields: Thunk<GraphQLFieldConfigMap<*, *>> = this.gqType._typeConfig.fields;
+      this._fields = resolveMaybeThunk(fields) || {};
     }
-    return {};
+
+    return this._fields;
   }
 
   getFieldNames(): string[] {
@@ -124,6 +123,7 @@ export default class TypeComposer {
       }
     });
 
+    this._fields = prepearedFields;
     this.gqType._typeConfig.fields = () =>
       resolveOutputConfigsAsThunk(prepearedFields, this.getTypeName());
     delete this.gqType._fields; // clear builded fields in type
@@ -318,7 +318,7 @@ export default class TypeComposer {
       optsArgs = ((opts.args: any): RelationArgsMapper<TSource, TContext>);
       deprecate(
         `Please rename 'args' option to 'prepareArgs' in type '${this.getTypeName()}' ` +
-          `method addRelation(${fieldName}, <here>).`
+          `in method call addRelation('${fieldName}', { /* rename option 'args' to 'prepareArgs' */ }).`
       );
     }
     Object.keys(optsArgs).forEach(argName => {
