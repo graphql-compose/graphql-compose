@@ -86,7 +86,12 @@ export default class ComposeStorage {
     relationFieldNames.forEach(relationFieldName => {
       const typeAndField = `${typeComposer.getTypeName()}.${relationFieldName}`;
 
-      const existedField = typeComposer.getField(relationFieldName);
+      let existedField;
+      try {
+        existedField = typeComposer.getField(relationFieldName);
+      } catch (e) {
+        // ok
+      }
       if (existedField && !existedField._gqcIsRelation) {
         if (!createdRelations.has(typeAndField)) {
           // eslint-disable-next-line

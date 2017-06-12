@@ -88,7 +88,7 @@ describe('Storage [Class]', () => {
       ArticleTC.addRelation('user', () => ({
         resolver: UserTC.getResolver('findById'),
       }));
-      expect(ArticleTC.getField('user')).toBeUndefined();
+      expect(() => ArticleTC.getField('user')).toThrow(/Field does not exist/);
       storage.rootQuery().setField('acticles', ArticleTC);
       storage.buildSchema();
       // $FlowFixMe
@@ -104,8 +104,8 @@ describe('Storage [Class]', () => {
         resolver: ArticleTC.getResolver('findOne'),
       }));
 
-      expect(ArticleTC.getField('user')).toBeUndefined();
-      expect(UserTC.getField('lastArticle')).toBeUndefined();
+      expect(() => ArticleTC.getField('user')).toThrow(/Field does not exist/);
+      expect(() => UserTC.getField('lastArticle')).toThrow(/Field does not exist/);
 
       storage.rootQuery().setField('acticle', ArticleTC);
       storage.rootQuery().setField('user', UserTC);
@@ -125,8 +125,8 @@ describe('Storage [Class]', () => {
         resolver: ArticleTC.getResolver('findOne'),
       }));
 
-      expect(ArticleTC.getField('user')).toBeUndefined();
-      expect(UserTC.getField('lastArticle')).toBeUndefined();
+      expect(() => ArticleTC.getField('user')).toThrow(/Field does not exist/);
+      expect(() => UserTC.getField('lastArticle')).toThrow(/Field does not exist/);
 
       storage.rootQuery().setField('acticle', ArticleTC);
       // we not add UserTC to schema explicitly
