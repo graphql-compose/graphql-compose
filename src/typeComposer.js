@@ -622,12 +622,25 @@ export default class TypeComposer {
   }
 
   deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this {
+    const existedFieldNames = this.getFieldNames();
+
     if (typeof fields === 'string') {
+      if (existedFieldNames.indexOf(fields) === -1) {
+        throw new Error(`Cannot deprecate unexisted field '${this.getTypeName()}.${fields}'`);
+      }
       this.extendField(fields, { deprecationReason: 'deprecated' });
     } else if (Array.isArray(fields)) {
-      fields.forEach(field => this.extendField(field, { deprecationReason: 'deprecated' }));
+      fields.forEach(field => {
+        if (existedFieldNames.indexOf(field) === -1) {
+          throw new Error(`Cannot deprecate unexisted field '${this.getTypeName()}.${field}'`);
+        }
+        this.extendField(field, { deprecationReason: 'deprecated' });
+      });
     } else {
       Object.keys(fields).forEach(field => {
+        if (existedFieldNames.indexOf(field) === -1) {
+          throw new Error(`Cannot deprecate unexisted field '${this.getTypeName()}.${field}'`);
+        }
         // $FlowFixMe
         const deprecationReason: string = fields[field];
         this.extendField(field, { deprecationReason });

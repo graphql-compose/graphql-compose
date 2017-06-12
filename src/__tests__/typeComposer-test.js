@@ -605,5 +605,19 @@ describe('TypeComposer', () => {
       expect(tc1.getField('age').deprecationReason).toBe('dont use');
       expect(tc1.getField('dob').deprecationReason).toBe('old field');
     });
+
+    it('should throw error on unexisted field', () => {
+      expect(() => {
+        tc1.deprecateFields('unexisted');
+      }).toThrowError(/Cannot deprecate unexisted field/);
+
+      expect(() => {
+        tc1.deprecateFields(['unexisted']);
+      }).toThrowError(/Cannot deprecate unexisted field/);
+
+      expect(() => {
+        tc1.deprecateFields({ unexisted: 'Deprecate reason' });
+      }).toThrowError(/Cannot deprecate unexisted field/);
+    });
   });
 });
