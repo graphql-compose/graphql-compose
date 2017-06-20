@@ -11,5 +11,5 @@ export function deprecate(msg: string) {
   }
 
   // eslint-disable-next-line
-  console.log(`DEPRECATION: ${msg} ${stackStr}\n\n`);
+  console.log(`GRAPHQL-COMPOSE DEPRECATION: ${msg} ${stackStr}\n\n`);
 }

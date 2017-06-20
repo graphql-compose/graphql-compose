@@ -1,7 +1,7 @@
 ## 06 - Generating schema
 
-`schema.js`
 ```js
+// schema.js
 import { GQC } from 'graphql-compose';
 
 import './rootQuery';
@@ -10,8 +10,8 @@ import './rootMutation';
 export default GQC.buildSchema();
 ```
 
-`rootQuery.js`
 ```js
+// rootQuery.js
 import { GQC } from 'graphql-compose';
 import { ViewerTC } from './viewer';
 import { AdminTC } from './admin';
@@ -34,8 +34,8 @@ GQC.rootQuery().addFields({
 });
 ```
 
-`viewer.js`
 ```js
+// viewer.js
 import { GQC } from 'graphql-compose';
 import { UserTC } from './user';
 import { CompanyTC } from './company';
@@ -56,8 +56,8 @@ ViewerTC.addFields({
 });
 ```
 
-`admin.js`
 ```js
+// admin.js
 import { GQC } from 'graphql-compose';
 import { TransactionTC } from './transaction';
 
@@ -81,8 +81,8 @@ AdminTC.addFields({
 });
 ```
 
-`rootMutation.js`
 ```js
+// rootMutation.js
 import { GQC } from 'graphql-compose';
 
 import { CommentTC } from './comment';

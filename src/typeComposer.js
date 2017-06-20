@@ -3,7 +3,7 @@
 import { GraphQLObjectType, GraphQLList, GraphQLInputObjectType } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
-import { resolveOutputConfigsAsThunk, keepConfigsAsThunk } from './utils/configAsThunk';
+import { resolveOutputConfigsAsThunk } from './utils/configAsThunk';
 import { deprecate } from './utils/debug';
 import Resolver from './resolver';
 import { toInputObjectType } from './toInputObjectType';
@@ -22,6 +22,7 @@ import type {
   RelationOpts,
   RelationOptsWithResolver,
   RelationThunkMap,
+  RelationArgsMapper,
   RelationArgsMapperFn,
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
@@ -37,10 +38,11 @@ import type {
 
 export default class TypeComposer {
   gqType: GraphQLObjectTypeExtended;
+  _fields: ComposeFieldConfigMap<*, *>;
 
   static create(
     opts: TypeNameString | TypeDefinitionString | ComposeObjectTypeConfig<*, *> | GraphQLObjectType
-  ) {
+  ): TypeComposer {
     let TC;
 
     if (isString(opts)) {
@@ -90,14 +92,12 @@ export default class TypeComposer {
    * WARNING: this method read an internal GraphQL instance variable.
    */
   getFields(): GraphQLFieldConfigMap<*, *> {
-    const fields: Thunk<GraphQLFieldConfigMap<*, *>> = this.gqType._typeConfig.fields;
-
-    const fieldMap: mixed = keepConfigsAsThunk(resolveMaybeThunk(fields));
-
-    if (isObject(fieldMap)) {
-      return { ...fieldMap };
+    if (!this._fields) {
+      const fields: Thunk<GraphQLFieldConfigMap<*, *>> = this.gqType._typeConfig.fields;
+      this._fields = resolveMaybeThunk(fields) || {};
     }
-    return {};
+
+    return this._fields;
   }
 
   getFieldNames(): string[] {
@@ -123,6 +123,7 @@ export default class TypeComposer {
       }
     });
 
+    this._fields = prepearedFields;
     this.gqType._typeConfig.fields = () =>
       resolveOutputConfigsAsThunk(prepearedFields, this.getTypeName());
     delete this.gqType._fields; // clear builded fields in type
@@ -143,14 +144,6 @@ export default class TypeComposer {
   }
 
   /**
-  * @deprecated 2.0.0
-  */
-  addField(fieldName: string, fieldConfig: ComposeFieldConfig<*, *>) {
-    deprecate('Use TypeComposer.setField() or plural addFields({}) instead.');
-    this.addFields({ [fieldName]: fieldConfig });
-  }
-
-  /**
    * Add new fields or replace existed in a GraphQL type
    */
   addFields(newFields: ComposeFieldConfigMap<*, *>): TypeComposer {
@@ -161,14 +154,16 @@ export default class TypeComposer {
   /**
    * Get fieldConfig by name
    */
-  getField(fieldName: string): ?GraphQLFieldConfig<*, *> {
+  getField(fieldName: string): GraphQLFieldConfig<*, *> {
     const fields = this.getFields();
 
-    if (fields[fieldName]) {
-      return fields[fieldName];
+    if (!fields[fieldName]) {
+      throw new Error(
+        `Cannot get field '${fieldName}' from type '${this.getTypeName()}'. Field does not exist.`
+      );
     }
 
-    return undefined;
+    return fields[fieldName];
   }
 
   removeField(fieldNameOrArray: string | Array<string>): TypeComposer {
@@ -191,12 +186,21 @@ export default class TypeComposer {
     return this;
   }
 
-  extendField(name: string, parialFieldConfig: ComposeFieldConfig<*, *>): TypeComposer {
+  extendField(fieldName: string, parialFieldConfig: ComposeFieldConfig<*, *>): TypeComposer {
+    let prevFieldConfig;
+    try {
+      prevFieldConfig = this.getField(fieldName);
+    } catch (e) {
+      throw new Error(
+        `Cannot extend field '${fieldName}' from type '${this.getTypeName()}'. Field does not exist.`
+      );
+    }
+
     const fieldConfig = {
-      ...this.getField(name),
+      ...prevFieldConfig,
       ...parialFieldConfig,
     };
-    this.setField(name, fieldConfig);
+    this.setField(fieldName, fieldConfig);
     return this;
   }
 
@@ -219,6 +223,28 @@ export default class TypeComposer {
     }
     this.gqType._gqcRelations[fieldName] = relationFn;
 
+    let relationOpts: RelationOpts<*, *>;
+    if (isFunction(relationFn)) {
+      relationOpts = relationFn();
+    } else {
+      // $FlowFixMe
+      relationOpts = relationFn;
+    }
+
+    if (relationOpts.hasOwnProperty('resolver')) {
+      this.setField(fieldName, () => {
+        // $FlowFixMe
+        const fc = this._relationWithResolverToFC(relationOpts, fieldName);
+        return { ...fc, _gqcIsRelation: true };
+      });
+    } else if (relationOpts.hasOwnProperty('type')) {
+      this.setField(fieldName, () => {
+        // $FlowFixMe
+        const fc: ComposeFieldConfig<*, *> = relationFn();
+        return { ...fc, _gqcIsRelation: true };
+      });
+    }
+
     return this;
   }
 
@@ -229,61 +255,47 @@ export default class TypeComposer {
     return this.gqType._gqcRelations;
   }
 
+  /**
+  * @deprecated 3.0.0
+  */
   buildRelations(): TypeComposer {
-    const relationFields = {};
-
-    const names = Object.keys(this.getRelations());
-    names.forEach(fieldName => {
-      relationFields[fieldName] = this.buildRelation(fieldName);
-    });
+    deprecate('No need in calling TC.buildRelations(). You may safely remove call of this method.');
     return this;
   }
 
-  buildRelation(fieldName: string): TypeComposer {
-    if (!this.gqType._gqcRelations || !isFunction(this.gqType._gqcRelations[fieldName])) {
+  /**
+  * @deprecated 3.0.0
+  */
+  buildRelation(): TypeComposer {
+    deprecate('No need in calling TC.buildRelation(). You may safely remove call of this method.');
+    return this;
+  }
+
+  _relationWithResolverToFC<TSource, TContext>(
+    opts: RelationOptsWithResolver<TSource, TContext>,
+    fieldName?: string = ''
+  ): ComposeFieldConfig<TSource, TContext> {
+    const resolver = isFunction(opts.resolver) ? opts.resolver() : opts.resolver;
+
+    if (!(resolver instanceof Resolver)) {
       throw new Error(
-        `Cannot call buildRelation() for type ${this.getTypeName()}. ` +
-          `Relation with name '${fieldName}' does not exist.`
+        'You should provide correct Resolver object for relation ' +
+          `${this.getTypeName()}.${fieldName}`
       );
     }
-    const relationFn: Thunk<RelationOpts<*, *>> = this.gqType._gqcRelations[fieldName];
-    // $FlowFixMe
-    const relationOpts: RelationOpts = relationFn();
-
-    if (relationOpts.resolver) {
-      if (!(relationOpts.resolver instanceof Resolver)) {
-        throw new Error(
-          'You should provide correct Resolver object for relation ' +
-            `${this.getTypeName()}.${fieldName}`
-        );
-      }
-      if (relationOpts.type) {
-        throw new Error(
-          'You can not use `resolver` and `type` properties simultaneously for relation ' +
-            `${this.getTypeName()}.${fieldName}`
-        );
-      }
-      if (relationOpts.resolve) {
-        throw new Error(
-          'You can not use `resolver` and `resolve` properties simultaneously for relation ' +
-            `${this.getTypeName()}.${fieldName}`
-        );
-      }
-      this.addRelationWithResolver(fieldName, relationOpts.resolver, relationOpts);
-    } else if (relationOpts.type) {
-      this.setField(fieldName, {
-        ...relationOpts,
-        _gqcIsRelation: true,
-      });
+    if (opts.type) {
+      throw new Error(
+        'You can not use `resolver` and `type` properties simultaneously for relation ' +
+          `${this.getTypeName()}.${fieldName}`
+      );
     }
-    return this;
-  }
+    if (opts.resolve) {
+      throw new Error(
+        'You can not use `resolver` and `resolve` properties simultaneously for relation ' +
+          `${this.getTypeName()}.${fieldName}`
+      );
+    }
 
-  addRelationWithResolver<TSource, TContext>(
-    fieldName: string,
-    resolver: Resolver<TSource, TContext>,
-    opts: RelationOptsWithResolver<TSource, TContext>
-  ): TypeComposer {
     const fieldConfig = resolver.getFieldConfig();
     const argsConfig = { ...fieldConfig.args };
     const argsProto = {};
@@ -295,7 +307,20 @@ export default class TypeComposer {
     //       is `null`, then just remove arg field from config
     //       is `function`, then remove arg field and run it in resolve
     //       is any other value, then put it to args prototype for resolve
-    const optsArgs = opts.args || {};
+    let optsArgs = opts.prepareArgs || {};
+
+    /*
+    * It's done for better naming. Cause `args` name should be reserver under GraphQLArgConfigMap
+    * In terms of graphql-compose `args` is map of preparation functions, so better name is `prepareArgs`
+    * @deprecated 3.0.0
+    */
+    if (opts.args) {
+      optsArgs = ((opts.args: any): RelationArgsMapper<TSource, TContext>);
+      deprecate(
+        `Please rename 'args' option to 'prepareArgs' in type '${this.getTypeName()}' ` +
+          `in method call addRelation('${fieldName}', { /* rename option 'args' to 'prepareArgs' */ }).`
+      );
+    }
     Object.keys(optsArgs).forEach(argName => {
       const argMapVal = optsArgs[argName];
       if (argMapVal !== undefined) {
@@ -333,17 +358,14 @@ export default class TypeComposer {
         : payload;
     };
 
-    this.setField(fieldName, {
+    return {
       type: fieldConfig.type,
       description: opts.description,
       deprecationReason: opts.deprecationReason,
       args: argsConfig,
       resolve,
       projection: opts.projection,
-      _gqcIsRelation: true,
-    });
-
-    return this;
+    };
   }
 
   /**
@@ -553,25 +575,32 @@ export default class TypeComposer {
     return this.getRecordIdFn()(source, args, context);
   }
 
-  getFieldArgs(fieldName: string): ?GraphQLFieldConfigArgumentMap {
-    const field = this.getField(fieldName);
-    if (field) {
-      return field.args;
+  getFieldArgs(fieldName: string): GraphQLFieldConfigArgumentMap {
+    try {
+      const field = this.getField(fieldName);
+      return field.args || {};
+    } catch (e) {
+      throw new Error(
+        `Cannot get field args. Field '${fieldName}' from type '${this.getTypeName()}' does not exist.`
+      );
     }
-    return null;
   }
 
-  getFieldArg(fieldName: string, argName: string): ?GraphQLArgumentConfig {
-    const fieldArgs = this.getFieldArgs(fieldName) || {};
-    return fieldArgs[argName] ? fieldArgs[argName] : undefined;
+  hasFieldArg(fieldName: string, argName: string): boolean {
+    const fieldArgs = this.getFieldArgs(fieldName);
+    return !!fieldArgs[argName];
   }
 
-  /**
-  * @deprecated 2.0.0
-  */
-  getByPath(path: string | Array<string>): any {
-    deprecate('Use TypeComposer.get() instead.');
-    return this.get(path);
+  getFieldArg(fieldName: string, argName: string): GraphQLArgumentConfig {
+    const fieldArgs = this.getFieldArgs(fieldName);
+
+    if (!fieldArgs[argName]) {
+      throw new Error(
+        `Cannot get arg '${argName}' from type.field '${this.getTypeName()}.${fieldName}'. Argument does not exist.`
+      );
+    }
+
+    return fieldArgs[argName];
   }
 
   get(path: string | Array<string>): any {
@@ -596,12 +625,31 @@ export default class TypeComposer {
   }
 
   deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this {
+    const existedFieldNames = this.getFieldNames();
+
     if (typeof fields === 'string') {
+      if (existedFieldNames.indexOf(fields) === -1) {
+        throw new Error(
+          `Cannot deprecate unexisted field '${fields}' from type '${this.getTypeName()}'`
+        );
+      }
       this.extendField(fields, { deprecationReason: 'deprecated' });
     } else if (Array.isArray(fields)) {
-      fields.forEach(field => this.extendField(field, { deprecationReason: 'deprecated' }));
+      fields.forEach(field => {
+        if (existedFieldNames.indexOf(field) === -1) {
+          throw new Error(
+            `Cannot deprecate unexisted field '${field}' from type '${this.getTypeName()}'`
+          );
+        }
+        this.extendField(field, { deprecationReason: 'deprecated' });
+      });
     } else {
       Object.keys(fields).forEach(field => {
+        if (existedFieldNames.indexOf(field) === -1) {
+          throw new Error(
+            `Cannot deprecate unexisted field '${field}' from type '${this.getTypeName()}'`
+          );
+        }
         // $FlowFixMe
         const deprecationReason: string = fields[field];
         this.extendField(field, { deprecationReason });

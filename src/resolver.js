@@ -11,7 +11,7 @@ import {
   isOutputType,
   isInputType,
 } from 'graphql';
-import { deprecate } from './utils/debug';
+// import { deprecate } from './utils/debug';
 import TypeMapper from './typeMapper';
 import TypeComposer from './typeComposer';
 import deepmerge from './utils/deepmerge';
@@ -36,11 +36,9 @@ import type {
   ResolverWrapArgsFn,
   ResolverWrapTypeFn,
   GraphQLInputType,
-  TypeDefinitionString,
   ComposeOutputType,
   ComposeArgumentConfig,
   ComposeFieldConfigArgumentMap,
-  TypeNameString,
 } from './definition';
 import InputTypeComposer from './inputTypeComposer';
 import { typeByPath } from './typeByPath';
@@ -62,15 +60,6 @@ export default class Resolver<TSource, TContext> {
     this.parent = opts.parent || null;
     this.kind = opts.kind || null;
     this.description = opts.description || '';
-
-    /**
-    * @deprecated 2.0.0
-    */
-    if (opts.outputType) {
-      deprecate('Use opts.type instead.');
-      // $FlowFixMe
-      this.setType(opts.outputType);
-    }
 
     if (opts.type) {
       this.setType(opts.type);
@@ -242,56 +231,6 @@ export default class Resolver<TSource, TContext> {
   setResolve(resolve: ResolverMWResolveFn<TSource, TContext>): Resolver<TSource, TContext> {
     this.resolve = resolve;
     return this;
-  }
-
-  /**
-  * @deprecated 2.0.0
-  */
-  getOutputType(): GraphQLOutputType {
-    deprecate('Use Resolver.getType() instead.');
-    return this.getType();
-  }
-
-  /**
-  * @deprecated 2.0.0
-  */
-  setOutputType(
-    gqType:
-      | GraphQLOutputType
-      | TypeDefinitionString
-      | TypeNameString
-      | TypeComposer
-      | Resolver<TSource, TContext>
-  ) {
-    deprecate('Use Resolver.setType() instead.');
-    this.setType(gqType);
-  }
-
-  /**
-  * @deprecated 2.0.0
-  */
-  wrapOutputType(
-    cb: ResolverWrapTypeFn,
-    wrapperName: string = 'wrapType'
-  ): Resolver<TSource, TContext> {
-    deprecate('Use Resolver.wrapType() instead.');
-    return this.wrapType(cb, wrapperName);
-  }
-
-  /**
-  * @deprecated 2.0.0
-  */
-  get outputType(): GraphQLOutputType {
-    deprecate('Use Resolver.getType() instead.');
-    return this.type;
-  }
-
-  /**
-  * @deprecated 2.0.0
-  */
-  set outputType(gqType: GraphQLOutputType) {
-    deprecate('Use Resolver.setType() instead.');
-    this.type = gqType;
   }
 
   getType(): GraphQLOutputType {

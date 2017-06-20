@@ -2,7 +2,7 @@
 
 import { GraphQLInputObjectType, GraphQLNonNull } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
-import { deprecate } from './utils/debug';
+// import { deprecate } from './utils/debug';
 import { isObject, isString } from './utils/is';
 import { resolveInputConfigsAsThunk, keepConfigsAsThunk } from './utils/configAsThunk';
 import TypeMapper from './typeMapper';
@@ -29,7 +29,7 @@ export default class InputTypeComposer {
       | TypeNameString
       | ComposeInputObjectTypeConfig
       | GraphQLInputObjectType
-  ) {
+  ): InputTypeComposer {
     let ITC;
 
     if (isString(opts)) {
@@ -121,14 +121,6 @@ export default class InputTypeComposer {
   }
 
   /**
-  * @deprecated 2.0.0
-  */
-  addField(fieldName: string, fieldConfig: GraphQLInputFieldConfig) {
-    deprecate('Use InputTypeComposer.setField() or plural addFields({}) instead.');
-    this.addFields({ [fieldName]: fieldConfig });
-  }
-
-  /**
    * Add new fields or replace existed in a GraphQL type
    */
   addFields(newFields: ComposeInputFieldConfigMap): InputTypeComposer {
@@ -139,14 +131,16 @@ export default class InputTypeComposer {
   /**
    * Get fieldConfig by name
    */
-  getField(fieldName: string): ?GraphQLInputFieldConfig {
+  getField(fieldName: string): GraphQLInputFieldConfig {
     const fields = this.getFields();
 
-    if (fields[fieldName]) {
-      return fields[fieldName];
+    if (!fields[fieldName]) {
+      throw new Error(
+        `Cannot get field '${fieldName}' from input type '${this.getTypeName()}'. Field does not exist.`
+      );
     }
 
-    return undefined;
+    return fields[fieldName];
   }
 
   removeField(fieldNameOrArray: string | Array<string>): InputTypeComposer {
@@ -169,12 +163,21 @@ export default class InputTypeComposer {
     return this;
   }
 
-  extendField(name: string, parialFieldConfig: ComposeInputFieldConfig): InputTypeComposer {
+  extendField(fieldName: string, parialFieldConfig: ComposeInputFieldConfig): InputTypeComposer {
+    let prevFieldConfig;
+    try {
+      prevFieldConfig = this.getField(fieldName);
+    } catch (e) {
+      throw new Error(
+        `Cannot extend field '${fieldName}' from input type '${this.getTypeName()}'. Field does not exist.`
+      );
+    }
+
     const fieldConfig: ComposeInputFieldConfig = {
-      ...this.getField(name),
+      ...prevFieldConfig,
       ...parialFieldConfig,
     };
-    this.setField(name, fieldConfig);
+    this.setField(fieldName, fieldConfig);
     return this;
   }
 
@@ -204,14 +207,6 @@ export default class InputTypeComposer {
     return undefined;
   }
 
-  /**
-  * @deprecated 2.0.0
-  */
-  isFieldRequired(fieldName: string): boolean {
-    deprecate('Use InputTypeComposer.isRequired() instead.');
-    return this.isRequired(fieldName);
-  }
-
   makeRequired(fieldNameOrArray: string | Array<string>): InputTypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
@@ -226,14 +221,6 @@ export default class InputTypeComposer {
     return this;
   }
 
-  /**
-  * @deprecated 2.0.0
-  */
-  makeFieldsRequired(fieldNameOrArray: string | Array<string>) {
-    deprecate('Use InputTypeComposer.makeRequired() instead.');
-    this.makeRequired(fieldNameOrArray);
-  }
-
   makeOptional(fieldNameOrArray: string | Array<string>): InputTypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
@@ -246,14 +233,6 @@ export default class InputTypeComposer {
     });
     this.setFields(fields);
     return this;
-  }
-
-  /**
-  * @deprecated 2.0.0
-  */
-  makeFieldsOptional(fieldNameOrArray: string | Array<string>) {
-    deprecate('Use InputTypeComposer.makeOptional() instead.');
-    this.makeOptional(fieldNameOrArray);
   }
 
   clone(newTypeName: string): InputTypeComposer {
@@ -299,14 +278,6 @@ export default class InputTypeComposer {
   setDescription(description: string): InputTypeComposer {
     this.gqType.description = description;
     return this;
-  }
-
-  /**
-  * @deprecated 2.0.0
-  */
-  getByPath(path: string | Array<string>): any {
-    deprecate('Use InputTypeComposer.get() instead.');
-    return this.get(path);
   }
 
   get(path: string | Array<string>): any {
