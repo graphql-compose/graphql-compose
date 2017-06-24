@@ -18,6 +18,7 @@ import deepmerge from './utils/deepmerge';
 import { resolveInputConfigsAsThunk } from './utils/configAsThunk';
 import { only, clearName } from './utils/misc';
 import { isFunction, isString } from './utils/is';
+import filterByDotPaths from './utils/filterByDotPaths';
 import { getProjectionFromAST } from './projection';
 import type {
   GraphQLArgumentConfig,
@@ -43,11 +44,18 @@ import type {
 import InputTypeComposer from './inputTypeComposer';
 import { typeByPath } from './typeByPath';
 
+export type ResolveDebugOpts = {
+  showHidden?: boolean,
+  depth?: number,
+  colors?: boolean,
+};
+
 export default class Resolver<TSource, TContext> {
   type: GraphQLOutputType;
   args: GraphQLFieldConfigArgumentMap;
   resolve: ResolverMWResolveFn<TSource, TContext>;
   name: string;
+  displayName: ?string;
   kind: ?ResolverKinds;
   description: ?string;
   parent: ?Resolver<TSource, TContext>;
@@ -57,6 +65,7 @@ export default class Resolver<TSource, TContext> {
       throw new Error('For Resolver constructor the `opts.name` is required option.');
     }
     this.name = opts.name;
+    this.displayName = opts.displayName || null;
     this.parent = opts.parent || null;
     this.kind = opts.kind || null;
     this.description = opts.description || '';
@@ -311,6 +320,7 @@ export default class Resolver<TSource, TContext> {
         oldOpts[key] = this[key];
       }
     }
+    oldOpts.displayName = undefined;
     oldOpts.args = { ...this.args };
     return new Resolver({ ...oldOpts, ...opts });
   }
@@ -521,17 +531,19 @@ export default class Resolver<TSource, TContext> {
   }
 
   getNestedName() {
+    const name = this.displayName || this.name;
     if (this.parent) {
-      return `${this.name}(${this.parent.getNestedName()})`;
+      return `${name}(${this.parent.getNestedName()})`;
     }
-    return this.name;
+    return name;
   }
 
-  toString() {
+  toStringOld() {
     function extendedInfo(resolver, spaces = '') {
       return [
         'Resolver(',
         `  name: ${resolver.name},`,
+        `  displayName: ${resolver.displayName || ''},`,
         `  type: ${util.inspect(resolver.type, { depth: 2 })},`,
         `  args: ${util.inspect(resolver.args, { depth: 3 }).replace('\n', `\n  ${spaces}`)},`,
         `  resolve: ${resolver.resolve
@@ -543,7 +555,122 @@ export default class Resolver<TSource, TContext> {
         .filter(s => !!s)
         .join(`\n  ${spaces}`);
     }
-
     return extendedInfo(this);
+  }
+
+  toString(colors: boolean = true) {
+    return util.inspect(this.toDebugStructure(false), { depth: 20, colors }).replace(/\\n/g, '\n');
+  }
+
+  setDisplayName(name: string): this {
+    this.displayName = name;
+    return this;
+  }
+
+  toDebugStructure(colors: boolean = true): Object {
+    const info: any = {
+      name: this.name,
+      displayName: this.displayName,
+      type: util.inspect(this.type, { depth: 2, colors }),
+      args: this.args,
+      resolve: this.resolve ? this.resolve.toString() : this.resolve,
+    };
+    if (this.parent) {
+      info.resolve = [info.resolve, { 'Parent resolver': this.parent.toDebugStructure(colors) }];
+    }
+    return info;
+  }
+
+  debugExecTime(): Resolver<TSource, TContext> {
+    /* eslint-disable no-console */
+    return this.wrapResolve(
+      next => async rp => {
+        const name = `Execution time for ${this.getNestedName()}`;
+        console.time(name);
+        const res = await next(rp);
+        console.timeEnd(name);
+        return res;
+      },
+      'debugExecTime'
+    );
+    /* eslint-enable no-console */
+  }
+
+  debugParams(
+    filterPaths: ?(string | string[]),
+    opts?: ResolveDebugOpts = { colors: true, depth: 5 }
+  ): Resolver<TSource, TContext> {
+    /* eslint-disable no-console */
+    return this.wrapResolve(
+      next => rp => {
+        console.log(`ResolveParams for ${this.getNestedName()}:`);
+        const data = filterByDotPaths(rp, filterPaths, {
+          // is hidden (use debugParams(["info"])) or debug({ params: ["info"]})
+          // `is hidden (use debugParams(["context.*"])) or debug({ params: ["context.*"]})`,
+          hideFields: rp && rp.context && rp.context.res && rp.context.params && rp.context.headers
+            ? {
+                // looks like context is express request, colapse it
+                info: '[[hidden]]',
+                context: '[[hidden]]',
+              }
+            : {
+                info: '[[hidden]]',
+                'context.*': '[[hidden]]',
+              },
+          hideFieldsNote:
+            'Some data was [[hidden]] to display this fields use debugParams("%fieldNames%")',
+        });
+        console.dir(data, opts);
+        return next(rp);
+      },
+      'debugParams'
+    );
+    /* eslint-enable no-console */
+  }
+
+  debugPayload(
+    filterPaths: ?(string | string[]),
+    opts?: ResolveDebugOpts = { colors: true, depth: 5 }
+  ): Resolver<TSource, TContext> {
+    /* eslint-disable no-console */
+    return this.wrapResolve(
+      next => async rp => {
+        try {
+          const res = await next(rp);
+          console.log(`Resolved Payload for ${this.getNestedName()}:`);
+          if (Array.isArray(res) && res.length > 3 && !filterPaths) {
+            console.dir(
+              [
+                filterPaths ? filterByDotPaths(res[0], filterPaths) : res[0],
+                `[debug note]: Other ${res.length - 1} records was [[hidden]]. ` +
+                  'Use debugPayload("0 1 2 3 4") or debug({ payload: "0 1 2 3 4" }) for display this records',
+              ],
+              opts
+            );
+          } else {
+            console.dir(filterPaths ? filterByDotPaths(res, filterPaths) : res, opts);
+          }
+          return res;
+        } catch (e) {
+          console.log(`Rejected Payload for ${this.getNestedName()}:`);
+          console.log(e);
+          throw e;
+        }
+      },
+      'debugPayload'
+    );
+    /* eslint-enable no-console */
+  }
+
+  debug(
+    filterDotPaths?: {
+      params?: ?(string | string[]),
+      payload?: ?(string | string[]),
+    },
+    opts?: ResolveDebugOpts = { colors: true, depth: 2 }
+  ): Resolver<TSource, TContext> {
+    return this.debugExecTime()
+      .debugParams(filterDotPaths ? filterDotPaths.params : null, opts)
+      .debugPayload(filterDotPaths ? filterDotPaths.payload : null, opts);
   }
 }

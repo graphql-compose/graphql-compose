@@ -677,4 +677,172 @@ describe('Resolver', () => {
     expect(resolver.setKind('query')).toBe(resolver);
     expect(resolver.setDescription('Find method')).toBe(resolver);
   });
+
+  describe('debug methods', () => {
+    /* eslint-disable no-console */
+    const origConsole = global.console;
+    beforeEach(() => {
+      global.console = {
+        log: jest.fn(),
+        dir: jest.fn(),
+        time: jest.fn(),
+        timeEnd: jest.fn(),
+      };
+    });
+    afterEach(() => {
+      global.console = origConsole;
+    });
+
+    describe('debugExecTime()', () => {
+      it('should measure execution time', async () => {
+        const r1 = new Resolver({
+          name: 'find',
+          displayName: 'User.find()',
+          resolve: () => {},
+        });
+        await r1.debugExecTime().resolve();
+
+        expect(console.time.mock.calls[0]).toEqual(['Execution time for User.find()']);
+        expect(console.timeEnd.mock.calls[0]).toEqual(['Execution time for User.find()']);
+      });
+    });
+
+    describe('debugParams()', () => {
+      it('should show resolved payload', () => {
+        const r1 = new Resolver({
+          name: 'find',
+          displayName: 'User.find()',
+          resolve: () => {},
+        });
+        r1.debugParams().resolve({
+          source: { id: 1 },
+          args: { limit: 1 },
+          context: { isAdmin: true, db: {} },
+          info: { fieldName: 'a', otherAstFields: {} },
+        });
+
+        expect(console.log.mock.calls[0]).toEqual(['ResolveParams for User.find():']);
+        expect(console.dir.mock.calls[0]).toEqual([
+          {
+            args: { limit: 1 },
+            context: { db: 'Object {} [[hidden]]', isAdmin: true },
+            info: 'Object {} [[hidden]]',
+            source: { id: 1 },
+            '[debug note]':
+              'Some data was [[hidden]] to display this fields use debugParams("info context.db")',
+          },
+          { colors: true, depth: 5 },
+        ]);
+      });
+
+      it('should show filtered resolved payload', () => {
+        const r1 = new Resolver({
+          name: 'find',
+          displayName: 'User.find()',
+          resolve: () => {},
+        });
+        r1.debugParams('args, args.sort, source.name').resolve({
+          source: { id: 1, name: 'Pavel' },
+          args: { limit: 1, sort: 'id' },
+        });
+
+        expect(console.log.mock.calls[0]).toEqual(['ResolveParams for User.find():']);
+        expect(console.dir.mock.calls[0]).toEqual([
+          {
+            args: { limit: 1, sort: 'id' },
+            'args.sort': 'id',
+            'source.name': 'Pavel',
+          },
+          { colors: true, depth: 5 },
+        ]);
+      });
+    });
+
+    describe('debugPayload()', () => {
+      it('should show resolved payload', async () => {
+        const r1 = new Resolver({
+          name: 'find',
+          displayName: 'User.find()',
+          resolve: async () => ({ a: 123 }),
+        });
+        await r1.debugPayload().resolve();
+
+        expect(console.log.mock.calls[0]).toEqual(['Resolved Payload for User.find():']);
+        expect(console.dir.mock.calls[0]).toEqual([{ a: 123 }, { colors: true, depth: 5 }]);
+      });
+
+      it('should show filtered resolved payload', async () => {
+        const r1 = new Resolver({
+          name: 'find',
+          displayName: 'User.find()',
+          resolve: async () => ({ a: 123, b: 345, c: [0, 1, 2, 3] }),
+        });
+        await r1.debugPayload(['b', 'c.3']).resolve();
+
+        expect(console.log.mock.calls[0]).toEqual(['Resolved Payload for User.find():']);
+        expect(console.dir.mock.calls[0]).toEqual([
+          { b: 345, 'c.3': 3 },
+          { colors: true, depth: 5 },
+        ]);
+      });
+
+      it('should show rejected payload', async () => {
+        const err = new Error('Request failed');
+        const r1 = new Resolver({
+          name: 'find',
+          displayName: 'User.find()',
+          resolve: async () => {
+            throw err;
+          },
+        });
+        await r1.debugPayload().resolve().catch(e => {});
+
+        expect(console.log.mock.calls[0]).toEqual(['Rejected Payload for User.find():']);
+        expect(console.log.mock.calls[1]).toEqual([err]);
+      });
+    });
+
+    describe('debug()', () => {
+      it('should output execution time, resolve params and payload', async () => {
+        const r1 = new Resolver({
+          name: 'find',
+          displayName: 'User.find()',
+          resolve: () => ({ a: 123, b: 345, c: [0, 1, 2, 3] }),
+        });
+
+        await r1
+          .debug({
+            params: 'args.sort source.name',
+            payload: 'b, c.3',
+          })
+          .resolve({
+            source: { id: 1, name: 'Pavel' },
+            args: { limit: 1, sort: 'id' },
+          });
+
+        expect(console.time.mock.calls[0]).toEqual(['Execution time for User.find()']);
+        expect(console.timeEnd.mock.calls[0]).toEqual(['Execution time for User.find()']);
+
+        expect(console.log.mock.calls[0]).toEqual([
+          'ResolveParams for debugExecTime(User.find()):',
+        ]);
+        expect(console.dir.mock.calls[0]).toEqual([
+          {
+            'args.sort': 'id',
+            'source.name': 'Pavel',
+          },
+          { colors: true, depth: 2 },
+        ]);
+
+        expect(console.log.mock.calls[1]).toEqual([
+          'Resolved Payload for debugParams(debugExecTime(User.find())):',
+        ]);
+        expect(console.dir.mock.calls[1]).toEqual([
+          { b: 345, 'c.3': 3 },
+          { colors: true, depth: 2 },
+        ]);
+      });
+    });
+    /* eslint-enable no-console */
+  });
 });

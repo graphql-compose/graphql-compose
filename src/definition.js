@@ -317,6 +317,7 @@ export type ResolverOpts<TSource, TContext> = {
   resolve?: ResolverMWResolveFn<TSource, TContext>,
   args?: ComposeFieldConfigArgumentMap,
   name?: string,
+  displayName?: string,
   kind?: ResolverKinds,
   description?: string,
   parent?: Resolver<TSource, TContext>,

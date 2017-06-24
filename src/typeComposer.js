@@ -513,6 +513,7 @@ export default class TypeComposer {
       throw new Error('setResolver() accept only Resolver instance');
     }
     this.gqType._gqcResolvers.set(name, resolver);
+    resolver.setDisplayName(`${this.getTypeName()}.${resolver.name}`);
     return this;
   }
 

@@ -65,8 +65,8 @@
     "watch": "jest --watch",
     "coverage": "jest --coverage",
     "lint": "eslint --ext .js ./src",
-    "flow": "./node_modules/.bin/flow stop && ./node_modules/.bin/flow",
-    "test": "npm run coverage && npm run lint && npm run flow",
+    "flow-reload": "./node_modules/.bin/flow stop && ./node_modules/.bin/flow",
+    "test": "npm run coverage && npm run lint && npm run flow-reload",
     "link": "yarn link graphql && yarn link",
     "unlink": "yarn unlink graphql && yarn add graphql",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
