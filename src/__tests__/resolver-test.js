@@ -292,13 +292,26 @@ describe('Resolver', () => {
             }`,
             description: 'Data filtering arg',
           },
+          mandatory: {
+            type: `input Mandatory {
+              data: String
+            }`,
+          },
+          mandatoryScalar: 'String!',
         });
+        resolver.makeRequired('mandatory');
       });
 
       it('should throw error if arg does not exists', () => {
         expect(() => {
           resolver.cloneArg('missingArg', 'NewTypeNameInput');
         }).toThrowError('Argument does not exist');
+      });
+
+      it('should throw error if arg is GraphqlNonNull wrapped scalar type', () => {
+        expect(() => {
+          resolver.cloneArg('mandatoryScalar', 'NewTypeNameInput');
+        }).toThrowError('should be GraphQLInputObjectType');
       });
 
       it('should throw error if arg is scalar type', () => {
@@ -317,6 +330,11 @@ describe('Resolver', () => {
         expect(() => {
           resolver.cloneArg('filter', 'FilterInput');
         }).toThrowError('It is equal to current name');
+      });
+
+      it('should clone GraphqlNonNull wrapped types', () => {
+        resolver.cloneArg('mandatory', 'NewMandatory');
+        expect(resolver.getArgType('mandatory').ofType.name).toBe('NewMandatory');
       });
 
       it('should clone arg type', () => {
@@ -388,9 +406,17 @@ describe('Resolver', () => {
           }`,
           description: 'Data filtering arg',
         },
+        mandatory: {
+          type: `input Mandatory {
+            data: String
+          }`,
+        },
       });
 
-      newResolver = resolver.wrapCloneArg('filter', 'NewFilterInput');
+      resolver.makeRequired('mandatory');
+      newResolver = resolver
+        .wrapCloneArg('filter', 'NewFilterInput')
+        .wrapCloneArg('mandatory', 'NewMandatory');
     });
 
     it('should return new resolver', () => {
@@ -402,9 +428,26 @@ describe('Resolver', () => {
       expect(newResolver.getArgType('filter')).not.toBe(resolver.getArgType('filter'));
     });
 
+    it('should change wrapped cloned type names', () => {
+      expect(newResolver.getArgType('filter').name).toBe('NewFilterInput');
+      expect(newResolver.getArgType('filter').name).not.toBe(resolver.getArgType('filter').name);
+    });
+
     it('should keep untouched other args', () => {
       expect(newResolver.getArg('other')).not.toBe(resolver.getArg('other'));
       expect(newResolver.getArgType('other')).toBe(resolver.getArgType('other'));
+    });
+
+    it('should unwrap GraphQLNonNull types', () => {
+      expect(newResolver.getArg('mandatory')).not.toBe(resolver.getArg('mandatory'));
+      expect(newResolver.getArgType('mandatory')).not.toBe(resolver.getArgType('mandatory'));
+    });
+
+    it('should change wrapped cloned type names', () => {
+      expect(newResolver.getArgType('mandatory').ofType.name).toBe('NewMandatory');
+      expect(newResolver.getArgType('mandatory').ofType.name).not.toBe(
+        resolver.getArgType('mandatory').ofType.name
+      );
     });
   });
 
