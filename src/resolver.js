@@ -163,7 +163,15 @@ export default class Resolver<TSource, TContext> {
         `Can not clone arg ${argName} for resolver ${this.name}. Argument does not exist.`
       );
     }
-    if (!(this.args[argName].type instanceof GraphQLInputObjectType)) {
+
+    let originalType = this.args[argName].type;
+    let isUnwrapped = false;
+    if (originalType instanceof GraphQLNonNull) {
+      originalType = originalType.ofType;
+      isUnwrapped = true;
+    }
+
+    if (!(originalType instanceof GraphQLInputObjectType)) {
       throw new Error(
         `Can not clone arg ${argName} for resolver ${this.name}.` +
           'Argument should be GraphQLInputObjectType (complex input type).'
@@ -172,13 +180,18 @@ export default class Resolver<TSource, TContext> {
     if (!newTypeName || newTypeName !== clearName(newTypeName)) {
       throw new Error('You should provide new type name as second argument');
     }
-    if (newTypeName === this.args[argName].type.name) {
+    if (newTypeName === originalType.name) {
       throw new Error('You should provide new type name. It is equal to current name.');
+    }
+
+    let clonedType = InputTypeComposer.create(originalType).clone(newTypeName).getType();
+    if (isUnwrapped) {
+      clonedType = new GraphQLNonNull(clonedType);
     }
 
     this.args[argName] = {
       ...this.args[argName],
-      type: InputTypeComposer.create(this.args[argName].type).clone(newTypeName).getType(),
+      type: clonedType,
     };
     return this;
   }
