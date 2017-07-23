@@ -256,7 +256,7 @@ describe('TypeComposer', () => {
           type: 'String', // type may be imported from another module
         }));
         expect(() => tc.extendField('hoistedField', { description: '123' })).toThrow(
-          /Cannot extend field.*FieldConfig declared as function/
+          /Cannot extend field.*FieldConfig declared as a function/
         );
       });
     });

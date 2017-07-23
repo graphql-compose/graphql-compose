@@ -199,8 +199,8 @@ export default class TypeComposer {
     if (isFunction(prevFieldConfig)) {
       throw new Error(
         `Cannot extend field '${fieldName}' from type '${this.getTypeName()}'. ` +
-          'FieldConfig declared as function. ' +
-          'Such declaration helps to solve hoisting problems between two types which imports each other'
+          'FieldConfig declared as a function. ' +
+          'Such declaration helps to solve hoisting problems between two types which import each other'
       );
     }
 
