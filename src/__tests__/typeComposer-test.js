@@ -250,6 +250,15 @@ describe('TypeComposer', () => {
           /Cannot extend field.*Field does not exist/
         );
       });
+
+      it('should throw error if field declared as function', () => {
+        tc.setField('hoistedField', () => ({
+          type: 'String', // type may be imported from another module
+        }));
+        expect(() => tc.extendField('hoistedField', { description: '123' })).toThrow(
+          /Cannot extend field.*FieldConfig declared as function/
+        );
+      });
     });
   });
 
