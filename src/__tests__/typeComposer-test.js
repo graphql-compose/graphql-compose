@@ -523,18 +523,18 @@ describe('TypeComposer', () => {
 
     describe('thunk with Resolver', () => {
       it('should convert simple relation to fieldConfig', () => {
-        ArticleTC.addRelation('user', () => ({
+        ArticleTC.addRelation('user', {
           resolver: UserTC.getResolver('findById'),
-        }));
+        });
         const fc = ArticleTC.getType().getFields().user;
         // $FlowFixMe
         expect(fc.type.name).toBe('User');
       });
 
       it('should convert simple relation to fieldConfig with resolver thunk', () => {
-        ArticleTC.addRelation('user', () => ({
+        ArticleTC.addRelation('user', {
           resolver: () => UserTC.getResolver('findById'),
-        }));
+        });
         const fc = ArticleTC.getType().getFields().user;
         // $FlowFixMe
         expect(fc.type.name).toBe('User');
@@ -550,13 +550,13 @@ describe('TypeComposer', () => {
       });
 
       it('should convert cross related relations to fieldConfigs', () => {
-        ArticleTC.addRelation('user', () => ({
+        ArticleTC.addRelation('user', {
           resolver: UserTC.getResolver('findById'),
-        }));
+        });
 
-        UserTC.addRelation('lastArticle', () => ({
+        UserTC.addRelation('lastArticle', {
           resolver: ArticleTC.getResolver('findOne'),
-        }));
+        });
 
         const fc1 = ArticleTC.getType().getFields().user;
         // $FlowFixMe
@@ -570,10 +570,10 @@ describe('TypeComposer', () => {
 
     describe('thunk with FieldConfig', () => {
       it('should create field via buildRelations()', () => {
-        ArticleTC.addRelation('user', () => ({
+        ArticleTC.addRelation('user', {
           type: UserTC,
           resolve: () => {},
-        }));
+        });
 
         const fc = ArticleTC.getType().getFields().user;
         expect(fc.type).toBeInstanceOf(GraphQLObjectType);
@@ -600,7 +600,7 @@ describe('TypeComposer', () => {
     expect(tc.removeOtherFields('f1')).toBe(tc);
     expect(tc.reorderFields(['f1'])).toBe(tc);
 
-    expect(tc.addRelation('user', () => ({}: any))).toBe(tc);
+    expect(tc.addRelation('user', ({}: any))).toBe(tc);
 
     expect(tc.setInterfaces(([1, 2]: any))).toBe(tc);
     expect(tc.addInterface((1: any))).toBe(tc);

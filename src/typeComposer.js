@@ -217,18 +217,21 @@ export default class TypeComposer {
     return this;
   }
 
-  addRelation(fieldName: string, relationFn: Thunk<RelationOpts<*, *>>): TypeComposer {
+  addRelation(fieldName: string, relationOpts: RelationOpts<*, *>): TypeComposer {
     if (!this.gqType._gqcRelations) {
       this.gqType._gqcRelations = {};
     }
-    this.gqType._gqcRelations[fieldName] = relationFn;
+    this.gqType._gqcRelations[fieldName] = relationOpts;
 
-    let relationOpts: RelationOpts<*, *>;
-    if (isFunction(relationFn)) {
-      relationOpts = relationFn();
-    } else {
-      // $FlowFixMe
-      relationOpts = relationFn;
+    // @deprecate remove this check in 3.0.0
+    if (isFunction(relationOpts)) {
+      deprecate(
+        `${this.getTypeName()}.addRelation('${fieldName}', relationOpts). \n` +
+          'Argument `relationOpts` cannot be a function from v2.0.0. See https://github.com/nodkz/graphql-compose/releases/tag/2.0.0 \n' +
+          'Please change `() => ({ resolver: Resolver, ... })` on `{ resolver: () => Resolver, ... }`'
+      );
+      // eslint-disable-next-line
+      relationOpts = relationOpts();
     }
 
     if (relationOpts.hasOwnProperty('resolver')) {
@@ -239,8 +242,7 @@ export default class TypeComposer {
       });
     } else if (relationOpts.hasOwnProperty('type')) {
       this.setField(fieldName, () => {
-        // $FlowFixMe
-        const fc: ComposeFieldConfig<*, *> = relationFn();
+        const fc: ComposeFieldConfig<*, *> = relationOpts;
         return { ...fc, _gqcIsRelation: true };
       });
     }
@@ -349,9 +351,7 @@ export default class TypeComposer {
       return catchErrors
         ? Promise.resolve(payload).catch(e => {
             // eslint-disable-next-line
-            console.log(
-              `GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`
-            );
+            console.log(`GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`);
             console.log(e); // eslint-disable-line
             return null;
           })

@@ -462,10 +462,10 @@ describe('Resolver', () => {
       `,
     });
 
-    GQC.rootQuery().addRelation('resolveUser', () => ({
-      resolver: myResolver,
+    GQC.rootQuery().addRelation('resolveUser', {
+      resolver: () => myResolver,
       projection: { _id: true },
-    }));
+    });
 
     const schema = GQC.buildSchema();
     const result = await graphql(schema, '{ resolveUser { name } }');
