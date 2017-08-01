@@ -43,6 +43,10 @@ export default class ComposeStorage {
     return this.get('Mutation');
   }
 
+  rootSubscription(): TypeComposer {
+    return this.get('Subscription');
+  }
+
   resolvers(typeName: string): Map<string, Resolver<*, *>> {
     return this.get(typeName).getResolvers();
   }
@@ -66,10 +70,16 @@ export default class ComposeStorage {
       roots.mutation = tc.getType();
     }
 
+    if (this.has('Subscription')) {
+      const tc = this.get('Subscription');
+      this.removeEmptyTypes(tc, new Set());
+      roots.subscription = tc.getType();
+    }
+
     if (Object.keys(roots).length === 0) {
       throw new Error(
         'Can not build schema. Must be initialized at least one ' +
-          'of the following types: RootQuery, RootMutation.'
+          'of the following types: Query, Mutation, Subscription.'
       );
     }
 
