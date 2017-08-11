@@ -166,11 +166,11 @@ describe('Resolver', () => {
         b1: 'String',
       });
       expect(resolver.getArgType('b1')).toBe(GraphQLString);
-      expect(resolver.getArgType('unexisted')).toBeUndefined();
+      expect(() => resolver.getArgType('unexisted')).toThrowError();
     });
 
     it('should return undefined for non-existing arg', () => {
-      expect(resolver.getArg('unexisted')).toBeUndefined();
+      expect(resolver.hasArg('unexisted')).toBeFalsy();
     });
 
     it('should remove args', () => {
@@ -178,31 +178,31 @@ describe('Resolver', () => {
       const argConfig = { type: GraphQLString };
       resolver.setArg(argName, argConfig);
       resolver.removeArg(argName);
-      expect(resolver.getArg(argName)).toBeUndefined();
+      expect(resolver.hasArg(argName)).toBeFalsy();
 
       resolver.setArg('a1', 'String');
       resolver.setArg('a2', 'String');
       resolver.setArg('a3', 'String');
       resolver.removeArg(['a1', 'a2']);
-      expect(resolver.getArg('a1')).toBeUndefined();
-      expect(resolver.getArg('a2')).toBeUndefined();
-      expect(resolver.getArg('a3')).toBeTruthy();
+      expect(resolver.hasArg('a1')).toBeFalsy();
+      expect(resolver.hasArg('a2')).toBeFalsy();
+      expect(resolver.hasArg('a3')).toBeTruthy();
     });
 
     it('should remove other args', () => {
       resolver.setArg('a1', 'String');
       resolver.setArg('a2', 'String');
       resolver.removeOtherArgs('a1');
-      expect(resolver.getArg('a1')).toBeTruthy();
-      expect(resolver.getArg('a2')).toBeUndefined();
+      expect(resolver.hasArg('a1')).toBeTruthy();
+      expect(resolver.hasArg('a2')).toBeFalsy();
 
       resolver.setArg('a1', 'String');
       resolver.setArg('a2', 'String');
       resolver.setArg('a3', 'String');
       resolver.removeOtherArgs(['a1', 'a2']);
-      expect(resolver.getArg('a1')).toBeTruthy();
-      expect(resolver.getArg('a2')).toBeTruthy();
-      expect(resolver.getArg('a3')).toBeUndefined();
+      expect(resolver.hasArg('a1')).toBeTruthy();
+      expect(resolver.hasArg('a2')).toBeTruthy();
+      expect(resolver.hasArg('a3')).toBeFalsy();
     });
 
     it('should add args', () => {
@@ -488,7 +488,7 @@ describe('Resolver', () => {
         filterTypeNameFallback: 'FilterUniqueNameInput',
       });
 
-      expect(resolver.getArg('filter')).toBeFalsy();
+      expect(resolver.hasArg('filter')).toBeFalsy();
 
       const filterCfg = newResolver.getArg('filter');
       expect(filterCfg).toBeTruthy();
@@ -887,5 +887,34 @@ describe('Resolver', () => {
       });
     });
     /* eslint-enable no-console */
+  });
+
+  describe('getArgTC()', () => {
+    const myResolver = new Resolver({
+      name: 'someResolver',
+      type: 'String',
+      args: {
+        scalar: 'String',
+        list: '[Int]',
+        obj: InputTypeComposer.create(`input ResolverCustomObjInputType {
+          name: String,
+        }`),
+      },
+    });
+
+    it('should return InputTypeComposer for object argument', () => {
+      const objTC = myResolver.getArgTC('obj');
+      expect(objTC.getTypeName()).toBe('ResolverCustomObjInputType');
+    });
+
+    it('should throw error for non-object argument', () => {
+      expect(() => {
+        myResolver.getArgTC('scalar');
+      }).toThrow('argument should be InputObjectType');
+
+      expect(() => {
+        myResolver.getArgTC('list');
+      }).toThrow('argument should be InputObjectType');
+    });
   });
 });

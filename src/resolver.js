@@ -89,19 +89,30 @@ export default class Resolver<TSource, TContext> {
     return !!this.args[argName];
   }
 
-  getArg(argName: string): ?GraphQLArgumentConfig {
-    if (this.hasArg(argName)) {
-      return this.args[argName];
+  getArg(argName: string): GraphQLArgumentConfig {
+    if (!this.hasArg(argName)) {
+      throw new Error(
+        `Cannot get arg '${argName}' for resolver ${this.name}. Argument does not exist.`
+      );
     }
-    return undefined;
+
+    return this.args[argName];
   }
 
-  getArgType(argName: string): GraphQLInputType | void {
+  getArgType(argName: string): GraphQLInputType {
     const arg = this.getArg(argName);
-    if (arg) {
-      return arg.type;
+    return arg.type;
+  }
+
+  getArgTC(argName: string): InputTypeComposer {
+    const argType = this.getArgType(argName);
+    if (!(argType instanceof GraphQLInputObjectType)) {
+      throw new Error(
+        `Cannot get InputTypeComposer for arg '${argName}' in resolver ${this.getNestedName()}. ` +
+          `This argument should be InputObjectType, but it has type '${argType.constructor.name}'`
+      );
     }
-    return undefined;
+    return new InputTypeComposer(argType);
   }
 
   getArgs(): GraphQLFieldConfigArgumentMap {
@@ -238,9 +249,7 @@ export default class Resolver<TSource, TContext> {
   */
   /* eslint-disable */
   resolve(
-    resolveParams:
-      | ResolveParams<TSource, TContext>
-      | $Shape<ResolveParams<TSource, TContext>>
+    resolveParams: ResolveParams<TSource, TContext> | $Shape<ResolveParams<TSource, TContext>>
   ): Promise<any> {
     return Promise.resolve();
   }
@@ -417,7 +426,7 @@ export default class Resolver<TSource, TContext> {
     const resolver = this.wrap(null, { name: 'addFilterArg' });
 
     // get filterTC or create new one argument
-    const filter = resolver.getArg('filter');
+    const filter = resolver.hasArg('filter') ? resolver.getArg('filter') : undefined;
     let filterITC;
     if (filter && filter.type instanceof GraphQLInputObjectType) {
       filterITC = new InputTypeComposer(filter.type);
@@ -483,9 +492,9 @@ export default class Resolver<TSource, TContext> {
     const resolver = this.wrap(null, { name: 'addSortArg' });
 
     // get sortEnumType or create new one
-    const sort = resolver.getArg('sort');
     let sortEnumType;
-    if (sort) {
+    if (resolver.hasArg('sort')) {
+      const sort = resolver.getArg('sort');
       if (sort.type instanceof GraphQLEnumType) {
         sortEnumType = sort.type;
       } else {

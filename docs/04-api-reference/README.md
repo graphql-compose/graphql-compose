@@ -63,6 +63,7 @@ LonLatTC.extendField('lat', {
   resolve: (source) => (source.lat ? source.lat : 61.1),
 });
 LonLatTC.getFieldType('lat'); // GraphQLFloat
+LonLatTC.getFieldTC('complexField'); // TypeComposer
 LonLatTC.getType(); // GraphQLObjectType({ name: 'LonLat', ...})
 LonLatTC.getTypePlural(); // new GraphQLList(GraphQLObjectType({ name: 'LonLat', ...}))
 LonLatTC.getTypeName(); // LonLat
@@ -160,6 +161,7 @@ LonLatITC.removeOtherFields(['lon', 'lat']); // will remove all other fields
 LonLatITC.extendField('lat', { defaultValue: 51.46, description: 'Prime Meridian' }); // override some field config values
 LonLatITC.reorderFields(['lat', 'lon']); // reorder fields, lat becomes first
 LonLatITC.getFieldType('lat'); // GraphQLNonNull(GraphQLFloat)
+LonLatITC.getFieldTC('complexField'); // InputTypeComposer
 LonLatITC.getType(); // GraphQLInputObjectType({ name: 'LonLatInput', ... })
 LonLatITC.getTypeAsRequired(); // GraphQLNonNull(GraphQLInputObjectType(...))
 LonLatITC.getTypeName(); // 'LonLatInput'
@@ -208,6 +210,7 @@ LonLatTC.addResolver(resolver); // or you may just provide ResolverOpts from abo
 resolver.hasArg('id'); // true
 resolver.getArg('id'): // GraphQLArgumentConfig
 resolver.getArgType('id'); // GraphQLInt
+resolver.getArgTC('complexArg'); // InputTypeComposer
 resolver.getArgs(); // GraphQLFieldConfigArgumentMap
 resolver.getArgNames(); // ['id'], list of arg names
 resolver.setArgs(GraphQLFieldConfigArgumentMap); // completely replace all args
