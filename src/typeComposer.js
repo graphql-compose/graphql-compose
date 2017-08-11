@@ -58,7 +58,10 @@ export default class TypeComposer {
       } else {
         const type = TypeMapper.createType(typeName);
         if (!(type instanceof GraphQLObjectType)) {
-          throw new Error('You should provide correct GraphQLObjectType type definition.');
+          throw new Error(
+            'You should provide correct GraphQLObjectType type definition.' +
+              'Eg. `type MyType { name: String }`'
+          );
         }
         TC = new TypeComposer(type);
       }
@@ -458,13 +461,24 @@ export default class TypeComposer {
   /**
    * Get fieldType by name
    */
-  getFieldType(fieldName: string): GraphQLOutputType | void {
+  getFieldType(fieldName: string): GraphQLOutputType {
     const field = this.getField(fieldName);
-    if (field) {
-      return field.type;
+    if (!field) {
+      throw new Error(`Type ${this.getTypeName()} does not have field with name '${fieldName}'`);
     }
 
-    return undefined;
+    return field.type;
+  }
+
+  getFieldTC(fieldName: string): TypeComposer {
+    const fieldType = this.getFieldType(fieldName);
+    if (!(fieldType instanceof GraphQLObjectType)) {
+      throw new Error(
+        `Cannot get TypeComposer for field '${fieldName}' in type ${this.getTypeName()}. ` +
+          `This field should be ObjectType, but it has type '${fieldType.constructor.name}'`
+      );
+    }
+    return TypeComposer.create(fieldType);
   }
 
   getType(): GraphQLObjectType {

@@ -676,4 +676,30 @@ describe('TypeComposer', () => {
       }).toThrowError(/Cannot deprecate unexisted field/);
     });
   });
+
+  describe('getFieldTC()', () => {
+    const myTC = TypeComposer.create('MyCustomType');
+    myTC.addFields({
+      scalar: 'String',
+      list: '[Int]',
+      obj: TypeComposer.create(`type MyCustomObjType {
+        name: String,
+      }`),
+    });
+
+    it('should return TypeComposer for object field', () => {
+      const objTC = myTC.getFieldTC('obj');
+      expect(objTC.getTypeName()).toBe('MyCustomObjType');
+    });
+
+    it('should throw error for non-object fields', () => {
+      expect(() => {
+        myTC.getFieldTC('scalar');
+      }).toThrow('field should be ObjectType');
+
+      expect(() => {
+        myTC.getFieldTC('list');
+      }).toThrow('field should be ObjectType');
+    });
+  });
 });
