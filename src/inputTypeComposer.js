@@ -45,7 +45,10 @@ export default class InputTypeComposer {
       } else {
         const type = TypeMapper.createType(typeName);
         if (!(type instanceof GraphQLInputObjectType)) {
-          throw new Error('You should provide correct GraphQLInputObjectType type definition.');
+          throw new Error(
+            'You should provide correct GraphQLInputObjectType type definition.' +
+              'Eg. `input MyInputType { name: String! }`'
+          );
         }
         ITC = new InputTypeComposer(type);
       }
@@ -198,13 +201,24 @@ export default class InputTypeComposer {
     return this.getFieldType(fieldName) instanceof GraphQLNonNull;
   }
 
-  getFieldType(fieldName: string): GraphQLInputType | void {
+  getFieldType(fieldName: string): GraphQLInputType {
     const field = this.getField(fieldName);
-    if (field) {
-      return field.type;
+    if (!field) {
+      throw new Error(`Type ${this.getTypeName()} does not have field with name '${fieldName}'`);
     }
 
-    return undefined;
+    return field.type;
+  }
+
+  getFieldTC(fieldName: string): InputTypeComposer {
+    const fieldType = this.getFieldType(fieldName);
+    if (!(fieldType instanceof GraphQLInputObjectType)) {
+      throw new Error(
+        `Cannot get InputTypeComposer for field '${fieldName}' in type ${this.getTypeName()}. ` +
+          `This field should be InputObjectType, but it has type '${fieldType.constructor.name}'`
+      );
+    }
+    return InputTypeComposer.create(fieldType);
   }
 
   makeRequired(fieldNameOrArray: string | Array<string>): InputTypeComposer {

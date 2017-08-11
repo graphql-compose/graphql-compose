@@ -342,4 +342,30 @@ describe('InputTypeComposer', () => {
     expect(itc1.setTypeName('InputType2')).toBe(itc1);
     expect(itc1.setDescription('Test')).toBe(itc1);
   });
+
+  describe('getFieldTC()', () => {
+    const myITC = InputTypeComposer.create('MyCustomInputType');
+    myITC.addFields({
+      scalar: 'String',
+      list: '[Int]',
+      obj: InputTypeComposer.create(`input MyCustomObjInputType {
+        name: String,
+      }`),
+    });
+
+    it('should return InputTypeComposer for object field', () => {
+      const objTC = myITC.getFieldTC('obj');
+      expect(objTC.getTypeName()).toBe('MyCustomObjInputType');
+    });
+
+    it('should throw error for non-object fields', () => {
+      expect(() => {
+        myITC.getFieldTC('scalar');
+      }).toThrow('field should be InputObjectType');
+
+      expect(() => {
+        myITC.getFieldTC('list');
+      }).toThrow('field should be InputObjectType');
+    });
+  });
 });
