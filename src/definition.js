@@ -294,20 +294,20 @@ export type ResolverFilterArgFn<TSource, TContext> = (
 
 export type ResolverFilterArgConfig<TSource, TContext> = {
   name: string,
-  type: string | GraphQLInputObjectType,
-  description: string,
+  type: ComposeArgumentType,
+  description?: string,
   query: ResolverFilterArgFn<TSource, TContext>,
   filterTypeNameFallback?: string,
 };
 
-export type ResolverSortArgFn<TSource, TContext> = (
-  resolveParams: ResolveParams<TSource, TContext>
-) => any;
+export type ResolverSortArgFn = (resolveParams: ResolveParams<*, *>) => mixed;
 
 export type ResolverSortArgConfig<TSource, TContext> = {
   name: string,
   sortTypeNameFallback?: string,
-  value: ResolverSortArgFn<TSource, TContext> | mixed,
+  // value also can be an `Object`, but flow does not understande union with object and function
+  // see https://github.com/facebook/flow/issues/1948
+  value: ResolverSortArgFn | string | number | boolean,
   deprecationReason?: ?string,
   description?: ?string,
 };
