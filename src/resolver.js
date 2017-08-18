@@ -10,6 +10,7 @@ import {
   GraphQLObjectType,
   isOutputType,
   isInputType,
+  getNamedType,
 } from 'graphql';
 // import { deprecate } from './utils/debug';
 import TypeMapper from './typeMapper';
@@ -105,7 +106,7 @@ export default class Resolver<TSource, TContext> {
   }
 
   getArgTC(argName: string): InputTypeComposer {
-    const argType = this.getArgType(argName);
+    const argType = getNamedType(this.getArgType(argName));
     if (!(argType instanceof GraphQLInputObjectType)) {
       throw new Error(
         `Cannot get InputTypeComposer for arg '${argName}' in resolver ${this.getNestedName()}. ` +

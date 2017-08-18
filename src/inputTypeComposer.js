@@ -1,6 +1,6 @@
 /* @flow */
 
-import { GraphQLInputObjectType, GraphQLNonNull } from 'graphql';
+import { GraphQLInputObjectType, GraphQLNonNull, getNamedType } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
 // import { deprecate } from './utils/debug';
 import { isObject, isString } from './utils/is';
@@ -211,7 +211,7 @@ export default class InputTypeComposer {
   }
 
   getFieldTC(fieldName: string): InputTypeComposer {
-    const fieldType = this.getFieldType(fieldName);
+    const fieldType = getNamedType(this.getFieldType(fieldName));
     if (!(fieldType instanceof GraphQLInputObjectType)) {
       throw new Error(
         `Cannot get InputTypeComposer for field '${fieldName}' in type ${this.getTypeName()}. ` +

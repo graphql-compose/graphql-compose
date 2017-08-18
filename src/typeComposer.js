@@ -1,6 +1,6 @@
 /* @flow */
 
-import { GraphQLObjectType, GraphQLList, GraphQLInputObjectType } from 'graphql';
+import { GraphQLObjectType, GraphQLList, GraphQLInputObjectType, getNamedType } from 'graphql';
 import { resolveMaybeThunk } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveOutputConfigsAsThunk } from './utils/configAsThunk';
@@ -471,7 +471,7 @@ export default class TypeComposer {
   }
 
   getFieldTC(fieldName: string): TypeComposer {
-    const fieldType = this.getFieldType(fieldName);
+    const fieldType = getNamedType(this.getFieldType(fieldName));
     if (!(fieldType instanceof GraphQLObjectType)) {
       throw new Error(
         `Cannot get TypeComposer for field '${fieldName}' in type ${this.getTypeName()}. ` +

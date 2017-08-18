@@ -682,14 +682,18 @@ describe('TypeComposer', () => {
     myTC.addFields({
       scalar: 'String',
       list: '[Int]',
-      obj: TypeComposer.create(`type MyCustomObjType {
-        name: String,
-      }`),
+      obj: TypeComposer.create(`type MyCustomObjType { name: String }`),
+      objArr: [TypeComposer.create(`type MyCustomObjType2 { name: String }`)],
     });
 
     it('should return TypeComposer for object field', () => {
       const objTC = myTC.getFieldTC('obj');
       expect(objTC.getTypeName()).toBe('MyCustomObjType');
+    });
+
+    it('should return TypeComposer for wrapped object field', () => {
+      const objTC = myTC.getFieldTC('objArr');
+      expect(objTC.getTypeName()).toBe('MyCustomObjType2');
     });
 
     it('should throw error for non-object fields', () => {

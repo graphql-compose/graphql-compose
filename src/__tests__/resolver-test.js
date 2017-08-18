@@ -896,15 +896,19 @@ describe('Resolver', () => {
       args: {
         scalar: 'String',
         list: '[Int]',
-        obj: InputTypeComposer.create(`input ResolverCustomObjInputType {
-          name: String,
-        }`),
+        obj: InputTypeComposer.create(`input RCustomInputType { name: String }`),
+        objArr: [InputTypeComposer.create(`input RCustomInputType2 { name: String }`)],
       },
     });
 
     it('should return InputTypeComposer for object argument', () => {
       const objTC = myResolver.getArgTC('obj');
-      expect(objTC.getTypeName()).toBe('ResolverCustomObjInputType');
+      expect(objTC.getTypeName()).toBe('RCustomInputType');
+    });
+
+    it('should return InputTypeComposer for wrapped object argument', () => {
+      const objTC = myResolver.getArgTC('objArr');
+      expect(objTC.getTypeName()).toBe('RCustomInputType2');
     });
 
     it('should throw error for non-object argument', () => {
