@@ -838,7 +838,10 @@ describe('Resolver', () => {
             throw err;
           },
         });
-        await r1.debugPayload().resolve().catch(e => {});
+        await r1
+          .debugPayload()
+          .resolve()
+          .catch(e => {});
 
         expect(console.log.mock.calls[0]).toEqual(['Rejected Payload for User.find():']);
         expect(console.log.mock.calls[1]).toEqual([err]);
