@@ -3,7 +3,8 @@
   "version": "0.0.0-semantically-released",
   "description": "GraphQL schema builder from different data sources with middleware extensions.",
   "files": [
-    "lib"
+    "lib",
+    "types"
   ],
   "main": "lib/index.js",
   "types": "types/index.d.ts",
