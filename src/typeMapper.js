@@ -243,10 +243,10 @@ class TypeMapper {
         );
       }
 
-      const type = RegexpOutputTypeDefinition.test(composeType) ||
-        RegexpEnumTypeDefinition.test(composeType)
-        ? this.createType(composeType)
-        : this.getWrapped(composeType);
+      const type =
+        RegexpOutputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
+          ? this.createType(composeType)
+          : this.getWrapped(composeType);
 
       if (!type) {
         throw new Error(
@@ -367,10 +367,10 @@ class TypeMapper {
         );
       }
 
-      const type = RegexpInputTypeDefinition.test(composeType) ||
-        RegexpEnumTypeDefinition.test(composeType)
-        ? this.createType(composeType)
-        : this.getWrapped(composeType);
+      const type =
+        RegexpInputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
+          ? this.createType(composeType)
+          : this.getWrapped(composeType);
 
       if (!type) {
         throw new Error(
@@ -494,10 +494,10 @@ class TypeMapper {
         );
       }
 
-      const type = RegexpInputTypeDefinition.test(composeType) ||
-        RegexpEnumTypeDefinition.test(composeType)
-        ? this.createType(composeType)
-        : this.getWrapped(composeType);
+      const type =
+        RegexpInputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
+          ? this.createType(composeType)
+          : this.getWrapped(composeType);
 
       if (!type) {
         throw new Error(

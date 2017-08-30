@@ -196,7 +196,9 @@ export default class Resolver<TSource, TContext> {
       throw new Error('You should provide new type name. It is equal to current name.');
     }
 
-    let clonedType = InputTypeComposer.create(originalType).clone(newTypeName).getType();
+    let clonedType = InputTypeComposer.create(originalType)
+      .clone(newTypeName)
+      .getType();
     if (isUnwrapped) {
       clonedType = new GraphQLNonNull(clonedType);
     }
@@ -630,16 +632,17 @@ export default class Resolver<TSource, TContext> {
         const data = filterByDotPaths(rp, filterPaths, {
           // is hidden (use debugParams(["info"])) or debug({ params: ["info"]})
           // `is hidden (use debugParams(["context.*"])) or debug({ params: ["context.*"]})`,
-          hideFields: rp && rp.context && rp.context.res && rp.context.params && rp.context.headers
-            ? {
-                // looks like context is express request, colapse it
-                info: '[[hidden]]',
-                context: '[[hidden]]',
-              }
-            : {
-                info: '[[hidden]]',
-                'context.*': '[[hidden]]',
-              },
+          hideFields:
+            rp && rp.context && rp.context.res && rp.context.params && rp.context.headers
+              ? {
+                  // looks like context is express request, colapse it
+                  info: '[[hidden]]',
+                  context: '[[hidden]]',
+                }
+              : {
+                  info: '[[hidden]]',
+                  'context.*': '[[hidden]]',
+                },
           hideFieldsNote:
             'Some data was [[hidden]] to display this fields use debugParams("%fieldNames%")',
         });
