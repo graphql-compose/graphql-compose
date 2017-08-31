@@ -3,6 +3,9 @@
 import * as graphql from 'graphql';
 
 export { graphql };
+
+export * from './definition';
+
 export { default as TypeComposer } from './typeComposer';
 export { default as InputTypeComposer } from './inputTypeComposer';
 export { default as Resolver } from './resolver';
