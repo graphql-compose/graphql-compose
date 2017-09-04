@@ -42,7 +42,7 @@
     "eslint-plugin-prettier": "^2.2.0",
     "flow-bin": "^0.53.1",
     "graphql": "^0.11.2",
-    "jest": "^20.0.4",
+    "jest": "^21.0.0",
     "prettier": "^1.6.1",
     "rimraf": "^2.6.1",
     "semantic-release": "^7.0.2",
