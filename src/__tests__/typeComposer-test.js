@@ -464,6 +464,19 @@ describe('TypeComposer', () => {
       });
       expect(await tc.getResolver('findById').resolve({})).toBe('123456');
     });
+
+    it('wrapResolver() should return new resolver', async () => {
+      tc.addResolver({
+        name: 'updateById',
+        resolve: () => '123',
+      });
+      expect(await tc.getResolver('updateById').resolve({})).toBe('123');
+
+      const prevResolver = tc.getResolver('updateById');
+      const newResolver = tc.wrapResolver('updateById');
+      expect(newResolver).not.toBe(prevResolver);
+      expect(await tc.getResolver('updateById').resolve({})).toBe('123');
+    });
   });
 
   describe('addRelation()', () => {
