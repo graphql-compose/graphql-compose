@@ -559,11 +559,10 @@ export default class TypeComposer {
     return this;
   }
 
-  wrapResolver(resolverName: string, cb?: ResolverMWResolve<any, any>): Resolver<*, *> {
+  wrapResolver(resolverName: string, cb: ResolverMWResolve<any, any>): TypeComposer {
     const resolver = this.getResolver(resolverName);
-    const newResolver = cb ? resolver.wrapResolve(cb) : resolver.clone();
-    this.setResolver(resolverName, newResolver);
-    return newResolver;
+    this.setResolver(resolverName, resolver.wrapResolve(cb));
+    return this;
   }
 
   getTypeName(): string {

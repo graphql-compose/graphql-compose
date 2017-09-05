@@ -337,7 +337,7 @@ export default class Resolver<TSource, TContext> {
     return typeByPath(this, path);
   }
 
-  clone(opts?: ResolverOpts<TSource, TContext> = {}): Resolver<TSource, TContext> {
+  clone(opts: ResolverOpts<TSource, TContext> = {}): Resolver<TSource, TContext> {
     const oldOpts = {};
     for (const key in this) {
       if ({}.hasOwnProperty.call(this, key)) {

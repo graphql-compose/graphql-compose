@@ -123,7 +123,7 @@ export default class TypeComposer {
 
     public removeResolver(resolverName: string): this;
 
-    public wrapResolver(resolverName: string, cb?: ResolverMWResolve<any, any>): Resolver<any, any>;
+    public wrapResolver(resolverName: string, cb: ResolverMWResolve<any, any>): this;
 
     public getTypeName(): string;
 
