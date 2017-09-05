@@ -27,7 +27,8 @@
     }],
     "import/prefer-default-export": 0,
     "arrow-parens": 0,
-    "no-use-before-define": ["error", { "functions": false }]
+    "no-use-before-define": ["error", { "functions": false }],
+    "prefer-destructuring": 0
   },
   "env": {
     "jasmine": true,

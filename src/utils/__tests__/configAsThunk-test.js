@@ -154,7 +154,7 @@ describe('typeAsThunk', () => {
         },
       };
       const unwrapped = resolveOutputConfigsAsThunk(fieldMap);
-      const args = unwrapped.f6.args;
+      const { args } = unwrapped.f6;
       expect(args.a1.type).toBe(GraphQLString);
       expect(args.a2.type).toBe(GraphQLString);
       expect(args.a2.description).toBe('Desc');

@@ -24,7 +24,7 @@ export default new GraphQLScalarType({
       );
     }
 
-    const result = new Buffer(ast.value);
+    const result = Buffer.from(ast.value);
 
     if (ast.value !== result.toString()) {
       throw new GraphQLError('Query error: Invalid buffer encoding', [ast]);
