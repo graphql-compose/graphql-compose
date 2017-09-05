@@ -34,6 +34,7 @@ import type {
   ComposeFieldConfigMap,
   ComposeFieldConfig,
   ComposeObjectTypeConfig,
+  ResolverMWResolve,
 } from './definition';
 
 export default class TypeComposer {
@@ -555,6 +556,12 @@ export default class TypeComposer {
     if (resolverName) {
       this.getResolvers().delete(resolverName);
     }
+    return this;
+  }
+
+  wrapResolver(resolverName: string, cb: ResolverMWResolve<any, any>): TypeComposer {
+    const resolver = this.getResolver(resolverName);
+    this.setResolver(resolverName, resolver.wrapResolve(cb));
     return this;
   }
 
