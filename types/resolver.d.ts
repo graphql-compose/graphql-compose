@@ -1,7 +1,6 @@
-/// <reference types="graphql" />
 import {
     GraphQLArgumentConfig, GraphQLFieldConfig, GraphQLFieldConfigArgumentMap, GraphQLInputType, GraphQLOutputType
-} from 'graphql';
+} from './graphql';
 import {
     ComposeArgumentConfig, ComposeFieldConfigArgumentMap, ComposeOutputType, ProjectionType, ResolverFilterArgConfig,
     ResolverKinds, ResolverNextRpCb, ResolverRpCb, ResolverOpts, ResolverSortArgConfig, ResolverWrapArgsCb,

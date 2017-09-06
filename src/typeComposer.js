@@ -1,6 +1,6 @@
 /* @flow */
 
-import { GraphQLObjectType, GraphQLList, GraphQLInputObjectType, getNamedType } from 'graphql';
+import { GraphQLObjectType, GraphQLList, GraphQLInputObjectType, getNamedType } from './graphql';
 import { resolveMaybeThunk } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveOutputConfigsAsThunk } from './utils/configAsThunk';
@@ -10,22 +10,23 @@ import { toInputObjectType } from './toInputObjectType';
 import InputTypeComposer from './inputTypeComposer';
 import TypeMapper from './typeMapper';
 import { typeByPath } from './typeByPath';
-
 import type {
-  Thunk,
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
   GraphQLOutputType,
-  GraphQLObjectTypeExtended,
   GraphQLInterfaceType,
+  GraphQLFieldConfigArgumentMap,
+  GraphQLArgumentConfig,
+} from './graphql';
+import type {
+  Thunk,
+  GraphQLObjectTypeExtended,
   GetRecordIdFn,
   RelationOpts,
   RelationOptsWithResolver,
   RelationThunkMap,
   RelationArgsMapper,
   RelationArgsMapperFn,
-  GraphQLFieldConfigArgumentMap,
-  GraphQLArgumentConfig,
   ProjectionType,
   ProjectionMapType,
   ResolverOpts,

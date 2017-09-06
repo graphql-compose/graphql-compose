@@ -11,7 +11,7 @@ import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLEnumType,
-} from 'graphql';
+} from '../graphql';
 import typeMapper from '../typeMapper';
 import TypeComposer from '../typeComposer';
 import InputTypeComposer from '../inputTypeComposer';

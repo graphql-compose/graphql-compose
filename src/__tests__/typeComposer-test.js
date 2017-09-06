@@ -9,7 +9,7 @@ import {
   GraphQLFloat,
   GraphQLBoolean,
   GraphQLInterfaceType,
-} from 'graphql';
+} from '../graphql';
 import TypeComposer from '../typeComposer';
 import Resolver from '../resolver';
 

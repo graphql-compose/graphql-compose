@@ -11,7 +11,7 @@ import {
   isOutputType,
   isInputType,
   getNamedType,
-} from 'graphql';
+} from './graphql';
 // import { deprecate } from './utils/debug';
 import TypeMapper from './typeMapper';
 import TypeComposer from './typeComposer';
@@ -22,10 +22,6 @@ import { isFunction, isString } from './utils/is';
 import filterByDotPaths from './utils/filterByDotPaths';
 import { getProjectionFromAST } from './projection';
 import type {
-  GraphQLArgumentConfig,
-  GraphQLFieldConfigArgumentMap,
-  GraphQLOutputType,
-  GraphQLFieldConfig,
   ResolverNextRpCb,
   ResolverRpCb,
   ResolveParams,
@@ -37,11 +33,17 @@ import type {
   ResolverWrapCb,
   ResolverWrapArgsCb,
   ResolverWrapTypeCb,
-  GraphQLInputType,
   ComposeOutputType,
   ComposeArgumentConfig,
   ComposeFieldConfigArgumentMap,
 } from './definition';
+import type {
+  GraphQLArgumentConfig,
+  GraphQLFieldConfigArgumentMap,
+  GraphQLOutputType,
+  GraphQLFieldConfig,
+  GraphQLInputType,
+} from './graphql';
 import InputTypeComposer from './inputTypeComposer';
 import { typeByPath } from './typeByPath';
 

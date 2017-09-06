@@ -1,6 +1,5 @@
 // tslint:disable:interface-over-type-literal to keep the file close to the original
-/// <reference types="graphql" />
-import * as graphql from 'graphql';
+import * as graphql from './graphql';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
 import TypeComposer from './typeComposer';
@@ -15,14 +14,6 @@ export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 export type TypeDefinitionString = string;
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]
 export type TypeNameString = string; // eg. Int, Float
-
-export {
-    GraphQLType, GraphQLScalarType, GraphQLObjectType, GraphQLObjectTypeConfig, GraphQLNullableType,
-    GraphQLInterfaceType, GraphQLOutputType, GraphQLInputField, GraphQLInputObjectType, GraphQLInputObjectTypeConfig,
-    GraphQLFieldConfigArgumentMap, GraphQLFieldResolver, GraphQLResolveInfo, GraphQLArgumentConfig, GraphQLNamedType,
-    GraphQLFieldConfig, GraphQLFieldConfigMap, GraphQLInputFieldConfig, GraphQLInputFieldConfigMap, GraphQLInputType,
-    GraphQLEnumType, GraphQLEnumTypeConfig, GraphQLEnumValueConfigMap, GraphQLEnumValueConfig, GraphQLEnumValue
-} from 'graphql';
 
 export type ComposeFieldConfigMap<TSource, TContext> = {
     [fieldName: string]: | ComposeFieldConfig<TSource, TContext>

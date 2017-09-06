@@ -2,28 +2,6 @@
 /* eslint-disable no-use-before-define, class-methods-use-this, no-unused-vars, no-param-reassign */
 
 import objectPath from 'object-path';
-import {
-  GraphQLInt,
-  GraphQLFloat,
-  GraphQLString,
-  GraphQLBoolean,
-  GraphQLScalarType,
-  GraphQLID,
-  GraphQLList,
-  GraphQLNonNull,
-  GraphQLEnumType,
-  GraphQLObjectType,
-  GraphQLInputObjectType,
-  GraphQLInterfaceType,
-  GraphQLDirective,
-  GraphQLSkipDirective,
-  GraphQLIncludeDirective,
-  GraphQLDeprecatedDirective,
-  GraphQLUnionType,
-  // isOutputType,
-  // isInputType,
-  valueFromAST,
-} from 'graphql';
 import { parse, parseType } from 'graphql/language/parser';
 import {
   LIST_TYPE,
@@ -45,7 +23,6 @@ import keyValMap from 'graphql/jsutils/keyValMap';
 import invariant from 'graphql/jsutils/invariant';
 import find from 'graphql/jsutils/find';
 import { getArgumentValues } from 'graphql/execution/values';
-
 import type {
   DocumentNode,
   ObjectTypeDefinitionNode,
@@ -58,10 +35,32 @@ import type {
   InputObjectTypeDefinitionNode,
 } from 'graphql/language/ast';
 
+import {
+  GraphQLInt,
+  GraphQLFloat,
+  GraphQLString,
+  GraphQLBoolean,
+  GraphQLScalarType,
+  GraphQLID,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLEnumType,
+  GraphQLObjectType,
+  GraphQLInputObjectType,
+  GraphQLInterfaceType,
+  GraphQLDirective,
+  GraphQLSkipDirective,
+  GraphQLIncludeDirective,
+  GraphQLDeprecatedDirective,
+  GraphQLUnionType,
+  // isOutputType,
+  // isInputType,
+  valueFromAST,
+} from './graphql';
+
 import GraphQLJSON from './type/json';
 import GraphQLDate from './type/date';
 import { isFunction, isObject } from './utils/is';
-
 import type {
   GraphQLType,
   GraphQLNamedType,
@@ -74,6 +73,8 @@ import type {
   GraphQLArgumentConfig,
   GraphQLInputFieldConfigMap,
   GraphQLInputFieldConfig,
+} from './graphql';
+import type {
   TypeDefinitionString,
   TypeNameString,
   TypeWrappedString,

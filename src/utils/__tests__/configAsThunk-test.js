@@ -1,6 +1,6 @@
 /* @flow */
 
-import { GraphQLString, GraphQLObjectType, GraphQLInputObjectType } from 'graphql';
+import { GraphQLString, GraphQLObjectType, GraphQLInputObjectType } from '../../graphql';
 import TypeComposer from '../../typeComposer';
 import InputTypeComposer from '../../inputTypeComposer';
 import {

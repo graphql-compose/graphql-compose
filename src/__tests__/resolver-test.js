@@ -11,7 +11,7 @@ import {
   GraphQLObjectType,
   GraphQLEnumType,
   GraphQLList,
-} from 'graphql';
+} from '../graphql';
 import GQC from '../__mocks__/gqc';
 import Resolver from '../resolver';
 import TypeComposer from '../typeComposer';

@@ -1,5 +1,4 @@
-/// <reference types="graphql" />
-import { GraphQLSchema } from 'graphql';
+import { GraphQLSchema } from './graphql';
 import Resolver from './resolver';
 import TypeComposer from './typeComposer';
 

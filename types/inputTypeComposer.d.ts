@@ -1,5 +1,4 @@
-/// <reference types="graphql" />
-import { GraphQLInputFieldConfig, GraphQLInputFieldConfigMap, GraphQLInputObjectType, GraphQLNonNull } from 'graphql';
+import { GraphQLInputFieldConfig, GraphQLInputFieldConfigMap, GraphQLInputObjectType, GraphQLNonNull } from './graphql';
 import {
     ComposeInputFieldConfig, ComposeInputFieldConfigMap, ComposeInputObjectTypeConfig, TypeDefinitionString,
     TypeNameString

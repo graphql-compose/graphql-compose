@@ -1,6 +1,7 @@
 /* @flow */
 /* eslint-disable no-use-before-define, prefer-template */
 
+import util from 'util';
 import {
   GraphQLInputObjectType,
   GraphQLObjectType,
@@ -8,8 +9,7 @@ import {
   isAbstractType,
   GraphQLList,
   GraphQLNonNull,
-} from 'graphql';
-import util from 'util';
+} from './graphql';
 import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import GenericType from './type/generic';
@@ -20,7 +20,7 @@ import type {
   GraphQLType,
   GraphQLInputFieldConfig,
   GraphQLInputType,
-} from './definition';
+} from './graphql';
 
 export function removeWrongFields<TSource, TContext>(
   fields: GraphQLFieldConfigMap<TSource, TContext>

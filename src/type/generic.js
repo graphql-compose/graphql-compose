@@ -1,7 +1,6 @@
 /* @flow */
 
-import { GraphQLScalarType, GraphQLError } from 'graphql';
-import { Kind } from 'graphql/language';
+import { GraphQLScalarType, GraphQLError, Kind } from '../graphql';
 
 function coerceDate(value) {
   const json = JSON.stringify(value);

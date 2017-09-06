@@ -1,6 +1,6 @@
 /* @flow */
 
-import { GraphQLObjectType, GraphQLSchema } from 'graphql';
+import { GraphQLObjectType, GraphQLSchema } from './graphql';
 import { deprecate } from './utils/debug';
 import TypeComposer from './typeComposer';
 import type Resolver from './resolver';

@@ -1,12 +1,12 @@
 /* @flow */
 /* eslint-disable no-use-before-define */
 
-import { GraphQLObjectType, GraphQLInputObjectType, getNamedType } from 'graphql';
+import { GraphQLObjectType, GraphQLInputObjectType, getNamedType } from './graphql';
 import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
 
-import type { GraphQLInputType, GraphQLOutputType } from './definition';
+import type { GraphQLInputType, GraphQLOutputType } from './graphql';
 
 /**
 * fieldName

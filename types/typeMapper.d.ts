@@ -1,8 +1,7 @@
-/// <reference types="graphql" />
 import {
     GraphQLArgumentConfig, GraphQLFieldConfig, GraphQLFieldConfigArgumentMap, GraphQLFieldConfigMap,
     GraphQLInputFieldConfig, GraphQLInputFieldConfigMap, GraphQLNamedType, GraphQLType
-} from 'graphql';
+} from './graphql';
 import {
     ComposeArgumentConfig, ComposeFieldConfig, ComposeFieldConfigArgumentMap, ComposeFieldConfigMap,
     ComposeInputFieldConfig, ComposeInputFieldConfigMap, TypeDefinitionString, TypeNameString, TypeWrappedString

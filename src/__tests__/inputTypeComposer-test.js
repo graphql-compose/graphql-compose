@@ -7,7 +7,7 @@ import {
   GraphQLNonNull,
   GraphQLInt,
   GraphQLBoolean,
-} from 'graphql';
+} from '../graphql';
 import InputTypeComposer from '../inputTypeComposer';
 
 describe('InputTypeComposer', () => {

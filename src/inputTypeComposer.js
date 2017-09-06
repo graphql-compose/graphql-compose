@@ -1,6 +1,6 @@
 /* @flow */
 
-import { GraphQLInputObjectType, GraphQLNonNull, getNamedType } from 'graphql';
+import { GraphQLInputObjectType, GraphQLNonNull, getNamedType } from './graphql';
 import { resolveMaybeThunk } from './utils/misc';
 // import { deprecate } from './utils/debug';
 import { isObject, isString } from './utils/is';
@@ -9,10 +9,12 @@ import TypeMapper from './typeMapper';
 import { typeByPath } from './typeByPath';
 
 import type {
-  Thunk,
   GraphQLInputFieldConfig,
   GraphQLInputFieldConfigMap,
   GraphQLInputType,
+} from './graphql';
+import type {
+  Thunk,
   TypeNameString,
   TypeDefinitionString,
   ComposeInputFieldConfig,

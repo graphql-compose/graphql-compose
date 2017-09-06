@@ -2,36 +2,17 @@
 /* eslint-disable */
 
 import type {
-  GraphQLFieldConfigArgumentMap as _GraphQLFieldConfigArgumentMap,
-  GraphQLFieldResolver as _GraphQLFieldResolver,
-  GraphQLResolveInfo as _GraphQLResolveInfo,
-  GraphQLArgumentConfig as _GraphQLArgumentConfig,
-  GraphQLOutputType as _GraphQLOutputType,
-  GraphQLNamedType as _GraphQLNamedType,
-  GraphQLObjectType as _GraphQLObjectType,
-  GraphQLObjectTypeConfig as _GraphQLObjectTypeConfig,
-  GraphQLInputObjectType as _GraphQLInputObjectType,
-  GraphQLFieldConfig as _GraphQLFieldConfig,
-  GraphQLFieldConfigMap as _GraphQLFieldConfigMap,
-  GraphQLType as _GraphQLType,
-  GraphQLInputObjectTypeConfig as _GraphQLInputObjectTypeConfig,
-  GraphQLInputField as _GraphQLInputField,
-  GraphQLInputFieldConfig as _GraphQLInputFieldConfig,
-  GraphQLInputFieldConfigMap as _GraphQLInputFieldConfigMap,
-  GraphQLInterfaceType as _GraphQLInterfaceType,
-  GraphQLInputType as _GraphQLInputType,
-  GraphQLNullableType as _GraphQLNullableType,
-  GraphQLScalarType as _GraphQLScalarType,
-  GraphQLEnumType as _GraphQLEnumType,
-  GraphQLEnumTypeConfig as _GraphQLEnumTypeConfig,
-  GraphQLEnumValueConfigMap as _GraphQLEnumValueConfigMap,
-  GraphQLEnumValueConfig as _GraphQLEnumValueConfig,
-  GraphQLEnumValue as _GraphQLEnumValue,
   GraphQLIsTypeOfFn,
-} from "graphql/type/definition";
+  GraphQLFieldConfigArgumentMap,
+  GraphQLOutputType,
+  GraphQLObjectType,
+  GraphQLInterfaceType,
+  GraphQLFieldResolver,
+  GraphQLResolveInfo,
+} from 'graphql/type/definition';
 
-import type Resolver from "./resolver";
-import type InputTypeComposer from "./inputTypeComposer";
+import type Resolver from './resolver';
+import type InputTypeComposer from './inputTypeComposer';
 
 export type Thunk<T> = (() => T) | T;
 export type ObjectMap = { [optName: string]: any };
@@ -46,46 +27,6 @@ export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 export type TypeDefinitionString = string;
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]
 export type TypeNameString = string; // eg. Int, Float
-
-// GRAPHQL RE-EXPORT --------------------
-export type GraphQLType = _GraphQLType;
-export type GraphQLScalarType = _GraphQLScalarType;
-export type GraphQLObjectType = _GraphQLObjectType;
-export type GraphQLObjectTypeConfig<
-  TSource,
-  TContext
-> = _GraphQLObjectTypeConfig<TSource, TContext>;
-export type GraphQLNullableType = _GraphQLNullableType;
-export type GraphQLInterfaceType = _GraphQLInterfaceType;
-export type GraphQLOutputType = _GraphQLOutputType;
-export type GraphQLInputField = _GraphQLInputField;
-export type GraphQLInputObjectType = _GraphQLInputObjectType;
-export type GraphQLInputObjectTypeConfig = _GraphQLInputObjectTypeConfig;
-export type GraphQLFieldConfigArgumentMap = _GraphQLFieldConfigArgumentMap;
-export type GraphQLFieldResolver<TSource, TContext> = _GraphQLFieldResolver<
-  TSource,
-  TContext
->;
-export type GraphQLResolveInfo = _GraphQLResolveInfo;
-export type GraphQLArgumentConfig = _GraphQLArgumentConfig;
-export type GraphQLNamedType = _GraphQLNamedType;
-export type GraphQLFieldConfig<TSource, TContext> = _GraphQLFieldConfig<
-  TSource,
-  TContext
->;
-export type GraphQLFieldConfigMap<TSource, TContext> = _GraphQLFieldConfigMap<
-  TSource,
-  TContext
->;
-export type GraphQLInputFieldConfig = _GraphQLInputFieldConfig;
-export type GraphQLInputFieldConfigMap = _GraphQLInputFieldConfigMap;
-export type GraphQLInputType = _GraphQLInputType;
-
-export type GraphQLEnumType = _GraphQLEnumType;
-export type GraphQLEnumTypeConfig = _GraphQLEnumTypeConfig;
-export type GraphQLEnumValueConfigMap = _GraphQLEnumValueConfigMap;
-export type GraphQLEnumValueConfig = _GraphQLEnumValueConfig;
-export type GraphQLEnumValue = _GraphQLEnumValue;
 
 // Compose OutputType -----------------------------
 // No type checks for inputs arguments, while waiting new Flow versions.
