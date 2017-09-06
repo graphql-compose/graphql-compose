@@ -169,11 +169,11 @@ export type ResolverMWArgsFn = (args: graphql.GraphQLFieldConfigArgumentMap) => 
 
 export type ResolverMWArgs = (next: ResolverMWArgsFn) => ResolverMWArgsFn;
 
-export type ResolverMWResolveFn<TSource, TContext> = (
+export type ResolverNextRpCbFn<TSource, TContext> = (
     resolveParams: Partial<ResolveParams<TSource, TContext>>) => Promise<any> | any;
 
-export type ResolverMWResolve<TSource, TContext> = (
-    next: ResolverMWResolveFn<TSource, TContext>) => ResolverMWResolveFn<TSource, TContext>;
+export type ResolverNextRpCb<TSource, TContext> = (
+    next: ResolverNextRpCbFn<TSource, TContext>) => ResolverNextRpCbFn<TSource, TContext>;
 
 export type ResolverMWOutputTypeFn = (outputType: graphql.GraphQLOutputType) => graphql.GraphQLOutputType;
 
@@ -206,7 +206,7 @@ export type ResolverSortArgConfig<TSource, TContext> = {
 
 export type ResolverOpts<TSource, TContext> = {
     type?: ComposeOutputType,
-    resolve?: ResolverMWResolveFn<TSource, TContext>,
+    resolve?: ResolverNextRpCbFn<TSource, TContext>,
     args?: ComposeFieldConfigArgumentMap,
     name?: string,
     displayName?: string,
@@ -215,9 +215,9 @@ export type ResolverOpts<TSource, TContext> = {
     parent?: Resolver<TSource, TContext>,
 };
 
-export type ResolverWrapFn<TSource, TContext> = (
+export type ResolverWrapCb<TSource, TContext> = (
     newResolver: Resolver<TSource, TContext>,
-    prevResolver: Resolver<TSource, TContext>) => Resolver<TSource, TContext>;
+    prevResolver: Resolver<TSource, TContext>) => void;
 
 export type ResolverWrapArgsFn = (prevArgs: graphql.GraphQLFieldConfigArgumentMap) => ComposeFieldConfigArgumentMap;
 

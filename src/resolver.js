@@ -26,15 +26,15 @@ import type {
   GraphQLFieldConfigArgumentMap,
   GraphQLOutputType,
   GraphQLFieldConfig,
-  ResolverMWResolve,
-  ResolverMWResolveFn,
+  ResolverNextRpCb,
+  ResolverNextRpCbFn,
   ResolveParams,
   ResolverKinds,
   ProjectionType,
   ResolverFilterArgConfig,
   ResolverSortArgConfig,
   ResolverOpts,
-  ResolverWrapFn,
+  ResolverWrapCb,
   ResolverWrapArgsFn,
   ResolverWrapTypeFn,
   GraphQLInputType,
@@ -54,7 +54,7 @@ export type ResolveDebugOpts = {
 export default class Resolver<TSource, TContext> {
   type: GraphQLOutputType;
   args: GraphQLFieldConfigArgumentMap;
-  resolve: ResolverMWResolveFn<TSource, TContext>;
+  resolve: ResolverNextRpCbFn<TSource, TContext>;
   name: string;
   displayName: ?string;
   kind: ?ResolverKinds;
@@ -258,11 +258,11 @@ export default class Resolver<TSource, TContext> {
   }
   /* eslint-enable */
 
-  getResolve(): ResolverMWResolveFn<TSource, TContext> {
+  getResolve(): ResolverNextRpCbFn<TSource, TContext> {
     return this.resolve;
   }
 
-  setResolve(resolve: ResolverMWResolveFn<TSource, TContext>): Resolver<TSource, TContext> {
+  setResolve(resolve: ResolverNextRpCbFn<TSource, TContext>): Resolver<TSource, TContext> {
     this.resolve = resolve;
     return this;
   }
@@ -351,7 +351,7 @@ export default class Resolver<TSource, TContext> {
   }
 
   wrap(
-    cb: ?ResolverWrapFn<TSource, TContext>,
+    cb: ?ResolverWrapCb<TSource, TContext>,
     newResolverOpts: ?ResolverOpts<TSource, TContext> = {}
   ): Resolver<TSource, TContext> {
     const prevResolver: Resolver<TSource, TContext> = this;
@@ -369,14 +369,13 @@ export default class Resolver<TSource, TContext> {
   }
 
   wrapResolve(
-    cb: ResolverMWResolve<TSource, TContext>,
+    cb: ResolverNextRpCb<TSource, TContext>,
     wrapperName: string = 'wrapResolve'
   ): Resolver<TSource, TContext> {
     return this.wrap(
       (newResolver, prevResolver) => {
         const newResolve = cb(prevResolver.getResolve());
         newResolver.setResolve(newResolve);
-        return newResolver;
       },
       { name: wrapperName }
     );
@@ -389,7 +388,6 @@ export default class Resolver<TSource, TContext> {
         const prevArgs = { ...prevResolver.getArgs() };
         const newArgs = cb(prevArgs);
         newResolver.setArgs(newArgs);
-        return newResolver;
       },
       { name: wrapperName }
     );
@@ -399,7 +397,6 @@ export default class Resolver<TSource, TContext> {
     return this.wrap(
       newResolver => {
         newResolver.cloneArg(argName, newTypeName);
-        return newResolver;
       },
       { name: 'cloneFilterArg' }
     );
@@ -411,7 +408,6 @@ export default class Resolver<TSource, TContext> {
         const prevType = prevResolver.getType();
         const newType = cb(prevType);
         newResolver.setType(newType);
-        return newResolver;
       },
       { name: wrapperName }
     );

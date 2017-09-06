@@ -4,8 +4,8 @@ import {
 } from 'graphql';
 import {
     ComposeArgumentConfig, ComposeFieldConfigArgumentMap, ComposeOutputType, ProjectionType, ResolverFilterArgConfig,
-    ResolverKinds, ResolverMWResolve, ResolverMWResolveFn, ResolverOpts, ResolverSortArgConfig, ResolverWrapArgsFn,
-    ResolverWrapFn, ResolverWrapTypeFn
+    ResolverKinds, ResolverNextRpCb, ResolverNextRpCbFn, ResolverOpts, ResolverSortArgConfig, ResolverWrapArgsFn,
+    ResolverWrapCb, ResolverWrapTypeFn
 } from './definition';
 import InputTypeComposer from './inputTypeComposer';
 import TypeComposer from './typeComposer';
@@ -19,7 +19,7 @@ export interface ResolveDebugOpts {
 export default class Resolver<TSource, TContext> {
     public type: GraphQLOutputType;
     public args: GraphQLFieldConfigArgumentMap;
-    public resolve: ResolverMWResolveFn<TSource, TContext>;
+    public resolve: ResolverNextRpCbFn<TSource, TContext>;
     public name: string;
     public displayName: string | null;
     public kind: ResolverKinds | null;
@@ -60,9 +60,9 @@ export default class Resolver<TSource, TContext> {
 
     public makeOptional(argNameOrArray: string | string[]): this;
 
-    public getResolve(): ResolverMWResolveFn<TSource, TContext>;
+    public getResolve(): ResolverNextRpCbFn<TSource, TContext>;
 
-    public setResolve(resolve: ResolverMWResolveFn<TSource, TContext>): Resolver<TSource, TContext>;
+    public setResolve(resolve: ResolverNextRpCbFn<TSource, TContext>): Resolver<TSource, TContext>;
 
     public getType(): GraphQLOutputType;
 
@@ -85,10 +85,10 @@ export default class Resolver<TSource, TContext> {
     public clone(opts?: ResolverOpts<TSource, TContext>): Resolver<TSource, TContext>;
 
     public wrap(
-        cb: ResolverWrapFn<TSource, TContext> | null,
+        cb: ResolverWrapCb<TSource, TContext> | null,
         newResolverOpts: ResolverOpts<TSource, TContext> | null): Resolver<TSource, TContext>;
 
-    public wrapResolve(cb: ResolverMWResolve<TSource, TContext>, wrapperName?: string): Resolver<TSource, TContext>;
+    public wrapResolve(cb: ResolverNextRpCb<TSource, TContext>, wrapperName?: string): Resolver<TSource, TContext>;
 
     public wrapArgs(cb: ResolverWrapArgsFn, wrapperName?: string): Resolver<TSource, TContext>;
 
