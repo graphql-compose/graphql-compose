@@ -451,18 +451,34 @@ describe('TypeComposer', () => {
       expect(Array.from(tc.getResolvers().keys())).toContain('myResolver5');
     });
 
-    it('wrapResolver() should wrap resolver resolve method', async () => {
+    it('wrapResolverResolve() should wrap resolver resolve method', async () => {
       tc.addResolver({
         name: 'findById',
         resolve: () => '123',
       });
       expect(await tc.getResolver('findById').resolve({})).toBe('123');
 
-      tc.wrapResolver('findById', next => async rp => {
+      tc.wrapResolverResolve('findById', next => async rp => {
         const prev = await next(rp);
         return `${prev}456`;
       });
       expect(await tc.getResolver('findById').resolve({})).toBe('123456');
+    });
+
+    it('wrapResolver() should wrap resolver via callback', async () => {
+      tc.addResolver({
+        name: 'update',
+        resolve: () => '123',
+      });
+      expect(await tc.getResolver('update').resolve({})).toBe('123');
+      const prevResolver = tc.getResolver('update');
+
+      tc.wrapResolver('update', resolver => {
+        resolver.resolve = () => '456'; // eslint-disable-line
+      });
+      expect(await tc.getResolver('update').resolve({})).toBe('456');
+      expect(tc.getResolver('update')).not.toBe(prevResolver);
+      expect(prevResolver.resolve()).toBe('123');
     });
   });
 

@@ -34,7 +34,8 @@ import type {
   ComposeFieldConfigMap,
   ComposeFieldConfig,
   ComposeObjectTypeConfig,
-  ResolverMWResolve,
+  ResolverNextRpCb,
+  ResolverWrapCb,
 } from './definition';
 
 export default class TypeComposer {
@@ -559,9 +560,16 @@ export default class TypeComposer {
     return this;
   }
 
-  wrapResolver(resolverName: string, cb: ResolverMWResolve<any, any>): TypeComposer {
+  wrapResolver(resolverName: string, cbResolver: ResolverWrapCb<any, any>): TypeComposer {
     const resolver = this.getResolver(resolverName);
-    this.setResolver(resolverName, resolver.wrapResolve(cb));
+    const newResolver = resolver.wrap(cbResolver);
+    this.setResolver(resolverName, newResolver);
+    return this;
+  }
+
+  wrapResolverResolve(resolverName: string, cbNextRp: ResolverNextRpCb<any, any>): TypeComposer {
+    const resolver = this.getResolver(resolverName);
+    this.setResolver(resolverName, resolver.wrapResolve(cbNextRp));
     return this;
   }
 

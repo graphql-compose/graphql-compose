@@ -6,7 +6,7 @@ import {
 import {
     ComposeFieldConfig, ComposeFieldConfigMap, ComposeObjectTypeConfig, GetRecordIdFn, GraphQLObjectTypeExtended,
     ProjectionMapType, ProjectionType, RelationOpts, RelationOptsWithResolver, RelationThunkMap, ResolverOpts,
-    TypeDefinitionString, TypeNameString, ResolverMWResolve
+    TypeDefinitionString, TypeNameString, ResolverNextRpCb, ResolverWrapCb
 } from './definition';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
@@ -123,7 +123,9 @@ export default class TypeComposer {
 
     public removeResolver(resolverName: string): this;
 
-    public wrapResolver(resolverName: string, cb: ResolverMWResolve<any, any>): this;
+    public wrapResolver(resolverName: string, cbResolver: ResolverWrapCb<any, any>): this;
+
+    public wrapResolverResolve(resolverName: string, cbNextRp: ResolverNextRpCb<any, any>): this;
 
     public getTypeName(): string;
 
