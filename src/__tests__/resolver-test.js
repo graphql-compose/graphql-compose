@@ -393,6 +393,32 @@ describe('Resolver', () => {
     });
   });
 
+  describe('wrap()', () => {
+    it('should return new resolver', () => {
+      const newResolver = resolver.wrap();
+      expect(newResolver).toBeInstanceOf(Resolver);
+      expect(newResolver).not.toBe(resolver);
+    });
+
+    it('should set internal name', () => {
+      expect(resolver.wrap().name).toBe('wrap');
+      expect(resolver.wrap(r => r, { name: 'crazyWrap' }).name).toBe('crazyWrap');
+    });
+
+    it('should keep ref to source resolver in parent property', () => {
+      expect(resolver.wrap().parent).toBe(resolver);
+    });
+
+    it('should return resolver from callback, cause it can be overridden there', () => {
+      const customResolver = new Resolver({ name: 'find' });
+
+      expect(resolver.wrap((newResolver, prevResolver) => { // eslint-disable-line
+          return customResolver;
+        })
+      ).toBe(customResolver);
+    });
+  });
+
   describe('wrapCloneArg()', () => {
     let newResolver;
 

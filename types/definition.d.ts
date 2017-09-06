@@ -217,7 +217,7 @@ export type ResolverOpts<TSource, TContext> = {
 
 export type ResolverWrapCb<TSource, TContext> = (
     newResolver: Resolver<TSource, TContext>,
-    prevResolver: Resolver<TSource, TContext>) => void;
+    prevResolver: Resolver<TSource, TContext>) => Resolver<TSource, TContext>;
 
 export type ResolverWrapArgsFn = (prevArgs: graphql.GraphQLFieldConfigArgumentMap) => ComposeFieldConfigArgumentMap;
 

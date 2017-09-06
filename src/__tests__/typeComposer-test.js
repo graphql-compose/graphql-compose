@@ -475,6 +475,7 @@ describe('TypeComposer', () => {
 
       tc.wrapResolver('update', resolver => {
         resolver.resolve = () => '456'; // eslint-disable-line
+        return resolver;
       });
       expect(await tc.getResolver('update').resolve({})).toBe('456');
       expect(tc.getResolver('update')).not.toBe(prevResolver);
@@ -490,6 +491,7 @@ describe('TypeComposer', () => {
 
       tc.wrapResolverAs('updateExt', 'update', resolver => {
         resolver.resolve = () => '456'; // eslint-disable-line
+        return resolver;
       });
       expect(await tc.getResolver('updateExt').resolve({})).toBe('456');
       expect(await tc.getResolver('update').resolve({})).toBe('123');

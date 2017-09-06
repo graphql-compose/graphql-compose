@@ -362,7 +362,8 @@ export default class Resolver<TSource, TContext> {
     });
 
     if (isFunction(cb)) {
-      cb(newResolver, prevResolver);
+      const resolver = cb(newResolver, prevResolver);
+      if (resolver) return resolver;
     }
 
     return newResolver;
@@ -376,6 +377,7 @@ export default class Resolver<TSource, TContext> {
       (newResolver, prevResolver) => {
         const newResolve = cb(prevResolver.getResolve());
         newResolver.setResolve(newResolve);
+        return newResolver;
       },
       { name: wrapperName }
     );
@@ -388,18 +390,16 @@ export default class Resolver<TSource, TContext> {
         const prevArgs = { ...prevResolver.getArgs() };
         const newArgs = cb(prevArgs);
         newResolver.setArgs(newArgs);
+        return newResolver;
       },
       { name: wrapperName }
     );
   }
 
   wrapCloneArg(argName: string, newTypeName: string): Resolver<TSource, TContext> {
-    return this.wrap(
-      newResolver => {
-        newResolver.cloneArg(argName, newTypeName);
-      },
-      { name: 'cloneFilterArg' }
-    );
+    return this.wrap(newResolver => newResolver.cloneArg(argName, newTypeName), {
+      name: 'cloneFilterArg',
+    });
   }
 
   wrapType(cb: ResolverWrapTypeFn, wrapperName: string = 'wrapType'): Resolver<TSource, TContext> {
@@ -408,6 +408,7 @@ export default class Resolver<TSource, TContext> {
         const prevType = prevResolver.getType();
         const newType = cb(prevType);
         newResolver.setType(newType);
+        return newResolver;
       },
       { name: wrapperName }
     );
