@@ -12,6 +12,14 @@ import {
   isInputType,
   getNamedType,
 } from './graphql';
+import type {
+  GraphQLArgumentConfig,
+  GraphQLFieldConfigArgumentMap,
+  GraphQLOutputType,
+  GraphQLFieldConfig,
+  GraphQLInputType,
+  GraphQLResolveInfo,
+} from './graphql';
 // import { deprecate } from './utils/debug';
 import TypeMapper from './typeMapper';
 import TypeComposer from './typeComposer';
@@ -22,30 +30,84 @@ import { isFunction, isString } from './utils/is';
 import filterByDotPaths from './utils/filterByDotPaths';
 import { getProjectionFromAST } from './projection';
 import type {
-  ResolverNextRpCb,
-  ResolverRpCb,
-  ResolveParams,
-  ResolverKinds,
-  ProjectionType,
-  ResolverFilterArgConfig,
-  ResolverSortArgConfig,
-  ResolverOpts,
-  ResolverWrapCb,
-  ResolverWrapArgsCb,
-  ResolverWrapTypeCb,
   ComposeOutputType,
   ComposeArgumentConfig,
   ComposeFieldConfigArgumentMap,
-} from './definition';
-import type {
-  GraphQLArgumentConfig,
-  GraphQLFieldConfigArgumentMap,
-  GraphQLOutputType,
-  GraphQLFieldConfig,
-  GraphQLInputType,
-} from './graphql';
+  ComposeArgumentType,
+} from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import { typeByPath } from './typeByPath';
+
+// export type ProjectionType = { [fieldName: string]: $Shape<ProjectionNode> | true };
+// export type ProjectionNode = { [fieldName: string]: $Shape<ProjectionNode> } | true;
+export type ProjectionType = { [fieldName: string]: any };
+export type ProjectionNode = { [fieldName: string]: any };
+export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
+
+export type ResolveParams<TSource, TContext> = {
+  source: TSource,
+  args: { [argName: string]: any },
+  context: TContext,
+  info: GraphQLResolveInfo,
+  projection: $Shape<ProjectionType>,
+  [opt: string]: any,
+};
+export type ResolverKinds = 'query' | 'mutation' | 'subscription';
+
+export type ResolverFilterArgFn<TSource, TContext> = (
+  query: any,
+  value: any,
+  resolveParams: ResolveParams<TSource, TContext>
+) => any;
+
+export type ResolverFilterArgConfig<TSource, TContext> = {
+  name: string,
+  type: ComposeArgumentType,
+  description?: string,
+  query: ResolverFilterArgFn<TSource, TContext>,
+  filterTypeNameFallback?: string,
+};
+
+export type ResolverSortArgFn = (resolveParams: ResolveParams<*, *>) => mixed;
+
+export type ResolverSortArgConfig = {
+  name: string,
+  sortTypeNameFallback?: string,
+  // value also can be an `Object`, but flow does not understande union with object and function
+  // see https://github.com/facebook/flow/issues/1948
+  value: ResolverSortArgFn | string | number | boolean,
+  deprecationReason?: ?string,
+  description?: ?string,
+};
+
+export type ResolverOpts<TSource, TContext> = {
+  type?: ComposeOutputType,
+  resolve?: ResolverRpCb<TSource, TContext>,
+  args?: ComposeFieldConfigArgumentMap,
+  name?: string,
+  displayName?: string,
+  kind?: ResolverKinds,
+  description?: string,
+  parent?: Resolver<TSource, TContext>,
+};
+
+export type ResolverWrapCb<TSource, TContext> = (
+  newResolver: Resolver<TSource, TContext>,
+  prevResolver: Resolver<TSource, TContext>
+) => Resolver<TSource, TContext>;
+
+export type ResolverRpCb<TSource, TContext> = (
+  resolveParams: $Shape<ResolveParams<TSource, TContext>>
+) => Promise<*> | *;
+export type ResolverNextRpCb<TSource, TContext> = (
+  next: ResolverRpCb<TSource, TContext>
+) => ResolverRpCb<TSource, TContext>;
+
+export type ResolverWrapArgsCb = (
+  prevArgs: GraphQLFieldConfigArgumentMap
+) => ComposeFieldConfigArgumentMap;
+
+export type ResolverWrapTypeCb = (prevType: GraphQLOutputType) => GraphQLOutputType;
 
 export type ResolveDebugOpts = {
   showHidden?: boolean,
@@ -482,7 +544,7 @@ export default class Resolver<TSource, TContext> {
     return resolver;
   }
 
-  addSortArg(opts: ResolverSortArgConfig<TSource, TContext>): Resolver<TSource, TContext> {
+  addSortArg(opts: ResolverSortArgConfig): Resolver<TSource, TContext> {
     if (!opts.name) {
       throw new Error('For Resolver.addSortArg the `opts.name` is required.');
     }

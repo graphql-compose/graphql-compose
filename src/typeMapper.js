@@ -74,22 +74,22 @@ import type {
   GraphQLInputFieldConfigMap,
   GraphQLInputFieldConfig,
 } from './graphql';
+import type { ComposeInputFieldConfigMap, ComposeInputFieldConfig } from './inputTypeComposer';
 import type {
-  TypeDefinitionString,
-  TypeNameString,
-  TypeWrappedString,
   ComposeOutputType,
-  ComposeArgumentConfig,
-  ComposeFieldConfigArgumentMap,
   ComposeFieldConfigMap,
   ComposeFieldConfig,
-  ComposeInputFieldConfigMap,
-  ComposeInputFieldConfig,
-} from './definition';
+  ComposeArgumentConfig,
+  ComposeFieldConfigArgumentMap,
+} from './typeComposer';
 
 import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
+
+export type TypeDefinitionString = string;
+export type TypeWrappedString = string; // eg. Int, Int!, [Int]
+export type TypeNameString = string; // eg. Int, Float
 
 export function isOutputType(type: ?GraphQLType): boolean {
   return (

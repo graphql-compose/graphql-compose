@@ -9,7 +9,7 @@ import type {
 } from 'graphql/language/ast';
 import type { GraphQLResolveInfo } from 'graphql/type/definition';
 import { FIELD, FRAGMENT_SPREAD, INLINE_FRAGMENT } from 'graphql/language/kinds';
-import type { ProjectionType } from './definition';
+import type { ProjectionType } from './resolver';
 
 export function getProjectionFromAST(
   context: GraphQLResolveInfo,

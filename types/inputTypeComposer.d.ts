@@ -1,8 +1,38 @@
-import { GraphQLInputFieldConfig, GraphQLInputFieldConfigMap, GraphQLInputObjectType, GraphQLNonNull } from './graphql';
+// tslint:disable:interface-over-type-literal to keep the file close to the original
+
 import {
-    ComposeInputFieldConfig, ComposeInputFieldConfigMap, ComposeInputObjectTypeConfig, TypeDefinitionString,
-    TypeNameString
-} from './definition';
+    GraphQLInputFieldConfig, GraphQLInputFieldConfigMap, GraphQLInputObjectType,
+    GraphQLNonNull, GraphQLInputType
+} from './graphql';
+import { TypeDefinitionString, TypeNameString, TypeWrappedString } from './typeMapper';
+
+export type ComposeInputFieldConfigMap = {
+    [fieldName: string]: | ComposeInputFieldConfig
+        | ComposeInputFieldConfig[]
+        | GraphQLInputFieldConfig,
+} | GraphQLInputFieldConfigMap;
+
+export type ComposeInputFieldConfig = {
+    type: ComposeInputType | ComposeInputType[],
+    defaultValue?: any,
+    description?: string | null,
+} | ComposeInputType | GraphQLInputFieldConfig;
+
+type Thunk<T> = (() => T) | T;
+
+export type ComposeInputType =
+    | InputTypeComposer
+    | GraphQLInputType
+    | TypeWrappedString
+    | TypeDefinitionString
+    | TypeNameString
+    | (() => ComposeInputType);
+
+export type ComposeInputObjectTypeConfig = {
+    name: string,
+    fields: Thunk<ComposeInputFieldConfigMap>,
+    description?: string | null,
+};
 
 export default class InputTypeComposer {
     public gqType: GraphQLInputObjectType;

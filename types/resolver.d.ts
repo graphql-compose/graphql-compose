@@ -1,19 +1,82 @@
+// tslint:disable:interface-over-type-literal to keep the file close to the original
+
 import {
     GraphQLArgumentConfig, GraphQLFieldConfig, GraphQLFieldConfigArgumentMap, GraphQLInputType, GraphQLOutputType
 } from './graphql';
+import * as graphql from './graphql';
 import {
-    ComposeArgumentConfig, ComposeFieldConfigArgumentMap, ComposeOutputType, ProjectionType, ResolverFilterArgConfig,
-    ResolverKinds, ResolverNextRpCb, ResolverRpCb, ResolverOpts, ResolverSortArgConfig, ResolverWrapArgsCb,
-    ResolverWrapCb, ResolverWrapTypeCb
-} from './definition';
+    ComposeArgumentConfig, ComposeFieldConfigArgumentMap, ComposeOutputType, ComposeArgumentType
+} from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import TypeComposer from './typeComposer';
 
-export interface ResolveDebugOpts {
-    showHidden?: boolean;
-    depth?: number;
-    colors?: boolean;
-}
+export type ProjectionType = { [fieldName: string]: any };
+export type ProjectionNode = { [fieldName: string]: any };
+export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
+
+export type ResolveParams<TSource, TContext> = {
+    source: TSource,
+    args: { [argName: string]: any },
+    context: TContext,
+    info: graphql.GraphQLResolveInfo,
+    projection: Partial<ProjectionType>,
+    [opt: string]: any,
+};
+
+export type ResolverKinds = 'query' | 'mutation' | 'subscription';
+
+export type ResolverFilterArgFn<TSource, TContext> = (
+    query: any,
+    value: any,
+    resolveParams: ResolveParams<TSource, TContext>) => any;
+
+export type ResolverFilterArgConfig<TSource, TContext> = {
+    name: string,
+    type: ComposeArgumentType,
+    description?: string,
+    query: ResolverFilterArgFn<TSource, TContext>
+    filterTypeNameFallback?: string,
+};
+
+export type ResolverSortArgFn = (resolveParams: ResolveParams<any, any>) => any;
+
+export type ResolverSortArgConfig<TSource, TContext> = {
+    name: string,
+    sortTypeNameFallback?: string,
+    value: ResolverSortArgFn | string | number | boolean,
+    deprecationReason?: string | null,
+    description?: string | null,
+};
+
+export type ResolverOpts<TSource, TContext> = {
+    type?: ComposeOutputType,
+    resolve?: ResolverRpCb<TSource, TContext>,
+    args?: ComposeFieldConfigArgumentMap,
+    name?: string,
+    displayName?: string,
+    kind?: ResolverKinds,
+    description?: string,
+    parent?: Resolver<TSource, TContext>,
+};
+
+export type ResolverWrapCb<TSource, TContext> = (
+    newResolver: Resolver<TSource, TContext>,
+    prevResolver: Resolver<TSource, TContext>) => Resolver<TSource, TContext>;
+
+export type ResolverRpCb<TSource, TContext> = (
+    resolveParams: Partial<ResolveParams<TSource, TContext>>) => Promise<any> | any;
+export type ResolverNextRpCb<TSource, TContext> = (
+    next: ResolverRpCb<TSource, TContext>) => ResolverRpCb<TSource, TContext>;
+
+export type ResolverWrapArgsCb = (prevArgs: graphql.GraphQLFieldConfigArgumentMap) => ComposeFieldConfigArgumentMap;
+
+export type ResolverWrapTypeCb = (prevType: graphql.GraphQLOutputType) => graphql.GraphQLOutputType;
+
+export type ResolveDebugOpts = {
+    showHidden?: boolean,
+    depth?: number,
+    colors?: boolean,
+};
 
 export default class Resolver<TSource, TContext> {
     public type: GraphQLOutputType;

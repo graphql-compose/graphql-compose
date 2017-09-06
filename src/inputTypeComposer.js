@@ -13,14 +13,45 @@ import type {
   GraphQLInputFieldConfigMap,
   GraphQLInputType,
 } from './graphql';
-import type {
-  Thunk,
-  TypeNameString,
-  TypeDefinitionString,
-  ComposeInputFieldConfig,
-  ComposeInputFieldConfigMap,
-  ComposeInputObjectTypeConfig,
-} from './definition';
+import type { TypeNameString, TypeDefinitionString } from './typeMapper';
+
+export type ComposeInputType = any;
+export type ComposeInputFieldConfig = any;
+export type ComposeInputFieldConfigMap = {
+  [fieldName: string]: ComposeInputFieldConfig,
+};
+// Flow 0.47 not ready for this, it fails with: *** Recursion limit exceeded ***
+// export type ComposeInputFieldConfigMap = {
+//   [fieldName: string]:
+//     | ComposeInputFieldConfig
+//     | Array<ComposeInputFieldConfig>
+//     | GraphQLInputFieldConfig,
+// } | GraphQLInputFieldConfigMap;
+//
+// export type ComposeInputFieldConfig =
+//   | {
+//       type: ComposeInputType | Array<ComposeInputType>,
+//       defaultValue?: mixed,
+//       description?: ?string,
+//     }
+//   | ComposeInputType
+//   | GraphQLInputFieldConfig;
+//
+// export type ComposeInputType =
+//   | InputTypeComposer
+//   | GraphQLInputType
+//   | TypeWrappedString
+//   | TypeDefinitionString
+//   | TypeNameString
+//   | (() => ComposeInputType);
+
+type Thunk<T> = (() => T) | T;
+
+export type ComposeInputObjectTypeConfig = {
+  name: string,
+  fields: Thunk<ComposeInputFieldConfigMap>,
+  description?: ?string,
+};
 
 export default class InputTypeComposer {
   gqType: GraphQLInputObjectType;

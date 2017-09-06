@@ -3,9 +3,15 @@ import {
     GraphQLInputFieldConfig, GraphQLInputFieldConfigMap, GraphQLNamedType, GraphQLType
 } from './graphql';
 import {
-    ComposeArgumentConfig, ComposeFieldConfig, ComposeFieldConfigArgumentMap, ComposeFieldConfigMap,
-    ComposeInputFieldConfig, ComposeInputFieldConfigMap, TypeDefinitionString, TypeNameString, TypeWrappedString
-} from './definition';
+    ComposeArgumentConfig, ComposeFieldConfig, ComposeFieldConfigArgumentMap,
+    ComposeFieldConfigMap
+} from './typeComposer';
+import { TypeDefinitionString, TypeNameString, TypeWrappedString } from './typeMapper';
+import { ComposeInputFieldConfig, ComposeInputFieldConfigMap } from './inputTypeComposer';
+
+export type TypeDefinitionString = string;
+export type TypeWrappedString = string; // eg. Int, Int!, [Int]
+export type TypeNameString = string; // eg. Int, Float
 
 declare class TypeMapper {
     public map: Map<string, GraphQLNamedType>;

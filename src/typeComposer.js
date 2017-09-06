@@ -1,6 +1,6 @@
 /* @flow */
+/* eslint-disable no-use-before-define */
 
-import { GraphQLObjectType, GraphQLList, GraphQLInputObjectType, getNamedType } from './graphql';
 import { resolveMaybeThunk } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveOutputConfigsAsThunk } from './utils/configAsThunk';
@@ -10,6 +10,7 @@ import { toInputObjectType } from './toInputObjectType';
 import InputTypeComposer from './inputTypeComposer';
 import TypeMapper from './typeMapper';
 import { typeByPath } from './typeByPath';
+import { GraphQLObjectType, GraphQLList, GraphQLInputObjectType, getNamedType } from './graphql';
 import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
@@ -17,27 +18,151 @@ import type {
   GraphQLInterfaceType,
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
+  GraphQLIsTypeOfFn,
+  GraphQLResolveInfo,
+  GraphQLFieldResolver,
 } from './graphql';
+import type { TypeNameString, TypeDefinitionString } from './typeMapper';
 import type {
-  Thunk,
-  GraphQLObjectTypeExtended,
-  GetRecordIdFn,
-  RelationOpts,
-  RelationOptsWithResolver,
-  RelationThunkMap,
-  RelationArgsMapper,
-  RelationArgsMapperFn,
-  ProjectionType,
-  ProjectionMapType,
   ResolverOpts,
-  TypeNameString,
-  TypeDefinitionString,
-  ComposeFieldConfigMap,
-  ComposeFieldConfig,
-  ComposeObjectTypeConfig,
   ResolverNextRpCb,
   ResolverWrapCb,
-} from './definition';
+  ProjectionType,
+  ProjectionMapType,
+} from './resolver';
+
+export type GetRecordIdFn<TSource, TContext> = (
+  source: TSource,
+  args: ?mixed,
+  context: TContext
+) => string;
+
+export type GraphQLObjectTypeExtended = GraphQLObjectType & {
+  _gqcInputTypeComposer?: InputTypeComposer,
+  _gqcResolvers?: Map<string, Resolver<*, *>>,
+  _gqcGetRecordIdFn?: GetRecordIdFn<*, *>,
+  _gqcProjectionMapper?: ProjectionMapType,
+  _gqcRelations?: RelationThunkMap<*, *>,
+  description: ?string,
+};
+
+type Thunk<T> = (() => T) | T;
+
+export type ComposeObjectTypeConfig<TSource, TContext> = {
+  name: string,
+  interfaces?: Thunk<?Array<GraphQLInterfaceType>>,
+  fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>,
+  isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>,
+  description?: ?string,
+  isIntrospection?: boolean,
+};
+
+// No type checks for inputs arguments, while waiting new Flow versions.
+export type ComposeOutputType = any;
+export type ComposeFieldConfig<TSource, TContext> = any; // eslint-disable-line
+export type ComposeFieldConfigMap<TSource, TContext> = {
+  [fieldName: string]: ComposeFieldConfig<TSource, TContext>,
+};
+
+// Flow 0.47 not ready for this, it fails with: *** Recursion limit exceeded ***
+// // extended GraphQLFieldConfigMap
+// export type ComposeFieldConfigMap<TSource, TContext> = {
+//   [fieldName: string]:
+//     | ComposeFieldConfig<TSource, TContext>
+//     | Array<ComposeFieldConfig<TSource, TContext>>
+//     | GraphQLFieldConfig<TSource, TContext>,
+// } | GraphQLFieldConfigMap<TSource, TContext>;
+//
+// // extended GraphQLFieldConfig
+// export type ComposeFieldConfig<TSource, TContext> =
+//   | {
+//       type:
+//         | ComposeOutputType
+//         | Array<ComposeOutputType>,
+//       args?: ComposeFieldConfigArgumentMap,
+//       resolve?: GraphQLFieldResolver<TSource, TContext>,
+//       subscribe?: GraphQLFieldResolver<TSource, TContext>,
+//       deprecationReason?: ?string,
+//       description?: ?string,
+//     }
+//   | ComposeOutputType
+//   | GraphQLFieldConfig<TSource, TContext>;
+//
+// // extended GraphQLOutputType
+// export type ComposeOutputType =
+//   | GraphQLOutputType
+//   | TypeComposer
+//   | TypeWrappedString
+//   | TypeDefinitionString
+//   | TypeNameString
+//   | Resolver<*, *>
+//   | (() => ComposeOutputType);
+
+// Compose Args -----------------------------
+export type ComposeArgumentType = any;
+export type ComposeArgumentConfig = any;
+export type ComposeFieldConfigArgumentMap = {
+  [fieldName: string]: ComposeArgumentConfig,
+};
+// Flow 0.47 not ready for this, it fails with: *** Recursion limit exceeded ***
+// export type ComposeArgumentType =
+//   | GraphQLInputType
+//   | string
+//   | InputTypeComposer
+//   | GraphQLArgumentConfig
+//   | (() => ComposeArgumentType);
+// export type ComposeArgumentConfig =
+//   | {
+//       type: ComposeArgumentType,
+//       defaultValue?: mixed,
+//       description?: ?string,
+//     }
+//   | ComposeArgumentType
+//   | (() => ComposeArgumentConfig);
+// export type ComposeFieldConfigArgumentMap = {
+//   [argName: string]: ComposeArgumentConfig | ComposeArgumentConfig[],
+// };
+
+// RELATION -----------------------------
+export type RelationThunkMap<TSource, TContext> = {
+  [fieldName: string]: Thunk<RelationOpts<TSource, TContext>>,
+};
+export type RelationOpts<TSource, TContext> =
+  | RelationOptsWithResolver<TSource, TContext>
+  | RelationOptsWithFieldConfig<TSource, TContext>;
+export type RelationOptsWithResolver<TSource, TContext> = {
+  resolver: Thunk<Resolver<TSource, TContext>>,
+  prepareArgs?: RelationArgsMapper<TSource, TContext>,
+  projection?: ProjectionType,
+  description?: ?string,
+  deprecationReason?: ?string,
+  catchErrors?: boolean,
+};
+export type RelationOptsWithFieldConfig<TSource, TContext> = {
+  type: ComposeOutputType,
+  args?: ComposeFieldConfigArgumentMap,
+  resolve: GraphQLFieldResolver<TSource, TContext>,
+  projection?: ProjectionType,
+  description?: ?string,
+  deprecationReason?: ?string,
+};
+export type ArgsType = { [argName: string]: any };
+export type RelationArgsMapperFn<TSource, TContext> = (
+  source: TSource,
+  args: ArgsType,
+  context: TContext,
+  info: GraphQLResolveInfo
+) => any;
+export type RelationArgsMapper<TSource, TContext> = {
+  [argName: string]:
+    | RelationArgsMapperFn<TSource, TContext>
+    | null
+    | void
+    | string
+    | number
+    | Array<any>
+    | Object,
+};
 
 export default class TypeComposer {
   gqType: GraphQLObjectTypeExtended;

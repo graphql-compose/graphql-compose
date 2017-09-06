@@ -1,5 +1,5 @@
 import { FieldNode, FragmentDefinitionNode, GraphQLResolveInfo, InlineFragmentNode } from './graphql';
-import { ProjectionType } from './definition';
+import { ProjectionType } from './resolver';
 
 export function getProjectionFromAST(
     context: GraphQLResolveInfo,
