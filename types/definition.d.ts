@@ -165,20 +165,6 @@ export type ResolveParams<TSource, TContext> = {
 export type ResolverMWMethodKeys = 'args' | 'resolve' | 'type';
 export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 
-export type ResolverMWArgsFn = (args: graphql.GraphQLFieldConfigArgumentMap) => graphql.GraphQLFieldConfigArgumentMap;
-
-export type ResolverMWArgs = (next: ResolverMWArgsFn) => ResolverMWArgsFn;
-
-export type ResolverNextRpCbFn<TSource, TContext> = (
-    resolveParams: Partial<ResolveParams<TSource, TContext>>) => Promise<any> | any;
-
-export type ResolverNextRpCb<TSource, TContext> = (
-    next: ResolverNextRpCbFn<TSource, TContext>) => ResolverNextRpCbFn<TSource, TContext>;
-
-export type ResolverMWOutputTypeFn = (outputType: graphql.GraphQLOutputType) => graphql.GraphQLOutputType;
-
-export type ResolverMWOutputType = (next: ResolverMWOutputTypeFn) => ResolverMWOutputTypeFn;
-
 export type GetRecordIdFn<TSource, TContext> = (source: TSource, args: any, context: TContext) => string;
 
 export type ResolverFilterArgFn<TSource, TContext> = (
@@ -206,7 +192,7 @@ export type ResolverSortArgConfig<TSource, TContext> = {
 
 export type ResolverOpts<TSource, TContext> = {
     type?: ComposeOutputType,
-    resolve?: ResolverNextRpCbFn<TSource, TContext>,
+    resolve?: ResolverRpCb<TSource, TContext>,
     args?: ComposeFieldConfigArgumentMap,
     name?: string,
     displayName?: string,
@@ -219,6 +205,11 @@ export type ResolverWrapCb<TSource, TContext> = (
     newResolver: Resolver<TSource, TContext>,
     prevResolver: Resolver<TSource, TContext>) => Resolver<TSource, TContext>;
 
-export type ResolverWrapArgsFn = (prevArgs: graphql.GraphQLFieldConfigArgumentMap) => ComposeFieldConfigArgumentMap;
+export type ResolverRpCb<TSource, TContext> = (
+    resolveParams: Partial<ResolveParams<TSource, TContext>>) => Promise<any> | any;
+export type ResolverNextRpCb<TSource, TContext> = (
+    next: ResolverRpCb<TSource, TContext>) => ResolverRpCb<TSource, TContext>;
 
-export type ResolverWrapTypeFn = (prevType: graphql.GraphQLOutputType) => graphql.GraphQLOutputType;
+export type ResolverWrapArgsCb = (prevArgs: graphql.GraphQLFieldConfigArgumentMap) => ComposeFieldConfigArgumentMap;
+
+export type ResolverWrapTypeCb = (prevType: graphql.GraphQLOutputType) => graphql.GraphQLOutputType;

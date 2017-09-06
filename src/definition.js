@@ -261,25 +261,6 @@ export type ResolveParams<TSource, TContext> = {
 export type ResolverMWMethodKeys = "args" | "resolve" | "type";
 export type ResolverKinds = "query" | "mutation" | "subscription";
 
-export type ResolverMWArgsFn = (
-  args: GraphQLFieldConfigArgumentMap
-) => GraphQLFieldConfigArgumentMap;
-export type ResolverMWArgs = (next: ResolverMWArgsFn) => ResolverMWArgsFn;
-
-export type ResolverNextRpCbFn<TSource, TContext> = (
-  resolveParams: $Shape<ResolveParams<TSource, TContext>>
-) => Promise<*> | *;
-export type ResolverNextRpCb<TSource, TContext> = (
-  next: ResolverNextRpCbFn<TSource, TContext>
-) => ResolverNextRpCbFn<TSource, TContext>;
-
-export type ResolverMWOutputTypeFn = (
-  outputType: GraphQLOutputType
-) => GraphQLOutputType;
-export type ResolverMWOutputType = (
-  next: ResolverMWOutputTypeFn
-) => ResolverMWOutputTypeFn;
-
 export type GetRecordIdFn<TSource, TContext> = (
   source: TSource,
   args: ?mixed,
@@ -314,7 +295,7 @@ export type ResolverSortArgConfig<TSource, TContext> = {
 
 export type ResolverOpts<TSource, TContext> = {
   type?: ComposeOutputType,
-  resolve?: ResolverNextRpCbFn<TSource, TContext>,
+  resolve?: ResolverRpCb<TSource, TContext>,
   args?: ComposeFieldConfigArgumentMap,
   name?: string,
   displayName?: string,
@@ -328,10 +309,17 @@ export type ResolverWrapCb<TSource, TContext> = (
   prevResolver: Resolver<TSource, TContext>
 ) => Resolver<TSource, TContext>;
 
-export type ResolverWrapArgsFn = (
+export type ResolverRpCb<TSource, TContext> = (
+  resolveParams: $Shape<ResolveParams<TSource, TContext>>
+) => Promise<*> | *;
+export type ResolverNextRpCb<TSource, TContext> = (
+  next: ResolverRpCb<TSource, TContext>
+) => ResolverRpCb<TSource, TContext>;
+
+export type ResolverWrapArgsCb = (
   prevArgs: GraphQLFieldConfigArgumentMap
 ) => ComposeFieldConfigArgumentMap;
 
-export type ResolverWrapTypeFn = (
+export type ResolverWrapTypeCb = (
   prevType: GraphQLOutputType
 ) => GraphQLOutputType;

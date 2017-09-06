@@ -27,7 +27,7 @@ import type {
   GraphQLOutputType,
   GraphQLFieldConfig,
   ResolverNextRpCb,
-  ResolverNextRpCbFn,
+  ResolverRpCb,
   ResolveParams,
   ResolverKinds,
   ProjectionType,
@@ -35,8 +35,8 @@ import type {
   ResolverSortArgConfig,
   ResolverOpts,
   ResolverWrapCb,
-  ResolverWrapArgsFn,
-  ResolverWrapTypeFn,
+  ResolverWrapArgsCb,
+  ResolverWrapTypeCb,
   GraphQLInputType,
   ComposeOutputType,
   ComposeArgumentConfig,
@@ -54,7 +54,7 @@ export type ResolveDebugOpts = {
 export default class Resolver<TSource, TContext> {
   type: GraphQLOutputType;
   args: GraphQLFieldConfigArgumentMap;
-  resolve: ResolverNextRpCbFn<TSource, TContext>;
+  resolve: ResolverRpCb<TSource, TContext>;
   name: string;
   displayName: ?string;
   kind: ?ResolverKinds;
@@ -258,11 +258,11 @@ export default class Resolver<TSource, TContext> {
   }
   /* eslint-enable */
 
-  getResolve(): ResolverNextRpCbFn<TSource, TContext> {
+  getResolve(): ResolverRpCb<TSource, TContext> {
     return this.resolve;
   }
 
-  setResolve(resolve: ResolverNextRpCbFn<TSource, TContext>): Resolver<TSource, TContext> {
+  setResolve(resolve: ResolverRpCb<TSource, TContext>): Resolver<TSource, TContext> {
     this.resolve = resolve;
     return this;
   }
@@ -383,7 +383,7 @@ export default class Resolver<TSource, TContext> {
     );
   }
 
-  wrapArgs(cb: ResolverWrapArgsFn, wrapperName: string = 'wrapArgs'): Resolver<TSource, TContext> {
+  wrapArgs(cb: ResolverWrapArgsCb, wrapperName: string = 'wrapArgs'): Resolver<TSource, TContext> {
     return this.wrap(
       (newResolver, prevResolver) => {
         // clone prevArgs, to avoid changing args in callback
@@ -402,7 +402,7 @@ export default class Resolver<TSource, TContext> {
     });
   }
 
-  wrapType(cb: ResolverWrapTypeFn, wrapperName: string = 'wrapType'): Resolver<TSource, TContext> {
+  wrapType(cb: ResolverWrapTypeCb, wrapperName: string = 'wrapType'): Resolver<TSource, TContext> {
     return this.wrap(
       (newResolver, prevResolver) => {
         const prevType = prevResolver.getType();
