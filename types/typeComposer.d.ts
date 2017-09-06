@@ -125,6 +125,8 @@ export default class TypeComposer {
 
     public wrapResolver(resolverName: string, cbResolver: ResolverWrapCb<any, any>): this;
 
+    public wrapResolverAs(resolverName: string, fromResolverName: string, cbResolver: ResolverWrapCb<any, any>): this;
+
     public wrapResolverResolve(resolverName: string, cbNextRp: ResolverNextRpCb<any, any>): this;
 
     public getTypeName(): string;

@@ -567,6 +567,17 @@ export default class TypeComposer {
     return this;
   }
 
+  wrapResolverAs(
+    resolverName: string,
+    fromResolverName: string,
+    cbResolver: ResolverWrapCb<any, any>
+  ): TypeComposer {
+    const resolver = this.getResolver(fromResolverName);
+    const newResolver = resolver.wrap(cbResolver);
+    this.setResolver(resolverName, newResolver);
+    return this;
+  }
+
   wrapResolverResolve(resolverName: string, cbNextRp: ResolverNextRpCb<any, any>): TypeComposer {
     const resolver = this.getResolver(resolverName);
     this.setResolver(resolverName, resolver.wrapResolve(cbNextRp));

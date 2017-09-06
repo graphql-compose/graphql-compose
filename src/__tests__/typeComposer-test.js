@@ -480,6 +480,20 @@ describe('TypeComposer', () => {
       expect(tc.getResolver('update')).not.toBe(prevResolver);
       expect(prevResolver.resolve()).toBe('123');
     });
+
+    it('wrapResolverAs() should wrap resolver via callback with new name', async () => {
+      tc.addResolver({
+        name: 'update',
+        resolve: () => '123',
+      });
+      expect(await tc.getResolver('update').resolve({})).toBe('123');
+
+      tc.wrapResolverAs('updateExt', 'update', resolver => {
+        resolver.resolve = () => '456'; // eslint-disable-line
+      });
+      expect(await tc.getResolver('updateExt').resolve({})).toBe('456');
+      expect(await tc.getResolver('update').resolve({})).toBe('123');
+    });
   });
 
   describe('addRelation()', () => {

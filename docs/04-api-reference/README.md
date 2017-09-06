@@ -101,6 +101,7 @@ LonLatTC.addRelation('facilities', { // add relation with some other TypeCompose
 // addResolver
 // removeResolver
 // wrapResolver('updateById', resolver => { /* some manipulations w/ resolver */ });
+// wrapResolverAs('updateByIdExtended', 'updateById', resolver => { /* some manipulations w/ resolver */ });
 // wrapResolverResolve('updateById', next => rp => { /* custom logic for wrapping resolver */ return next(rp); });
 //
 // setRecordIdFn
