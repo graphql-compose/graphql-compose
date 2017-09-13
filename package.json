@@ -4,10 +4,10 @@
   "description": "GraphQL schema builder from different data sources with middleware extensions.",
   "files": [
     "lib",
-    "types"
+    "src/**/*.d.ts"
   ],
   "main": "lib/index.js",
-  "types": "types/index.d.ts",
+  "types": "src/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/nodkz/graphql-compose.git"
@@ -71,7 +71,7 @@
     "coverage": "jest --coverage",
     "lint": "npm run eslint && npm run tslint",
     "eslint": "eslint --ext .js ./src",
-    "tslint": "tslint -p . \"types/**/*.d.ts\"",
+    "tslint": "tslint -p . \"src/**/*.d.ts\"",
     "check-ts": "tsc",
     "flow-reload": "./node_modules/.bin/flow stop && ./node_modules/.bin/flow",
     "test": "npm run coverage && npm run lint && npm run flow-reload && npm run check-ts",

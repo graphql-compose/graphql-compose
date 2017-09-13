@@ -1,5 +1,3 @@
-// tslint:disable:interface-over-type-literal to keep the file close to the original
-
 import {
     GraphQLArgumentConfig, GraphQLFieldConfig, GraphQLFieldConfigArgumentMap, GraphQLFieldConfigMap,
     GraphQLInputObjectType, GraphQLInterfaceType, GraphQLList, GraphQLObjectType, GraphQLOutputType,

@@ -5,7 +5,7 @@
     "strict": true,
     "lib": ["es2017", "esnext.asynciterable"]
   },
-  "include": ["types/**/*.d.ts"],
+  "include": ["src/**/*.d.ts"],
   "exclude": [
     "./node_modules"
   ]
