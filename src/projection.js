@@ -34,26 +34,26 @@ export function getProjectionFromAST(
     }, []);
   }
 
-  const projection = (selections || [])
-    .reduce((list, ast: FieldNode | InlineFragmentNode | FragmentSpreadNode) => {
-      switch (ast.kind) {
-        case FIELD:
-          list[ast.name.value] = getProjectionFromAST(context, ast) || true;
-          return list;
-        case INLINE_FRAGMENT:
-          return {
-            ...list,
-            ...getProjectionFromAST(context, ast),
-          };
-        case FRAGMENT_SPREAD:
-          return {
-            ...list,
-            ...getProjectionFromAST(context, context.fragments[ast.name.value]),
-          };
-        default:
-          throw new Error('Unsuported query selection');
-      }
-    }, {});
+  const projection = (selections || []
+  ).reduce((list, ast: FieldNode | InlineFragmentNode | FragmentSpreadNode) => {
+    switch (ast.kind) {
+      case FIELD:
+        list[ast.name.value] = getProjectionFromAST(context, ast) || true;
+        return list;
+      case INLINE_FRAGMENT:
+        return {
+          ...list,
+          ...getProjectionFromAST(context, ast),
+        };
+      case FRAGMENT_SPREAD:
+        return {
+          ...list,
+          ...getProjectionFromAST(context, context.fragments[ast.name.value]),
+        };
+      default:
+        throw new Error('Unsuported query selection');
+    }
+  }, {});
 
   // this type params are setup via TypeComposer.addProjectionMapper()
   // Sometimes, when you create relations you need query additional fields, that not in query.

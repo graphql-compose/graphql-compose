@@ -69,33 +69,28 @@ describe('GraphQLJSON', () => {
       graphql(
         schema,
         `
-        {
-          value(arg: {
-            string: "string",
-            int: 3,
-            float: 3.14,
-            true: true,
-            false: false,
-            null: null,
-            object: {
-              string: "string",
-              int: 3,
-              float: 3.14,
-              true: true,
-              false: false,
-              null: null,
-            },
-            array: [
-              "string",
-              3,
-              3.14,
-              true,
-              false,
-              null,
-            ],
-          }),
-        }
-      `
+          {
+            value(
+              arg: {
+                string: "string"
+                int: 3
+                float: 3.14
+                true: true
+                false: false
+                null: null
+                object: {
+                  string: "string"
+                  int: 3
+                  float: 3.14
+                  true: true
+                  false: false
+                  null: null
+                }
+                array: ["string", 3, 3.14, true, false, null]
+              }
+            )
+          }
+        `
       ).then(({ data }) => {
         // $FlowFixMe
         expect(data.value).toEqual({
