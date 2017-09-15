@@ -3,11 +3,10 @@
   "version": "0.0.0-semantically-released",
   "description": "GraphQL schema builder from different data sources with middleware extensions.",
   "files": [
-    "lib",
-    "src/**/*.d.ts"
+    "lib"
   ],
   "main": "lib/index.js",
-  "types": "src/index.d.ts",
+  "types": "lib/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/nodkz/graphql-compose.git"
@@ -64,9 +63,10 @@
     ]
   },
   "scripts": {
-    "build": "npm run build-cjs && npm run build-flow",
+    "build": "npm run build-cjs && npm run build-flow && npm run build-ts",
     "build-cjs": "rimraf lib && babel src --ignore __tests__,__mocks__ -d lib",
     "build-flow": "find ./src -name '*.js' -not -path '*/__*' | while read filepath; do cp $filepath `echo $filepath | sed 's/\\/src\\//\\/lib\\//g'`.flow; done",
+    "build-ts": "find ./src -name '*.d.ts' -not -path '*/__*' | while read filepath; do cp $filepath `echo $filepath | sed 's/\\/src\\//\\/lib\\//g'`; done",
     "watch": "jest --watch",
     "coverage": "jest --coverage",
     "lint": "npm run eslint && npm run tslint",
