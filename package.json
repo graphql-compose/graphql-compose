@@ -39,7 +39,7 @@
     "eslint-plugin-flowtype": "^2.35.1",
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-prettier": "^2.2.0",
-    "flow-bin": "^0.54.1",
+    "flow-bin": "^0.55.0",
     "graphql": "^0.11.3",
     "jest": "^21.1.0",
     "prettier": "^1.7.0",
