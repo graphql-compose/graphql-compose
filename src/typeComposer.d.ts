@@ -16,9 +16,13 @@ export type GetRecordIdFn<TSource, TContext> = (source: TSource, args: any, cont
 type Thunk<T> = (() => T) | T;
 
 export type ComposeFieldConfigMap<TSource, TContext> = {
-    [fieldName: string]: | ComposeFieldConfig<TSource, TContext>
+    [fieldName: string]:
+        | ComposeFieldConfig<TSource, TContext>
+        | Thunk<ComposeFieldConfig<TSource, TContext>>
         | Array<ComposeFieldConfig<TSource, TContext>>
-        | GraphQLFieldConfig<TSource, TContext>,
+        | Thunk<Array<ComposeFieldConfig<TSource, TContext>>>
+        | GraphQLFieldConfig<TSource, TContext>
+        | Thunk<GraphQLFieldConfig<TSource, TContext>>
 } | GraphQLFieldConfigMap<TSource, TContext>;
 
 export type ComposeFieldConfig<TSource, TContext> = {
