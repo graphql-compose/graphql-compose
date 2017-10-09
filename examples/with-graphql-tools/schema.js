@@ -1,4 +1,4 @@
-const graphqlCompose = require('../../lib')
+const graphqlCompose = require('graphql-compose')
 const { makeExecutableSchema, mergeSchemas } = require('graphql-tools')
 
 const GQC = graphqlCompose.GQC
@@ -24,4 +24,8 @@ const extraSchema = makeExecutableSchema({
 })
 module.exports = mergeSchemas({
   schemas: [extraSchema, GQC.buildSchema()]
+  // if your type conflict
+  // onTypeConflict: () => ({
+
+  // })
 })
