@@ -6,9 +6,13 @@ import { GraphQLScalarType, GraphQLError, Kind } from '../graphql';
 export default new GraphQLScalarType({
   name: 'Date',
   serialize(value) {
+    // Valid string values:
+    // 2016-02-02
+    // 2016-02-02T00:13:22Z
+    // 2016-02-02T00:13:22.000Z
     if (
       typeof value === 'string' &&
-      /^(\d{4})-(\d{2})-(\d{2})T((\d{2}):(\d{2}):(\d{2}))\.(\d{3})Z$/.test(value)
+      /^(\d{4})-(\d{2})-(\d{2})(T((\d{2}):(\d{2}):(\d{2}))(\.(\d{1,3}))?Z)?$/.test(value)
     ) {
       return value;
     }
