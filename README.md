@@ -148,13 +148,6 @@ function adminAccess(resolvers) {
 export default GQC.buildSchema();
 ```
 
-## To-Do list
-- [ ] write [DataLoader](https://github.com/facebook/dataloader) resolver's wrapper for reducing number of queries
-- [ ] add support for PubSub. Introduce subscriptions to your graphql schemas
-- [ ] write `graphql-compose-remote-graphql` module, for building your own types which will resolve from 3rd party graphql servers
-- [ ] write `graphql-compose-rest` module, for building your own types which will resolve from 3rd party REST api's. It will be prototype for simple and fast realization of your rest wrappers
-- [ ] **[need help]** find somebody who write `graphql-compose-sequilze` module like `graphql-compose-mongoose` (need to write types converter, and change resolver functions).
-
 
 ## License
 [MIT](https://github.com/nodkz/graphql-compose/blob/master/LICENSE.md)
