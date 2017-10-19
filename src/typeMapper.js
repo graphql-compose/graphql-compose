@@ -299,7 +299,7 @@ class TypeMapper {
   }
 
   convertOutputFieldConfigMap<TSource, TContext>(
-    composeFields: ComposeFieldConfigMap<TSource, TContext>,
+    composeFields: ComposeFieldConfigMap<TSource, TContext> | GraphQLFieldConfigMap<*, *>,
     typeName?: string = ''
   ): GraphQLFieldConfigMap<TSource, TContext> {
     const fields = {};

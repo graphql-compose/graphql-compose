@@ -40,7 +40,7 @@ declare class TypeMapper {
         typeName?: string): GraphQLFieldConfig<TSource, TContext>;
 
     public convertOutputFieldConfigMap<TSource, TContext>(
-        composeFields: ComposeFieldConfigMap<TSource, TContext>,
+        composeFields: ComposeFieldConfigMap<TSource, TContext> | GraphQLFieldConfigMap<TSource, TContext>,
         typeName?: string): GraphQLFieldConfigMap<TSource, TContext>;
 
     public convertArgConfig(

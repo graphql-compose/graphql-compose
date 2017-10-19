@@ -2,6 +2,7 @@
 /* eslint-disable no-use-before-define */
 
 import { resolveMaybeThunk } from './utils/misc';
+import type { Thunk } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveOutputConfigsAsThunk } from './utils/configAsThunk';
 import { deprecate } from './utils/debug';
@@ -45,8 +46,6 @@ export type GraphQLObjectTypeExtended = GraphQLObjectType & {
   _gqcRelations?: RelationThunkMap<*, *>,
   description: ?string,
 };
-
-type Thunk<T> = (() => T) | T;
 
 export type ComposeObjectTypeConfig<TSource, TContext> = {
   name: string,
@@ -166,7 +165,7 @@ export type RelationArgsMapper<TSource, TContext> = {
 
 export default class TypeComposer {
   gqType: GraphQLObjectTypeExtended;
-  _fields: ComposeFieldConfigMap<*, *>;
+  _fields: GraphQLFieldConfigMap<*, *>;
 
   static create(
     opts: TypeNameString | TypeDefinitionString | ComposeObjectTypeConfig<*, *> | GraphQLObjectType
@@ -239,7 +238,7 @@ export default class TypeComposer {
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
-  setFields(fields: ComposeFieldConfigMap<*, *>): TypeComposer {
+  setFields(fields: ComposeFieldConfigMap<*, *> | GraphQLFieldConfigMap<*, *>): TypeComposer {
     const prepearedFields: GraphQLFieldConfigMap<*, *> = TypeMapper.convertOutputFieldConfigMap(
       fields,
       this.getTypeName()

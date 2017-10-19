@@ -46,7 +46,7 @@ export default class InputTypeComposer {
      * Get fields from a GraphQL type
      * WARNING: this method read an internal GraphQL instance variable.
      */
-    public getFields(): GraphQLInputFieldConfigMap;
+    public getFields(): ComposeInputFieldConfigMap;
 
     public getFieldNames(): string[];
 

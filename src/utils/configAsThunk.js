@@ -6,6 +6,7 @@ import { isFunction, isObject } from './is';
 
 export type FieldMaps = {
   [fieldName: string]: any,
+  __proto__: null,
 };
 
 export function resolveOutputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName?: string = ''): T {

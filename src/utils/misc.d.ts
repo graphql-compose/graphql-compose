@@ -1,4 +1,6 @@
-export function resolveMaybeThunk<T>(thingOrThunk: T | (() => T)): T;
+export type Thunk<T> = (() => T) | T;
+
+export function resolveMaybeThunk<T>(thingOrThunk: Thunk<T>): T;
 
 export function camelCase(str: string): string;
 

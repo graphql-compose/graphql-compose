@@ -118,7 +118,7 @@ export default class InputTypeComposer {
    * Get fields from a GraphQL type
    * WARNING: this method read an internal GraphQL instance variable.
    */
-  getFields(): GraphQLInputFieldConfigMap {
+  getFields(): ComposeInputFieldConfigMap {
     const fields: Thunk<GraphQLInputFieldConfigMap> = this.gqType._typeConfig.fields;
 
     const fieldMap: mixed = keepConfigsAsThunk(resolveMaybeThunk(fields));

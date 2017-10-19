@@ -3,6 +3,7 @@ import {
     GraphQLInputObjectType, GraphQLInterfaceType, GraphQLList, GraphQLObjectType, GraphQLOutputType,
     GraphQLFieldResolver, GraphQLInputType, GraphQLIsTypeOfFn, GraphQLResolveInfo
 } from './graphql';
+import { Thunk } from './utils/misc';
 import { TypeDefinitionString, TypeNameString, TypeWrappedString } from './typeMapper';
 import {
     ResolverOpts, ResolverNextRpCb, ResolverWrapCb,
@@ -12,8 +13,6 @@ import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
 
 export type GetRecordIdFn<TSource, TContext> = (source: TSource, args: any, context: TContext) => string;
-
-type Thunk<T> = (() => T) | T;
 
 export type ComposeFieldConfigMap<TSource, TContext> = {
     [fieldName: string]:
@@ -124,7 +123,7 @@ export type RelationArgsMapper<TSource, TContext> = {
 
 export default class TypeComposer {
     public gqType: GraphQLObjectTypeExtended;
-    private _fields: ComposeFieldConfigMap<any, any>;
+    private _fields: GraphQLFieldConfigMap<any, any>;
 
     public constructor(gqType: GraphQLObjectType);
 
@@ -147,7 +146,7 @@ export default class TypeComposer {
      * Completely replace all fields in GraphQL type
      * WARNING: this method rewrite an internal GraphQL instance variable.
      */
-    public setFields(fields: ComposeFieldConfigMap<any, any>): this;
+    public setFields(fields: ComposeFieldConfigMap<any, any> | GraphQLFieldConfigMap<any, any>): this;
 
     public hasField(fieldName: string): boolean;
 
