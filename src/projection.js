@@ -18,7 +18,6 @@ const { FIELD, FRAGMENT_SPREAD, INLINE_FRAGMENT } = Kind;
 // export type ProjectionNode = { [fieldName: string]: $Shape<ProjectionNode> } | true;
 export type ProjectionType = { [fieldName: string]: any };
 export type ProjectionNode = { [fieldName: string]: any };
-export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 
 export function getProjectionFromAST(
   context: GraphQLResolveInfo,
@@ -80,25 +79,6 @@ export function getProjectionFromASTquery(
     }
   }, {});
 
-  // this type params are setup via TypeComposer.addProjectionMapper()
-  // Sometimes, when you create relations you need query additional fields, that not in query.
-  // Eg. for obtaining `friendList` you also should add `friendIds` to projection.
-  if (projection && context.returnType) {
-    let returnType = context.returnType;
-    while (returnType.ofType) {
-      returnType = returnType.ofType;
-    }
-
-    // $FlowFixMe
-    const mapper = returnType._gqcProjectionMapper;
-    if (mapper && typeof mapper === 'object') {
-      Object.keys(mapper).forEach(key => {
-        if (projection[key]) {
-          Object.assign(projection, mapper[key]);
-        }
-      });
-    }
-  }
   return projection;
 }
 
@@ -106,7 +86,7 @@ export function getFlatProjectionFromAST(
   context: GraphQLResolveInfo,
   fieldNodes?: FieldNode | InlineFragmentNode | FragmentDefinitionNode
 ) {
-  const projection = getProjectionFromASTquery(context, fieldNodes) || {};
+  const projection = getProjectionFromAST(context, fieldNodes) || {};
   const flatProjection = {};
   Object.keys(projection).forEach(key => {
     flatProjection[key] = !!projection[key];

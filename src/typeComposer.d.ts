@@ -6,7 +6,7 @@ import {
 import { Thunk } from './utils/misc';
 import { TypeDefinitionString, TypeNameString, TypeWrappedString } from './typeMapper';
 import { ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
-import { ProjectionMapType, ProjectionType } from './projection';
+import { ProjectionType } from './projection';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
 
@@ -70,7 +70,6 @@ export type GraphQLObjectTypeExtended = GraphQLObjectType & {
     _gqcInputTypeComposer?: InputTypeComposer,
     _gqcResolvers?: Map<string, Resolver<any, any>>,
     _gqcGetRecordIdFn?: GetRecordIdFn<any, any>,
-    _gqcProjectionMapper?: ProjectionMapType,
     _gqcRelations?: RelationThunkMap<any, any>,
     description: string | null,
 };
@@ -263,10 +262,6 @@ export default class TypeComposer {
     public getFieldArg(fieldName: string, argName: string): GraphQLArgumentConfig;
 
     public get(path: string | string[]): any;
-
-    public addProjectionMapper(fieldName: string, sourceProjection: ProjectionType): TypeComposer;
-
-    public getProjectionMapper(): ProjectionMapType;
 
     public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
 

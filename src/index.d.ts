@@ -65,7 +65,6 @@ export {
 export {
   ProjectionType,
   ProjectionNode,
-  ProjectionMapType,
 } from './projection';
 
 export { TypeDefinitionString, TypeWrappedString, TypeNameString } from './typeMapper';

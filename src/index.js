@@ -64,6 +64,6 @@ export {
   ResolveDebugOpts,
 } from './resolver';
 
-export { ProjectionType, ProjectionNode, ProjectionMapType } from './projection';
+export { ProjectionType, ProjectionNode } from './projection';
 
 export type { TypeDefinitionString, TypeWrappedString, TypeNameString } from './typeMapper';

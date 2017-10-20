@@ -25,7 +25,7 @@ import type {
 } from './graphql';
 import type { TypeNameString, TypeDefinitionString } from './typeMapper';
 import type { ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
-import type { ProjectionType, ProjectionMapType } from './projection';
+import type { ProjectionType } from './projection';
 
 export type GetRecordIdFn<TSource, TContext> = (
   source: TSource,
@@ -37,7 +37,6 @@ export type GraphQLObjectTypeExtended = GraphQLObjectType & {
   _gqcInputTypeComposer?: InputTypeComposer,
   _gqcResolvers?: Map<string, Resolver<*, *>>,
   _gqcGetRecordIdFn?: GetRecordIdFn<*, *>,
-  _gqcProjectionMapper?: ProjectionMapType,
   _gqcRelations?: RelationThunkMap<*, *>,
   description: ?string,
 };
@@ -238,15 +237,6 @@ export default class TypeComposer {
       fields,
       this.getTypeName()
     );
-
-    // if field has a projection option, then add it to projection mapper
-    Object.keys(prepearedFields).forEach(name => {
-      if (prepearedFields[name].projection) {
-        // $FlowFixMe
-        const projection: ProjectionType = prepearedFields[name].projection;
-        this.addProjectionMapper(name, projection);
-      }
-    });
 
     this._fields = prepearedFields;
     this.gqType._typeConfig.fields = () =>
@@ -564,7 +554,6 @@ export default class TypeComposer {
         fields: newFields,
       })
     );
-    cloned.gqType._gqcProjectionMapper = this.gqType._gqcProjectionMapper;
 
     cloned.setDescription(this.getDescription());
     try {
@@ -774,23 +763,6 @@ export default class TypeComposer {
 
   get(path: string | Array<string>): any {
     return typeByPath(this, path);
-  }
-
-  // Sometimes, when you create relations or some tricky fields,
-  // you should have a data from additional fields, that not in a query projection.
-  // E.g. for obtaining `friendList` you also should add `friendIds` to projection.
-  //      or for `fullname` field you should request `firstname` and `lastname` from DB.
-  // this _gqcProjectionMapper used in `projection` module
-  addProjectionMapper(fieldName: string, sourceProjection: ProjectionType): TypeComposer {
-    if (!this.gqType._gqcProjectionMapper) {
-      this.gqType._gqcProjectionMapper = {};
-    }
-    this.gqType._gqcProjectionMapper[fieldName] = sourceProjection;
-    return this;
-  }
-
-  getProjectionMapper(): ProjectionMapType {
-    return this.gqType._gqcProjectionMapper || {};
   }
 
   deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this {

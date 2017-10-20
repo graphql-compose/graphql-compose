@@ -108,9 +108,6 @@ LonLatTC.addRelation('facilities', { // add relation with some other TypeCompose
 // hasRecordIdFn
 // getRecordIdFn
 // getRecordId
-//
-// addProjectionMapper
-// getProjectionMapper
 ```
 
 ### InputTypeComposer

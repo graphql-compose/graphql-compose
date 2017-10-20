@@ -102,11 +102,6 @@ describe('TypeComposer', () => {
           field4: { type: GraphQLString },
           field5: { type: GraphQLString, projection: { field4: true } },
         });
-
-        expect(tc.getProjectionMapper()).toEqual({
-          field3: { field1: true, field2: true },
-          field5: { field4: true },
-        });
       });
 
       it('accept types as function', () => {
@@ -372,8 +367,9 @@ describe('TypeComposer', () => {
       });
 
       const tc2 = tc.clone('newObject');
-      expect(tc2.getProjectionMapper()).toEqual({
-        field3: { field1: true, field2: true },
+      expect(tc2.getField('field3')).toEqual({
+        type: GraphQLString,
+        projection: { field1: true, field2: true },
       });
     });
   });
@@ -668,7 +664,6 @@ describe('TypeComposer', () => {
     expect(tc.setTypeName('Type2')).toBe(tc);
     expect(tc.setDescription('Description')).toBe(tc);
     expect(tc.setRecordIdFn(() => ({}: any))).toBe(tc);
-    expect(tc.addProjectionMapper('f1', { name: true })).toBe(tc);
   });
 
   describe('deprecateFields()', () => {

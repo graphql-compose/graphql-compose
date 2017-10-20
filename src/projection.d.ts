@@ -1,8 +1,9 @@
-import { FieldNode, FragmentDefinitionNode, GraphQLResolveInfo, InlineFragmentNode } from './graphql';
+import {
+    FieldNode, FragmentDefinitionNode, GraphQLResolveInfo, InlineFragmentNode, GraphQLOutputType
+} from './graphql';
 
 export type ProjectionType = { [fieldName: string]: any };
 export type ProjectionNode = { [fieldName: string]: any };
-export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 
 export function getProjectionFromAST(
     context: GraphQLResolveInfo,
@@ -11,3 +12,7 @@ export function getProjectionFromAST(
 export function getFlatProjectionFromAST(
     context: GraphQLResolveInfo,
     fieldNodes?: FieldNode | InlineFragmentNode | FragmentDefinitionNode): { [key: string]: boolean };
+
+export function extendByFieldProjection(
+    returnType: GraphQLOutputType,
+    projection: ProjectionType): ProjectionType;
