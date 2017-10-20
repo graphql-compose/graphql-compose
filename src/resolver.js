@@ -37,12 +37,7 @@ import type {
 } from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import { typeByPath } from './typeByPath';
-
-// export type ProjectionType = { [fieldName: string]: $Shape<ProjectionNode> | true };
-// export type ProjectionNode = { [fieldName: string]: $Shape<ProjectionNode> } | true;
-export type ProjectionType = { [fieldName: string]: any };
-export type ProjectionNode = { [fieldName: string]: any };
-export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
+import type { ProjectionType } from './projection';
 
 export type ResolveParams<TSource, TContext> = {
   source: TSource,

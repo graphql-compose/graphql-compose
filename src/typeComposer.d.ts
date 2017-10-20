@@ -5,10 +5,8 @@ import {
 } from './graphql';
 import { Thunk } from './utils/misc';
 import { TypeDefinitionString, TypeNameString, TypeWrappedString } from './typeMapper';
-import {
-    ResolverOpts, ResolverNextRpCb, ResolverWrapCb,
-    ProjectionMapType, ProjectionType
-} from './resolver';
+import { ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
+import { ProjectionMapType, ProjectionType } from './projection';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
 

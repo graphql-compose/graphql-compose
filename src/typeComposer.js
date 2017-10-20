@@ -24,13 +24,8 @@ import type {
   GraphQLFieldResolver,
 } from './graphql';
 import type { TypeNameString, TypeDefinitionString } from './typeMapper';
-import type {
-  ResolverOpts,
-  ResolverNextRpCb,
-  ResolverWrapCb,
-  ProjectionType,
-  ProjectionMapType,
-} from './resolver';
+import type { ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
+import type { ProjectionType, ProjectionMapType } from './projection';
 
 export type GetRecordIdFn<TSource, TContext> = (
   source: TSource,

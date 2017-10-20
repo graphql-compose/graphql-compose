@@ -7,10 +7,7 @@ import {
 } from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import TypeComposer from './typeComposer';
-
-export type ProjectionType = { [fieldName: string]: any };
-export type ProjectionNode = { [fieldName: string]: any };
-export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
+import { ProjectionType } from './projection';
 
 export type ResolveParams<TSource, TContext> = {
     source: TSource,

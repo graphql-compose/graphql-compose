@@ -7,9 +7,14 @@ import type {
   FragmentSpreadNode,
   InlineFragmentNode,
 } from 'graphql/language/ast';
-import type { GraphQLResolveInfo } from 'graphql/type/definition';
+import type { GraphQLResolveInfo, GraphQLOutputType } from 'graphql/type/definition';
 import { FIELD, FRAGMENT_SPREAD, INLINE_FRAGMENT } from 'graphql/language/kinds';
-import type { ProjectionType } from './resolver';
+
+// export type ProjectionType = { [fieldName: string]: $Shape<ProjectionNode> | true };
+// export type ProjectionNode = { [fieldName: string]: $Shape<ProjectionNode> } | true;
+export type ProjectionType = { [fieldName: string]: any };
+export type ProjectionNode = { [fieldName: string]: any };
+export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 
 export function getProjectionFromAST(
   context: GraphQLResolveInfo,

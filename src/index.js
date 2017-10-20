@@ -49,9 +49,6 @@ export {
 } from './inputTypeComposer';
 
 export {
-  ProjectionType,
-  ProjectionNode,
-  ProjectionMapType,
   ResolveParams,
   ResolverKinds,
   ResolverFilterArgFn,
@@ -66,5 +63,7 @@ export {
   ResolverWrapTypeCb,
   ResolveDebugOpts,
 } from './resolver';
+
+export { ProjectionType, ProjectionNode, ProjectionMapType } from './projection';
 
 export type { TypeDefinitionString, TypeWrappedString, TypeNameString } from './typeMapper';

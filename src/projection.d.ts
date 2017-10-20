@@ -1,5 +1,8 @@
 import { FieldNode, FragmentDefinitionNode, GraphQLResolveInfo, InlineFragmentNode } from './graphql';
-import { ProjectionType } from './resolver';
+
+export type ProjectionType = { [fieldName: string]: any };
+export type ProjectionNode = { [fieldName: string]: any };
+export type ProjectionMapType = { [relationfieldName: string]: ProjectionType };
 
 export function getProjectionFromAST(
     context: GraphQLResolveInfo,
