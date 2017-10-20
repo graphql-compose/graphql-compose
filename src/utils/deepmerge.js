@@ -2,9 +2,9 @@
 /* eslint-disable prefer-template, no-param-reassign, no-lonely-if */
 // https://github.com/KyleAMathews/deepmerge/blob/master/index.js
 
-export default function deepmerge(target: any, src: any) {
+export default function deepmerge<T: any>(target: any, src: T): T {
   const array = Array.isArray(src);
-  let dst = (array && []) || {};
+  let dst: T = ((array && []) || {}: any);
 
   if (array) {
     target = target || [];
