@@ -9,4 +9,4 @@ server.use('/graphql', graphqlExpress((req) => ({
   schema
 })))
 
-server.listen(3001, function () { console.log('app launch on 3000') })
+server.listen(3000, function () { console.log('app launch on 3000') })
