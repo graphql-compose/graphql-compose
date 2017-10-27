@@ -330,11 +330,15 @@ export default class Resolver<TSource, TContext> {
     return this.type;
   }
 
-  getTypeComposer(): ?TypeComposer {
-    if (this.type instanceof GraphQLObjectType) {
-      return new TypeComposer(this.type);
+  getTypeComposer(): TypeComposer {
+    const outputType = getNamedType(this.type);
+    if (!(outputType instanceof GraphQLObjectType)) {
+      throw new Error(
+        `Resolver ${this.name} cannot return its output type as TypeComposer instance. ` +
+          `Cause '${this.type.toString()}' does not instance of GraphQLObjectType.`
+      );
     }
-    return null;
+    return new TypeComposer(outputType);
   }
 
   setType(gqType: ComposeOutputType): Resolver<TSource, TContext> {

@@ -123,7 +123,7 @@ export default class Resolver<TSource, TContext> {
 
     public getType(): GraphQLOutputType;
 
-    public getTypeComposer(): TypeComposer | null;
+    public getTypeComposer(): TypeComposer;
 
     public setType(gqType: ComposeOutputType): this;
 

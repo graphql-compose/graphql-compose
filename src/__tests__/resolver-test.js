@@ -950,4 +950,44 @@ describe('Resolver', () => {
       }).toThrow('argument should be InputObjectType');
     });
   });
+
+  describe('getTypeComposer()', () => {
+    it('should return TypeComposer for GraphQLObjectType', () => {
+      const r = new Resolver({
+        name: 'find',
+        type: `type MyOutputType { name: String }`,
+        displayName: 'User.find()',
+        resolve: () => {},
+      });
+      expect(r.type).toBeInstanceOf(GraphQLObjectType);
+      expect(r.getTypeComposer()).toBeInstanceOf(TypeComposer);
+      expect(r.getTypeComposer().getTypeName()).toBe('MyOutputType');
+    });
+
+    it('should unwrap List and NonNull GraphQLObjectType', () => {
+      TypeComposer.create(`type MyOutputType { name: String }`);
+
+      const r = new Resolver({
+        name: 'find',
+        type: '[MyOutputType!]!',
+        displayName: 'User.find()',
+        resolve: () => {},
+      });
+      expect(r.type).toBeInstanceOf(GraphQLNonNull);
+      expect(r.type.ofType).toBeInstanceOf(GraphQLList);
+      expect(r.getTypeComposer()).toBeInstanceOf(TypeComposer);
+      expect(r.getTypeComposer().getTypeName()).toBe('MyOutputType');
+    });
+
+    it('should throw error if output type is not GraphQLObjectType', () => {
+      const r = new Resolver({
+        name: 'find',
+        type: 'String',
+        displayName: 'User.find()',
+        resolve: () => {},
+      });
+      expect(r.type).toBe(GraphQLString);
+      expect(() => r.getTypeComposer()).toThrow();
+    });
+  });
 });
