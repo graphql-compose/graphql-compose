@@ -8,6 +8,7 @@ import {
 import InputTypeComposer from './inputTypeComposer';
 import TypeComposer from './typeComposer';
 import { ProjectionType } from './projection';
+import { GenericMap } from './utils/definitions';
 
 export type ResolveParams<TSource, TContext> = {
     source: TSource,
@@ -38,7 +39,7 @@ export type ResolverSortArgFn = (resolveParams: ResolveParams<any, any>) => any;
 export type ResolverSortArgConfig<TSource, TContext> = {
     name: string,
     sortTypeNameFallback?: string,
-    value: ResolverSortArgFn | string | number | boolean,
+    value: ResolverSortArgFn | string | number | boolean | any[] | GenericMap<any>,
     deprecationReason?: string | null,
     description?: string | null,
 };

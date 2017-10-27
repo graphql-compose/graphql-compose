@@ -26,6 +26,7 @@ import type {
 import type { TypeNameString, TypeDefinitionString } from './typeMapper';
 import type { ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
 import type { ProjectionType } from './projection';
+import type { GenericMap } from './utils/definitions';
 
 export type GetRecordIdFn<TSource, TContext> = (
   source: TSource,
@@ -154,7 +155,7 @@ export type RelationArgsMapper<TSource, TContext> = {
     | string
     | number
     | Array<any>
-    | Object,
+    | GenericMap<any>,
 };
 
 export default class TypeComposer {

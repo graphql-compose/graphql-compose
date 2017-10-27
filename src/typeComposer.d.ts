@@ -9,6 +9,7 @@ import { ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
 import { ProjectionType } from './projection';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
+import { GenericMap } from './utils/definitions';
 
 export type GetRecordIdFn<TSource, TContext> = (source: TSource, args: any, context: TContext) => string;
 
@@ -115,7 +116,7 @@ export type RelationArgsMapper<TSource, TContext> = {
         | string
         | number
         | any[]
-        | object
+        | GenericMap<any>
 };
 
 export default class TypeComposer {

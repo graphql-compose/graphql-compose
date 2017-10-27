@@ -38,6 +38,7 @@ import type {
 import InputTypeComposer from './inputTypeComposer';
 import { typeByPath } from './typeByPath';
 import type { ProjectionType } from './projection';
+import type { GenericMap } from './utils/definitions';
 
 export type ResolveParams<TSource, TContext> = {
   source: TSource,
@@ -70,7 +71,7 @@ export type ResolverSortArgConfig = {
   sortTypeNameFallback?: string,
   // value also can be an `Object`, but flow does not understande union with object and function
   // see https://github.com/facebook/flow/issues/1948
-  value: ResolverSortArgFn | string | number | boolean,
+  value: ResolverSortArgFn | string | number | boolean | Array<any> | GenericMap<any>,
   deprecationReason?: ?string,
   description?: ?string,
 };
