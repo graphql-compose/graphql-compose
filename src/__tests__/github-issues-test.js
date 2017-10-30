@@ -3,7 +3,7 @@
 import TypeComposer from '../typeComposer';
 
 describe('github issues checks', () => {
-  it.only('#72 extendField after addRelation', () => {
+  it('#72 extendField after addRelation', () => {
     const MyTypeTC = TypeComposer.create(`type MyType { name: String }`);
     const OtherTypeTC = TypeComposer.create(`type OtherType { name: String }`);
     OtherTypeTC.addResolver({

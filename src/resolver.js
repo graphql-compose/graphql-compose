@@ -397,16 +397,16 @@ export default class Resolver<TSource, TContext> {
   }
 
   get(path: string | Array<string>): any {
-    // $FlowFixMe
     return typeByPath(this, path);
   }
 
   clone(opts: ResolverOpts<TSource, TContext> = {}): Resolver<TSource, TContext> {
     const oldOpts = {};
-    for (const key in this) {
-      if ({}.hasOwnProperty.call(this, key)) {
-        // $FlowFixMe
-        oldOpts[key] = this[key];
+
+    const self: any = this;
+    for (const key in self) {
+      if (self.hasOwnProperty(key)) {
+        oldOpts[key] = self[key];
       }
     }
     oldOpts.displayName = undefined;
@@ -505,7 +505,7 @@ export default class Resolver<TSource, TContext> {
       filterITC = InputTypeComposer.create(opts.filterTypeNameFallback);
     }
 
-    let defaultValue;
+    let defaultValue: any;
     if (filter && filter.defaultValue) {
       defaultValue = filter.defaultValue;
     }
@@ -513,7 +513,6 @@ export default class Resolver<TSource, TContext> {
       if (!defaultValue) {
         defaultValue = {};
       }
-      // $FlowFixMe
       defaultValue[opts.name] = opts.defaultValue;
     }
 
@@ -556,7 +555,7 @@ export default class Resolver<TSource, TContext> {
     const resolver = this.wrap(null, { name: 'addSortArg' });
 
     // get sortEnumType or create new one
-    let sortEnumType;
+    let sortEnumType: GraphQLInputType;
     if (resolver.hasArg('sort')) {
       const sort = resolver.getArg('sort');
       if (sort.type instanceof GraphQLEnumType) {
@@ -602,11 +601,11 @@ export default class Resolver<TSource, TContext> {
     // If sort value is evaluable (function), then wrap resolve method
     const resolveNext = resolver.getResolve();
     if (isFunction(opts.value)) {
+      const getValue: Function = opts.value;
       resolver.setResolve(resolveParams => {
         const value = objectPath.get(resolveParams, ['args', 'sort']);
         if (value === opts.name) {
-          // $FlowFixMe
-          const newSortValue = opts.value(resolveParams);
+          const newSortValue = getValue(resolveParams);
           resolveParams.args.sort = newSortValue; // eslint-disable-line
         }
         return resolveNext(resolveParams);

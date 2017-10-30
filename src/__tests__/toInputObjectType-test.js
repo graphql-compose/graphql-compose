@@ -12,8 +12,8 @@ import InputTypeComposer from '../inputTypeComposer';
 import { toInputObjectType } from '../toInputObjectType';
 
 describe('toInputObjectType()', () => {
-  let PersonType;
-  let PersonTC;
+  let PersonType: GraphQLObjectType;
+  let PersonTC: TypeComposer;
 
   beforeEach(() => {
     PersonType = new GraphQLObjectType({
@@ -61,8 +61,7 @@ describe('toInputObjectType()', () => {
     const itc = toInputObjectType(PersonTC);
     const addrType = itc.getFieldType('address');
     expect(addrType).toBeInstanceOf(GraphQLInputObjectType);
-    // $FlowFixMe
-    expect(addrType._typeConfig.name).toBe('PersonAddressInput');
+    expect((addrType: any)._typeConfig.name).toBe('PersonAddressInput');
   });
 
   it('should reuse generated input type for recursive types', () => {
@@ -74,7 +73,6 @@ describe('toInputObjectType()', () => {
   it('should reuse generated input type for recursive types in List', () => {
     PersonTC.setField('friends', { type: new GraphQLList(PersonType) });
     const itc = toInputObjectType(PersonTC);
-    // $FlowFixMe
-    expect(itc.getFieldType('friends').ofType).toBe(itc.getType());
+    expect((itc.getFieldType('friends'): any).ofType).toBe(itc.getType());
   });
 });

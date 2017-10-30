@@ -56,9 +56,10 @@ export function toInputObjectType(
   const postfix: string = opts.postfix || 'Input';
 
   const inputTypeName = `${prefix}${typeComposer.getTypeName()}${postfix}`;
-  if (cache.has(typeComposer.getType())) {
-    // $FlowFixMe
-    return cache.get(typeComposer.getType());
+  const type = typeComposer.getType();
+  if (cache.has(type)) {
+    const itc: any = cache.get(type);
+    return itc;
   }
 
   const inputTypeComposer = new InputTypeComposer(

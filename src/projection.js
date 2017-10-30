@@ -112,13 +112,11 @@ export function extendByFieldProjection(
 
   let proj = projection;
   Object.keys(proj).forEach(key => {
-    // $FlowFixMe
-    const field = type._fields[key];
+    const field = (type: any)._fields[key];
     if (!field) return;
 
     if (field.projection) proj = deepmerge(proj, field.projection);
-    // $FlowFixMe
-    proj[key] = extendByFieldProjection(field.type, proj[key]);
+    proj[key] = extendByFieldProjection((field.type: any), proj[key]);
   });
 
   return proj;

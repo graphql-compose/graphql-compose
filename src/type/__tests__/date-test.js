@@ -41,9 +41,8 @@ describe('GraphQLDate', () => {
         kind: Kind.STRING,
         value: '2015-07-24T10:56:42.744Z',
       };
-      const date = GraphQLDate.parseLiteral(ast);
+      const date: any = GraphQLDate.parseLiteral(ast);
       expect(date).toBeInstanceOf(Date);
-      // $FlowFixMe
       expect(date.toJSON()).toEqual(ast.value);
     });
   });

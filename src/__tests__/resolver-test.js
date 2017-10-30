@@ -18,7 +18,7 @@ import TypeComposer from '../typeComposer';
 import InputTypeComposer from '../inputTypeComposer';
 
 describe('Resolver', () => {
-  let resolver;
+  let resolver: Resolver<any, any>;
 
   beforeEach(() => {
     resolver = new Resolver({ name: 'find' });
@@ -51,10 +51,10 @@ describe('Resolver', () => {
 
       expect(() => {
         resolver.setType(
-          new GraphQLInputObjectType({
+          (new GraphQLInputObjectType({
             name: 'MyInput',
             fields: () => ({}),
-          })
+          }): any)
         );
       }).toThrowError();
     });
@@ -94,10 +94,12 @@ describe('Resolver', () => {
     it('should throw error on InputTypeComposer for `type` option', () => {
       const someInputITC = InputTypeComposer.create('input SomeInputType { add: String }');
       expect(() => {
-        new Resolver({
-          name: 'myResolver',
-          type: someInputITC,
-        });
+        new Resolver(
+          ({
+            name: 'myResolver',
+            type: someInputITC,
+          }: any)
+        );
       }).toThrowError('InputTypeComposer');
     });
 
@@ -130,10 +132,8 @@ describe('Resolver', () => {
 
     it('should have wrapType() method', () => {
       const newResolver = resolver.wrapType(prevType => {
-        // eslint-disable-line
         return 'String';
       });
-
       expect(newResolver.getType()).toBe(GraphQLString);
     });
   });
@@ -334,12 +334,12 @@ describe('Resolver', () => {
 
       it('should clone GraphqlNonNull wrapped types', () => {
         resolver.cloneArg('mandatory', 'NewMandatory');
-        expect(resolver.getArgType('mandatory').ofType.name).toBe('NewMandatory');
+        expect((resolver.getArgType('mandatory'): any).ofType.name).toBe('NewMandatory');
       });
 
       it('should clone arg type', () => {
         resolver.cloneArg('filter', 'NewFilterInput');
-        expect(resolver.getArgType('filter').name).toBe('NewFilterInput');
+        expect((resolver.getArgType('filter'): any).name).toBe('NewFilterInput');
         expect(resolver.getArg('filter').description).toBe('Data filtering arg');
       });
     });
@@ -359,7 +359,7 @@ describe('Resolver', () => {
       resolver.resolve = resolveParams => {
         rp = resolveParams;
       };
-      const fc = resolver.getFieldConfig();
+      const fc: any = resolver.getFieldConfig();
       fc.resolve('sourceData', 'argsData', 'contextData', 'infoData');
       expect(rp).toHaveProperty('source', 'sourceData');
       expect(rp).toHaveProperty('args', 'argsData');
@@ -372,7 +372,7 @@ describe('Resolver', () => {
       resolver.resolve = resolveParams => {
         rp = resolveParams;
       };
-      const fc = resolver.getFieldConfig();
+      const fc: any = resolver.getFieldConfig();
       fc.resolve();
       expect(rp).toHaveProperty('projection');
     });
@@ -386,7 +386,7 @@ describe('Resolver', () => {
           type: () => 'String',
         },
       });
-      const fc = resolver.getFieldConfig();
+      const fc: any = resolver.getFieldConfig();
       expect(fc.args.arg1.type).toBe(GraphQLString);
       expect(fc.args.arg2.type).toBe(GraphQLString);
       expect(fc.args.arg3.type).toBe(GraphQLString);
@@ -412,7 +412,9 @@ describe('Resolver', () => {
     it('should return resolver from callback, cause it can be overridden there', () => {
       const customResolver = new Resolver({ name: 'find' });
 
-      expect(resolver.wrap((newResolver, prevResolver) => { // eslint-disable-line
+      expect(
+        resolver.wrap((newResolver, prevResolver) => {
+          // eslint-disable-line
           return customResolver;
         })
       ).toBe(customResolver);
@@ -420,7 +422,7 @@ describe('Resolver', () => {
   });
 
   describe('wrapCloneArg()', () => {
-    let newResolver;
+    let newResolver: Resolver<any, any>;
 
     beforeEach(() => {
       resolver.setArgs({
@@ -455,8 +457,9 @@ describe('Resolver', () => {
     });
 
     it('should change wrapped cloned type names', () => {
-      expect(newResolver.getArgType('filter').name).toBe('NewFilterInput');
-      expect(newResolver.getArgType('filter').name).not.toBe(resolver.getArgType('filter').name);
+      const filterType: any = newResolver.getArgType('filter');
+      expect(filterType.name).toBe('NewFilterInput');
+      expect(filterType.name).not.toBe((resolver.getArgType('filter'): any).name);
     });
 
     it('should keep untouched other args', () => {
@@ -470,9 +473,10 @@ describe('Resolver', () => {
     });
 
     it('should change wrapped cloned type names', () => {
-      expect(newResolver.getArgType('mandatory').ofType.name).toBe('NewMandatory');
-      expect(newResolver.getArgType('mandatory').ofType.name).not.toBe(
-        resolver.getArgType('mandatory').ofType.name
+      const mandatoryType: any = newResolver.getArgType('mandatory');
+      expect(mandatoryType.ofType.name).toBe('NewMandatory');
+      expect(mandatoryType.ofType.name).not.toBe(
+        (resolver.getArgType('mandatory'): any).ofType.name
       );
     });
   });
@@ -521,7 +525,7 @@ describe('Resolver', () => {
       expect(filterCfg.type).toBeInstanceOf(GraphQLInputObjectType);
       expect(filterCfg.defaultValue).toEqual({ age: 20 });
 
-      const filterITC = new InputTypeComposer(filterCfg.type);
+      const filterITC = new InputTypeComposer((filterCfg.type: any));
       expect(filterITC.getField('age').description).toBe('Age filter');
       expect(filterITC.getFieldType('age')).toBeInstanceOf(GraphQLNonNull);
       expect(filterITC.getFieldType('age').ofType).toBe(GraphQLInt);
@@ -561,8 +565,7 @@ describe('Resolver', () => {
         someKey: 16,
       });
 
-      // $FlowFixMe
-      expect(rpSnap.rawQuery).toEqual({
+      expect((rpSnap: any).rawQuery).toEqual({
         age: { $gt: 15 },
         isActive: false,
         someKey: 16,
@@ -599,13 +602,11 @@ describe('Resolver', () => {
 
     it('should throw errors if provided incorrect options', () => {
       expect(() => {
-        resolver.addFilterArg({});
+        resolver.addFilterArg(({}: any));
       }).toThrowError('`opts.name` is required');
 
       expect(() => {
-        resolver.addFilterArg({
-          name: 'price',
-        });
+        resolver.addFilterArg(({ name: 'price' }: any));
       }).toThrowError('`opts.type` is required');
 
       expect(() => {
@@ -668,7 +669,7 @@ describe('Resolver', () => {
         value: { price: 1 },
       });
 
-      const sortEnum = newResolver.getArg('sort').type;
+      const sortEnum: any = newResolver.getArg('sort').type;
       expect(sortEnum.parseValue('AGE_ASC')).toBe('AGE_ASC');
       expect(sortEnum.parseValue('PRICE_ASC')).toEqual({ price: 1 });
     });
@@ -698,20 +699,17 @@ describe('Resolver', () => {
       });
 
       newResolver.resolve({ args: { sort: 'PRICE_ASC' }, query });
-      // $FlowFixMe
-      expect(rpSnap.args.sort).toEqual({ price: 1 });
+      expect((rpSnap: any).args.sort).toEqual({ price: 1 });
       expect(whereSnap).toEqual({ price: { $gt: 0 } });
     });
 
     it('should throw errors if provided incorrect options', () => {
       expect(() => {
-        resolver.addSortArg({});
+        resolver.addSortArg(({}: any));
       }).toThrowError('`opts.name` is required');
 
       expect(() => {
-        resolver.addSortArg({
-          name: 'PRICE_ASC',
-        });
+        resolver.addSortArg(({ name: 'PRICE_ASC' }: any));
       }).toThrowError('`opts.value` is required');
 
       expect(() => {

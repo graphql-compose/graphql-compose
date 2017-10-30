@@ -56,8 +56,7 @@ describe('GraphQLJSON', () => {
     it('should support parsing values', done => {
       graphql(schema, 'query ($arg: JSON) { value(arg: $arg) }', null, null, {
         arg: FIXTURE,
-      }).then(({ data }) => {
-        // $FlowFixMe
+      }).then(({ data }: any) => {
         expect(data.value).toEqual(FIXTURE);
         done();
       });
@@ -91,8 +90,7 @@ describe('GraphQLJSON', () => {
             )
           }
         `
-      ).then(({ data }) => {
-        // $FlowFixMe
+      ).then(({ data }: any) => {
         expect(data.value).toEqual({
           string: 'string',
           int: 3,

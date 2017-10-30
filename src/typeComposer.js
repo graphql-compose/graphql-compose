@@ -632,11 +632,11 @@ export default class TypeComposer {
   }
 
   getResolver(name: string): Resolver<*, *> {
-    // $FlowFixMe
-    if (!this.hasResolver(name) || !this.gqType._gqcResolvers) {
+    if (!this.hasResolver(name)) {
       throw new Error(`Type ${this.getTypeName()} does not have resolver with name '${name}'`);
     }
-    return this.gqType._gqcResolvers.get(name);
+    const resolverMap: any = this.gqType._gqcResolvers;
+    return resolverMap.get(name);
   }
 
   setResolver(name: string, resolver: Resolver<*, *>): TypeComposer {
@@ -792,8 +792,7 @@ export default class TypeComposer {
             `Cannot deprecate unexisted field '${field}' from type '${this.getTypeName()}'`
           );
         }
-        // $FlowFixMe
-        const deprecationReason: string = fields[field];
+        const deprecationReason: string = fieldMap[field];
         this.extendField(field, { deprecationReason });
       });
     }

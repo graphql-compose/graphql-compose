@@ -254,9 +254,7 @@ class TypeMapper {
           `${typeName}.${fieldName} cannot convert to OutputType the following string: '${composeType}'`
         );
       }
-
-      // $FlowFixMe
-      fieldConfig.type = type;
+      fieldConfig.type = (type: any);
     } else if (composeType instanceof TypeComposer) {
       fieldConfig.type = composeType.getType();
     } else if (composeType instanceof Resolver) {
@@ -379,8 +377,7 @@ class TypeMapper {
         );
       }
 
-      // $FlowFixMe
-      argConfig.type = type;
+      argConfig.type = (type: any);
     } else if (composeType instanceof InputTypeComposer) {
       argConfig.type = composeType.getType();
     } else {
@@ -506,8 +503,7 @@ class TypeMapper {
         );
       }
 
-      // $FlowFixMe
-      fieldConfig.type = type;
+      fieldConfig.type = (type: any);
     } else if (composeType instanceof InputTypeComposer) {
       fieldConfig.type = composeType.getType();
     } else {

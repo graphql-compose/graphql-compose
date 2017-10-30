@@ -29,9 +29,9 @@ export default function filterByDotPaths(
 
   if (opts && opts.hideFields) {
     const hiddenFields = [];
-    Object.keys(opts.hideFields).forEach(key => {
-      // $FlowFixMe
-      const msg = opts.hideFields[key];
+    const optsHideFields = opts.hideFields;
+    Object.keys(optsHideFields).forEach(key => {
+      const msg = optsHideFields[key];
       hiddenFields.push(...hideField(result, key, msg, pathsFilter));
     });
     if (hiddenFields.length > 0 && opts.hideFieldsNote) {

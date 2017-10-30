@@ -15,14 +15,12 @@ describe('Storage [Class]', () => {
       name: 'ValidType1',
     };
     expect(() => {
-      // $FlowFixMe
-      storage.add(errTypeObj1);
+      storage.add((errTypeObj1: any));
     }).toThrowError();
 
     const errTypeObj2 = { name: '123' };
     expect(() => {
-      // $FlowFixMe
-      storage.add(errTypeObj2);
+      storage.add((errTypeObj2: any));
     }).toThrowError();
   });
 
@@ -64,16 +62,14 @@ describe('Storage [Class]', () => {
 
       /* eslint-disable */
       const oldConsoleLog = console.log;
-      // $FlowFixMe
-      console.log = jest.fn();
+      global.console.log = jest.fn();
 
       storage.removeEmptyTypes(viewerTC);
 
       expect(console.log).lastCalledWith(
         "GQC: Delete field 'Viewer.stub' with type 'Stub', cause it does not have fields.",
       );
-      // $FlowFixMe
-      console.log = oldConsoleLog;
+      global.console.log = oldConsoleLog;
       /* eslint-enable */
 
       expect(viewerTC.hasField('stub')).toBe(false);

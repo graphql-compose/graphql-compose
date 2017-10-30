@@ -14,7 +14,7 @@ import TypeComposer from '../typeComposer';
 import Resolver from '../resolver';
 
 describe('TypeComposer', () => {
-  let objectType;
+  let objectType: GraphQLObjectType;
   let tc: TypeComposer;
 
   beforeEach(() => {
@@ -67,11 +67,9 @@ describe('TypeComposer', () => {
 
         expect(tc.getField('field3').type).toBe(GraphQLString);
         expect(tc.getField('field4').type).toBeInstanceOf(GraphQLList);
-        // $FlowFixMe
-        expect(tc.getField('field4').type.ofType).toBe(GraphQLInt);
+        expect((tc.getField('field4').type: any).ofType).toBe(GraphQLInt);
         expect(tc.getField('field5').type).toBeInstanceOf(GraphQLNonNull);
-        // $FlowFixMe
-        expect(tc.getField('field5').type.ofType).toBe(GraphQLBoolean);
+        expect((tc.getField('field5').type: any).ofType).toBe(GraphQLBoolean);
       });
 
       it('should add fields with converting args types from string to object', () => {
@@ -86,11 +84,9 @@ describe('TypeComposer', () => {
         });
 
         expect(tc.getFieldArg('field3', 'arg1').type).toBeInstanceOf(GraphQLNonNull);
-        // $FlowFixMe
-        expect(tc.getFieldArg('field3', 'arg1').type.ofType).toBe(GraphQLString);
+        expect((tc.getFieldArg('field3', 'arg1').type: any).ofType).toBe(GraphQLString);
         expect(tc.getFieldArg('field3', 'arg2').type).toBeInstanceOf(GraphQLList);
-        // $FlowFixMe
-        expect(tc.getFieldArg('field3', 'arg2').type.ofType).toBe(GraphQLFloat);
+        expect((tc.getFieldArg('field3', 'arg2').type: any).ofType).toBe(GraphQLFloat);
       });
 
       it('should add projection via `setField` and `addFields`', () => {
@@ -112,8 +108,7 @@ describe('TypeComposer', () => {
         expect(tc.getFieldType('input3')).toBe(typeAsFn);
 
         // show provide unwrapped/unhoisted type for graphql
-        // $FlowFixMe
-        expect(tc.getType()._typeConfig.fields().input3.type).toBe(GraphQLString);
+        expect((tc.getType()._typeConfig: any).fields().input3.type).toBe(GraphQLString);
       });
 
       it('accept fieldConfig as function', () => {
@@ -121,8 +116,7 @@ describe('TypeComposer', () => {
           input4: () => ({ type: 'String' }),
         });
         // show provide unwrapped/unhoisted type for graphql
-        // $FlowFixMe
-        expect(tc.getType()._typeConfig.fields().input4.type).toBe(GraphQLString);
+        expect((tc.getType()._typeConfig: any).fields().input4.type).toBe(GraphQLString);
       });
     });
 
@@ -134,11 +128,9 @@ describe('TypeComposer', () => {
       });
       expect(tc.getField('field3').type).toBe(GraphQLString);
       expect(tc.getField('field4').type).toBeInstanceOf(GraphQLList);
-      // $FlowFixMe
-      expect(tc.getField('field4').type.ofType).toBe(GraphQLInt);
+      expect((tc.getField('field4').type: any).ofType).toBe(GraphQLInt);
       expect(tc.getField('field5').type).toBeInstanceOf(GraphQLNonNull);
-      // $FlowFixMe
-      expect(tc.getField('field5').type.ofType).toBe(GraphQLBoolean);
+      expect((tc.getField('field5').type: any).ofType).toBe(GraphQLBoolean);
     });
 
     describe('removeField()', () => {
@@ -322,8 +314,7 @@ describe('TypeComposer', () => {
       expect(myTC.getTypeName()).toBe('TestTypeTpl');
       expect(myTC.getFieldType('f1')).toBe(GraphQLString);
       expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
-      // $FlowFixMe
-      expect(myTC.getFieldType('f2').ofType).toBe(GraphQLInt);
+      expect((myTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });
 
     it('should create TC by GraphQLObjectTypeConfig', () => {
@@ -339,8 +330,7 @@ describe('TypeComposer', () => {
       expect(myTC).toBeInstanceOf(TypeComposer);
       expect(myTC.getFieldType('f1')).toBe(GraphQLString);
       expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
-      // $FlowFixMe
-      expect(myTC.getFieldType('f2').ofType).toBe(GraphQLInt);
+      expect((myTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });
 
     it('should create TC by GraphQLObjectType', () => {
@@ -495,8 +485,8 @@ describe('TypeComposer', () => {
   });
 
   describe('addRelation()', () => {
-    let UserTC;
-    let ArticleTC;
+    let UserTC: TypeComposer;
+    let ArticleTC: TypeComposer;
 
     beforeEach(() => {
       UserTC = TypeComposer.create(
@@ -532,14 +522,14 @@ describe('TypeComposer', () => {
 
     describe('_relationWithResolverToFC()', () => {
       it('should return FieldConfig', () => {
-        const fc = ArticleTC._relationWithResolverToFC({
+        const fc: any = ArticleTC._relationWithResolverToFC({
           resolver: UserTC.getResolver('findById'),
         });
         expect(fc.type.name).toBe('User');
       });
 
       it('should accept resolver as thunk and return FieldConfig', () => {
-        const fc = ArticleTC._relationWithResolverToFC({
+        const fc: any = ArticleTC._relationWithResolverToFC({
           resolver: () => UserTC.getResolver('findById'),
         });
         expect(fc.type.name).toBe('User');
@@ -577,8 +567,7 @@ describe('TypeComposer', () => {
         ArticleTC.addRelation('user', {
           resolver: UserTC.getResolver('findById'),
         });
-        const fc = ArticleTC.getType().getFields().user;
-        // $FlowFixMe
+        const fc: any = ArticleTC.getType().getFields().user;
         expect(fc.type.name).toBe('User');
       });
 
@@ -586,8 +575,7 @@ describe('TypeComposer', () => {
         ArticleTC.addRelation('user', {
           resolver: () => UserTC.getResolver('findById'),
         });
-        const fc = ArticleTC.getType().getFields().user;
-        // $FlowFixMe
+        const fc: any = ArticleTC.getType().getFields().user;
         expect(fc.type.name).toBe('User');
       });
 
@@ -595,8 +583,7 @@ describe('TypeComposer', () => {
         ArticleTC.addRelation('user', {
           resolver: () => UserTC.getResolver('findById'),
         });
-        const fc = ArticleTC.getType().getFields().user;
-        // $FlowFixMe
+        const fc: any = ArticleTC.getType().getFields().user;
         expect(fc.type.name).toBe('User');
       });
 
@@ -609,12 +596,10 @@ describe('TypeComposer', () => {
           resolver: ArticleTC.getResolver('findOne'),
         });
 
-        const fc1 = ArticleTC.getType().getFields().user;
-        // $FlowFixMe
+        const fc1: any = ArticleTC.getType().getFields().user;
         expect(fc1.type.name).toBe('User');
 
-        const fc2 = UserTC.getType().getFields().lastArticle;
-        // $FlowFixMe
+        const fc2: any = UserTC.getType().getFields().lastArticle;
         expect(fc2.type.name).toBe('Article');
       });
     });
@@ -626,9 +611,8 @@ describe('TypeComposer', () => {
           resolve: () => {},
         });
 
-        const fc = ArticleTC.getType().getFields().user;
+        const fc: any = ArticleTC.getType().getFields().user;
         expect(fc.type).toBeInstanceOf(GraphQLObjectType);
-        // $FlowFixMe
         expect(fc.type.name).toBe('User');
       });
     });
@@ -667,7 +651,7 @@ describe('TypeComposer', () => {
   });
 
   describe('deprecateFields()', () => {
-    let tc1;
+    let tc1: TypeComposer;
 
     beforeEach(() => {
       tc1 = TypeComposer.create(`

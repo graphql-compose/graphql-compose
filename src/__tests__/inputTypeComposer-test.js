@@ -11,7 +11,7 @@ import {
 import InputTypeComposer from '../inputTypeComposer';
 
 describe('InputTypeComposer', () => {
-  let objectType;
+  let objectType: GraphQLInputObjectType;
   let itc: InputTypeComposer;
 
   beforeEach(() => {
@@ -86,8 +86,7 @@ describe('InputTypeComposer', () => {
         expect(itc.getFieldType('input3')).toBe(typeAsFn);
 
         // show provide unwrapped/unhoisted type for graphql
-        // $FlowFixMe
-        expect(itc.getType()._typeConfig.fields().input3.type).toBe(GraphQLString);
+        expect((itc.getType(): any)._typeConfig.fields().input3.type).toBe(GraphQLString);
       });
     });
 
@@ -195,8 +194,7 @@ describe('InputTypeComposer', () => {
     it('makeRequired()', () => {
       itc.makeRequired('input1');
       expect(itc.getField('input1').type).toBeInstanceOf(GraphQLNonNull);
-      // $FlowFixMe
-      expect(itc.getField('input1').type.ofType).toBe(GraphQLString);
+      expect((itc.getField('input1'): any).type.ofType).toBe(GraphQLString);
       expect(itc.isRequired('input1')).toBe(true);
     });
 
@@ -216,11 +214,9 @@ describe('InputTypeComposer', () => {
 
       expect(itc.getField('input3').type).toBe(GraphQLString);
       expect(itc.getField('input4').type).toBeInstanceOf(GraphQLList);
-      // $FlowFixMe
-      expect(itc.getField('input4').type.ofType).toBe(GraphQLInt);
+      expect((itc.getField('input4'): any).type.ofType).toBe(GraphQLInt);
       expect(itc.getField('input5').type).toBeInstanceOf(GraphQLNonNull);
-      // $FlowFixMe
-      expect(itc.getField('input5').type.ofType).toBe(GraphQLBoolean);
+      expect((itc.getField('input5'): any).type.ofType).toBe(GraphQLBoolean);
     });
   });
 
@@ -276,8 +272,7 @@ describe('InputTypeComposer', () => {
       expect(itc1.getTypeName()).toBe('TestTypeTplInput');
       expect(itc1.getFieldType('f1')).toBe(GraphQLString);
       expect(itc1.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
-      // $FlowFixMe
-      expect(itc1.getFieldType('f2').ofType).toBe(GraphQLInt);
+      expect((itc1.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });
 
     it('should create ITC by GraphQLObjectTypeConfig', () => {
@@ -293,8 +288,7 @@ describe('InputTypeComposer', () => {
       expect(itc1).toBeInstanceOf(InputTypeComposer);
       expect(itc1.getFieldType('f1')).toBe(GraphQLString);
       expect(itc1.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
-      // $FlowFixMe
-      expect(itc1.getFieldType('f2').ofType).toBe(GraphQLInt);
+      expect((itc1.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });
 
     it('should create ITC by GraphQLInputObjectType', () => {

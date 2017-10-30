@@ -87,14 +87,12 @@ describe('typeAsThunk', () => {
           description: 'Field5',
         },
       };
-      const unwrapped = resolveOutputConfigsAsThunk(fieldMap);
+      const unwrapped: any = resolveOutputConfigsAsThunk(fieldMap);
 
       expect(unwrapped.f1.type).toBe(GraphQLString);
 
       expect(unwrapped.f2.type).toBe(GraphQLString);
-      // $FlowFixMe
       expect(unwrapped.f2._typeAsThunk).toBeTruthy();
-      // $FlowFixMe
       expect(unwrapped.f2._typeAsThunk()).toBe(GraphQLString);
 
       expect(unwrapped.f3.type).toBeInstanceOf(GraphQLObjectType);
@@ -102,9 +100,7 @@ describe('typeAsThunk', () => {
       expect(unwrapped.f3.description).toBe('Field3');
 
       expect(unwrapped.f4.type).toBe(GraphQLString);
-      // $FlowFixMe
       expect(unwrapped.f4._typeAsThunk).toBeTruthy();
-      // $FlowFixMe
       expect(unwrapped.f4._typeAsThunk()).toBe('String');
 
       expect(unwrapped.f5.type).toBeInstanceOf(GraphQLObjectType);
@@ -162,10 +158,8 @@ describe('typeAsThunk', () => {
     });
 
     it('should pass null, undefined', () => {
-      // $FlowFixMe
-      expect(resolveOutputConfigsAsThunk(null)).toBe(null);
-      // $FlowFixMe
-      expect(resolveOutputConfigsAsThunk(undefined)).toBe(undefined);
+      expect(resolveOutputConfigsAsThunk((null: any))).toBe(null);
+      expect(resolveOutputConfigsAsThunk((undefined: any))).toBe(undefined);
     });
   });
 
@@ -247,14 +241,12 @@ describe('typeAsThunk', () => {
         },
       };
 
-      const unwrapped = resolveInputConfigsAsThunk(fieldMap);
+      const unwrapped: any = resolveInputConfigsAsThunk(fieldMap);
 
       expect(unwrapped.f1.type).toBe(GraphQLString);
 
       expect(unwrapped.f2.type).toBe(GraphQLString);
-      // $FlowFixMe
       expect(unwrapped.f2._typeAsThunk).toBeTruthy();
-      // $FlowFixMe
       expect(unwrapped.f2._typeAsThunk()).toBe(GraphQLString);
 
       expect(unwrapped.f3.type).toBeInstanceOf(GraphQLInputObjectType);
@@ -262,9 +254,7 @@ describe('typeAsThunk', () => {
       expect(unwrapped.f3.description).toBe('Field3');
 
       expect(unwrapped.f4.type).toBe(GraphQLString);
-      // $FlowFixMe
       expect(unwrapped.f4._typeAsThunk).toBeTruthy();
-      // $FlowFixMe
       expect(unwrapped.f4._typeAsThunk()).toBe('String');
 
       expect(unwrapped.f5.type).toBeInstanceOf(GraphQLInputObjectType);
@@ -305,10 +295,8 @@ describe('typeAsThunk', () => {
     });
 
     it('should pass null, undefined', () => {
-      // $FlowFixMe
-      expect(resolveInputConfigsAsThunk(null)).toBe(null);
-      // $FlowFixMe
-      expect(resolveInputConfigsAsThunk(undefined)).toBe(undefined);
+      expect(resolveInputConfigsAsThunk((null: any))).toBe(null);
+      expect(resolveInputConfigsAsThunk((undefined: any))).toBe(undefined);
     });
   });
 
@@ -345,25 +333,19 @@ describe('typeAsThunk', () => {
           _fieldAsThunk: () => ({ type: GraphQLString }),
         },
       };
-      const wrapped = keepConfigsAsThunk(unwrapped);
+      const wrapped: any = keepConfigsAsThunk(unwrapped);
       expect(wrapped.f1.type).toBe(GraphQLString);
-      // $FlowFixMe
       expect(wrapped.f1.args.a1.type()).toBe(GraphQLString);
       expect(wrapped.f2.type).toBeInstanceOf(GraphQLObjectType);
       expect(wrapped.f3.type).toBeTruthy();
-      // $FlowFixMe
       expect(wrapped.f3.type()).toBe(GraphQLString);
-      // $FlowFixMe
       expect(wrapped.f4()).toBe(GraphQLString);
-      // $FlowFixMe
       expect(wrapped.f5().type).toBe(GraphQLString);
     });
 
     it('should pass null, undefined', () => {
-      // $FlowFixMe
-      expect(keepConfigsAsThunk(null)).toBe(null);
-      // $FlowFixMe
-      expect(keepConfigsAsThunk(undefined)).toBe(undefined);
+      expect(keepConfigsAsThunk((null: any))).toBe(null);
+      expect(keepConfigsAsThunk((undefined: any))).toBe(undefined);
     });
   });
 });
