@@ -1,5 +1,5 @@
 import {
-    GraphQLArgumentConfig, GraphQLFieldConfig, GraphQLFieldConfigArgumentMap, GraphQLInputType, GraphQLOutputType
+    GraphQLFieldConfig, GraphQLFieldConfigArgumentMap, GraphQLInputType, GraphQLOutputType
 } from './graphql';
 import * as graphql from './graphql';
 import {
@@ -30,7 +30,7 @@ export type ResolverFilterArgConfig<TSource, TContext> = {
     name: string,
     type: ComposeArgumentType,
     description?: string,
-    query: ResolverFilterArgFn<TSource, TContext>
+    query?: ResolverFilterArgFn<TSource, TContext>
     filterTypeNameFallback?: string,
 };
 
@@ -66,7 +66,7 @@ export type ResolverNextRpCb<TSource, TContext> = (
 
 export type ResolverWrapArgsCb = (prevArgs: graphql.GraphQLFieldConfigArgumentMap) => ComposeFieldConfigArgumentMap;
 
-export type ResolverWrapTypeCb = (prevType: graphql.GraphQLOutputType) => graphql.GraphQLOutputType;
+export type ResolverWrapTypeCb = (prevType: graphql.GraphQLOutputType) => ComposeOutputType;
 
 export type ResolveDebugOpts = {
     showHidden?: boolean,
@@ -88,7 +88,7 @@ export default class Resolver<TSource, TContext> {
 
     public hasArg(argName: string): boolean;
 
-    public getArg(argName: string): GraphQLArgumentConfig;
+    public getArg(argName: string): any;
 
     public getArgType(argName: string): GraphQLInputType;
 

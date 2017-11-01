@@ -82,16 +82,18 @@ import type {
   ComposeArgumentConfig,
   ComposeFieldConfigArgumentMap,
 } from './typeComposer';
+import type { Thunk } from './utils/definitions';
 
 import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
 
-export type TypeDefinitionString = string;
+export type TypeDefinitionString = string; // eg type Name { field: Int }
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]
 export type TypeNameString = string; // eg. Int, Float
+export type TypeAsString = TypeDefinitionString | TypeWrappedString | TypeNameString;
 
-export function isOutputType(type: ?GraphQLType): boolean {
+export function isOutputType(type: any): boolean {
   return (
     type instanceof GraphQLScalarType ||
     type instanceof GraphQLObjectType ||
@@ -103,7 +105,7 @@ export function isOutputType(type: ?GraphQLType): boolean {
   );
 }
 
-export function isInputType(type: ?GraphQLType): boolean {
+export function isInputType(type: any): boolean {
   return (
     type instanceof GraphQLScalarType ||
     type instanceof GraphQLEnumType ||
@@ -191,9 +193,13 @@ class TypeMapper {
     typeName?: string = ''
   ): GraphQLFieldConfig<TSource, TContext> {
     let composeType;
+    let copyProps;
+    let copyArgs;
 
     if (composeFC instanceof GraphQLList || composeFC instanceof GraphQLNonNull) {
       return { type: composeFC };
+    } else if (isFunction(composeFC)) {
+      return (composeFC: any);
     } else if (composeFC instanceof Resolver) {
       return composeFC.getFieldConfig();
     } else if (composeFC instanceof TypeComposer) {
@@ -203,14 +209,13 @@ class TypeMapper {
       };
     } else if (Array.isArray(composeFC)) {
       composeType = composeFC;
-      composeFC = {};
-    } else if (isFunction(composeFC)) {
-      return composeFC;
     } else if (composeFC.type) {
-      composeType = composeFC.type;
+      const { type, args, ...rest } = (composeFC: any);
+      composeType = type;
+      copyProps = rest;
+      copyArgs = args;
     } else {
       composeType = composeFC;
-      composeFC = {};
     }
 
     let wrapWithList = false;
@@ -236,7 +241,7 @@ class TypeMapper {
       );
     }
 
-    const fieldConfig = {};
+    const fieldConfig: GraphQLFieldConfig<TSource, TContext> = ({}: any);
     if (typeof composeType === 'string') {
       if (RegexpInputTypeDefinition.test(composeType)) {
         throw new Error(
@@ -260,7 +265,7 @@ class TypeMapper {
     } else if (composeType instanceof Resolver) {
       fieldConfig.type = composeType.getType();
     } else {
-      fieldConfig.type = composeType;
+      fieldConfig.type = (composeType: any);
     }
 
     if (!fieldConfig.type) {
@@ -279,16 +284,20 @@ class TypeMapper {
       }
     }
 
-    if (isObject(composeFC)) {
-      if (composeFC.args) {
-        fieldConfig.args = this.convertArgConfigMap((composeFC.args: any), fieldName, typeName);
-      }
+    if (copyArgs) {
+      const args: GraphQLFieldConfigArgumentMap = this.convertArgConfigMap(
+        copyArgs,
+        fieldName,
+        typeName
+      );
+      fieldConfig.args = args;
+    }
 
+    if (isObject(copyProps)) {
       // copy all other props
-      const doNotCopy = ['type', 'args'];
-      for (const prop in composeFC) {
-        if (composeFC.hasOwnProperty(prop) && doNotCopy.indexOf(prop) === -1) {
-          fieldConfig[prop] = composeFC[prop];
+      for (const prop in copyProps) {
+        if (copyProps.hasOwnProperty(prop)) {
+          fieldConfig[prop] = copyProps[prop];
         }
       }
     }
@@ -297,10 +306,10 @@ class TypeMapper {
   }
 
   convertOutputFieldConfigMap<TSource, TContext>(
-    composeFields: ComposeFieldConfigMap<TSource, TContext> | GraphQLFieldConfigMap<*, *>,
+    composeFields: ComposeFieldConfigMap<TSource, TContext>,
     typeName?: string = ''
   ): GraphQLFieldConfigMap<TSource, TContext> {
-    const fields = {};
+    const fields: GraphQLFieldConfigMap<TSource, TContext> = ({}: any);
     Object.keys(composeFields).forEach(name => {
       fields[name] = this.convertOutputFieldConfig(composeFields[name], name, typeName);
     });
@@ -315,6 +324,7 @@ class TypeMapper {
     typeName?: string = ''
   ): GraphQLArgumentConfig {
     let composeType;
+    let copyProps;
 
     if (composeAC instanceof GraphQLList || composeAC instanceof GraphQLNonNull) {
       return { type: composeAC };
@@ -325,14 +335,14 @@ class TypeMapper {
       };
     } else if (Array.isArray(composeAC)) {
       composeType = composeAC;
-      composeAC = {};
     } else if (isFunction(composeAC)) {
-      return composeAC;
+      return (composeAC: any);
     } else if (composeAC.type) {
-      composeType = composeAC.type;
+      const { type, ...rest } = (composeAC: any);
+      composeType = type;
+      copyProps = rest;
     } else {
       composeType = composeAC;
-      composeAC = {};
     }
 
     let wrapWithList = false;
@@ -358,7 +368,7 @@ class TypeMapper {
       );
     }
 
-    const argConfig = {};
+    const argConfig: GraphQLArgumentConfig = ({}: any);
     if (typeof composeType === 'string') {
       if (RegexpOutputTypeDefinition.test(composeType)) {
         throw new Error(
@@ -381,7 +391,7 @@ class TypeMapper {
     } else if (composeType instanceof InputTypeComposer) {
       argConfig.type = composeType.getType();
     } else {
-      argConfig.type = composeType;
+      argConfig.type = (composeType: any);
     }
 
     if (!argConfig.type) {
@@ -402,12 +412,11 @@ class TypeMapper {
       }
     }
 
-    if (isObject(composeAC)) {
+    if (isObject(copyProps)) {
       // copy all other props
-      const doNotCopy = ['type'];
-      for (const prop in composeAC) {
-        if (composeAC.hasOwnProperty(prop) && doNotCopy.indexOf(prop) === -1) {
-          argConfig[prop] = composeAC[prop];
+      for (const prop in copyProps) {
+        if (copyProps.hasOwnProperty(prop)) {
+          argConfig[prop] = copyProps[prop];
         }
       }
     }
@@ -441,6 +450,7 @@ class TypeMapper {
     typeName?: string = ''
   ): GraphQLInputFieldConfig {
     let composeType;
+    let copyProps;
 
     if (composeIFC instanceof GraphQLList || composeIFC instanceof GraphQLNonNull) {
       return { type: composeIFC };
@@ -451,14 +461,14 @@ class TypeMapper {
       };
     } else if (Array.isArray(composeIFC)) {
       composeType = composeIFC;
-      composeIFC = {};
     } else if (isFunction(composeIFC)) {
-      return composeIFC;
+      return (composeIFC: any);
     } else if (composeIFC.type) {
+      const { type, ...rest } = (composeIFC: any);
       composeType = composeIFC.type;
+      copyProps = rest;
     } else {
       composeType = composeIFC;
-      composeIFC = {};
     }
 
     let wrapWithList = false;
@@ -484,7 +494,7 @@ class TypeMapper {
       );
     }
 
-    const fieldConfig = {};
+    const fieldConfig: GraphQLInputFieldConfig = ({}: any);
     if (typeof composeType === 'string') {
       if (RegexpOutputTypeDefinition.test(composeType)) {
         throw new Error(
@@ -507,7 +517,7 @@ class TypeMapper {
     } else if (composeType instanceof InputTypeComposer) {
       fieldConfig.type = composeType.getType();
     } else {
-      fieldConfig.type = composeType;
+      fieldConfig.type = (composeType: any);
     }
 
     if (!fieldConfig.type) {
@@ -526,24 +536,23 @@ class TypeMapper {
       }
     }
 
-    if (isObject(composeIFC)) {
+    if (isObject(copyProps)) {
       // copy all other props
-      const doNotCopy = ['type'];
-      for (const prop in composeIFC) {
-        if (composeIFC.hasOwnProperty(prop) && doNotCopy.indexOf(prop) === -1) {
-          fieldConfig[prop] = composeIFC[prop];
+      for (const prop in copyProps) {
+        if (copyProps.hasOwnProperty(prop)) {
+          fieldConfig[prop] = copyProps[prop];
         }
       }
     }
 
-    return (fieldConfig: GraphQLInputFieldConfig);
+    return fieldConfig;
   }
 
   convertInputFieldConfigMap(
     composeFields: ComposeInputFieldConfigMap,
     typeName?: string = ''
   ): GraphQLInputFieldConfigMap {
-    const fields = {};
+    const fields: GraphQLInputFieldConfigMap = ({}: any);
     Object.keys(composeFields).forEach(name => {
       fields[name] = this.convertInputFieldConfig(composeFields[name], name, typeName);
     });

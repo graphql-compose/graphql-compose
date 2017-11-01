@@ -13,7 +13,6 @@ import {
   getNamedType,
 } from './graphql';
 import type {
-  GraphQLArgumentConfig,
   GraphQLFieldConfigArgumentMap,
   GraphQLOutputType,
   GraphQLFieldConfig,
@@ -60,11 +59,11 @@ export type ResolverFilterArgConfig<TSource, TContext> = {
   name: string,
   type: ComposeArgumentType,
   description?: string,
-  query: ResolverFilterArgFn<TSource, TContext>,
+  query?: ResolverFilterArgFn<TSource, TContext>,
   filterTypeNameFallback?: string,
 };
 
-export type ResolverSortArgFn = (resolveParams: ResolveParams<*, *>) => mixed;
+export type ResolverSortArgFn = (resolveParams: ResolveParams<any, any>) => mixed;
 
 export type ResolverSortArgConfig = {
   name: string,
@@ -94,7 +93,7 @@ export type ResolverWrapCb<TSource, TContext> = (
 
 export type ResolverRpCb<TSource, TContext> = (
   resolveParams: $Shape<ResolveParams<TSource, TContext>>
-) => Promise<*> | *;
+) => Promise<any> | any;
 export type ResolverNextRpCb<TSource, TContext> = (
   next: ResolverRpCb<TSource, TContext>
 ) => ResolverRpCb<TSource, TContext>;
@@ -103,7 +102,7 @@ export type ResolverWrapArgsCb = (
   prevArgs: GraphQLFieldConfigArgumentMap
 ) => ComposeFieldConfigArgumentMap;
 
-export type ResolverWrapTypeCb = (prevType: GraphQLOutputType) => GraphQLOutputType;
+export type ResolverWrapTypeCb = (prevType: GraphQLOutputType) => ComposeOutputType;
 
 export type ResolveDebugOpts = {
   showHidden?: boolean,
@@ -150,7 +149,12 @@ export default class Resolver<TSource, TContext> {
     return !!this.args[argName];
   }
 
-  getArg(argName: string): GraphQLArgumentConfig {
+  /**
+   * Should return GraphQLArgumentConfig
+   * See TODO in TypeComposer.getFields()
+   * `any` solved problem of "Could not decide which case to select"
+   */
+  getArg(argName: string): any {
     if (!this.hasArg(argName)) {
       throw new Error(
         `Cannot get arg '${argName}' for resolver ${this.name}. Argument does not exist.`
@@ -360,9 +364,9 @@ export default class Resolver<TSource, TContext> {
     const resolve = this.getResolve();
     return {
       type: this.getType(),
-      args: resolveInputConfigsAsThunk(this.getArgs()),
+      args: (resolveInputConfigsAsThunk(this.getArgs()): any),
       description: this.description,
-      resolve: (source, args, context, info) => {
+      resolve: (source: TSource, args, context: TContext, info: GraphQLResolveInfo) => {
         let projection = getProjectionFromAST(info);
         if (opts.projection) {
           projection = ((deepmerge(projection, opts.projection): any): ProjectionType);
@@ -522,19 +526,23 @@ export default class Resolver<TSource, TContext> {
       defaultValue,
     });
 
-    filterITC.setField(opts.name, {
-      ...only(opts, ['name', 'type', 'defaultValue', 'description']),
-    });
+    filterITC.setField(
+      opts.name,
+      ({
+        ...only(opts, ['name', 'type', 'defaultValue', 'description']),
+      }: any)
+    );
 
     const resolveNext = resolver.getResolve();
-    if (isFunction(opts.query)) {
+    const query = opts.query;
+    if (query && isFunction(query)) {
       resolver.setResolve(resolveParams => {
         const value = objectPath.get(resolveParams, ['args', 'filter', opts.name]);
         if (value !== null && value !== undefined) {
           if (!resolveParams.rawQuery) {
             resolveParams.rawQuery = {}; // eslint-disable-line
           }
-          opts.query(resolveParams.rawQuery, value, resolveParams);
+          query(resolveParams.rawQuery, value, resolveParams);
         }
         return resolveNext(resolveParams);
       });

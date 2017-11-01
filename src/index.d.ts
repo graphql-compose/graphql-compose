@@ -26,9 +26,11 @@ export {
   ComposeObjectTypeConfig,
   ComposeOutputType,
   ComposeFieldConfig,
+  ComposeFieldConfigAsObject,
   ComposeFieldConfigMap,
   ComposeArgumentType,
   ComposeArgumentConfig,
+  ComposeArgumentConfigAsObject,
   ComposeFieldConfigArgumentMap,
   RelationThunkMap,
   RelationOpts,
@@ -42,6 +44,7 @@ export {
 export {
   ComposeInputType,
   ComposeInputFieldConfig,
+  ComposeInputFieldConfigAsObject,
   ComposeInputFieldConfigMap,
   ComposeInputObjectTypeConfig,
 } from './inputTypeComposer';

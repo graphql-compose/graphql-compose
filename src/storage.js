@@ -47,11 +47,11 @@ export default class ComposeStorage {
     return this.get('Subscription');
   }
 
-  resolvers(typeName: string): Map<string, Resolver<*, *>> {
+  resolvers(typeName: string): Map<string, Resolver<any, any>> {
     return this.get(typeName).getResolvers();
   }
 
-  resolver(typeName: string, resolverName: string): ?Resolver<*, *> {
+  resolver(typeName: string, resolverName: string): ?Resolver<any, any> {
     return this.get(typeName).getResolver(resolverName);
   }
 

@@ -407,12 +407,12 @@ describe('TypeMapper', () => {
 
       expect(() => {
         typeMapper.convertInputFieldConfig({
-          type: tc,
+          type: (tc: any),
         });
       }).toThrowError(/\sTypeComposer/);
 
       expect(() => {
-        typeMapper.convertInputFieldConfig(tc);
+        typeMapper.convertInputFieldConfig((tc: any));
       }).toThrowError(/\sTypeComposer/);
     });
 

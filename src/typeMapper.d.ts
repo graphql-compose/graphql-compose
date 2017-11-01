@@ -6,12 +6,14 @@ import {
     ComposeArgumentConfig, ComposeFieldConfig, ComposeFieldConfigArgumentMap,
     ComposeFieldConfigMap
 } from './typeComposer';
+import { Thunk } from './utils/definitions';
 import { TypeDefinitionString, TypeNameString, TypeWrappedString } from './typeMapper';
 import { ComposeInputFieldConfig, ComposeInputFieldConfigMap } from './inputTypeComposer';
 
-export type TypeDefinitionString = string;
+export type TypeDefinitionString = string; // eg. type Name { field: Int }
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]
 export type TypeNameString = string; // eg. Int, Float
+export type TypeAsString = TypeDefinitionString | TypeWrappedString | TypeNameString;
 
 declare class TypeMapper {
     public map: Map<string, GraphQLNamedType>;

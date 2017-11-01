@@ -72,9 +72,9 @@
     "lint": "npm run eslint && npm run tslint",
     "eslint": "eslint --ext .js ./src",
     "tslint": "tslint -p . \"src/**/*.d.ts\"",
-    "check-ts": "tsc",
+    "tscheck": "tsc",
     "flow": "./node_modules/.bin/flow",
-    "test": "npm run coverage && npm run lint && npm run flow && npm run check-ts",
+    "test": "npm run coverage && npm run lint && npm run flow && npm run tscheck",
     "link": "yarn link graphql && yarn link",
     "unlink": "yarn unlink graphql && yarn add graphql",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"

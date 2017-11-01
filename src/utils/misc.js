@@ -1,8 +1,7 @@
 /* @flow */
 
 import pluralize from './pluralize';
-
-export type Thunk<T> = (() => T) | T;
+import type { Thunk } from './definitions';
 
 export function resolveMaybeThunk<T>(thingOrThunk: Thunk<T>): T {
   // eslint-disable-line

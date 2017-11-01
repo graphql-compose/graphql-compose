@@ -42,5 +42,6 @@
     "Class": true,
     "Iterator": true,
     "$Shape": true,
+    "$FlowFixMe": true,
   }
 }

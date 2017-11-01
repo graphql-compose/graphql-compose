@@ -14,7 +14,7 @@ import type { GraphQLInputType, GraphQLOutputType } from './graphql';
 * #resolver
 */
 export function typeByPath(
-  src: TypeComposer | InputTypeComposer | Resolver<*, *>,
+  src: TypeComposer | InputTypeComposer | Resolver<any, any>,
   path: string | Array<string>
 ) {
   const parts = Array.isArray(path) ? path : String(path).split('.');
@@ -71,7 +71,7 @@ export function typeByPathITC(itc: InputTypeComposer, parts: Array<string>) {
   return processType(fieldType, parts.slice(1));
 }
 
-function typeByPathRSV(rsv: Resolver<*, *>, parts: Array<string>) {
+function typeByPathRSV(rsv: Resolver<any, any>, parts: Array<string>) {
   if (!rsv) return undefined;
   if (parts.length === 0) return rsv;
   const name = parts[0];

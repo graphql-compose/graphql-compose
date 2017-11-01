@@ -1,4 +1,5 @@
 /* @flow */
+/* eslint-disable no-use-before-define */
 
 import { GraphQLInputObjectType, GraphQLNonNull, getNamedType } from './graphql';
 import { resolveMaybeThunk } from './utils/misc';
@@ -7,45 +8,35 @@ import { isObject, isString } from './utils/is';
 import { resolveInputConfigsAsThunk, keepConfigsAsThunk } from './utils/configAsThunk';
 import TypeMapper from './typeMapper';
 import { typeByPath } from './typeByPath';
-
+import type { Thunk, ObjMap } from './utils/definitions';
+import type { TypeAsString } from './typeMapper';
 import type {
-  GraphQLInputFieldConfig,
+  // GraphQLInputFieldConfig,
   GraphQLInputFieldConfigMap,
   GraphQLInputType,
+  InputValueDefinitionNode,
 } from './graphql';
-import type { TypeNameString, TypeDefinitionString } from './typeMapper';
 
-export type ComposeInputType = any;
-export type ComposeInputFieldConfig = any;
-export type ComposeInputFieldConfigMap = {
-  [fieldName: string]: ComposeInputFieldConfig,
-};
-// Flow 0.47 not ready for this, it fails with: *** Recursion limit exceeded ***
-// export type ComposeInputFieldConfigMap = {
-//   [fieldName: string]:
-//     | ComposeInputFieldConfig
-//     | Array<ComposeInputFieldConfig>
-//     | GraphQLInputFieldConfig,
-// } | GraphQLInputFieldConfigMap;
-//
-// export type ComposeInputFieldConfig =
-//   | {
-//       type: ComposeInputType | Array<ComposeInputType>,
-//       defaultValue?: mixed,
-//       description?: ?string,
-//     }
-//   | ComposeInputType
-//   | GraphQLInputFieldConfig;
-//
-// export type ComposeInputType =
-//   | InputTypeComposer
-//   | GraphQLInputType
-//   | TypeWrappedString
-//   | TypeDefinitionString
-//   | TypeNameString
-//   | (() => ComposeInputType);
+export type ComposeInputFieldConfigMap = ObjMap<ComposeInputFieldConfig>;
 
-type Thunk<T> = (() => T) | T;
+export type ComposeInputFieldConfig =
+  | ComposeInputFieldConfigAsObject
+  | ComposeInputType
+  | (() => ComposeInputFieldConfigAsObject | ComposeInputType);
+
+export type ComposeInputFieldConfigAsObject = {
+  type: Thunk<ComposeInputType> | GraphQLInputType,
+  defaultValue?: mixed,
+  description?: ?string,
+  astNode?: ?InputValueDefinitionNode,
+  [key: string]: any,
+} & { $call?: void };
+
+export type ComposeInputType =
+  | InputTypeComposer
+  | GraphQLInputType
+  | TypeAsString
+  | Array<ComposeInputType>;
 
 export type ComposeInputObjectTypeConfig = {
   name: string,
@@ -57,11 +48,7 @@ export default class InputTypeComposer {
   gqType: GraphQLInputObjectType;
 
   static create(
-    opts:
-      | TypeDefinitionString
-      | TypeNameString
-      | ComposeInputObjectTypeConfig
-      | GraphQLInputObjectType
+    opts: TypeAsString | ComposeInputObjectTypeConfig | GraphQLInputObjectType
   ): InputTypeComposer {
     let ITC;
 
@@ -117,8 +104,15 @@ export default class InputTypeComposer {
   /**
    * Get fields from a GraphQL type
    * WARNING: this method read an internal GraphQL instance variable.
+   * TODO: should return GraphQLInputFieldConfigMap
+   * BUT if setFields(fields: ComposeInputFieldConfigMap | GraphQLInputFieldConfigMap)
+   * then flow producess error with such common case ITC.setFields(ITC.getFields())
+   * with following message "Could not decide which case to select"
+   * More info about solution
+   *  https://twitter.com/nodkz/status/925010361815851008
+   *  https://github.com/facebook/flow/issues/2892
    */
-  getFields(): ComposeInputFieldConfigMap {
+  getFields(): ObjMap<any> {
     const fields: Thunk<GraphQLInputFieldConfigMap> = this.gqType._typeConfig.fields;
 
     const fieldMap: mixed = keepConfigsAsThunk(resolveMaybeThunk(fields));
@@ -166,8 +160,10 @@ export default class InputTypeComposer {
 
   /**
    * Get fieldConfig by name
+   * TODO should be GraphQLInputFieldConfig
+   * see getFields() method for details
    */
-  getField(fieldName: string): GraphQLInputFieldConfig {
+  getField(fieldName: string): any {
     const fields = this.getFields();
 
     if (!fields[fieldName]) {
@@ -199,7 +195,10 @@ export default class InputTypeComposer {
     return this;
   }
 
-  extendField(fieldName: string, parialFieldConfig: ComposeInputFieldConfig): InputTypeComposer {
+  extendField(
+    fieldName: string,
+    parialFieldConfig: $Shape<ComposeInputFieldConfigAsObject>
+  ): InputTypeComposer {
     let prevFieldConfig;
     try {
       prevFieldConfig = this.getField(fieldName);
@@ -210,8 +209,8 @@ export default class InputTypeComposer {
     }
 
     const fieldConfig: ComposeInputFieldConfig = {
-      ...prevFieldConfig,
-      ...parialFieldConfig,
+      ...(prevFieldConfig: any),
+      ...(parialFieldConfig: any),
     };
     this.setField(fieldName, fieldConfig);
     return this;

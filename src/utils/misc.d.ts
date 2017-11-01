@@ -1,4 +1,4 @@
-export type Thunk<T> = (() => T) | T;
+import { Thunk } from './definitions';
 
 export function resolveMaybeThunk<T>(thingOrThunk: Thunk<T>): T;
 

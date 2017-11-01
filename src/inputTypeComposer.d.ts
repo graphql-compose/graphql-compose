@@ -1,30 +1,30 @@
 import {
     GraphQLInputFieldConfig, GraphQLInputFieldConfigMap, GraphQLInputObjectType,
-    GraphQLNonNull, GraphQLInputType
+    GraphQLNonNull, GraphQLInputType, InputValueDefinitionNode
 } from './graphql';
-import { TypeDefinitionString, TypeNameString, TypeWrappedString } from './typeMapper';
+import { Thunk, ObjMap } from './utils/definitions';
+import { TypeAsString } from './typeMapper';
 
-export type ComposeInputFieldConfigMap = {
-    [fieldName: string]: | ComposeInputFieldConfig
-        | ComposeInputFieldConfig[]
-        | GraphQLInputFieldConfig,
-} | GraphQLInputFieldConfigMap;
+export type ComposeInputFieldConfigMap = ObjMap<ComposeInputFieldConfig>;
 
-export type ComposeInputFieldConfig = {
-    type: ComposeInputType | ComposeInputType[],
+export type ComposeInputFieldConfig =
+    | ComposeInputFieldConfigAsObject
+    | ComposeInputType
+    | (() => ComposeInputFieldConfigAsObject | ComposeInputType);
+
+export type ComposeInputFieldConfigAsObject = {
+    type: Thunk<ComposeInputType> | GraphQLInputType,
     defaultValue?: any,
     description?: string | null,
-} | ComposeInputType | GraphQLInputFieldConfig;
-
-type Thunk<T> = (() => T) | T;
+    astNode?: InputValueDefinitionNode | null,
+    [key: string]: any,
+} & { $call?: void };
 
 export type ComposeInputType =
     | InputTypeComposer
     | GraphQLInputType
-    | TypeWrappedString
-    | TypeDefinitionString
-    | TypeNameString
-    | (() => ComposeInputType);
+    | TypeAsString
+    | Array<InputTypeComposer | GraphQLInputType | TypeAsString>;
 
 export type ComposeInputObjectTypeConfig = {
     name: string,
@@ -37,8 +37,7 @@ export default class InputTypeComposer {
 
     public constructor(gqType: GraphQLInputObjectType);
 
-    public static create(opts: TypeDefinitionString |
-        TypeNameString |
+    public static create(opts: TypeAsString |
         ComposeInputObjectTypeConfig |
         GraphQLInputObjectType): InputTypeComposer;
 
