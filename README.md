@@ -23,11 +23,12 @@
 
 
 **`graphql-compose-[plugin]`** – is a *declarative generators/plugins* that build on top of `graphql-compose`, which take some ORMs, schema definitions and creates GraphQL Models from them or modify existed GraphQL Types:
-- [graphql-compose-mongoose](https://github.com/nodkz/graphql-compose-mongoose) - build graphql types from mongoose (MongoDB models) with Resolvers
-- [graphql-compose-relay](https://github.com/nodkz/graphql-compose-relay) - reassemble GraphQL types with `Relay` specific things, like `Node` type and interface, `globalId`, `clientMutationId`
-- [graphql-compose-connection](https://github.com/nodkz/graphql-compose-connection) - generate `connection` Resolver from `findMany` and `count` Resolvers.
-- [graphql-compose-elasticsearch](https://github.com/nodkz/graphql-compose-elasticsearch) - generate GraphQL types from elastic mappings; ElasticSearch REST API proxy via GraphQL.
-- [graphql-compose-dataloader](https://github.com/stoffern/graphql-compose-dataloader) - add DataLoader to graphql-composer resolvers..
+- [graphql-compose-json](https://github.com/graphql-compose/graphql-compose-json) - generates GraphQL type from JSON (a good helper for wrapping REST APIs)
+- [graphql-compose-mongoose](https://github.com/nodkz/graphql-compose-mongoose) - generates GraphQL types from mongoose (MongoDB models) with Resolvers.
+- [graphql-compose-relay](https://github.com/nodkz/graphql-compose-relay) - reassemble GraphQL types with `Relay` specific things, like `Node` type and interface, `globalId`, `clientMutationId`.
+- [graphql-compose-connection](https://github.com/nodkz/graphql-compose-connection) - generates `connection` Resolver from `findMany` and `count` Resolvers.
+- [graphql-compose-elasticsearch](https://github.com/nodkz/graphql-compose-elasticsearch) - generates GraphQL types from elastic mappings; ElasticSearch REST API proxy via GraphQL.
+- [graphql-compose-dataloader](https://github.com/stoffern/graphql-compose-dataloader) - add DataLoader to graphql-composer resolvers.
 - [graphql-compose-recompose](https://github.com/digithun/graphql-compose-recompose) - utility that wrap GraphQL compose to high order functional pattern [work in process].
 
 ## Documentation
