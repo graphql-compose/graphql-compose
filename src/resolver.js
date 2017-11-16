@@ -639,9 +639,11 @@ export default class Resolver<TSource, TContext> {
         `  displayName: ${resolver.displayName || ''},`,
         `  type: ${util.inspect(resolver.type, { depth: 2 })},`,
         `  args: ${util.inspect(resolver.args, { depth: 3 }).replace('\n', `\n  ${spaces}`)},`,
-        `  resolve: ${resolver.resolve
-          ? resolver.resolve.toString().replace('\n', `\n  ${spaces}`)
-          : 'undefined'},`,
+        `  resolve: ${
+          resolver.resolve
+            ? resolver.resolve.toString().replace('\n', `\n  ${spaces}`)
+            : 'undefined'
+        },`,
         `  parent: ${resolver.parent ? extendedInfo(resolver.parent, `  ${spaces}`) : ''}`,
         ')',
       ]

@@ -87,8 +87,8 @@ export default class ComposeStorage {
   }
 
   /**
-  * @deprecated 3.0.0
-  */
+   * @deprecated 3.0.0
+   */
   buildRelations() {
     deprecate(
       'No need in calling buildRelations() any more. You may safely remove call of this method.'

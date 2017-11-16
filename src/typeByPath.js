@@ -9,10 +9,10 @@ import Resolver from './resolver';
 import type { GraphQLInputType, GraphQLOutputType } from './graphql';
 
 /**
-* fieldName
-* @argName
-* #resolver
-*/
+ * fieldName
+ * @argName
+ * #resolver
+ */
 export function typeByPath(
   src: TypeComposer | InputTypeComposer | Resolver<any, any>,
   path: string | Array<string>

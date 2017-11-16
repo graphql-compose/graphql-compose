@@ -55,29 +55,31 @@ export function getProjectionFromASTquery(
     }, []);
   }
 
-  const projection = (selections || []
-  ).reduce((res, ast: FieldNode | InlineFragmentNode | FragmentSpreadNode) => {
-    switch (ast.kind) {
-      case FIELD: {
-        const { value } = ast.name;
-        if (res[value]) {
-          res[value] = deepmerge(res[value], getProjectionFromASTquery(context, ast) || true);
-        } else {
-          res[value] = getProjectionFromASTquery(context, ast) || true;
+  const projection = (selections || []).reduce(
+    (res, ast: FieldNode | InlineFragmentNode | FragmentSpreadNode) => {
+      switch (ast.kind) {
+        case FIELD: {
+          const { value } = ast.name;
+          if (res[value]) {
+            res[value] = deepmerge(res[value], getProjectionFromASTquery(context, ast) || true);
+          } else {
+            res[value] = getProjectionFromASTquery(context, ast) || true;
+          }
+          return res;
         }
-        return res;
+        case INLINE_FRAGMENT:
+          return deepmerge(res, getProjectionFromASTquery(context, ast));
+        case FRAGMENT_SPREAD:
+          return deepmerge(
+            res,
+            getProjectionFromASTquery(context, context.fragments[ast.name.value])
+          );
+        default:
+          throw new Error('Unsuported query selection');
       }
-      case INLINE_FRAGMENT:
-        return deepmerge(res, getProjectionFromASTquery(context, ast));
-      case FRAGMENT_SPREAD:
-        return deepmerge(
-          res,
-          getProjectionFromASTquery(context, context.fragments[ast.name.value])
-        );
-      default:
-        throw new Error('Unsuported query selection');
-    }
-  }, {});
+    },
+    {}
+  );
 
   return projection;
 }

@@ -306,7 +306,9 @@ export default class TypeComposer {
       prevFieldConfig = this.getField(fieldName);
     } catch (e) {
       throw new Error(
-        `Cannot extend field '${fieldName}' from type '${this.getTypeName()}'. Field does not exist.`
+        `Cannot extend field '${
+          fieldName
+        }' from type '${this.getTypeName()}'. Field does not exist.`
       );
     }
 
@@ -379,16 +381,16 @@ export default class TypeComposer {
   }
 
   /**
-  * @deprecated 3.0.0
-  */
+   * @deprecated 3.0.0
+   */
   buildRelations(): TypeComposer {
     deprecate('No need in calling TC.buildRelations(). You may safely remove call of this method.');
     return this;
   }
 
   /**
-  * @deprecated 3.0.0
-  */
+   * @deprecated 3.0.0
+   */
   buildRelation(): TypeComposer {
     deprecate('No need in calling TC.buildRelation(). You may safely remove call of this method.');
     return this;
@@ -441,7 +443,9 @@ export default class TypeComposer {
       optsArgs = ((opts.args: any): RelationArgsMapper<TSource, TContext>);
       deprecate(
         `Please rename 'args' option to 'prepareArgs' in type '${this.getTypeName()}' ` +
-          `in method call addRelation('${fieldName}', { /* rename option 'args' to 'prepareArgs' */ }).`
+          `in method call addRelation('${
+            fieldName
+          }', { /* rename option 'args' to 'prepareArgs' */ }).`
       );
     }
     Object.keys(optsArgs).forEach(argName => {
@@ -725,8 +729,8 @@ export default class TypeComposer {
     return this.gqType._gqcGetRecordIdFn;
   }
   /**
-  * Get function that returns record id, from provided object.
-  */
+   * Get function that returns record id, from provided object.
+   */
   getRecordId(source: ?mixed, args: ?mixed, context: ?mixed): string | number {
     return this.getRecordIdFn()(source, args, context);
   }
@@ -737,7 +741,9 @@ export default class TypeComposer {
       return field.args || {};
     } catch (e) {
       throw new Error(
-        `Cannot get field args. Field '${fieldName}' from type '${this.getTypeName()}' does not exist.`
+        `Cannot get field args. Field '${
+          fieldName
+        }' from type '${this.getTypeName()}' does not exist.`
       );
     }
   }
@@ -752,7 +758,9 @@ export default class TypeComposer {
 
     if (!fieldArgs[argName]) {
       throw new Error(
-        `Cannot get arg '${argName}' from type.field '${this.getTypeName()}.${fieldName}'. Argument does not exist.`
+        `Cannot get arg '${argName}' from type.field '${this.getTypeName()}.${
+          fieldName
+        }'. Argument does not exist.`
       );
     }
 
