@@ -12,7 +12,6 @@ var PeopleSchema = new mongoose.Schema({
   email: { type: String },
   jobId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Company'
   }
 });
 
@@ -30,7 +29,6 @@ var CompanySchema = new mongoose.Schema({
   description: { type: String },
   employeeIds: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'People'
   }],
 });
 export const Company = mongoose.model('Company', CompanySchema);
