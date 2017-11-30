@@ -247,6 +247,35 @@ describe('TypeComposer', () => {
         );
       });
     });
+
+    it('makeFieldNonNull()', () => {
+      tc.setField('fieldNN', 'String');
+      expect(tc.getFieldType('fieldNN')).toBe(GraphQLString);
+
+      // should wrap with GraphQLNonNull
+      tc.makeFieldNonNull('fieldNN');
+      expect(tc.getFieldType('fieldNN')).toBeInstanceOf(GraphQLNonNull);
+      expect((tc.getFieldType('fieldNN'): any).ofType).toBe(GraphQLString);
+
+      // should not wrap twice
+      tc.makeFieldNonNull('fieldNN');
+      expect(tc.getFieldType('fieldNN')).toBeInstanceOf(GraphQLNonNull);
+      expect((tc.getFieldType('fieldNN'): any).ofType).toBe(GraphQLString);
+    });
+
+    it('makeFieldNullable()', () => {
+      tc.setField('fieldNN', 'String!');
+      expect(tc.getFieldType('fieldNN')).toBeInstanceOf(GraphQLNonNull);
+      expect((tc.getFieldType('fieldNN'): any).ofType).toBe(GraphQLString);
+
+      // should unwrap with GraphQLNonNull
+      tc.makeFieldNullable('fieldNN');
+      expect(tc.getFieldType('fieldNN')).toBe(GraphQLString);
+
+      // should work for already unwrapped type
+      tc.makeFieldNullable('fieldNN');
+      expect(tc.getFieldType('fieldNN')).toBe(GraphQLString);
+    });
   });
 
   describe('interfaces manipulation', () => {
@@ -619,9 +648,14 @@ describe('TypeComposer', () => {
   });
 
   describe('get type methods', () => {
-    it('getTypePlural() should return wrapped type in GraphQLList', () => {
+    it('getTypePlural() should return wrapped type with GraphQLList', () => {
       expect(tc.getTypePlural()).toBeInstanceOf(GraphQLList);
       expect(tc.getTypePlural().ofType).toBe(tc.getType());
+    });
+
+    it('getTypeNonNull() should return wrapped type with GraphQLNonNull', () => {
+      expect(tc.getTypeNonNull()).toBeInstanceOf(GraphQLNonNull);
+      expect(tc.getTypeNonNull().ofType).toBe(tc.getType());
     });
   });
 

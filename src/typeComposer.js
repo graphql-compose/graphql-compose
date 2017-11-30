@@ -10,7 +10,13 @@ import { toInputObjectType } from './toInputObjectType';
 import InputTypeComposer from './inputTypeComposer';
 import TypeMapper from './typeMapper';
 import { typeByPath } from './typeByPath';
-import { GraphQLObjectType, GraphQLList, GraphQLInputObjectType, getNamedType } from './graphql';
+import {
+  GraphQLObjectType,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLInputObjectType,
+  getNamedType,
+} from './graphql';
 import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
@@ -594,12 +600,44 @@ export default class TypeComposer {
     return TypeComposer.create(fieldType);
   }
 
+  makeFieldNonNull(fieldNameOrArray: string | Array<string>): TypeComposer {
+    const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
+    const fields = this.getFields();
+    fieldNames.forEach(fieldName => {
+      if (fields[fieldName] && fields[fieldName].type) {
+        if (!(fields[fieldName].type instanceof GraphQLNonNull)) {
+          fields[fieldName].type = new GraphQLNonNull(fields[fieldName].type);
+        }
+      }
+    });
+    this.setFields(fields);
+    return this;
+  }
+
+  makeFieldNullable(fieldNameOrArray: string | Array<string>): TypeComposer {
+    const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
+    const fields = this.getFields();
+    fieldNames.forEach(fieldName => {
+      if (fieldNames.indexOf(fieldName) > -1) {
+        if (fields[fieldName] && fields[fieldName].type instanceof GraphQLNonNull) {
+          fields[fieldName].type = fields[fieldName].type.ofType;
+        }
+      }
+    });
+    this.setFields(fields);
+    return this;
+  }
+
   getType(): GraphQLObjectType {
     return this.gqType;
   }
 
   getTypePlural(): GraphQLList<GraphQLObjectType> {
     return new GraphQLList(this.gqType);
+  }
+
+  getTypeNonNull(): GraphQLNonNull<GraphQLObjectType> {
+    return new GraphQLNonNull(this.gqType);
   }
 
   getInputType(): GraphQLInputObjectType {

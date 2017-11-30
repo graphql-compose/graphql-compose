@@ -2,7 +2,7 @@ import {
     GraphQLArgumentConfig, GraphQLFieldConfig, GraphQLFieldConfigArgumentMap, GraphQLFieldConfigMap,
     GraphQLInputObjectType, GraphQLInterfaceType, GraphQLList, GraphQLObjectType, GraphQLInputType,
     GraphQLOutputType, GraphQLFieldResolver, GraphQLIsTypeOfFn, GraphQLResolveInfo,
-    FieldDefinitionNode
+    FieldDefinitionNode, GraphQLNonNull
 } from './graphql';
 import { TypeAsString } from './typeMapper';
 import { ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
@@ -210,9 +210,15 @@ export default class TypeComposer {
 
     public getFieldTC(fieldName: string): TypeComposer;
 
+    public makeFieldNonNull(fieldNameOrArray: string | string[]): TypeComposer;
+
+    public makeFieldNullable(fieldNameOrArray: string | string[]): TypeComposer;
+
     public getType(): GraphQLObjectType;
 
     public getTypePlural(): GraphQLList<GraphQLObjectType>;
+
+    public getTypeNonNull(): GraphQLNonNull<GraphQLObjectType>;
 
     public getInputType(): GraphQLInputObjectType;
 

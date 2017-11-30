@@ -64,8 +64,11 @@ LonLatTC.extendField('lat', {
 });
 LonLatTC.getFieldType('lat'); // GraphQLFloat
 LonLatTC.getFieldTC('complexField'); // TypeComposer
+LonLatTC.makeFieldNonNull(['lat', 'lon']); // wrap fields by GraphQLNonNull
+LonLatTC.makeFieldNullable(['lat', 'lon']); // unwrap fields from GraphQLNonNull
 LonLatTC.getType(); // GraphQLObjectType({ name: 'LonLat', ...})
 LonLatTC.getTypePlural(); // new GraphQLList(GraphQLObjectType({ name: 'LonLat', ...}))
+LonLatTC.getTypeNonNull()); // new GraphQLNonNull(GraphQLObjectType({ name: 'LonLat', ...}))
 LonLatTC.getTypeName(); // LonLat
 LonLatTC.setTypeName('LonLatRenamed');
 LonLatTC.setDescription('Object type with Longitude and Latitude');
