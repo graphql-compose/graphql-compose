@@ -98,7 +98,7 @@ export type ComposeArgumentType =
   | GraphQLInputType
   | TypeAsString
   | InputTypeComposer
-  | Array<GraphQLInputType | TypeAsString | InputTypeComposer>;
+  | Array<ComposeArgumentType>;
 export type ComposeArgumentConfigAsObject = {
   type: Thunk<ComposeArgumentType> | GraphQLInputType,
   defaultValue?: mixed,

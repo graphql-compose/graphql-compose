@@ -218,21 +218,15 @@ class TypeMapper {
       composeType = composeFC;
     }
 
-    let wrapWithList = false;
-    if (Array.isArray(composeType)) {
+    let wrapWithList = 0;
+    while (Array.isArray(composeType)) {
       if (composeType.length !== 1) {
         throw new Error(
           `${typeName}.${fieldName} can accept Array exact with one output type definition`
         );
       }
-      wrapWithList = true;
+      wrapWithList += 1;
       composeType = composeType[0];
-
-      if (Array.isArray(composeType)) {
-        throw new Error(
-          `${typeName}.${fieldName} definition [[Type]] (array of array) does not supported`
-        );
-      }
     }
 
     if (composeType instanceof InputTypeComposer) {
@@ -285,8 +279,10 @@ class TypeMapper {
         );
       }
 
-      if (wrapWithList) {
-        fieldConfig.type = new GraphQLList((fieldConfig.type: any));
+      if (wrapWithList > 0) {
+        for (let i = 0; i < wrapWithList; i++) {
+          fieldConfig.type = new GraphQLList((fieldConfig.type: any));
+        }
       }
     }
 
@@ -351,8 +347,8 @@ class TypeMapper {
       composeType = composeAC;
     }
 
-    let wrapWithList = false;
-    if (Array.isArray(composeType)) {
+    let wrapWithList = 0;
+    while (Array.isArray(composeType)) {
       if (composeType.length !== 1) {
         throw new Error(
           `${typeName}.${fieldName}@${
@@ -360,16 +356,8 @@ class TypeMapper {
           } can accept Array exact with one input type definition`
         );
       }
-      wrapWithList = true;
+      wrapWithList += 1;
       composeType = composeType[0];
-
-      if (Array.isArray(composeType)) {
-        throw new Error(
-          `${typeName}.${fieldName}@${
-            argName
-          } definition [[Type]] (array of array) does not supported`
-        );
-      }
     }
 
     if (composeType instanceof TypeComposer) {
@@ -423,8 +411,10 @@ class TypeMapper {
         );
       }
 
-      if (wrapWithList) {
-        argConfig.type = new GraphQLList((argConfig.type: any));
+      if (wrapWithList > 0) {
+        for (let i = 0; i < wrapWithList; i++) {
+          argConfig.type = new GraphQLList((argConfig.type: any));
+        }
       }
     }
 
@@ -487,21 +477,15 @@ class TypeMapper {
       composeType = composeIFC;
     }
 
-    let wrapWithList = false;
-    if (Array.isArray(composeType)) {
+    let wrapWithList = 0;
+    while (Array.isArray(composeType)) {
       if (composeType.length !== 1) {
         throw new Error(
           `${typeName}.${fieldName} can accept Array exact with one input type definition`
         );
       }
-      wrapWithList = true;
+      wrapWithList += 1;
       composeType = composeType[0];
-
-      if (Array.isArray(composeType)) {
-        throw new Error(
-          `${typeName}.${fieldName} definition [[Type]] (array of array) does not supported`
-        );
-      }
     }
 
     if (composeType instanceof TypeComposer) {
@@ -553,8 +537,10 @@ class TypeMapper {
         );
       }
 
-      if (wrapWithList) {
-        fieldConfig.type = new GraphQLList((fieldConfig.type: any));
+      if (wrapWithList > 0) {
+        for (let i = 0; i < wrapWithList; i++) {
+          fieldConfig.type = new GraphQLList((fieldConfig.type: any));
+        }
       }
     }
 

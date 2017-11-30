@@ -263,6 +263,11 @@ describe('TypeMapper', () => {
         expect(() => {
           typeMapper.convertOutputFieldConfig([]);
         }).toThrowError(/can accept Array exact with one output type/);
+
+        const fc6: any = typeMapper.convertOutputFieldConfig([['String']]);
+        expect(fc6.type).toBeInstanceOf(GraphQLList);
+        expect(fc6.type.ofType).toBeInstanceOf(GraphQLList);
+        expect(fc6.type.ofType.ofType).toBe(GraphQLString);
       });
 
       it('should throw error if provided InputTypeComposer', () => {
@@ -447,6 +452,11 @@ describe('TypeMapper', () => {
       expect(fc5.type).toBeInstanceOf(GraphQLList);
       expect(fc5.type.ofType).toBe(itc.getType());
 
+      const fc6: any = typeMapper.convertInputFieldConfig([['String']]);
+      expect(fc6.type).toBeInstanceOf(GraphQLList);
+      expect(fc6.type.ofType).toBeInstanceOf(GraphQLList);
+      expect(fc6.type.ofType.ofType).toBe(GraphQLString);
+
       expect(() => {
         typeMapper.convertInputFieldConfig([]);
       }).toThrowError(/can accept Array exact with one input type/);
@@ -592,6 +602,11 @@ describe('TypeMapper', () => {
       const fc5: any = typeMapper.convertArgConfig({ type: [itc] });
       expect(fc5.type).toBeInstanceOf(GraphQLList);
       expect(fc5.type.ofType).toBe(itc.getType());
+
+      const fc6: any = typeMapper.convertArgConfig([['String']]);
+      expect(fc6.type).toBeInstanceOf(GraphQLList);
+      expect(fc6.type.ofType).toBeInstanceOf(GraphQLList);
+      expect(fc6.type.ofType.ofType).toBe(GraphQLString);
 
       expect(() => {
         typeMapper.convertArgConfig([]);
