@@ -1705,9 +1705,9 @@ flat-cache@^1.2.1:
     graceful-fs "^4.1.2"
     write "^0.2.1"
 
-flow-bin@^0.59.0:
-  version "0.59.0"
-  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.59.0.tgz#8c151ee7f09f1deed9bf0b9d1f2e8ab9d470f1bb"
+flow-bin@0.60.0:
+  version "0.60.0"
+  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.60.0.tgz#885d0d92a90f94c29445e0f9a0382f5b5debaaed"
 
 follow-redirects@0.0.7:
   version "0.0.7"
