@@ -4,6 +4,7 @@ export { graphql };
 
 export { default as TypeComposer } from './typeComposer';
 export { default as InputTypeComposer } from './inputTypeComposer';
+export { default as EnumTypeComposer } from './enumTypeComposer';
 export { default as Resolver } from './resolver';
 export { default as TypeStorage } from './typeStorage';
 export { default as TypeMapper } from './typeMapper';
