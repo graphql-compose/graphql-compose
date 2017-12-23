@@ -241,9 +241,7 @@ class TypeMapper {
 
     if (composeType instanceof InputTypeComposer) {
       throw new Error(
-        `You cannot provide InputTypeComposer to the field '${typeName}.${
-          fieldName
-        }'. It should be OutputType.`
+        `You cannot provide InputTypeComposer to the field '${typeName}.${fieldName}'. It should be OutputType.`
       );
     }
 
@@ -251,9 +249,7 @@ class TypeMapper {
     if (typeof composeType === 'string') {
       if (RegexpInputTypeDefinition.test(composeType)) {
         throw new Error(
-          `${typeName}.${fieldName} should be OutputType, but got input type definition '${
-            composeType
-          }'`
+          `${typeName}.${fieldName} should be OutputType, but got input type definition '${composeType}'`
         );
       }
 
@@ -365,9 +361,7 @@ class TypeMapper {
     while (Array.isArray(composeType)) {
       if (composeType.length !== 1) {
         throw new Error(
-          `${typeName}.${fieldName}@${
-            argName
-          } can accept Array exact with one input type definition`
+          `${typeName}.${fieldName}@${argName} can accept Array exact with one input type definition`
         );
       }
       wrapWithList += 1;
@@ -376,9 +370,7 @@ class TypeMapper {
 
     if (composeType instanceof TypeComposer) {
       throw new Error(
-        `You cannot provide TypeComposer to the arg '${typeName}.${fieldName}.@${
-          argName
-        }'. It should be InputType.`
+        `You cannot provide TypeComposer to the arg '${typeName}.${fieldName}.@${argName}'. It should be InputType.`
       );
     }
 
@@ -386,9 +378,7 @@ class TypeMapper {
     if (typeof composeType === 'string') {
       if (RegexpOutputTypeDefinition.test(composeType)) {
         throw new Error(
-          `${typeName}.${fieldName}@${
-            argName
-          } should be InputType, but got output type definition '${composeType}'`
+          `${typeName}.${fieldName}@${argName} should be InputType, but got output type definition '${composeType}'`
         );
       }
 
@@ -508,9 +498,7 @@ class TypeMapper {
 
     if (composeType instanceof TypeComposer) {
       throw new Error(
-        `You cannot provide TypeComposer to the field '${typeName}.${
-          fieldName
-        }'. It should be InputType.`
+        `You cannot provide TypeComposer to the field '${typeName}.${fieldName}'. It should be InputType.`
       );
     }
 
@@ -518,9 +506,7 @@ class TypeMapper {
     if (typeof composeType === 'string') {
       if (RegexpOutputTypeDefinition.test(composeType)) {
         throw new Error(
-          `${typeName}.${fieldName} should be InputType, but got output type definition '${
-            composeType
-          }'`
+          `${typeName}.${fieldName} should be InputType, but got output type definition '${composeType}'`
         );
       }
 
@@ -648,7 +634,8 @@ function makeSchemaDef(def) {
   }
 }
 
-function makeInputValues(values: Array<InputValueDefinitionNode>) {
+function makeInputValues(values: ?$ReadOnlyArray<InputValueDefinitionNode>) {
+  if (!values) return {};
   return keyValMap(
     values,
     value => value.name.value,
@@ -664,6 +651,7 @@ function makeInputValues(values: Array<InputValueDefinitionNode>) {
 }
 
 function makeFieldDefMap(def: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode) {
+  if (!def.fields) return {};
   return keyValMap(
     def.fields,
     field => field.name.value,
@@ -680,14 +668,16 @@ function makeEnumDef(def: EnumTypeDefinitionNode) {
   const enumType = new GraphQLEnumType({
     name: def.name.value,
     description: getDescription(def),
-    values: keyValMap(
-      def.values,
-      enumValue => enumValue.name.value,
-      enumValue => ({
-        description: getDescription(enumValue),
-        deprecationReason: getDeprecationReason(enumValue.directives),
-      })
-    ),
+    values: !def.values
+      ? {}
+      : keyValMap(
+          def.values,
+          enumValue => enumValue.name.value,
+          enumValue => ({
+            description: getDescription(enumValue),
+            deprecationReason: getDeprecationReason(enumValue.directives),
+          })
+        ),
   });
 
   return enumType;
@@ -759,7 +749,7 @@ function makeTypeDef(def: ObjectTypeDefinitionNode) {
   });
 }
 
-function getDeprecationReason(directives: ?Array<DirectiveNode>): ?string {
+function getDeprecationReason(directives: ?$ReadOnlyArray<DirectiveNode>): ?string {
   const deprecatedAST =
     directives &&
     find(directives, directive => directive.name.value === GraphQLDeprecatedDirective.name);

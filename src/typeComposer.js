@@ -230,7 +230,7 @@ export default class TypeComposer {
 
   /**
    * Completely replace all fields in GraphQL type
-   * WARNING: this method rewrite an internal GraphQL instance variable.
+   * WARNING: this method rewrite an internal GraphQL instance properties.
    */
   setFields(fields: ComposeFieldConfigMap<any, any>): TypeComposer {
     const prepearedFields: GraphQLFieldConfigMap<any, any> = TypeMapper.convertOutputFieldConfigMap(
