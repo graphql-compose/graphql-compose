@@ -8,6 +8,7 @@ import { TypeAsString } from './typeMapper';
 import { ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
 import { ProjectionType } from './projection';
 import InputTypeComposer from './inputTypeComposer';
+import EnumTypeComposer from './enumTypeComposer';
 import Resolver from './resolver';
 import { GenericMap, ObjMap, Thunk } from './utils/definitions';
 
@@ -59,16 +60,18 @@ export type ComposeFieldConfigAsObject<TSource, TContext> = {
 export type ComposeOutputType =
     | GraphQLOutputType
     | TypeComposer
+    | EnumTypeComposer
     | TypeAsString
     | Resolver<any, any>
-    | Array<GraphQLOutputType | TypeComposer | TypeAsString | Resolver<any, any>>;
+    | Array<GraphQLOutputType | TypeComposer | EnumTypeComposer | TypeAsString | Resolver<any, any>>;
 
 // Compose Args -----------------------------
 export type ComposeArgumentType =
     | GraphQLInputType
     | TypeAsString
     | InputTypeComposer
-    | Array<GraphQLInputType | TypeAsString | InputTypeComposer>;
+    | EnumTypeComposer
+    | Array<GraphQLInputType | TypeAsString | InputTypeComposer | EnumTypeComposer>;
 export type ComposeArgumentConfigAsObject = {
     type: Thunk<ComposeArgumentType> | GraphQLInputType,
     defaultValue?: any,

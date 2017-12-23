@@ -15,6 +15,7 @@ import {
 import typeMapper from '../typeMapper';
 import TypeComposer from '../typeComposer';
 import InputTypeComposer from '../inputTypeComposer';
+import EnumTypeComposer from '../enumTypeComposer';
 import Resolver from '../resolver';
 import GQC from '../gqc';
 
@@ -205,6 +206,20 @@ describe('TypeMapper', () => {
 
         const fc2 = typeMapper.convertOutputFieldConfig(tc);
         expect(fc2.type).toBe(tc.getType());
+        expect(fc2.description).toBe('Description');
+      });
+
+      it('should accept EnumTypeComposer', () => {
+        const etc = EnumTypeComposer.create('enum MyEnum { V1 V2 V3 }');
+        etc.setDescription('Description');
+        const fc = typeMapper.convertOutputFieldConfig({
+          type: etc,
+        });
+        expect(fc.type).toBe(etc.getType());
+        expect(fc.description).toBe(undefined);
+
+        const fc2 = typeMapper.convertOutputFieldConfig(etc);
+        expect(fc2.type).toBe(etc.getType());
         expect(fc2.description).toBe('Description');
       });
 
@@ -424,6 +439,20 @@ describe('TypeMapper', () => {
       expect(ic2.description).toBe('Description');
     });
 
+    it('should accept EnumTypeComposer', () => {
+      const etc = EnumTypeComposer.create('enum MyEnum { V1 V2 }');
+      etc.setDescription('Description');
+      const ic = typeMapper.convertInputFieldConfig({
+        type: etc,
+      });
+      expect(ic.type).toBe(etc.getType());
+      expect(ic.description).toBe(undefined);
+
+      const ic2 = typeMapper.convertInputFieldConfig(etc);
+      expect(ic2.type).toBe(etc.getType());
+      expect(ic2.description).toBe('Description');
+    });
+
     it('should throw error if provided TypeComposer', () => {
       const tc = TypeComposer.create('type LonLat { lon: Float, lat: Float }');
 
@@ -596,6 +625,20 @@ describe('TypeMapper', () => {
 
       const ac2 = typeMapper.convertArgConfig(itc);
       expect(ac2.type).toBe(itc.getType());
+      expect(ac2.description).toBe('Description');
+    });
+
+    it('should accept EnumTypeComposer', () => {
+      const etc = EnumTypeComposer.create('enum MyEnum { V1 V2 }');
+      etc.setDescription('Description');
+      const ac = typeMapper.convertArgConfig({
+        type: etc,
+      });
+      expect(ac.type).toBe(etc.getType());
+      expect(ac.description).toBe(undefined);
+
+      const ac2 = typeMapper.convertArgConfig(etc);
+      expect(ac2.type).toBe(etc.getType());
       expect(ac2.description).toBe('Description');
     });
 

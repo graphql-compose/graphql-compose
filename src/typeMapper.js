@@ -73,6 +73,7 @@ import type { Thunk } from './utils/definitions';
 
 import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
+import EnumTypeComposer from './enumTypeComposer';
 import Resolver from './resolver';
 import TypeStorage from './typeStorage';
 import GQC from './gqc';
@@ -212,7 +213,7 @@ class TypeMapper {
       return (composeFC: any);
     } else if (composeFC instanceof Resolver) {
       return composeFC.getFieldConfig();
-    } else if (composeFC instanceof TypeComposer) {
+    } else if (composeFC instanceof TypeComposer || composeFC instanceof EnumTypeComposer) {
       return {
         type: composeFC.getType(),
         description: composeFC.getDescription(),
@@ -270,7 +271,8 @@ class TypeMapper {
         }
         fieldConfig.type = (type: any);
       }
-    } else if (composeType instanceof TypeComposer) {
+      fieldConfig.type = (type: any);
+    } else if (composeType instanceof TypeComposer || composeType instanceof EnumTypeComposer) {
       fieldConfig.type = composeType.getType();
     } else if (composeType instanceof Resolver) {
       fieldConfig.type = composeType.getType();
@@ -340,7 +342,7 @@ class TypeMapper {
 
     if (composeAC instanceof GraphQLList || composeAC instanceof GraphQLNonNull) {
       return { type: composeAC };
-    } else if (composeAC instanceof InputTypeComposer) {
+    } else if (composeAC instanceof InputTypeComposer || composeAC instanceof EnumTypeComposer) {
       return {
         type: composeAC.getType(),
         description: composeAC.getDescription(),
@@ -400,7 +402,12 @@ class TypeMapper {
 
         argConfig.type = (type: any);
       }
-    } else if (composeType instanceof InputTypeComposer) {
+
+      argConfig.type = (type: any);
+    } else if (
+      composeType instanceof InputTypeComposer ||
+      composeType instanceof EnumTypeComposer
+    ) {
       argConfig.type = composeType.getType();
     } else {
       argConfig.type = (composeType: any);
@@ -468,7 +475,7 @@ class TypeMapper {
 
     if (composeIFC instanceof GraphQLList || composeIFC instanceof GraphQLNonNull) {
       return { type: composeIFC };
-    } else if (composeIFC instanceof InputTypeComposer) {
+    } else if (composeIFC instanceof InputTypeComposer || composeIFC instanceof EnumTypeComposer) {
       return {
         type: composeIFC.getType(),
         description: composeIFC.getDescription(),
@@ -528,7 +535,12 @@ class TypeMapper {
 
         fieldConfig.type = (type: any);
       }
-    } else if (composeType instanceof InputTypeComposer) {
+
+      fieldConfig.type = (type: any);
+    } else if (
+      composeType instanceof InputTypeComposer ||
+      composeType instanceof EnumTypeComposer
+    ) {
       fieldConfig.type = composeType.getType();
     } else {
       fieldConfig.type = (composeType: any);

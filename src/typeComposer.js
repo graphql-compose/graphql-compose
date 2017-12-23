@@ -8,6 +8,7 @@ import { deprecate } from './utils/debug';
 import Resolver from './resolver';
 import { toInputObjectType } from './toInputObjectType';
 import InputTypeComposer from './inputTypeComposer';
+import EnumTypeComposer from './enumTypeComposer';
 import TypeMapper from './typeMapper';
 import { typeByPath } from './typeByPath';
 import {
@@ -89,6 +90,7 @@ export type ComposeFieldConfigAsObject<TSource, TContext> = {
 export type ComposeOutputType =
   | GraphQLOutputType
   | TypeComposer
+  | EnumTypeComposer
   | TypeAsString
   | Resolver<any, any>
   | Array<ComposeOutputType>;
@@ -98,6 +100,7 @@ export type ComposeArgumentType =
   | GraphQLInputType
   | TypeAsString
   | InputTypeComposer
+  | EnumTypeComposer
   | Array<ComposeArgumentType>;
 export type ComposeArgumentConfigAsObject = {
   type: Thunk<ComposeArgumentType> | GraphQLInputType,
