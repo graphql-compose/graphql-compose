@@ -22,6 +22,7 @@ import type {
 // import { deprecate } from './utils/debug';
 import TypeMapper from './typeMapper';
 import TypeComposer from './typeComposer';
+import EnumTypeComposer from './enumTypeComposer';
 import deepmerge from './utils/deepmerge';
 import { resolveInputConfigsAsThunk } from './utils/configAsThunk';
 import { only, clearName } from './utils/misc';
@@ -562,12 +563,12 @@ export default class Resolver<TSource, TContext> {
 
     const resolver = this.wrap(null, { name: 'addSortArg' });
 
-    // get sortEnumType or create new one
-    let sortEnumType: GraphQLInputType;
+    // get sortETC or create new one
+    let sortETC: EnumTypeComposer;
     if (resolver.hasArg('sort')) {
       const sort = resolver.getArg('sort');
       if (sort.type instanceof GraphQLEnumType) {
-        sortEnumType = sort.type;
+        sortETC = EnumTypeComposer.create(sort.type);
       } else {
         throw new Error(
           'Resolver should have `sort` arg with type GraphQLEnumType. ' +
@@ -582,26 +583,19 @@ export default class Resolver<TSource, TContext> {
             'Eg. SortXXXXXEnum'
         );
       }
-      sortEnumType = new GraphQLEnumType({
+      sortETC = EnumTypeComposer.create({
         name: opts.sortTypeNameFallback,
         values: {
           [opts.name]: {},
         },
       });
-      resolver.setArg('sort', { type: sortEnumType });
+      resolver.setArg('sort', sortETC);
     }
 
-    // extend sortEnumType with new sorting value
-    const existedIdx = sortEnumType._values.findIndex(o => o.name === opts.name);
-    if (existedIdx >= 0) {
-      sortEnumType._values.splice(existedIdx, 1);
-    }
-    delete sortEnumType._nameLookup;
-    delete sortEnumType._valueLookup;
-    sortEnumType._values.push({
+    // extend sortETC with new sorting value
+    sortETC.setField(opts.name, {
       name: opts.name,
       description: opts.description,
-      isDeprecated: Boolean(opts.deprecationReason),
       deprecationReason: opts.deprecationReason,
       value: isFunction(opts.value) ? opts.name : opts.value,
     });
