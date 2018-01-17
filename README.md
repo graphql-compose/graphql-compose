@@ -1,12 +1,12 @@
 # GraphQL-compose
 
 [![](https://img.shields.io/npm/v/graphql-compose.svg)](https://www.npmjs.com/package/graphql-compose)
-[![codecov coverage](https://img.shields.io/codecov/c/github/nodkz/graphql-compose.svg)](https://codecov.io/github/nodkz/graphql-compose)
-[![Travis](https://img.shields.io/travis/nodkz/graphql-compose.svg?maxAge=2592000)](https://travis-ci.org/nodkz/graphql-compose)
+[![codecov coverage](https://img.shields.io/codecov/c/github/graphql-compose/graphql-compose.svg)](https://codecov.io/github/graphql-compose/graphql-compose)
+[![Travis](https://img.shields.io/travis/graphql-compose/graphql-compose.svg?maxAge=2592000)](https://travis-ci.org/graphql-compose/graphql-compose)
 [![npm](https://img.shields.io/npm/dt/graphql-compose.svg)](http://www.npmtrends.com/graphql-compose)
-[![Join the chat at https://gitter.im/graphql-compose/Lobby](https://badges.gitter.im/nodkz/graphql-compose.svg)](https://gitter.im/graphql-compose/Lobby)
+[![Join the chat at https://gitter.im/graphql-compose/Lobby](https://badges.gitter.im/graphql-compose/graphql-compose.svg)](https://gitter.im/graphql-compose/Lobby)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
-[![Greenkeeper badge](https://badges.greenkeeper.io/nodkz/graphql-compose.svg)](https://greenkeeper.io/)
+[![Greenkeeper badge](https://badges.greenkeeper.io/graphql-compose/graphql-compose.svg)](https://greenkeeper.io/)
 ![TypeScript compatible](https://img.shields.io/badge/typescript-compatible-brightgreen.svg)
 ![FlowType compatible](https://img.shields.io/badge/flowtype-compatible-brightgreen.svg)
 
@@ -22,12 +22,17 @@
 - adds additional types `Date`, `Json`
 
 
-**`graphql-compose-[plugin]`** – is a *declarative generators/plugins* that build on top of `graphql-compose`, which take some ORMs, schema definitions and creates GraphQL Models from them or modify existed GraphQL Types:
+**`graphql-compose-[plugin]`** – is a *declarative generators/plugins* that build on top of `graphql-compose`, which take some ORMs, schema definitions and creates GraphQL Models from them or modify existed GraphQL Types.
+
+Type generator plugins:
 - [graphql-compose-json](https://github.com/graphql-compose/graphql-compose-json) - generates GraphQL type from JSON (a good helper for wrapping REST APIs)
-- [graphql-compose-mongoose](https://github.com/nodkz/graphql-compose-mongoose) - generates GraphQL types from mongoose (MongoDB models) with Resolvers.
-- [graphql-compose-relay](https://github.com/nodkz/graphql-compose-relay) - reassemble GraphQL types with `Relay` specific things, like `Node` type and interface, `globalId`, `clientMutationId`.
-- [graphql-compose-connection](https://github.com/nodkz/graphql-compose-connection) - generates `connection` Resolver from `findMany` and `count` Resolvers.
-- [graphql-compose-elasticsearch](https://github.com/nodkz/graphql-compose-elasticsearch) - generates GraphQL types from elastic mappings; ElasticSearch REST API proxy via GraphQL.
+- [graphql-compose-mongoose](https://github.com/graphql-compose/graphql-compose-mongoose) - generates GraphQL types from mongoose (MongoDB models) with Resolvers.
+- [graphql-compose-elasticsearch](https://github.com/graphql-compose/graphql-compose-elasticsearch) - generates GraphQL types from elastic mappings; ElasticSearch REST API proxy via GraphQL.
+- [graphql-compose-aws](https://github.com/graphql-compose/graphql-compose-aws) - expose AWS Cloud API via GraphQL
+
+Utility plugins:
+- [graphql-compose-relay](https://github.com/graphql-compose/graphql-compose-relay) - reassemble GraphQL types with `Relay` specific things, like `Node` type and interface, `globalId`, `clientMutationId`.
+- [graphql-compose-connection](https://github.com/graphql-compose/graphql-compose-connection) - generates `connection` Resolver from `findMany` and `count` Resolvers.
 - [graphql-compose-dataloader](https://github.com/stoffern/graphql-compose-dataloader) - add DataLoader to graphql-composer resolvers.
 - [graphql-compose-recompose](https://github.com/digithun/graphql-compose-recompose) - utility that wrap GraphQL compose to high order functional pattern [work in process].
 
@@ -151,4 +156,4 @@ export default GQC.buildSchema();
 
 
 ## License
-[MIT](https://github.com/nodkz/graphql-compose/blob/master/LICENSE.md)
+[MIT](https://github.com/graphql-compose/graphql-compose/blob/master/LICENSE.md)
