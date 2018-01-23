@@ -500,16 +500,24 @@ describe('TypeComposer', () => {
     it('wrapResolverAs() should wrap resolver via callback with new name', async () => {
       tc.addResolver({
         name: 'update',
+        args: {
+          a: 'Int',
+          b: 'String',
+        },
         resolve: () => '123',
       });
       expect(await tc.getResolver('update').resolve({})).toBe('123');
 
       tc.wrapResolverAs('updateExt', 'update', resolver => {
         resolver.resolve = () => '456'; // eslint-disable-line
+        resolver.addArgs({ c: 'Boolean' });
         return resolver;
       });
       expect(await tc.getResolver('updateExt').resolve({})).toBe('456');
       expect(await tc.getResolver('update').resolve({})).toBe('123');
+
+      expect(tc.getResolver('update').getArgNames()).toEqual(['a', 'b']);
+      expect(tc.getResolver('updateExt').getArgNames()).toEqual(['a', 'b', 'c']);
     });
   });
 
