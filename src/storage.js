@@ -5,10 +5,17 @@ import { deprecate } from './utils/debug';
 import TypeComposer from './typeComposer';
 import type Resolver from './resolver';
 
+/**
+ * @deprecated 3.0.0
+ */
 export default class ComposeStorage {
   types: { [typeName: string]: TypeComposer };
 
   constructor() {
+    // deprecate(
+    //   'ComposeStorage out of law ;). Use `GQC` if you work with schema ' +
+    //     'or `TypeStorage` if you want to keep map of types. ' +
+    // );
     this.types = {};
   }
 

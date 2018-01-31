@@ -7,7 +7,11 @@ export { graphql };
 export { default as TypeComposer } from './typeComposer';
 export { default as InputTypeComposer } from './inputTypeComposer';
 export { default as Resolver } from './resolver';
+/**
+ * @deprecated 3.0.0
+ */
 export { default as ComposeStorage } from './storage';
+export { default as TypeStorage } from './typeStorage';
 export { default as TypeMapper } from './typeMapper';
 export { getProjectionFromAST, getFlatProjectionFromAST } from './projection';
 export { default as GQC } from './gqc';
