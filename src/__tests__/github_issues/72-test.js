@@ -1,9 +1,9 @@
 /* @flow */
 
-import TypeComposer from '../typeComposer';
+import TypeComposer from '../../typeComposer';
 
-describe('github issues checks', () => {
-  it('#72 extendField after addRelation', () => {
+describe('github issue #72', () => {
+  it('extendField after addRelation', () => {
     const MyTypeTC = TypeComposer.create(`type MyType { name: String }`);
     const OtherTypeTC = TypeComposer.create(`type OtherType { name: String }`);
     OtherTypeTC.addResolver({
