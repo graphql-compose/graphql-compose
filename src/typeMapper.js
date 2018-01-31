@@ -254,9 +254,7 @@ class TypeMapper {
 
     if (composeType instanceof InputTypeComposer) {
       throw new Error(
-        `You cannot provide InputTypeComposer to the field '${typeName}.${
-          fieldName
-        }'. It should be OutputType.`
+        `You cannot provide InputTypeComposer to the field '${typeName}.${fieldName}'. It should be OutputType.`
       );
     }
 
@@ -264,9 +262,7 @@ class TypeMapper {
     if (typeof composeType === 'string') {
       if (RegexpInputTypeDefinition.test(composeType)) {
         throw new Error(
-          `${typeName}.${fieldName} should be OutputType, but got input type definition '${
-            composeType
-          }'`
+          `${typeName}.${fieldName} should be OutputType, but got input type definition '${composeType}'`
         );
       }
 
@@ -280,9 +276,7 @@ class TypeMapper {
 
         if (!type) {
           throw new Error(
-            `${typeName}.${fieldName} cannot convert to OutputType the following string: '${
-              composeType
-            }'`
+            `${typeName}.${fieldName} cannot convert to OutputType the following string: '${composeType}'`
           );
         }
         fieldConfig.type = (type: any);
@@ -378,9 +372,7 @@ class TypeMapper {
     while (Array.isArray(composeType)) {
       if (composeType.length !== 1) {
         throw new Error(
-          `${typeName}.${fieldName}@${
-            argName
-          } can accept Array exact with one input type definition`
+          `${typeName}.${fieldName}@${argName} can accept Array exact with one input type definition`
         );
       }
       wrapWithList += 1;
@@ -389,9 +381,7 @@ class TypeMapper {
 
     if (composeType instanceof TypeComposer) {
       throw new Error(
-        `You cannot provide TypeComposer to the arg '${typeName}.${fieldName}.@${
-          argName
-        }'. It should be InputType.`
+        `You cannot provide TypeComposer to the arg '${typeName}.${fieldName}.@${argName}'. It should be InputType.`
       );
     }
 
@@ -399,9 +389,7 @@ class TypeMapper {
     if (typeof composeType === 'string') {
       if (RegexpOutputTypeDefinition.test(composeType)) {
         throw new Error(
-          `${typeName}.${fieldName}@${
-            argName
-          } should be InputType, but got output type definition '${composeType}'`
+          `${typeName}.${fieldName}@${argName} should be InputType, but got output type definition '${composeType}'`
         );
       }
 
@@ -415,9 +403,7 @@ class TypeMapper {
 
         if (!type) {
           throw new Error(
-            `${typeName}.${fieldName}@${
-              argName
-            } cannot convert to InputType the following string: '${composeType}'`
+            `${typeName}.${fieldName}@${argName} cannot convert to InputType the following string: '${composeType}'`
           );
         }
 
@@ -521,9 +507,7 @@ class TypeMapper {
 
     if (composeType instanceof TypeComposer) {
       throw new Error(
-        `You cannot provide TypeComposer to the field '${typeName}.${
-          fieldName
-        }'. It should be InputType.`
+        `You cannot provide TypeComposer to the field '${typeName}.${fieldName}'. It should be InputType.`
       );
     }
 
@@ -531,9 +515,7 @@ class TypeMapper {
     if (typeof composeType === 'string') {
       if (RegexpOutputTypeDefinition.test(composeType)) {
         throw new Error(
-          `${typeName}.${fieldName} should be InputType, but got output type definition '${
-            composeType
-          }'`
+          `${typeName}.${fieldName} should be InputType, but got output type definition '${composeType}'`
         );
       }
 
@@ -547,9 +529,7 @@ class TypeMapper {
 
         if (!type) {
           throw new Error(
-            `${typeName}.${fieldName} cannot convert to InputType the following string: '${
-              composeType
-            }'`
+            `${typeName}.${fieldName} cannot convert to InputType the following string: '${composeType}'`
           );
         }
 

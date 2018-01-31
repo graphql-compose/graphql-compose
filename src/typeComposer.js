@@ -312,9 +312,7 @@ export default class TypeComposer {
       prevFieldConfig = this.getField(fieldName);
     } catch (e) {
       throw new Error(
-        `Cannot extend field '${
-          fieldName
-        }' from type '${this.getTypeName()}'. Field does not exist.`
+        `Cannot extend field '${fieldName}' from type '${this.getTypeName()}'. Field does not exist.`
       );
     }
 
@@ -449,9 +447,7 @@ export default class TypeComposer {
       optsArgs = ((opts.args: any): RelationArgsMapper<TSource, TContext>);
       deprecate(
         `Please rename 'args' option to 'prepareArgs' in type '${this.getTypeName()}' ` +
-          `in method call addRelation('${
-            fieldName
-          }', { /* rename option 'args' to 'prepareArgs' */ }).`
+          `in method call addRelation('${fieldName}', { /* rename option 'args' to 'prepareArgs' */ }).`
       );
     }
     Object.keys(optsArgs).forEach(argName => {
@@ -779,9 +775,7 @@ export default class TypeComposer {
       return field.args || {};
     } catch (e) {
       throw new Error(
-        `Cannot get field args. Field '${
-          fieldName
-        }' from type '${this.getTypeName()}' does not exist.`
+        `Cannot get field args. Field '${fieldName}' from type '${this.getTypeName()}' does not exist.`
       );
     }
   }
@@ -796,9 +790,7 @@ export default class TypeComposer {
 
     if (!fieldArgs[argName]) {
       throw new Error(
-        `Cannot get arg '${argName}' from type.field '${this.getTypeName()}.${
-          fieldName
-        }'. Argument does not exist.`
+        `Cannot get arg '${argName}' from type.field '${this.getTypeName()}.${fieldName}'. Argument does not exist.`
       );
     }
 

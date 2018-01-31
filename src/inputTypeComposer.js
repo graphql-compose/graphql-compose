@@ -168,9 +168,7 @@ export default class InputTypeComposer {
 
     if (!fields[fieldName]) {
       throw new Error(
-        `Cannot get field '${
-          fieldName
-        }' from input type '${this.getTypeName()}'. Field does not exist.`
+        `Cannot get field '${fieldName}' from input type '${this.getTypeName()}'. Field does not exist.`
       );
     }
 
@@ -206,9 +204,7 @@ export default class InputTypeComposer {
       prevFieldConfig = this.getField(fieldName);
     } catch (e) {
       throw new Error(
-        `Cannot extend field '${
-          fieldName
-        }' from input type '${this.getTypeName()}'. Field does not exist.`
+        `Cannot extend field '${fieldName}' from input type '${this.getTypeName()}'. Field does not exist.`
       );
     }
 
