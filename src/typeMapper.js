@@ -87,6 +87,7 @@ import type { Thunk } from './utils/definitions';
 import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
+import TypeStorage from './typeStorage';
 import GQC from './gqc';
 
 export type TypeDefinitionString = string; // eg type Name { field: Int }
@@ -186,6 +187,27 @@ class TypeMapper {
     }
 
     return undefined;
+  }
+
+  parseTypesFromString(str: string): TypeStorage<GraphQLNamedType> {
+    const astDocument: DocumentNode = parse(str);
+
+    if (!astDocument || astDocument.kind !== 'Document') {
+      throw new Error('You should provide correct SDL syntax.');
+    }
+
+    return this.parseTypesFromAst(astDocument);
+  }
+
+  parseTypesFromAst(astDocument: DocumentNode): TypeStorage<GraphQLNamedType> {
+    const typeStorage = new TypeStorage();
+
+    for (let i = 0; i < astDocument.definitions.length; i++) {
+      const def = astDocument.definitions[i];
+      const type = makeSchemaDef(def);
+      typeStorage.set(type.name, type);
+    }
+    return typeStorage;
   }
 
   convertOutputFieldConfig<TSource, TContext>(

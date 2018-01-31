@@ -663,4 +663,30 @@ describe('TypeMapper', () => {
       expect(acm.a2.type).toBe(GraphQLInt);
     });
   });
+
+  describe('parseTypesFrom... methods', () => {
+    it('parseTypesFromString()', () => {
+      const gql = `
+        type User {
+          name: String
+        }
+
+        type Article {
+          title: String
+        }
+
+        input Record {
+          id: ID
+          ts: Int
+        }
+      `;
+
+      const ts = typeMapper.parseTypesFromString(gql);
+      expect(Array.from(ts.keys())).toEqual(['User', 'Article', 'Record']);
+
+      expect(ts.get('User')).toBeInstanceOf(GraphQLObjectType);
+      expect(ts.get('Article')).toBeInstanceOf(GraphQLObjectType);
+      expect(ts.get('Record')).toBeInstanceOf(GraphQLInputObjectType);
+    });
+  });
 });
