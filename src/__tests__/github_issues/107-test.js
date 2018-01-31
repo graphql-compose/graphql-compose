@@ -202,4 +202,26 @@ describe('github issue #107 merge Schema types on GQL', () => {
       },
     });
   });
+
+  it('adding remote type to GQC and check reference by name', () => {
+    const RemoteQueryTC = TypeComposer.create(remoteSchema._queryType);
+    const UserTC = RemoteQueryTC.getFieldTC('users');
+    GQC.add(UserTC);
+
+    const ArticleTC = TypeComposer.create({
+      name: 'Article',
+      fields: {
+        user: 'User',
+        users: ['User'],
+      },
+    });
+
+    const userType: any = ArticleTC.getFieldType('user');
+    expect(userType).toBeInstanceOf(GraphQLObjectType);
+    expect(userType.name).toBe('User');
+
+    const usersType: any = ArticleTC.getFieldType('users');
+    expect(usersType).toBeInstanceOf(GraphQLList);
+    expect(usersType.ofType.name).toBe('User');
+  });
 });

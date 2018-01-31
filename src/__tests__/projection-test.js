@@ -4,7 +4,7 @@ import { graphql } from '../graphql';
 import type { GraphQLResolveInfo, GraphQLObjectType } from '../graphql';
 import { getProjectionFromAST, extendByFieldProjection } from '../projection';
 import TypeComposer from '../typeComposer';
-import gqc from '../gqc';
+import GQC from '../gqc';
 
 const Level2TC = TypeComposer.create({
   name: 'Level2',
@@ -34,8 +34,8 @@ const Level1TC = TypeComposer.create({
   },
 });
 const resolve = jest.fn(() => ({}));
-gqc.rootQuery().addFields({ field0: { type: Level1TC, resolve } });
-const schema = gqc.buildSchema();
+GQC.rootQuery().addFields({ field0: { type: Level1TC, resolve } });
+const schema = GQC.buildSchema();
 
 const getResolveInfo = async (query: string): Promise<GraphQLResolveInfo> => {
   resolve.mockClear();
