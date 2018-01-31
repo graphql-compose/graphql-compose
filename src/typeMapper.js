@@ -87,6 +87,7 @@ import type { Thunk } from './utils/definitions';
 import TypeComposer from './typeComposer';
 import InputTypeComposer from './inputTypeComposer';
 import Resolver from './resolver';
+import GQC from './gqc';
 
 export type TypeDefinitionString = string; // eg type Name { field: Int }
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]
@@ -247,19 +248,23 @@ class TypeMapper {
         );
       }
 
-      const type =
-        RegexpOutputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
-          ? this.createType(composeType)
-          : this.getWrapped(composeType);
+      if (GQC.hasInstance(composeType, TypeComposer)) {
+        fieldConfig.type = GQC.getTC(composeType).getType();
+      } else {
+        const type =
+          RegexpOutputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
+            ? this.createType(composeType)
+            : this.getWrapped(composeType);
 
-      if (!type) {
-        throw new Error(
-          `${typeName}.${fieldName} cannot convert to OutputType the following string: '${
-            composeType
-          }'`
-        );
+        if (!type) {
+          throw new Error(
+            `${typeName}.${fieldName} cannot convert to OutputType the following string: '${
+              composeType
+            }'`
+          );
+        }
+        fieldConfig.type = (type: any);
       }
-      fieldConfig.type = (type: any);
     } else if (composeType instanceof TypeComposer) {
       fieldConfig.type = composeType.getType();
     } else if (composeType instanceof Resolver) {
@@ -378,20 +383,24 @@ class TypeMapper {
         );
       }
 
-      const type =
-        RegexpInputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
-          ? this.createType(composeType)
-          : this.getWrapped(composeType);
+      if (GQC.hasInstance(composeType, InputTypeComposer)) {
+        argConfig.type = GQC.getITC(composeType).getType();
+      } else {
+        const type =
+          RegexpInputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
+            ? this.createType(composeType)
+            : this.getWrapped(composeType);
 
-      if (!type) {
-        throw new Error(
-          `${typeName}.${fieldName}@${argName} cannot convert to InputType the following string: '${
-            composeType
-          }'`
-        );
+        if (!type) {
+          throw new Error(
+            `${typeName}.${fieldName}@${
+              argName
+            } cannot convert to InputType the following string: '${composeType}'`
+          );
+        }
+
+        argConfig.type = (type: any);
       }
-
-      argConfig.type = (type: any);
     } else if (composeType instanceof InputTypeComposer) {
       argConfig.type = composeType.getType();
     } else {
@@ -506,20 +515,24 @@ class TypeMapper {
         );
       }
 
-      const type =
-        RegexpInputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
-          ? this.createType(composeType)
-          : this.getWrapped(composeType);
+      if (GQC.hasInstance(composeType, InputTypeComposer)) {
+        fieldConfig.type = GQC.getITC(composeType).getType();
+      } else {
+        const type =
+          RegexpInputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
+            ? this.createType(composeType)
+            : this.getWrapped(composeType);
 
-      if (!type) {
-        throw new Error(
-          `${typeName}.${fieldName} cannot convert to InputType the following string: '${
-            composeType
-          }'`
-        );
+        if (!type) {
+          throw new Error(
+            `${typeName}.${fieldName} cannot convert to InputType the following string: '${
+              composeType
+            }'`
+          );
+        }
+
+        fieldConfig.type = (type: any);
       }
-
-      fieldConfig.type = (type: any);
     } else if (composeType instanceof InputTypeComposer) {
       fieldConfig.type = composeType.getType();
     } else {

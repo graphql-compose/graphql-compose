@@ -16,6 +16,11 @@ import typeMapper from '../typeMapper';
 import TypeComposer from '../typeComposer';
 import InputTypeComposer from '../inputTypeComposer';
 import Resolver from '../resolver';
+import GQC from '../gqc';
+
+beforeEach(() => {
+  GQC.clear();
+});
 
 describe('TypeMapper', () => {
   it('should have basic mapper functions', () => {
@@ -150,6 +155,14 @@ describe('TypeMapper', () => {
       it('should create field config from type as string', () => {
         const fc = typeMapper.convertOutputFieldConfig('String');
         expect(fc.type).toBe(GraphQLString);
+      });
+
+      it('should lookup type name as string in GQC', () => {
+        const tc = TypeComposer.create(`type MyType { a: Int }`);
+        GQC.add(tc);
+
+        const fc = typeMapper.convertOutputFieldConfig('MyType');
+        expect(fc.type).toBe(tc.getType());
       });
 
       it('should create field config from GraphQL Schema Language', () => {
@@ -360,6 +373,14 @@ describe('TypeMapper', () => {
       expect(ic.type).toBe(GraphQLString);
     });
 
+    it('should lookup type name as string in GQC', () => {
+      const itc = InputTypeComposer.create(`input MyInput { a: Int }`);
+      GQC.add(itc);
+
+      const ic = typeMapper.convertInputFieldConfig('MyInput');
+      expect(ic.type).toBe(itc.getType());
+    });
+
     it('should create field config from input type GraphQL Schema Language', () => {
       const fc: any = typeMapper.convertInputFieldConfig(
         `input MyInputType {
@@ -525,6 +546,14 @@ describe('TypeMapper', () => {
     it('should create arg config from GraphQL Schema Language', () => {
       const ac = typeMapper.convertArgConfig('String');
       expect(ac.type).toBe(GraphQLString);
+    });
+
+    it('should lookup type name as string in GQC', () => {
+      const itc = InputTypeComposer.create(`input MyArg { a: Int }`);
+      GQC.add(itc);
+
+      const ac = typeMapper.convertArgConfig('MyArg');
+      expect(ac.type).toBe(itc.getType());
     });
 
     it('should create arg config from input type GraphQL Schema Language', () => {
