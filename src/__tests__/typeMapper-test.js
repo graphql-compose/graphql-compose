@@ -48,11 +48,8 @@ describe('TypeMapper', () => {
     const type: GraphQLObjectType = (typeMapper.createType(
       `
       type IntRange {
-        # Max value
         max: Int,
-        # Min value
         min: Int!
-        # Array of Strings
         arr: [String]
       }
     `
@@ -64,7 +61,6 @@ describe('TypeMapper', () => {
     const IntRangeTC = new TypeComposer(type);
     expect(IntRangeTC.getTypeName()).toBe('IntRange');
     expect(IntRangeTC.getFieldNames()).toEqual(expect.arrayContaining(['max', 'min', 'arr']));
-    expect(IntRangeTC.getField('max').description).toBe('Max value');
     expect(IntRangeTC.getField('max').type).toBe(GraphQLInt);
     expect(IntRangeTC.getField('min').type).toBeInstanceOf(GraphQLNonNull);
     expect(IntRangeTC.getField('arr').type).toBeInstanceOf(GraphQLList);

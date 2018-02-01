@@ -3,20 +3,7 @@
 
 import objectPath from 'object-path';
 import { parse, parseType } from 'graphql/language/parser';
-import {
-  LIST_TYPE,
-  NON_NULL_TYPE,
-  DOCUMENT,
-  SCHEMA_DEFINITION,
-  SCALAR_TYPE_DEFINITION,
-  OBJECT_TYPE_DEFINITION,
-  INTERFACE_TYPE_DEFINITION,
-  ENUM_TYPE_DEFINITION,
-  UNION_TYPE_DEFINITION,
-  INPUT_OBJECT_TYPE_DEFINITION,
-  DIRECTIVE_DEFINITION,
-  NAMED_TYPE,
-} from 'graphql/language/kinds';
+import { Kind } from 'graphql/language';
 
 import { getDescription } from 'graphql/utilities/buildASTSchema';
 import keyValMap from 'graphql/jsutils/keyValMap';
@@ -254,7 +241,9 @@ class TypeMapper {
 
     if (composeType instanceof InputTypeComposer) {
       throw new Error(
-        `You cannot provide InputTypeComposer to the field '${typeName}.${fieldName}'. It should be OutputType.`
+        `You cannot provide InputTypeComposer to the field '${typeName}.${
+          fieldName
+        }'. It should be OutputType.`
       );
     }
 
@@ -262,7 +251,9 @@ class TypeMapper {
     if (typeof composeType === 'string') {
       if (RegexpInputTypeDefinition.test(composeType)) {
         throw new Error(
-          `${typeName}.${fieldName} should be OutputType, but got input type definition '${composeType}'`
+          `${typeName}.${fieldName} should be OutputType, but got input type definition '${
+            composeType
+          }'`
         );
       }
 
@@ -276,7 +267,9 @@ class TypeMapper {
 
         if (!type) {
           throw new Error(
-            `${typeName}.${fieldName} cannot convert to OutputType the following string: '${composeType}'`
+            `${typeName}.${fieldName} cannot convert to OutputType the following string: '${
+              composeType
+            }'`
           );
         }
         fieldConfig.type = (type: any);
@@ -372,7 +365,9 @@ class TypeMapper {
     while (Array.isArray(composeType)) {
       if (composeType.length !== 1) {
         throw new Error(
-          `${typeName}.${fieldName}@${argName} can accept Array exact with one input type definition`
+          `${typeName}.${fieldName}@${
+            argName
+          } can accept Array exact with one input type definition`
         );
       }
       wrapWithList += 1;
@@ -381,7 +376,9 @@ class TypeMapper {
 
     if (composeType instanceof TypeComposer) {
       throw new Error(
-        `You cannot provide TypeComposer to the arg '${typeName}.${fieldName}.@${argName}'. It should be InputType.`
+        `You cannot provide TypeComposer to the arg '${typeName}.${fieldName}.@${
+          argName
+        }'. It should be InputType.`
       );
     }
 
@@ -389,7 +386,9 @@ class TypeMapper {
     if (typeof composeType === 'string') {
       if (RegexpOutputTypeDefinition.test(composeType)) {
         throw new Error(
-          `${typeName}.${fieldName}@${argName} should be InputType, but got output type definition '${composeType}'`
+          `${typeName}.${fieldName}@${
+            argName
+          } should be InputType, but got output type definition '${composeType}'`
         );
       }
 
@@ -403,7 +402,9 @@ class TypeMapper {
 
         if (!type) {
           throw new Error(
-            `${typeName}.${fieldName}@${argName} cannot convert to InputType the following string: '${composeType}'`
+            `${typeName}.${fieldName}@${
+              argName
+            } cannot convert to InputType the following string: '${composeType}'`
           );
         }
 
@@ -507,7 +508,9 @@ class TypeMapper {
 
     if (composeType instanceof TypeComposer) {
       throw new Error(
-        `You cannot provide TypeComposer to the field '${typeName}.${fieldName}'. It should be InputType.`
+        `You cannot provide TypeComposer to the field '${typeName}.${
+          fieldName
+        }'. It should be InputType.`
       );
     }
 
@@ -515,7 +518,9 @@ class TypeMapper {
     if (typeof composeType === 'string') {
       if (RegexpOutputTypeDefinition.test(composeType)) {
         throw new Error(
-          `${typeName}.${fieldName} should be InputType, but got output type definition '${composeType}'`
+          `${typeName}.${fieldName} should be InputType, but got output type definition '${
+            composeType
+          }'`
         );
       }
 
@@ -529,7 +534,9 @@ class TypeMapper {
 
         if (!type) {
           throw new Error(
-            `${typeName}.${fieldName} cannot convert to InputType the following string: '${composeType}'`
+            `${typeName}.${fieldName} cannot convert to InputType the following string: '${
+              composeType
+            }'`
           );
         }
 
@@ -598,15 +605,15 @@ function parseTypes(astDocument: DocumentNode): Array<GraphQLNamedType> {
 
 function typeFromAST(inputTypeAST: TypeNode): ?GraphQLType {
   let innerType;
-  if (inputTypeAST.kind === LIST_TYPE) {
+  if (inputTypeAST.kind === Kind.LIST_TYPE) {
     innerType = typeFromAST(inputTypeAST.type);
     return innerType && new GraphQLList(innerType);
   }
-  if (inputTypeAST.kind === NON_NULL_TYPE) {
+  if (inputTypeAST.kind === Kind.NON_NULL_TYPE) {
     innerType = typeFromAST(inputTypeAST.type);
     return innerType && new GraphQLNonNull(((innerType: any): GraphQLNullableType));
   }
-  invariant(inputTypeAST.kind === NAMED_TYPE, 'Must be a named type.');
+  invariant(inputTypeAST.kind === Kind.NAMED_TYPE, 'Must be a named type.');
   return typeMapper.get(inputTypeAST.name.value);
 }
 
@@ -624,17 +631,17 @@ function makeSchemaDef(def) {
   }
 
   switch (def.kind) {
-    case OBJECT_TYPE_DEFINITION:
+    case Kind.OBJECT_TYPE_DEFINITION:
       return makeTypeDef(def);
     // case INTERFACE_TYPE_DEFINITION:
     //   return makeInterfaceDef(def);
-    case ENUM_TYPE_DEFINITION:
+    case Kind.ENUM_TYPE_DEFINITION:
       return makeEnumDef(def);
     // case UNION_TYPE_DEFINITION:
     //   return makeUnionDef(def);
     // case SCALAR_TYPE_DEFINITION:
     //   return makeScalarDef(def);
-    case INPUT_OBJECT_TYPE_DEFINITION:
+    case Kind.INPUT_OBJECT_TYPE_DEFINITION:
       return makeInputObjectDef(def);
     default:
       throw new Error(`Type kind "${def.kind}" not supported.`);
@@ -696,17 +703,17 @@ function makeInputObjectDef(def: InputObjectTypeDefinitionNode) {
 
 function getNamedTypeAST(typeAST: TypeNode): NamedTypeNode {
   let namedType = typeAST;
-  while (namedType.kind === LIST_TYPE || namedType.kind === NON_NULL_TYPE) {
+  while (namedType.kind === Kind.LIST_TYPE || namedType.kind === Kind.NON_NULL_TYPE) {
     namedType = namedType.type;
   }
   return namedType;
 }
 
 function buildWrappedType(innerType: GraphQLType, inputTypeAST: TypeNode): GraphQLType {
-  if (inputTypeAST.kind === LIST_TYPE) {
+  if (inputTypeAST.kind === Kind.LIST_TYPE) {
     return new GraphQLList(buildWrappedType(innerType, inputTypeAST.type));
   }
-  if (inputTypeAST.kind === NON_NULL_TYPE) {
+  if (inputTypeAST.kind === Kind.NON_NULL_TYPE) {
     const wrappedType = buildWrappedType(innerType, inputTypeAST.type);
     invariant(!(wrappedType instanceof GraphQLNonNull), 'No nesting nonnull.');
     return new GraphQLNonNull(wrappedType);
