@@ -18,6 +18,7 @@ import InputTypeComposer from '../inputTypeComposer';
 import EnumTypeComposer from '../enumTypeComposer';
 import Resolver from '../resolver';
 import GQC from '../gqc';
+import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
   GQC.clear();
@@ -47,13 +48,23 @@ describe('TypeMapper', () => {
 
   it('should create object type from template string', () => {
     const type: GraphQLObjectType = (typeMapper.createType(
-      `
-      type IntRange {
-        max: Int,
-        min: Int!
-        arr: [String]
-      }
-    `
+      graphqlVersion < 12
+        ? `
+          type IntRange {
+            # Max value
+            max: Int,
+            min: Int!
+            arr: [String]
+          }
+        `
+        : `
+          type IntRange {
+            """Max value"""
+            max: Int,
+            min: Int!
+            arr: [String]
+          }
+        `
     ): any);
 
     expect(type).toBeInstanceOf(GraphQLObjectType);
@@ -63,6 +74,7 @@ describe('TypeMapper', () => {
     expect(IntRangeTC.getTypeName()).toBe('IntRange');
     expect(IntRangeTC.getFieldNames()).toEqual(expect.arrayContaining(['max', 'min', 'arr']));
     expect(IntRangeTC.getField('max').type).toBe(GraphQLInt);
+    expect(IntRangeTC.getField('max').description).toBe('Max value');
     expect(IntRangeTC.getField('min').type).toBeInstanceOf(GraphQLNonNull);
     expect(IntRangeTC.getField('arr').type).toBeInstanceOf(GraphQLList);
   });

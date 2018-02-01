@@ -264,14 +264,11 @@ class TypeMapper {
 
         if (!type) {
           throw new Error(
-            `${typeName}.${fieldName} cannot convert to OutputType the following string: '${
-              composeType
-            }'`
+            `${typeName}.${fieldName} cannot convert to OutputType the following string: '${composeType}'`
           );
         }
         fieldConfig.type = (type: any);
       }
-      fieldConfig.type = (type: any);
     } else if (composeType instanceof TypeComposer || composeType instanceof EnumTypeComposer) {
       fieldConfig.type = composeType.getType();
     } else if (composeType instanceof Resolver) {
@@ -394,16 +391,12 @@ class TypeMapper {
 
         if (!type) {
           throw new Error(
-            `${typeName}.${fieldName}@${
-              argName
-            } cannot convert to InputType the following string: '${composeType}'`
+            `${typeName}.${fieldName}@${argName} cannot convert to InputType the following string: '${composeType}'`
           );
         }
 
         argConfig.type = (type: any);
       }
-
-      argConfig.type = (type: any);
     } else if (
       composeType instanceof InputTypeComposer ||
       composeType instanceof EnumTypeComposer
@@ -527,16 +520,12 @@ class TypeMapper {
 
         if (!type) {
           throw new Error(
-            `${typeName}.${fieldName} cannot convert to InputType the following string: '${
-              composeType
-            }'`
+            `${typeName}.${fieldName} cannot convert to InputType the following string: '${composeType}'`
           );
         }
 
         fieldConfig.type = (type: any);
       }
-
-      fieldConfig.type = (type: any);
     } else if (
       composeType instanceof InputTypeComposer ||
       composeType instanceof EnumTypeComposer
