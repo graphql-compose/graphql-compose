@@ -10,6 +10,10 @@ export default class TypeStorage<V, K = string> {
     this.types = new Map();
   }
 
+  get size(): number {
+    return this.types.size;
+  }
+
   clear(): void {
     this.types.clear();
   }
@@ -73,7 +77,7 @@ export default class TypeStorage<V, K = string> {
   }
 
   getOrSet(key: K, typeOrThunk: V | (() => V)): V {
-    const existedType = (this.get(key): any);
+    const existedType = (this.types.get(key): any);
     if (existedType) {
       return existedType;
     }
