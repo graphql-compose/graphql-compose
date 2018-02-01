@@ -2,6 +2,7 @@
 
 import EnumTypeComposer from '../enumTypeComposer';
 import { GraphQLList, GraphQLNonNull, GraphQLEnumType } from '../graphql';
+import { graphqlVersion } from '../utils/graphqlVersion';
 
 describe('EnumTypeComposer', () => {
   let enumType: GraphQLEnumType;
@@ -23,10 +24,14 @@ describe('EnumTypeComposer', () => {
     it('getFields()', () => {
       const fieldNames = Object.keys(etc.getFields());
       expect(fieldNames).toEqual(expect.arrayContaining(['VAL1', 'VAL2']));
-
-      const etc2 = EnumTypeComposer.create('SomeType');
-      expect(etc2.getFields()).toEqual({});
     });
+
+    if (graphqlVersion >= 13) {
+      it('getFields() from empty Enum', () => {
+        const etc2 = EnumTypeComposer.create('SomeType');
+        expect(etc2.getFields()).toEqual({});
+      });
+    }
 
     describe('getField()', () => {
       it('should return value config', () => {
@@ -139,12 +144,14 @@ describe('EnumTypeComposer', () => {
   });
 
   describe('create() [static method]', () => {
-    it('should create ETC by typeName as a string', () => {
-      const myTC = EnumTypeComposer.create('TypeStub');
-      expect(myTC).toBeInstanceOf(EnumTypeComposer);
-      expect(myTC.getType()).toBeInstanceOf(GraphQLEnumType);
-      expect(myTC.getFields()).toEqual({});
-    });
+    if (graphqlVersion >= 13) {
+      it('should create ETC by typeName as a string', () => {
+        const myTC = EnumTypeComposer.create('TypeStub');
+        expect(myTC).toBeInstanceOf(EnumTypeComposer);
+        expect(myTC.getType()).toBeInstanceOf(GraphQLEnumType);
+        expect(myTC.getFields()).toEqual({});
+      });
+    }
 
     it('should create ETC by type template string', () => {
       const myTC = EnumTypeComposer.create('enum SDLEnum { V1 V2 V3 }');
