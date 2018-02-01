@@ -23,6 +23,7 @@ export { toInputObjectType, convertInputObjectFieldOpts } from './toInputObjectT
 
 export * from './utils/misc';
 export * from './utils/is';
+export * from './utils/graphqlVersion';
 export { default as toDottedObject } from './utils/toDottedObject';
 export { default as deepmerge } from './utils/deepmerge';
 export { default as filterByDotPaths } from './utils/filterByDotPaths';
