@@ -16,7 +16,7 @@ import GQC from '../__mocks__/gqc';
 import { Resolver, TypeComposer, InputTypeComposer } from '../';
 
 describe('Resolver', () => {
-  let resolver: Resolver<any, any>;
+  let resolver: Resolver;
 
   beforeEach(() => {
     resolver = new Resolver({ name: 'find' });
@@ -420,7 +420,7 @@ describe('Resolver', () => {
   });
 
   describe('wrapCloneArg()', () => {
-    let newResolver: Resolver<any, any>;
+    let newResolver: Resolver;
 
     beforeEach(() => {
       resolver.setArgs({

@@ -77,7 +77,7 @@ export type ResolverSortArgConfig = {
 };
 
 export type ResolverOpts<TSource, TContext> = {
-  type?: ComposeOutputType,
+  type?: ComposeOutputType<TContext>,
   resolve?: ResolverRpCb<TSource, TContext>,
   args?: ComposeFieldConfigArgumentMap,
   name?: string,
@@ -103,7 +103,7 @@ export type ResolverWrapArgsCb = (
   prevArgs: GraphQLFieldConfigArgumentMap
 ) => ComposeFieldConfigArgumentMap;
 
-export type ResolverWrapTypeCb = (prevType: GraphQLOutputType) => ComposeOutputType;
+export type ResolverWrapTypeCb = (prevType: GraphQLOutputType) => ComposeOutputType<any>;
 
 export type ResolveDebugOpts = {
   showHidden?: boolean,
@@ -112,7 +112,7 @@ export type ResolveDebugOpts = {
 };
 
 export class Resolver<TSource, TContext> {
-  static _schema: SchemaComposer;
+  static _schema: SchemaComposer<TContext>;
 
   type: GraphQLOutputType;
   args: GraphQLFieldConfigArgumentMap;
@@ -351,7 +351,7 @@ export class Resolver<TSource, TContext> {
     return this.type;
   }
 
-  getTypeComposer(): TypeComposer {
+  getTypeComposer(): TypeComposer<TContext> {
     const outputType = getNamedType(this.type);
     if (!(outputType instanceof GraphQLObjectType)) {
       throw new Error(
@@ -362,7 +362,7 @@ export class Resolver<TSource, TContext> {
     return new this.constructor._schema.TypeComposer(outputType);
   }
 
-  setType(gqType: ComposeOutputType): Resolver<TSource, TContext> {
+  setType(gqType: ComposeOutputType<TContext>): Resolver<TSource, TContext> {
     const fc = this.constructor._schema.TypeMapper.convertOutputFieldConfig(
       gqType,
       'setType',

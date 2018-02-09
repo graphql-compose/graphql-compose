@@ -65,8 +65,8 @@ export type ComposeFieldConfigMap<TSource, TContext> = ObjMap<
 
 export type ComposeFieldConfig<TSource, TContext> =
   | ComposeFieldConfigAsObject<TSource, TContext>
-  | ComposeOutputType
-  | (() => ComposeFieldConfigAsObject<TSource, TContext> | ComposeOutputType);
+  | ComposeOutputType<TContext>
+  | (() => ComposeFieldConfigAsObject<TSource, TContext> | ComposeOutputType<TContext>);
 
 // extended GraphQLFieldConfig
 export type GraphqlFieldConfigExtended<TSource, TContext> = GraphQLFieldConfig<
@@ -75,7 +75,7 @@ export type GraphqlFieldConfigExtended<TSource, TContext> = GraphQLFieldConfig<
 > & { projection?: any };
 
 export type ComposeFieldConfigAsObject<TSource, TContext> = {
-  type: Thunk<ComposeOutputType> | GraphQLOutputType,
+  type: Thunk<ComposeOutputType<TContext>> | GraphQLOutputType,
   args?: ComposeFieldConfigArgumentMap,
   resolve?: GraphQLFieldResolver<TSource, TContext>,
   subscribe?: GraphQLFieldResolver<TSource, TContext>,
@@ -86,13 +86,13 @@ export type ComposeFieldConfigAsObject<TSource, TContext> = {
 } & { $call?: void };
 
 // extended GraphQLOutputType
-export type ComposeOutputType =
+export type ComposeOutputType<TContext> =
   | GraphQLOutputType
-  | TypeComposer
+  | TypeComposer<TContext>
   | EnumTypeComposer
   | TypeAsString
-  | Resolver<any, any>
-  | Array<ComposeOutputType>;
+  | Resolver<any, TContext>
+  | Array<ComposeOutputType<TContext>>;
 
 // Compose Args -----------------------------
 export type ComposeArgumentType =
@@ -151,14 +151,14 @@ export type RelationArgsMapper<TSource, TContext> = {
     | GenericMap<any>,
 };
 
-export class TypeComposer {
+export class TypeComposer<TContext> {
   gqType: GraphQLObjectTypeExtended;
-  _fields: GraphQLFieldConfigMap<any, any>;
-  static _schema: SchemaComposer;
+  _fields: GraphQLFieldConfigMap<any, TContext>;
+  static _schema: SchemaComposer<TContext>;
 
   static create(
-    opts: TypeAsString | ComposeObjectTypeConfig<any, any> | GraphQLObjectType
-  ): TypeComposer {
+    opts: TypeAsString | ComposeObjectTypeConfig<any, TContext> | GraphQLObjectType
+  ): TypeComposer<TContext> {
     let TC;
 
     if (isString(opts)) {
@@ -235,10 +235,10 @@ export class TypeComposer {
    * Completely replace all fields in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance properties.
    */
-  setFields(fields: ComposeFieldConfigMap<any, any>): TypeComposer {
+  setFields(fields: ComposeFieldConfigMap<any, TContext>): TypeComposer<TContext> {
     const prepearedFields: GraphQLFieldConfigMap<
       any,
-      any
+      TContext
     > = this.constructor._schema.TypeMapper.convertOutputFieldConfigMap(fields, this.getTypeName());
 
     this._fields = prepearedFields;
@@ -253,10 +253,10 @@ export class TypeComposer {
     return !!fields[fieldName];
   }
 
-  setField<TSource, TContext>(
+  setField<TSource>(
     fieldName: string,
     fieldConfig: ComposeFieldConfig<TSource, TContext>
-  ): TypeComposer {
+  ): TypeComposer<TContext> {
     this.addFields({ [fieldName]: fieldConfig });
     return this;
   }
@@ -264,7 +264,7 @@ export class TypeComposer {
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  addFields(newFields: ComposeFieldConfigMap<any, any>): TypeComposer {
+  addFields(newFields: ComposeFieldConfigMap<any, TContext>): TypeComposer<TContext> {
     this.setFields({ ...this.getFields(), ...newFields });
     return this;
   }
@@ -286,7 +286,7 @@ export class TypeComposer {
     return fields[fieldName];
   }
 
-  removeField(fieldNameOrArray: string | Array<string>): TypeComposer {
+  removeField(fieldNameOrArray: string | Array<string>): TypeComposer<TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     fieldNames.forEach(fieldName => delete fields[fieldName]);
@@ -294,7 +294,7 @@ export class TypeComposer {
     return this;
   }
 
-  removeOtherFields(fieldNameOrArray: string | Array<string>): TypeComposer {
+  removeOtherFields(fieldNameOrArray: string | Array<string>): TypeComposer<TContext> {
     const keepFieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     Object.keys(fields).forEach(fieldName => {
@@ -308,8 +308,8 @@ export class TypeComposer {
 
   extendField(
     fieldName: string,
-    parialFieldConfig: $Shape<ComposeFieldConfigAsObject<any, any>>
-  ): TypeComposer {
+    parialFieldConfig: $Shape<ComposeFieldConfigAsObject<any, TContext>>
+  ): TypeComposer<TContext> {
     let prevFieldConfig;
     try {
       prevFieldConfig = this.getField(fieldName);
@@ -327,7 +327,7 @@ export class TypeComposer {
       );
     }
 
-    const fieldConfig: ComposeFieldConfigAsObject<any, any> = {
+    const fieldConfig: ComposeFieldConfigAsObject<any, TContext> = {
       ...(prevFieldConfig: any),
       ...(parialFieldConfig: any),
     };
@@ -335,7 +335,7 @@ export class TypeComposer {
     return this;
   }
 
-  reorderFields(names: string[]): TypeComposer {
+  reorderFields(names: string[]): TypeComposer<TContext> {
     const orderedFields = {};
     const fields = this.getFields();
     names.forEach(name => {
@@ -348,10 +348,10 @@ export class TypeComposer {
     return this;
   }
 
-  addRelation<TSource, TContext>(
+  addRelation<TSource>(
     fieldName: string,
     relationOpts: RelationOpts<TSource, TContext>
-  ): TypeComposer {
+  ): TypeComposer<TContext> {
     if (!this.gqType._gqcRelations) {
       this.gqType._gqcRelations = {};
     }
@@ -380,7 +380,7 @@ export class TypeComposer {
     return this;
   }
 
-  getRelations(): RelationThunkMap<any, any> {
+  getRelations(): RelationThunkMap<any, TContext> {
     if (!this.gqType._gqcRelations) {
       this.gqType._gqcRelations = {};
     }
@@ -390,7 +390,7 @@ export class TypeComposer {
   /**
    * @deprecated 3.0.0
    */
-  buildRelations(): TypeComposer {
+  buildRelations(): TypeComposer<TContext> {
     deprecate('No need in calling TC.buildRelations(). You may safely remove call of this method.');
     return this;
   }
@@ -398,12 +398,12 @@ export class TypeComposer {
   /**
    * @deprecated 3.0.0
    */
-  buildRelation(): TypeComposer {
+  buildRelation(): TypeComposer<TContext> {
     deprecate('No need in calling TC.buildRelation(). You may safely remove call of this method.');
     return this;
   }
 
-  _relationWithResolverToFC<TSource, TContext>(
+  _relationWithResolverToFC<TSource>(
     opts: RelationOptsWithResolver<TSource, TContext>,
     fieldName?: string = ''
   ): ComposeFieldConfigAsObject<TSource, TContext> {
@@ -517,7 +517,7 @@ export class TypeComposer {
    * Completely replace all interfaces in GraphQL type
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
-  setInterfaces(interfaces: Array<GraphQLInterfaceType>): TypeComposer {
+  setInterfaces(interfaces: Array<GraphQLInterfaceType>): TypeComposer<TContext> {
     this.gqType._typeConfig.interfaces = interfaces;
     delete this.gqType._interfaces; // if schema was builded, delete _interfaces
     return this;
@@ -527,14 +527,14 @@ export class TypeComposer {
     return this.getInterfaces().indexOf(interfaceObj) > -1;
   }
 
-  addInterface(interfaceObj: GraphQLInterfaceType): TypeComposer {
+  addInterface(interfaceObj: GraphQLInterfaceType): TypeComposer<TContext> {
     if (!this.hasInterface(interfaceObj)) {
       this.setInterfaces([...this.getInterfaces(), interfaceObj]);
     }
     return this;
   }
 
-  removeInterface(interfaceObj: GraphQLInterfaceType): TypeComposer {
+  removeInterface(interfaceObj: GraphQLInterfaceType): TypeComposer<TContext> {
     const interfaces = this.getInterfaces();
     const idx = interfaces.indexOf(interfaceObj);
     if (idx > -1) {
@@ -544,7 +544,7 @@ export class TypeComposer {
     return this;
   }
 
-  clone(newTypeName: string): TypeComposer {
+  clone(newTypeName: string): TypeComposer<TContext> {
     if (!newTypeName) {
       throw new Error('You should provide newTypeName:string for TypeComposer.clone()');
     }
@@ -588,7 +588,7 @@ export class TypeComposer {
     return field.type;
   }
 
-  getFieldTC(fieldName: string): TypeComposer {
+  getFieldTC(fieldName: string): TypeComposer<TContext> {
     const fieldType = getNamedType(this.getFieldType(fieldName));
     if (!(fieldType instanceof GraphQLObjectType)) {
       throw new Error(
@@ -599,7 +599,7 @@ export class TypeComposer {
     return this.constructor._schema.TypeComposer.create(fieldType);
   }
 
-  makeFieldNonNull(fieldNameOrArray: string | Array<string>): TypeComposer {
+  makeFieldNonNull(fieldNameOrArray: string | Array<string>): TypeComposer<TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     fieldNames.forEach(fieldName => {
@@ -613,7 +613,7 @@ export class TypeComposer {
     return this;
   }
 
-  makeFieldNullable(fieldNameOrArray: string | Array<string>): TypeComposer {
+  makeFieldNullable(fieldNameOrArray: string | Array<string>): TypeComposer<TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     fieldNames.forEach(fieldName => {
@@ -655,7 +655,7 @@ export class TypeComposer {
     return this.gqType._gqcInputTypeComposer;
   }
 
-  getResolvers(): Map<string, Resolver<any, any>> {
+  getResolvers(): Map<string, Resolver<any, TContext>> {
     if (!this.gqType._gqcResolvers) {
       this.gqType._gqcResolvers = new Map();
     }
@@ -669,7 +669,7 @@ export class TypeComposer {
     return this.gqType._gqcResolvers.has(name);
   }
 
-  getResolver(name: string): Resolver<any, any> {
+  getResolver(name: string): Resolver<any, TContext> {
     if (!this.hasResolver(name)) {
       throw new Error(`Type ${this.getTypeName()} does not have resolver with name '${name}'`);
     }
@@ -677,7 +677,7 @@ export class TypeComposer {
     return resolverMap.get(name);
   }
 
-  setResolver(name: string, resolver: Resolver<any, any>): TypeComposer {
+  setResolver(name: string, resolver: Resolver<any, TContext>): TypeComposer<TContext> {
     if (!this.gqType._gqcResolvers) {
       this.gqType._gqcResolvers = new Map();
     }
@@ -689,9 +689,11 @@ export class TypeComposer {
     return this;
   }
 
-  addResolver(resolver: Resolver<any, any> | ResolverOpts<any, any>): TypeComposer {
+  addResolver(
+    resolver: Resolver<any, TContext> | ResolverOpts<any, TContext>
+  ): TypeComposer<TContext> {
     if (!(resolver instanceof this.constructor._schema.Resolver)) {
-      resolver = new this.constructor._schema.Resolver(resolver); // eslint-disable-line no-param-reassign
+      resolver = new this.constructor._schema.Resolver((resolver: any)); // eslint-disable-line no-param-reassign
     }
 
     if (!resolver.name) {
@@ -701,14 +703,17 @@ export class TypeComposer {
     return this;
   }
 
-  removeResolver(resolverName: string): TypeComposer {
+  removeResolver(resolverName: string): TypeComposer<TContext> {
     if (resolverName) {
       this.getResolvers().delete(resolverName);
     }
     return this;
   }
 
-  wrapResolver(resolverName: string, cbResolver: ResolverWrapCb<any, any>): TypeComposer {
+  wrapResolver(
+    resolverName: string,
+    cbResolver: ResolverWrapCb<any, TContext>
+  ): TypeComposer<TContext> {
     const resolver = this.getResolver(resolverName);
     const newResolver = resolver.wrap(cbResolver);
     this.setResolver(resolverName, newResolver);
@@ -718,15 +723,18 @@ export class TypeComposer {
   wrapResolverAs(
     resolverName: string,
     fromResolverName: string,
-    cbResolver: ResolverWrapCb<any, any>
-  ): TypeComposer {
+    cbResolver: ResolverWrapCb<any, TContext>
+  ): TypeComposer<TContext> {
     const resolver = this.getResolver(fromResolverName);
     const newResolver = resolver.wrap(cbResolver);
     this.setResolver(resolverName, newResolver);
     return this;
   }
 
-  wrapResolverResolve(resolverName: string, cbNextRp: ResolverNextRpCb<any, any>): TypeComposer {
+  wrapResolverResolve(
+    resolverName: string,
+    cbNextRp: ResolverNextRpCb<any, TContext>
+  ): TypeComposer<TContext> {
     const resolver = this.getResolver(resolverName);
     this.setResolver(resolverName, resolver.wrapResolve(cbNextRp));
     return this;
@@ -736,7 +744,7 @@ export class TypeComposer {
     return this.gqType.name;
   }
 
-  setTypeName(name: string): TypeComposer {
+  setTypeName(name: string): TypeComposer<TContext> {
     this.gqType.name = name;
     return this;
   }
@@ -745,12 +753,12 @@ export class TypeComposer {
     return this.gqType.description || '';
   }
 
-  setDescription(description: string): TypeComposer {
+  setDescription(description: string): TypeComposer<TContext> {
     this.gqType.description = description;
     return this;
   }
 
-  setRecordIdFn(fn: GetRecordIdFn<any, any>): TypeComposer {
+  setRecordIdFn(fn: GetRecordIdFn<any, TContext>): TypeComposer<TContext> {
     this.gqType._gqcGetRecordIdFn = fn;
     return this;
   }
@@ -759,7 +767,7 @@ export class TypeComposer {
     return !!this.gqType._gqcGetRecordIdFn;
   }
 
-  getRecordIdFn(): GetRecordIdFn<any, any> {
+  getRecordIdFn(): GetRecordIdFn<any, TContext> {
     if (!this.gqType._gqcGetRecordIdFn) {
       throw new Error(`Type ${this.getTypeName()} does not have RecordIdFn`);
     }
@@ -768,7 +776,7 @@ export class TypeComposer {
   /**
    * Get function that returns record id, from provided object.
    */
-  getRecordId(source: ?mixed, args: ?mixed, context: ?mixed): string | number {
+  getRecordId(source: ?mixed, args: ?mixed, context: TContext): string | number {
     return this.getRecordIdFn()(source, args, context);
   }
 

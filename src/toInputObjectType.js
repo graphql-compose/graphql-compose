@@ -45,7 +45,7 @@ export type toInputObjectTypeOpts = {
 };
 
 export function toInputObjectType(
-  typeComposer: TypeComposer,
+  typeComposer: TypeComposer<any>,
   opts: toInputObjectTypeOpts = {},
   cache: Map<GraphQLObjectType, InputTypeComposer> = new Map()
 ): InputTypeComposer {
@@ -98,7 +98,7 @@ export function convertInputObjectField<TSource, TContext>(
   field: GraphQLFieldConfig<TSource, TContext>,
   opts: convertInputObjectFieldOpts,
   cache: Map<GraphQLObjectType, InputTypeComposer>,
-  schemaComposer: SchemaComposer
+  schemaComposer: SchemaComposer<any>
 ): GraphQLInputFieldConfig {
   let fieldType: GraphQLType = field.type;
 

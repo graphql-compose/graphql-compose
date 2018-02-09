@@ -9,20 +9,20 @@ import { InputTypeComposer as _InputTypeComposer } from './inputTypeComposer';
 import { EnumTypeComposer as _EnumTypeComposer } from './enumTypeComposer';
 import { Resolver as _Resolver } from './resolver';
 
-export class SchemaComposer extends TypeStorage<
-  _TypeComposer | _InputTypeComposer | GraphQLNamedType
+export class SchemaComposer<TContext> extends TypeStorage<
+  _TypeComposer<TContext> | _InputTypeComposer | GraphQLNamedType
 > {
   TypeMapper: _TypeMapper;
-  TypeComposer: typeof _TypeComposer;
+  TypeComposer: Class<_TypeComposer<TContext>>;
   InputTypeComposer: typeof _InputTypeComposer;
   EnumTypeComposer: typeof _EnumTypeComposer;
-  Resolver: typeof _Resolver;
+  Resolver: Class<_Resolver<any, TContext>>;
 
   constructor() {
     super();
     const schema = this;
 
-    class TypeComposer extends _TypeComposer {
+    class TypeComposer extends _TypeComposer<TContext> {
       static _schema = schema;
     }
     this.TypeComposer = TypeComposer;
@@ -32,7 +32,7 @@ export class SchemaComposer extends TypeStorage<
     }
     this.InputTypeComposer = InputTypeComposer;
 
-    class Resolver extends _Resolver<any, any> {
+    class Resolver extends _Resolver<any, TContext> {
       static _schema = schema;
     }
     this.Resolver = Resolver;
@@ -48,7 +48,7 @@ export class SchemaComposer extends TypeStorage<
     this.TypeMapper = new TypeMapper();
   }
 
-  getOrCreateTC(typeName: string): _TypeComposer {
+  getOrCreateTC(typeName: string): _TypeComposer<TContext> {
     if (!this.hasInstance(typeName, this.TypeComposer)) {
       this.set(typeName, this.TypeComposer.create(typeName));
     }
@@ -62,7 +62,7 @@ export class SchemaComposer extends TypeStorage<
     return (this.get(typeName): any);
   }
 
-  getTC(typeName: string): _TypeComposer {
+  getTC(typeName: string): _TypeComposer<TContext> {
     if (!this.hasInstance(typeName, this.TypeComposer)) {
       throw new Error(`GQC does not have TypeComposer with name ${typeName}`);
     }
@@ -76,15 +76,15 @@ export class SchemaComposer extends TypeStorage<
     return (this.get(typeName): any);
   }
 
-  rootQuery(): _TypeComposer {
+  rootQuery(): _TypeComposer<TContext> {
     return this.getOrCreateTC('Query');
   }
 
-  rootMutation(): _TypeComposer {
+  rootMutation(): _TypeComposer<TContext> {
     return this.getOrCreateTC('Mutation');
   }
 
-  rootSubscription(): _TypeComposer {
+  rootSubscription(): _TypeComposer<TContext> {
     return this.getOrCreateTC('Subscription');
   }
 
@@ -119,7 +119,7 @@ export class SchemaComposer extends TypeStorage<
     return new GraphQLSchema(roots);
   }
 
-  removeEmptyTypes(typeComposer: _TypeComposer, passedTypes: Set<string> = new Set()) {
+  removeEmptyTypes(typeComposer: _TypeComposer<TContext>, passedTypes: Set<string> = new Set()) {
     const fields = typeComposer.getFields();
     Object.keys(fields).forEach(fieldName => {
       const fieldType = fields[fieldName].type;

@@ -10,7 +10,7 @@ export type FieldMaps = {
 };
 
 export function resolveOutputConfigsAsThunk<T: FieldMaps>(
-  schema: SchemaComposer,
+  schema: SchemaComposer<any>,
   fieldMap: T,
   typeName?: string = ''
 ): T {
@@ -49,7 +49,7 @@ export function resolveOutputConfigsAsThunk<T: FieldMaps>(
 }
 
 export function resolveInputConfigsAsThunk<T: FieldMaps>(
-  schema: SchemaComposer,
+  schema: SchemaComposer<any>,
   fieldMap: T,
   typeName?: string
 ): T {
