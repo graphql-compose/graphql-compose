@@ -14,7 +14,7 @@ import type { SchemaComposer } from './schemaComposer';
  * #resolver
  */
 export function typeByPath(
-  src: TypeComposer | InputTypeComposer | Resolver<any, any>,
+  src: TypeComposer<any> | InputTypeComposer | Resolver<any, any>,
   path: string | Array<string>
 ) {
   const parts = Array.isArray(path) ? path : String(path).split('.');
@@ -34,7 +34,7 @@ export function typeByPath(
   return src;
 }
 
-export function typeByPathTC(tc: TypeComposer, parts: Array<string>) {
+export function typeByPathTC(tc: TypeComposer<any>, parts: Array<string>) {
   if (!tc) return undefined;
   if (parts.length === 0) return tc;
 
@@ -89,7 +89,7 @@ function typeByPathRSV(rsv: Resolver<any, any>, parts: Array<string>) {
 export function processType(
   type: GraphQLOutputType | GraphQLInputType | void | null,
   restParts: Array<string>,
-  schema: SchemaComposer
+  schema: SchemaComposer<any>
 ): mixed {
   if (!type) return undefined;
   const unwrappedType = getNamedType(type);

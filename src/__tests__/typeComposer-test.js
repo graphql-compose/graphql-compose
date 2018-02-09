@@ -24,7 +24,6 @@ describe('TypeComposer', () => {
         field2: { type: GraphQLString },
       },
     });
-
     tc = new TypeComposer(objectType);
   });
 

@@ -21,7 +21,7 @@ export type GraphQLEnumTypeExtended = GraphQLEnumType & {
 export class EnumTypeComposer {
   gqType: GraphQLEnumType;
 
-  static _schema: SchemaComposer;
+  static _schema: SchemaComposer<any>;
 
   static create(opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType): EnumTypeComposer {
     let ETC;

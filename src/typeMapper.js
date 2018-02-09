@@ -110,7 +110,7 @@ const RegexpInputTypeDefinition = /input\s[^{]+\{[^}]+\}/im;
 const RegexpEnumTypeDefinition = /enum\s[^{]+\{[^}]+\}/im;
 
 export class TypeMapper {
-  _schema: SchemaComposer;
+  _schema: SchemaComposer<*>;
 
   basicScalars: Map<string, GraphQLNamedType> = new Map([
     ['String', GraphQLString],
@@ -577,7 +577,10 @@ export class TypeMapper {
 // /////////////////////////////////////////////////////////////////////////////
 // From GraphQL-js particles
 // /////////////////////////////////////////////////////////////////////////////
-function parseTypes(astDocument: DocumentNode, schema: SchemaComposer): Array<GraphQLNamedType> {
+function parseTypes(
+  astDocument: DocumentNode,
+  schema: SchemaComposer<any>
+): Array<GraphQLNamedType> {
   const types = [];
   for (let i = 0; i < astDocument.definitions.length; i++) {
     const def = astDocument.definitions[i];
@@ -586,7 +589,7 @@ function parseTypes(astDocument: DocumentNode, schema: SchemaComposer): Array<Gr
   return types;
 }
 
-function typeFromAST(inputTypeAST: TypeNode, schema: SchemaComposer): ?GraphQLType {
+function typeFromAST(inputTypeAST: TypeNode, schema: SchemaComposer<any>): ?GraphQLType {
   let innerType;
   if (inputTypeAST.kind === Kind.LIST_TYPE) {
     innerType = typeFromAST(inputTypeAST.type, schema);
@@ -600,7 +603,7 @@ function typeFromAST(inputTypeAST: TypeNode, schema: SchemaComposer): ?GraphQLTy
   return schema.TypeMapper.get(inputTypeAST.name.value);
 }
 
-function typeDefNamed(typeName: string, schema: SchemaComposer): GraphQLNamedType {
+function typeDefNamed(typeName: string, schema: SchemaComposer<any>): GraphQLNamedType {
   const type = schema.TypeMapper.get(typeName);
   if (type) {
     return type;
@@ -608,7 +611,7 @@ function typeDefNamed(typeName: string, schema: SchemaComposer): GraphQLNamedTyp
   throw new Error(`Cannot find type with name '${typeName}' in TypeMapper.`);
 }
 
-function makeSchemaDef(def, schema: SchemaComposer) {
+function makeSchemaDef(def, schema: SchemaComposer<any>) {
   if (!def) {
     throw new Error('def must be defined');
   }
@@ -633,7 +636,7 @@ function makeSchemaDef(def, schema: SchemaComposer) {
 
 function makeInputValues(
   values: ?$ReadOnlyArray<InputValueDefinitionNode>,
-  schema: SchemaComposer
+  schema: SchemaComposer<any>
 ) {
   if (!values) return {};
   return keyValMap(
@@ -652,7 +655,7 @@ function makeInputValues(
 
 function makeFieldDefMap(
   def: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode,
-  schema: SchemaComposer
+  schema: SchemaComposer<any>
 ) {
   if (!def.fields) return {};
   return keyValMap(
@@ -686,7 +689,7 @@ function makeEnumDef(def: EnumTypeDefinitionNode) {
   return enumType;
 }
 
-function makeInputObjectDef(def: InputObjectTypeDefinitionNode, schema: SchemaComposer) {
+function makeInputObjectDef(def: InputObjectTypeDefinitionNode, schema: SchemaComposer<any>) {
   return new GraphQLInputObjectType({
     name: def.name.value,
     description: getDescription(def),
@@ -714,35 +717,38 @@ function buildWrappedType(innerType: GraphQLType, inputTypeAST: TypeNode): Graph
   return innerType;
 }
 
-function produceOutputType(typeAST: TypeNode, schema: SchemaComposer): GraphQLOutputType {
+function produceOutputType(typeAST: TypeNode, schema: SchemaComposer<any>): GraphQLOutputType {
   const type = produceType(typeAST, schema);
   invariant(isOutputType(type), 'Expected Output type.');
   return (type: any);
 }
 
-function produceType(typeAST: TypeNode, schema: SchemaComposer): GraphQLType {
+function produceType(typeAST: TypeNode, schema: SchemaComposer<any>): GraphQLType {
   const typeName = getNamedTypeAST(typeAST).name.value;
   const typeDef = typeDefNamed(typeName, schema);
   return buildWrappedType(typeDef, typeAST);
 }
 
-function produceInputType(typeAST: TypeNode, schema: SchemaComposer): GraphQLInputType {
+function produceInputType(typeAST: TypeNode, schema: SchemaComposer<any>): GraphQLInputType {
   const type = produceType(typeAST, schema);
   invariant(isInputType(type), 'Expected Input type.');
   return (type: any);
 }
 
-function produceInterfaceType(typeAST: TypeNode, schema: SchemaComposer): GraphQLInterfaceType {
+function produceInterfaceType(
+  typeAST: TypeNode,
+  schema: SchemaComposer<any>
+): GraphQLInterfaceType {
   const type = produceType(typeAST, schema);
   invariant(type instanceof GraphQLInterfaceType, 'Expected Object type.');
   return type;
 }
 
-function makeImplementedInterfaces(def: ObjectTypeDefinitionNode, schema: SchemaComposer) {
+function makeImplementedInterfaces(def: ObjectTypeDefinitionNode, schema: SchemaComposer<any>) {
   return def.interfaces && def.interfaces.map(iface => produceInterfaceType(iface, schema));
 }
 
-function makeTypeDef(def: ObjectTypeDefinitionNode, schema: SchemaComposer) {
+function makeTypeDef(def: ObjectTypeDefinitionNode, schema: SchemaComposer<any>) {
   const typeName = def.name.value;
   return new GraphQLObjectType({
     name: typeName,

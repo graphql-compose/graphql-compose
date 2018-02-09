@@ -5,7 +5,7 @@ import { SchemaComposer } from './schemaComposer';
 
 export { graphql };
 
-const GQC: SchemaComposer = new SchemaComposer();
+const GQC: SchemaComposer<*> = new SchemaComposer();
 const TypeComposer = GQC.TypeComposer;
 const InputTypeComposer = GQC.InputTypeComposer;
 const EnumTypeComposer = GQC.EnumTypeComposer;
