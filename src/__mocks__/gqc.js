@@ -1,9 +1,9 @@
 /* @flow */
 
 import { GraphQLInt, GraphQLString } from '../graphql';
-import gqc from '../gqc';
+import { GQC } from '../';
 
-gqc.getOrCreateTC('User').addFields({
+GQC.getOrCreateTC('User').addFields({
   name: {
     type: GraphQLString,
   },
@@ -15,4 +15,4 @@ gqc.getOrCreateTC('User').addFields({
   },
 });
 
-export default gqc;
+export default GQC;

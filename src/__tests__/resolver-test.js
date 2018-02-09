@@ -13,9 +13,7 @@ import {
   GraphQLList,
 } from '../graphql';
 import GQC from '../__mocks__/gqc';
-import Resolver from '../resolver';
-import TypeComposer from '../typeComposer';
-import InputTypeComposer from '../inputTypeComposer';
+import { Resolver, TypeComposer, InputTypeComposer } from '../';
 
 describe('Resolver', () => {
   let resolver: Resolver<any, any>;

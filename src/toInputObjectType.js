@@ -10,8 +10,9 @@ import {
   GraphQLList,
   GraphQLNonNull,
 } from './graphql';
-import TypeComposer from './typeComposer';
-import InputTypeComposer from './inputTypeComposer';
+import type { TypeComposer } from './typeComposer';
+import type { InputTypeComposer } from './inputTypeComposer';
+import type { SchemaComposer } from './schemaComposer';
 import GenericType from './type/generic';
 import { upperFirst } from './utils/misc';
 import type {
@@ -52,6 +53,7 @@ export function toInputObjectType(
     return typeComposer.getInputTypeComposer();
   }
 
+  const schemaComposer = typeComposer.constructor._schema;
   const prefix: string = opts.prefix || '';
   const postfix: string = opts.postfix || 'Input';
 
@@ -62,7 +64,7 @@ export function toInputObjectType(
     return itc;
   }
 
-  const inputTypeComposer = new InputTypeComposer(
+  const inputTypeComposer = new schemaComposer.InputTypeComposer(
     new GraphQLInputObjectType({
       name: inputTypeName,
       fields: {},
@@ -78,7 +80,7 @@ export function toInputObjectType(
       fieldName: key,
       outputTypeName: typeComposer.getTypeName(),
     };
-    inputFields[key] = convertInputObjectField(outputFields[key], fieldOpts, cache);
+    inputFields[key] = convertInputObjectField(outputFields[key], fieldOpts, cache, schemaComposer);
   });
   inputTypeComposer.addFields(inputFields);
 
@@ -95,7 +97,8 @@ export type convertInputObjectFieldOpts = {
 export function convertInputObjectField<TSource, TContext>(
   field: GraphQLFieldConfig<TSource, TContext>,
   opts: convertInputObjectFieldOpts,
-  cache: Map<GraphQLObjectType, InputTypeComposer>
+  cache: Map<GraphQLObjectType, InputTypeComposer>,
+  schemaComposer: SchemaComposer
 ): GraphQLInputFieldConfig {
   let fieldType: GraphQLType = field.type;
 
@@ -111,8 +114,8 @@ export function convertInputObjectField<TSource, TContext>(
         prefix: `${opts.prefix || ''}${upperFirst(opts.outputTypeName || '')}`,
         postfix: opts.postfix || 'Input',
       };
-      const typeComposer = new TypeComposer(fieldType);
-      fieldType = toInputObjectType(typeComposer, typeOpts, cache).getType();
+      const tc = new schemaComposer.TypeComposer(fieldType);
+      fieldType = toInputObjectType(tc, typeOpts, cache).getType();
     } else {
       // eslint-disable-next-line
       console.error(

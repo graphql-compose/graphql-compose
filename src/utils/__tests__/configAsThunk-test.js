@@ -1,8 +1,7 @@
 /* @flow */
 
 import { GraphQLString, GraphQLObjectType, GraphQLInputObjectType } from '../../graphql';
-import TypeComposer from '../../typeComposer';
-import InputTypeComposer from '../../inputTypeComposer';
+import { TypeComposer, InputTypeComposer, GQC } from '../../';
 import {
   resolveOutputConfigsAsThunk,
   resolveInputConfigsAsThunk,
@@ -35,7 +34,7 @@ describe('typeAsThunk', () => {
           description: 'Field5',
         }),
       };
-      const unwrapped = resolveOutputConfigsAsThunk(fieldMap);
+      const unwrapped = resolveOutputConfigsAsThunk(GQC, fieldMap);
       expect(unwrapped.f0.type).toBe(GraphQLString);
       expect(unwrapped.f0.description).toBe('Field0');
       expect(unwrapped.f0._fieldAsThunk).toBeTruthy();
@@ -87,7 +86,7 @@ describe('typeAsThunk', () => {
           description: 'Field5',
         },
       };
-      const unwrapped: any = resolveOutputConfigsAsThunk(fieldMap);
+      const unwrapped: any = resolveOutputConfigsAsThunk(GQC, fieldMap);
 
       expect(unwrapped.f1.type).toBe(GraphQLString);
 
@@ -119,7 +118,7 @@ describe('typeAsThunk', () => {
           description: 'Field4',
         }),
       };
-      const unwrapped = resolveOutputConfigsAsThunk(fieldMap);
+      const unwrapped = resolveOutputConfigsAsThunk(GQC, fieldMap);
 
       expect(unwrapped.f3.type).toBe(GraphQLString);
       expect(unwrapped.f3._fieldAsThunk).toBeTruthy();
@@ -149,7 +148,7 @@ describe('typeAsThunk', () => {
           },
         },
       };
-      const unwrapped = resolveOutputConfigsAsThunk(fieldMap);
+      const unwrapped = resolveOutputConfigsAsThunk(GQC, fieldMap);
       const { args } = unwrapped.f6;
       expect(args.a1.type).toBe(GraphQLString);
       expect(args.a2.type).toBe(GraphQLString);
@@ -158,8 +157,8 @@ describe('typeAsThunk', () => {
     });
 
     it('should pass null, undefined', () => {
-      expect(resolveOutputConfigsAsThunk((null: any))).toBe(null);
-      expect(resolveOutputConfigsAsThunk((undefined: any))).toBe(undefined);
+      expect(resolveOutputConfigsAsThunk(GQC, (null: any))).toBe(null);
+      expect(resolveOutputConfigsAsThunk(GQC, (undefined: any))).toBe(undefined);
     });
   });
 
@@ -188,7 +187,7 @@ describe('typeAsThunk', () => {
           description: 'Field5',
         }),
       };
-      const unwrapped = resolveInputConfigsAsThunk(fieldMap);
+      const unwrapped = resolveInputConfigsAsThunk(GQC, fieldMap);
       expect(unwrapped.f0.type).toBe(GraphQLString);
       expect(unwrapped.f0.description).toBe('Field0');
       expect(unwrapped.f0._fieldAsThunk).toBeTruthy();
@@ -241,7 +240,7 @@ describe('typeAsThunk', () => {
         },
       };
 
-      const unwrapped: any = resolveInputConfigsAsThunk(fieldMap);
+      const unwrapped: any = resolveInputConfigsAsThunk(GQC, fieldMap);
 
       expect(unwrapped.f1.type).toBe(GraphQLString);
 
@@ -273,7 +272,7 @@ describe('typeAsThunk', () => {
           description: 'Field4',
         }),
       };
-      const unwrapped = resolveInputConfigsAsThunk(fieldMap);
+      const unwrapped = resolveInputConfigsAsThunk(GQC, fieldMap);
 
       expect(unwrapped.f3.type).toBe(GraphQLString);
       expect(unwrapped.f3.description).toBe('Field3');
@@ -295,8 +294,8 @@ describe('typeAsThunk', () => {
     });
 
     it('should pass null, undefined', () => {
-      expect(resolveInputConfigsAsThunk((null: any))).toBe(null);
-      expect(resolveInputConfigsAsThunk((undefined: any))).toBe(undefined);
+      expect(resolveInputConfigsAsThunk(GQC, (null: any))).toBe(null);
+      expect(resolveInputConfigsAsThunk(GQC, (undefined: any))).toBe(undefined);
     });
   });
 

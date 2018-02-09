@@ -7,9 +7,9 @@ import {
 import { TypeAsString } from './typeMapper';
 import { ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
 import { ProjectionType } from './projection';
-import InputTypeComposer from './inputTypeComposer';
-import EnumTypeComposer from './enumTypeComposer';
-import Resolver from './resolver';
+import { InputTypeComposer } from './inputTypeComposer';
+import { EnumTypeComposer } from './enumTypeComposer';
+import { Resolver } from './resolver';
 import { GenericMap, ObjMap, Thunk } from './utils/definitions';
 
 export type GetRecordIdFn<TSource, TContext> = (source: TSource, args: any, context: TContext) => string;
@@ -124,7 +124,7 @@ export type RelationArgsMapper<TSource, TContext> = {
         | GenericMap<any>
 };
 
-export default class TypeComposer {
+export class TypeComposer {
     public gqType: GraphQLObjectTypeExtended;
     private _fields: GraphQLFieldConfigMap<any, any>;
 

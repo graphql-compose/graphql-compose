@@ -5,11 +5,9 @@ import { resolveMaybeThunk } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveOutputConfigsAsThunk } from './utils/configAsThunk';
 import { deprecate } from './utils/debug';
-import Resolver from './resolver';
 import { toInputObjectType } from './toInputObjectType';
-import InputTypeComposer from './inputTypeComposer';
-import EnumTypeComposer from './enumTypeComposer';
-import TypeMapper from './typeMapper';
+import { type InputTypeComposer } from './inputTypeComposer';
+import { type EnumTypeComposer } from './enumTypeComposer';
 import { typeByPath } from './typeByPath';
 import {
   GraphQLObjectType,
@@ -32,9 +30,10 @@ import type {
   FieldDefinitionNode,
 } from './graphql';
 import type { TypeAsString } from './typeMapper';
-import type { ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
+import type { Resolver, ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
 import type { ProjectionType } from './projection';
 import type { GenericMap, ObjMap, Thunk } from './utils/definitions';
+import type { SchemaComposer } from './schemaComposer';
 
 export type GetRecordIdFn<TSource, TContext> = (
   source: TSource,
@@ -152,9 +151,10 @@ export type RelationArgsMapper<TSource, TContext> = {
     | GenericMap<any>,
 };
 
-export default class TypeComposer {
+export class TypeComposer {
   gqType: GraphQLObjectTypeExtended;
   _fields: GraphQLFieldConfigMap<any, any>;
+  static _schema: SchemaComposer;
 
   static create(
     opts: TypeAsString | ComposeObjectTypeConfig<any, any> | GraphQLObjectType
@@ -165,30 +165,30 @@ export default class TypeComposer {
       const typeName: string = opts;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
-        TC = new TypeComposer(
+        TC = new this._schema.TypeComposer(
           new GraphQLObjectType({
             name: typeName,
             fields: () => ({}),
           })
         );
       } else {
-        const type = TypeMapper.createType(typeName);
+        const type = this._schema.TypeMapper.createType(typeName);
         if (!(type instanceof GraphQLObjectType)) {
           throw new Error(
             'You should provide correct GraphQLObjectType type definition.' +
               'Eg. `type MyType { name: String }`'
           );
         }
-        TC = new TypeComposer(type);
+        TC = new this._schema.TypeComposer(type);
       }
     } else if (opts instanceof GraphQLObjectType) {
-      TC = new TypeComposer(opts);
+      TC = new this._schema.TypeComposer(opts);
     } else if (isObject(opts)) {
       const type = new GraphQLObjectType({
         ...(opts: any),
         fields: () => ({}),
       });
-      TC = new TypeComposer(type);
+      TC = new this._schema.TypeComposer(type);
 
       if (isObject(opts.fields)) {
         TC.addFields(opts.fields);
@@ -236,14 +236,14 @@ export default class TypeComposer {
    * WARNING: this method rewrite an internal GraphQL instance properties.
    */
   setFields(fields: ComposeFieldConfigMap<any, any>): TypeComposer {
-    const prepearedFields: GraphQLFieldConfigMap<any, any> = TypeMapper.convertOutputFieldConfigMap(
-      fields,
-      this.getTypeName()
-    );
+    const prepearedFields: GraphQLFieldConfigMap<
+      any,
+      any
+    > = this.constructor._schema.TypeMapper.convertOutputFieldConfigMap(fields, this.getTypeName());
 
     this._fields = prepearedFields;
     this.gqType._typeConfig.fields = () =>
-      resolveOutputConfigsAsThunk(prepearedFields, this.getTypeName());
+      resolveOutputConfigsAsThunk(this.constructor._schema, prepearedFields, this.getTypeName());
     delete this.gqType._fields; // clear builded fields in type
     return this;
   }
@@ -409,7 +409,7 @@ export default class TypeComposer {
   ): ComposeFieldConfigAsObject<TSource, TContext> {
     const resolver = isFunction(opts.resolver) ? opts.resolver() : opts.resolver;
 
-    if (!(resolver instanceof Resolver)) {
+    if (!(resolver instanceof this.constructor._schema.Resolver)) {
       throw new Error(
         'You should provide correct Resolver object for relation ' +
           `${this.getTypeName()}.${fieldName}`
@@ -555,7 +555,7 @@ export default class TypeComposer {
       newFields[fieldName] = { ...fields[fieldName] };
     });
 
-    const cloned = new TypeComposer(
+    const cloned = new this.constructor._schema.TypeComposer(
       new GraphQLObjectType({
         name: newTypeName,
         fields: newFields,
@@ -596,7 +596,7 @@ export default class TypeComposer {
           `This field should be ObjectType, but it has type '${fieldType.constructor.name}'`
       );
     }
-    return TypeComposer.create(fieldType);
+    return this.constructor._schema.TypeComposer.create(fieldType);
   }
 
   makeFieldNonNull(fieldNameOrArray: string | Array<string>): TypeComposer {
@@ -681,7 +681,7 @@ export default class TypeComposer {
     if (!this.gqType._gqcResolvers) {
       this.gqType._gqcResolvers = new Map();
     }
-    if (!(resolver instanceof Resolver)) {
+    if (!(resolver instanceof this.constructor._schema.Resolver)) {
       throw new Error('setResolver() accept only Resolver instance');
     }
     this.gqType._gqcResolvers.set(name, resolver);
@@ -690,8 +690,8 @@ export default class TypeComposer {
   }
 
   addResolver(resolver: Resolver<any, any> | ResolverOpts<any, any>): TypeComposer {
-    if (!(resolver instanceof Resolver)) {
-      resolver = new Resolver(resolver); // eslint-disable-line no-param-reassign
+    if (!(resolver instanceof this.constructor._schema.Resolver)) {
+      resolver = new this.constructor._schema.Resolver(resolver); // eslint-disable-line no-param-reassign
     }
 
     if (!resolver.name) {

@@ -1,7 +1,6 @@
 /* @flow */
 /* eslint-disable no-use-before-define, class-methods-use-this, no-unused-vars, no-param-reassign */
 
-import objectPath from 'object-path';
 import { parse, parseType } from 'graphql/language/parser';
 import { Kind } from 'graphql/language';
 
@@ -42,6 +41,7 @@ import {
   GraphQLUnionType,
   // isOutputType,
   // isInputType,
+  isNamedType,
   valueFromAST,
 } from './graphql';
 
@@ -70,13 +70,13 @@ import type {
   ComposeFieldConfigArgumentMap,
 } from './typeComposer';
 import type { Thunk } from './utils/definitions';
+import type { SchemaComposer } from './schemaComposer';
 
-import TypeComposer from './typeComposer';
-import InputTypeComposer from './inputTypeComposer';
-import EnumTypeComposer from './enumTypeComposer';
-import Resolver from './resolver';
-import TypeStorage from './typeStorage';
-import GQC from './gqc';
+import { TypeComposer } from './typeComposer';
+import { InputTypeComposer } from './inputTypeComposer';
+import { EnumTypeComposer } from './enumTypeComposer';
+import { Resolver } from './resolver';
+import { TypeStorage } from './typeStorage';
 
 export type TypeDefinitionString = string; // eg type Name { field: Int }
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]
@@ -109,63 +109,59 @@ const RegexpOutputTypeDefinition = /type\s[^{]+\{[^}]+\}/im;
 const RegexpInputTypeDefinition = /input\s[^{]+\{[^}]+\}/im;
 const RegexpEnumTypeDefinition = /enum\s[^{]+\{[^}]+\}/im;
 
-class TypeMapper {
-  map: Map<string, GraphQLNamedType>;
+export class TypeMapper {
+  _schema: SchemaComposer;
 
-  constructor() {
-    this.map = new Map();
-
-    this.addBasicScalarTypes();
-  }
+  basicScalars: Map<string, GraphQLNamedType> = new Map([
+    ['String', GraphQLString],
+    ['Float', GraphQLFloat],
+    ['Int', GraphQLInt],
+    ['Boolean', GraphQLBoolean],
+    ['ID', GraphQLID],
+    ['JSON', GraphQLJSON],
+    ['Json', GraphQLJSON],
+    ['Date', GraphQLDate],
+  ]);
 
   get(name: string): ?GraphQLNamedType {
-    return this.map.get(name);
+    const basicScalar = this.basicScalars.get(name);
+    if (basicScalar) return basicScalar;
+
+    if (!this._schema.has(name)) {
+      return null;
+    }
+
+    const schemaType = this._schema.get(name);
+    if (isNamedType(schemaType)) {
+      return schemaType;
+    }
+    return schemaType.getType();
   }
 
   set(name: string, type: GraphQLNamedType) {
-    this.map.set(name, type);
+    this._schema.set(name, type);
   }
 
   has(name: string): boolean {
-    return this.map.has(name);
-  }
-
-  delete(name: string): boolean {
-    return this.map.delete(name);
-  }
-
-  keys(): Iterator<string> {
-    // eslint-disable-line no-undef
-    return this.map.keys();
-  }
-
-  addBasicScalarTypes() {
-    this.set('String', GraphQLString);
-    this.set('Float', GraphQLFloat);
-    this.set('Int', GraphQLInt);
-    this.set('Boolean', GraphQLBoolean);
-    this.set('ID', GraphQLID);
-    this.set('JSON', GraphQLJSON);
-    this.set('Json', GraphQLJSON);
-    this.set('Date', GraphQLDate);
+    return this._schema.has(name);
   }
 
   getWrapped(str: TypeWrappedString | TypeNameString): ?GraphQLType {
     const inputTypeAST: TypeNode = parseType(str);
-    return typeFromAST(inputTypeAST);
+    return typeFromAST(inputTypeAST, this._schema);
   }
 
   createType(str: TypeDefinitionString): ?GraphQLNamedType {
     const astDocument: DocumentNode = parse(str);
 
-    if (objectPath.get(astDocument, 'kind') !== 'Document') {
+    if (!astDocument || astDocument.kind !== 'Document') {
       throw new Error(
         'You should provide correct type syntax. ' +
           "Eg. createType('type IntRange { min: Int, max: Int }')"
       );
     }
 
-    const types = parseTypes(astDocument);
+    const types = parseTypes(astDocument, this._schema);
 
     const type = types[0];
 
@@ -192,7 +188,7 @@ class TypeMapper {
 
     for (let i = 0; i < astDocument.definitions.length; i++) {
       const def = astDocument.definitions[i];
-      const type = makeSchemaDef(def);
+      const type = makeSchemaDef(def, this._schema);
       typeStorage.set(type.name, type);
     }
     return typeStorage;
@@ -254,8 +250,8 @@ class TypeMapper {
         );
       }
 
-      if (GQC.hasInstance(composeType, TypeComposer)) {
-        fieldConfig.type = GQC.getTC(composeType).getType();
+      if (this._schema.hasInstance(composeType, TypeComposer)) {
+        fieldConfig.type = this._schema.getTC(composeType).getType();
       } else {
         const type =
           RegexpOutputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
@@ -381,8 +377,8 @@ class TypeMapper {
         );
       }
 
-      if (GQC.hasInstance(composeType, InputTypeComposer)) {
-        argConfig.type = GQC.getITC(composeType).getType();
+      if (this._schema.hasInstance(composeType, InputTypeComposer)) {
+        argConfig.type = this._schema.getITC(composeType).getType();
       } else {
         const type =
           RegexpInputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
@@ -510,8 +506,8 @@ class TypeMapper {
         );
       }
 
-      if (GQC.hasInstance(composeType, InputTypeComposer)) {
-        fieldConfig.type = GQC.getITC(composeType).getType();
+      if (this._schema.hasInstance(composeType, InputTypeComposer)) {
+        fieldConfig.type = this._schema.getITC(composeType).getType();
       } else {
         const type =
           RegexpInputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
@@ -578,48 +574,48 @@ class TypeMapper {
   }
 }
 
-const typeMapper = new TypeMapper();
-export default typeMapper;
-
-function parseTypes(astDocument: DocumentNode): Array<GraphQLNamedType> {
+// /////////////////////////////////////////////////////////////////////////////
+// From GraphQL-js particles
+// /////////////////////////////////////////////////////////////////////////////
+function parseTypes(astDocument: DocumentNode, schema: SchemaComposer): Array<GraphQLNamedType> {
   const types = [];
   for (let i = 0; i < astDocument.definitions.length; i++) {
     const def = astDocument.definitions[i];
-    types[i] = makeSchemaDef(def);
+    types[i] = makeSchemaDef(def, schema);
   }
   return types;
 }
 
-function typeFromAST(inputTypeAST: TypeNode): ?GraphQLType {
+function typeFromAST(inputTypeAST: TypeNode, schema: SchemaComposer): ?GraphQLType {
   let innerType;
   if (inputTypeAST.kind === Kind.LIST_TYPE) {
-    innerType = typeFromAST(inputTypeAST.type);
+    innerType = typeFromAST(inputTypeAST.type, schema);
     return innerType && new GraphQLList(innerType);
   }
   if (inputTypeAST.kind === Kind.NON_NULL_TYPE) {
-    innerType = typeFromAST(inputTypeAST.type);
+    innerType = typeFromAST(inputTypeAST.type, schema);
     return innerType && new GraphQLNonNull(((innerType: any): GraphQLNullableType));
   }
   invariant(inputTypeAST.kind === Kind.NAMED_TYPE, 'Must be a named type.');
-  return typeMapper.get(inputTypeAST.name.value);
+  return schema.TypeMapper.get(inputTypeAST.name.value);
 }
 
-function typeDefNamed(typeName: string): GraphQLNamedType {
-  const type = typeMapper.get(typeName);
+function typeDefNamed(typeName: string, schema: SchemaComposer): GraphQLNamedType {
+  const type = schema.TypeMapper.get(typeName);
   if (type) {
     return type;
   }
   throw new Error(`Cannot find type with name '${typeName}' in TypeMapper.`);
 }
 
-function makeSchemaDef(def) {
+function makeSchemaDef(def, schema: SchemaComposer) {
   if (!def) {
     throw new Error('def must be defined');
   }
 
   switch (def.kind) {
     case Kind.OBJECT_TYPE_DEFINITION:
-      return makeTypeDef(def);
+      return makeTypeDef(def, schema);
     // case INTERFACE_TYPE_DEFINITION:
     //   return makeInterfaceDef(def);
     case Kind.ENUM_TYPE_DEFINITION:
@@ -629,19 +625,22 @@ function makeSchemaDef(def) {
     // case SCALAR_TYPE_DEFINITION:
     //   return makeScalarDef(def);
     case Kind.INPUT_OBJECT_TYPE_DEFINITION:
-      return makeInputObjectDef(def);
+      return makeInputObjectDef(def, schema);
     default:
       throw new Error(`Type kind "${def.kind}" not supported.`);
   }
 }
 
-function makeInputValues(values: ?$ReadOnlyArray<InputValueDefinitionNode>) {
+function makeInputValues(
+  values: ?$ReadOnlyArray<InputValueDefinitionNode>,
+  schema: SchemaComposer
+) {
   if (!values) return {};
   return keyValMap(
     values,
     value => value.name.value,
     value => {
-      const type = produceInputType(value.type);
+      const type = produceInputType(value.type, schema);
       return {
         type,
         description: getDescription(value),
@@ -651,15 +650,18 @@ function makeInputValues(values: ?$ReadOnlyArray<InputValueDefinitionNode>) {
   );
 }
 
-function makeFieldDefMap(def: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode) {
+function makeFieldDefMap(
+  def: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode,
+  schema: SchemaComposer
+) {
   if (!def.fields) return {};
   return keyValMap(
     def.fields,
     field => field.name.value,
     field => ({
-      type: produceOutputType(field.type),
+      type: produceOutputType(field.type, schema),
       description: getDescription(field),
-      args: makeInputValues(field.arguments),
+      args: makeInputValues(field.arguments, schema),
       deprecationReason: getDeprecationReason(field.directives),
     })
   );
@@ -684,11 +686,11 @@ function makeEnumDef(def: EnumTypeDefinitionNode) {
   return enumType;
 }
 
-function makeInputObjectDef(def: InputObjectTypeDefinitionNode) {
+function makeInputObjectDef(def: InputObjectTypeDefinitionNode, schema: SchemaComposer) {
   return new GraphQLInputObjectType({
     name: def.name.value,
     description: getDescription(def),
-    fields: () => makeInputValues(def.fields),
+    fields: () => makeInputValues(def.fields, schema),
   });
 }
 
@@ -712,41 +714,41 @@ function buildWrappedType(innerType: GraphQLType, inputTypeAST: TypeNode): Graph
   return innerType;
 }
 
-function produceOutputType(typeAST: TypeNode): GraphQLOutputType {
-  const type = produceType(typeAST);
+function produceOutputType(typeAST: TypeNode, schema: SchemaComposer): GraphQLOutputType {
+  const type = produceType(typeAST, schema);
   invariant(isOutputType(type), 'Expected Output type.');
   return (type: any);
 }
 
-function produceType(typeAST: TypeNode): GraphQLType {
+function produceType(typeAST: TypeNode, schema: SchemaComposer): GraphQLType {
   const typeName = getNamedTypeAST(typeAST).name.value;
-  const typeDef = typeDefNamed(typeName);
+  const typeDef = typeDefNamed(typeName, schema);
   return buildWrappedType(typeDef, typeAST);
 }
 
-function produceInputType(typeAST: TypeNode): GraphQLInputType {
-  const type = produceType(typeAST);
+function produceInputType(typeAST: TypeNode, schema: SchemaComposer): GraphQLInputType {
+  const type = produceType(typeAST, schema);
   invariant(isInputType(type), 'Expected Input type.');
   return (type: any);
 }
 
-function produceInterfaceType(typeAST: TypeNode): GraphQLInterfaceType {
-  const type = produceType(typeAST);
+function produceInterfaceType(typeAST: TypeNode, schema: SchemaComposer): GraphQLInterfaceType {
+  const type = produceType(typeAST, schema);
   invariant(type instanceof GraphQLInterfaceType, 'Expected Object type.');
   return type;
 }
 
-function makeImplementedInterfaces(def: ObjectTypeDefinitionNode) {
-  return def.interfaces && def.interfaces.map(iface => produceInterfaceType(iface));
+function makeImplementedInterfaces(def: ObjectTypeDefinitionNode, schema: SchemaComposer) {
+  return def.interfaces && def.interfaces.map(iface => produceInterfaceType(iface, schema));
 }
 
-function makeTypeDef(def: ObjectTypeDefinitionNode) {
+function makeTypeDef(def: ObjectTypeDefinitionNode, schema: SchemaComposer) {
   const typeName = def.name.value;
   return new GraphQLObjectType({
     name: typeName,
     description: getDescription(def),
-    fields: () => makeFieldDefMap(def),
-    interfaces: () => makeImplementedInterfaces(def),
+    fields: () => makeFieldDefMap(def, schema),
+    interfaces: () => makeImplementedInterfaces(def, schema),
   });
 }
 

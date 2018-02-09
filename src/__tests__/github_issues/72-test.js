@@ -1,6 +1,6 @@
 /* @flow */
 
-import TypeComposer from '../../typeComposer';
+import { TypeComposer } from '../../';
 
 describe('github issue #72', () => {
   it('extendField after addRelation', () => {

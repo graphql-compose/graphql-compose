@@ -7,8 +7,7 @@ import {
   GraphQLList,
   GraphQLInt,
 } from '../graphql';
-import TypeComposer from '../typeComposer';
-import InputTypeComposer from '../inputTypeComposer';
+import { TypeComposer, InputTypeComposer } from '../';
 import { toInputObjectType } from '../toInputObjectType';
 
 describe('toInputObjectType()', () => {

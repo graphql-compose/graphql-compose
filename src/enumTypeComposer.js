@@ -4,7 +4,6 @@
 import invariant from 'graphql/jsutils/invariant';
 import { GraphQLEnumType, GraphQLList, GraphQLNonNull } from './graphql';
 import { isObject, isString } from './utils/is';
-import TypeMapper from './typeMapper';
 import type {
   GraphQLEnumValueConfig,
   GraphQLEnumTypeConfig,
@@ -13,13 +12,16 @@ import type {
 } from './graphql';
 import type { TypeAsString } from './typeMapper';
 import { graphqlVersion } from './utils/graphqlVersion';
+import type { SchemaComposer } from './schemaComposer';
 
 export type GraphQLEnumTypeExtended = GraphQLEnumType & {
   _gqcEnumTypeComposer?: EnumTypeComposer,
 };
 
-export default class EnumTypeComposer {
+export class EnumTypeComposer {
   gqType: GraphQLEnumType;
+
+  static _schema: SchemaComposer;
 
   static create(opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType): EnumTypeComposer {
     let ETC;
@@ -28,29 +30,29 @@ export default class EnumTypeComposer {
       const typeName: string = opts;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
-        ETC = new EnumTypeComposer(
+        ETC = new this._schema.EnumTypeComposer(
           new GraphQLEnumType({
             name: typeName,
             values: {},
           })
         );
       } else {
-        const type = TypeMapper.createType(typeName);
+        const type = this._schema.TypeMapper.createType(typeName);
         if (!(type instanceof GraphQLEnumType)) {
           throw new Error(
             'You should provide correct GraphQLEnumType type definition.' +
               'Eg. `enum MyType { KEY1 KEY2 KEY3 }`'
           );
         }
-        ETC = new EnumTypeComposer(type);
+        ETC = new this._schema.EnumTypeComposer(type);
       }
     } else if (opts instanceof GraphQLEnumType) {
-      ETC = new EnumTypeComposer(opts);
+      ETC = new this._schema.EnumTypeComposer(opts);
     } else if (isObject(opts)) {
       const type = new GraphQLEnumType({
         ...(opts: any),
       });
-      ETC = new EnumTypeComposer(type);
+      ETC = new this._schema.EnumTypeComposer(type);
     } else {
       throw new Error('You should provide GraphQLEnumTypeConfig or string with enum name or SDL');
     }
@@ -263,7 +265,7 @@ export default class EnumTypeComposer {
       delete newValues[fieldName].isDeprecated;
     });
 
-    const cloned = new EnumTypeComposer(
+    const cloned = new this.constructor._schema.EnumTypeComposer(
       new GraphQLEnumType({
         name: newTypeName,
         values: newValues,
