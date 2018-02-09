@@ -1,5 +1,6 @@
-export default class TypeStorage<V, K = string> {
+export class TypeStorage<V, K = string> {
   public types: Map<K, V>;
+  public size: number;
 
   public constructor();
 

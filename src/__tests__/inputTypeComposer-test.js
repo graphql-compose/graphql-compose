@@ -8,7 +8,7 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from '../graphql';
-import InputTypeComposer from '../inputTypeComposer';
+import { InputTypeComposer } from '../';
 
 describe('InputTypeComposer', () => {
   let objectType: GraphQLInputObjectType;

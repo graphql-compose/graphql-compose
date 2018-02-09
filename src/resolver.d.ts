@@ -5,8 +5,8 @@ import * as graphql from './graphql';
 import {
     ComposeArgumentConfig, ComposeFieldConfigArgumentMap, ComposeOutputType, ComposeArgumentType
 } from './typeComposer';
-import InputTypeComposer from './inputTypeComposer';
-import TypeComposer from './typeComposer';
+import { InputTypeComposer } from './inputTypeComposer';
+import { TypeComposer } from './typeComposer';
 import { ProjectionType } from './projection';
 import { GenericMap } from './utils/definitions';
 
@@ -74,7 +74,7 @@ export type ResolveDebugOpts = {
     colors?: boolean,
 };
 
-export default class Resolver<TSource, TContext> {
+export class Resolver<TSource, TContext> {
     public type: GraphQLOutputType;
     public args: GraphQLFieldConfigArgumentMap;
     public resolve: ResolverRpCb<TSource, TContext>;

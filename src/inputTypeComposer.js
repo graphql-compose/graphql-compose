@@ -6,11 +6,11 @@ import { resolveMaybeThunk } from './utils/misc';
 // import { deprecate } from './utils/debug';
 import { isObject, isString } from './utils/is';
 import { resolveInputConfigsAsThunk, keepConfigsAsThunk } from './utils/configAsThunk';
-import TypeMapper from './typeMapper';
 import { typeByPath } from './typeByPath';
 import type { Thunk, ObjMap } from './utils/definitions';
-import type EnumTypeComposer from './enumTypeComposer';
+import type { EnumTypeComposer } from './enumTypeComposer';
 import type { TypeAsString } from './typeMapper';
+import type { SchemaComposer } from './schemaComposer';
 import type {
   // GraphQLInputFieldConfig,
   GraphQLInputFieldConfigMap,
@@ -46,8 +46,10 @@ export type ComposeInputObjectTypeConfig = {
   description?: ?string,
 };
 
-export default class InputTypeComposer {
+export class InputTypeComposer {
   gqType: GraphQLInputObjectType;
+
+  static _schema: SchemaComposer;
 
   static create(
     opts: TypeAsString | ComposeInputObjectTypeConfig | GraphQLInputObjectType
@@ -58,31 +60,31 @@ export default class InputTypeComposer {
       const typeName: string = opts;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
-        ITC = new InputTypeComposer(
+        ITC = new this._schema.InputTypeComposer(
           new GraphQLInputObjectType({
             name: typeName,
             fields: () => ({}),
           })
         );
       } else {
-        const type = TypeMapper.createType(typeName);
+        const type = this._schema.TypeMapper.createType(typeName);
         if (!(type instanceof GraphQLInputObjectType)) {
           throw new Error(
             'You should provide correct GraphQLInputObjectType type definition.' +
               'Eg. `input MyInputType { name: String! }`'
           );
         }
-        ITC = new InputTypeComposer(type);
+        ITC = new this._schema.InputTypeComposer(type);
       }
     } else if (opts instanceof GraphQLInputObjectType) {
-      ITC = new InputTypeComposer(opts);
+      ITC = new this._schema.InputTypeComposer(opts);
     } else if (isObject(opts)) {
       const type = new GraphQLInputObjectType({
         name: opts.name,
         description: opts.description,
         fields: () => ({}),
       });
-      ITC = new InputTypeComposer(type);
+      ITC = new this._schema.InputTypeComposer(type);
 
       if (isObject(opts.fields)) {
         ITC.addFields(opts.fields);
@@ -139,10 +141,13 @@ export default class InputTypeComposer {
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
   setFields(fields: ComposeInputFieldConfigMap): InputTypeComposer {
-    const prepearedFields = TypeMapper.convertInputFieldConfigMap(fields, this.getTypeName());
+    const prepearedFields = this.constructor._schema.TypeMapper.convertInputFieldConfigMap(
+      fields,
+      this.getTypeName()
+    );
 
     this.gqType._typeConfig.fields = () =>
-      resolveInputConfigsAsThunk(prepearedFields, this.getTypeName());
+      resolveInputConfigsAsThunk(this.constructor._schema, prepearedFields, this.getTypeName());
     delete this.gqType._fields; // if schema was builded, delete defineFieldMap
     return this;
   }
@@ -252,7 +257,7 @@ export default class InputTypeComposer {
           `This field should be InputObjectType, but it has type '${fieldType.constructor.name}'`
       );
     }
-    return InputTypeComposer.create(fieldType);
+    return this.constructor._schema.InputTypeComposer.create(fieldType);
   }
 
   makeRequired(fieldNameOrArray: string | Array<string>): InputTypeComposer {
@@ -294,7 +299,7 @@ export default class InputTypeComposer {
       newFields[fieldName] = { ...fields[fieldName] };
     });
 
-    return new InputTypeComposer(
+    return new this.constructor._schema.InputTypeComposer(
       new GraphQLInputObjectType({
         name: newTypeName,
         fields: newFields,

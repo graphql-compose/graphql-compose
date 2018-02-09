@@ -4,7 +4,7 @@ import {
 } from './graphql';
 import { Thunk, ObjMap } from './utils/definitions';
 import { TypeAsString } from './typeMapper';
-import EnumTypeComposer from './enumTypeComposer';
+import { EnumTypeComposer } from './enumTypeComposer';
 
 export type ComposeInputFieldConfigMap = ObjMap<ComposeInputFieldConfig>;
 
@@ -34,7 +34,7 @@ export type ComposeInputObjectTypeConfig = {
     description?: string | null,
 };
 
-export default class InputTypeComposer {
+export class InputTypeComposer {
     public gqType: GraphQLInputObjectType;
 
     public constructor(gqType: GraphQLInputObjectType);

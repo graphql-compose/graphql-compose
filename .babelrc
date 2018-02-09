@@ -2,6 +2,7 @@
   "plugins": [
     "transform-object-rest-spread",
     "transform-flow-strip-types",
+    "transform-class-properties",
     ["transform-runtime", { "polyfill": false }]
   ],
   "presets": [

@@ -1,9 +1,7 @@
 /* @flow */
 
 import { GraphQLString, GraphQLInt, GraphQLFloat } from '../graphql';
-import TypeComposer from '../typeComposer';
-import InputTypeComposer from '../inputTypeComposer';
-import Resolver from '../resolver';
+import { TypeComposer, InputTypeComposer, Resolver } from '../';
 
 describe('typeByPath', () => {
   const lonLatTC = TypeComposer.create('type LonLat { lon: Float, lat: Float }');

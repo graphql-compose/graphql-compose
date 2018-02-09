@@ -10,8 +10,7 @@ import {
   GraphQLBoolean,
   GraphQLInterfaceType,
 } from '../graphql';
-import TypeComposer from '../typeComposer';
-import Resolver from '../resolver';
+import { TypeComposer, Resolver } from '../';
 
 describe('TypeComposer', () => {
   let objectType: GraphQLObjectType;

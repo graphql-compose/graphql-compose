@@ -1,19 +1,23 @@
 /* @flow */
 /* eslint-disable no-param-reassign, no-use-before-define */
 
-import TypeMapper from '../typeMapper';
 import { isFunction, isObject } from './is';
+import type { SchemaComposer } from '../schemaComposer';
 
 export type FieldMaps = {
   [fieldName: string]: any,
   __proto__: null,
 };
 
-export function resolveOutputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName?: string = ''): T {
+export function resolveOutputConfigsAsThunk<T: FieldMaps>(
+  schema: SchemaComposer,
+  fieldMap: T,
+  typeName?: string = ''
+): T {
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(name => {
       if (isFunction(fieldMap[name])) {
-        const fieldConfig: any = TypeMapper.convertOutputFieldConfig(
+        const fieldConfig: any = schema.TypeMapper.convertOutputFieldConfig(
           fieldMap[name](),
           name,
           typeName
@@ -24,7 +28,7 @@ export function resolveOutputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName?
 
       if (isFunction(fieldMap[name].type)) {
         fieldMap[name]._typeAsThunk = fieldMap[name].type;
-        const fieldConfig = TypeMapper.convertOutputFieldConfig(
+        const fieldConfig = schema.TypeMapper.convertOutputFieldConfig(
           fieldMap[name].type(),
           name,
           typeName
@@ -34,6 +38,7 @@ export function resolveOutputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName?
 
       if (isObject(fieldMap[name].args)) {
         fieldMap[name].args = resolveInputConfigsAsThunk(
+          schema,
           fieldMap[name].args,
           `${typeName}.${name}.args`
         );
@@ -43,11 +48,15 @@ export function resolveOutputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName?
   return fieldMap;
 }
 
-export function resolveInputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName?: string): T {
+export function resolveInputConfigsAsThunk<T: FieldMaps>(
+  schema: SchemaComposer,
+  fieldMap: T,
+  typeName?: string
+): T {
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(name => {
       if (isFunction(fieldMap[name])) {
-        const fieldConfig: any = TypeMapper.convertInputFieldConfig(
+        const fieldConfig: any = schema.TypeMapper.convertInputFieldConfig(
           fieldMap[name](),
           name,
           typeName
@@ -58,7 +67,7 @@ export function resolveInputConfigsAsThunk<T: FieldMaps>(fieldMap: T, typeName?:
 
       if (isFunction(fieldMap[name].type)) {
         fieldMap[name]._typeAsThunk = fieldMap[name].type;
-        const fieldConfig = TypeMapper.convertInputFieldConfig(
+        const fieldConfig = schema.TypeMapper.convertInputFieldConfig(
           fieldMap[name].type(),
           name,
           typeName

@@ -1,37 +1,25 @@
 /* @flow */
 
-import Storage from '../storage';
-import TypeComposer from '../typeComposer';
+import { SchemaComposer } from '../';
 
 describe('Storage [Class]', () => {
-  const someTC = TypeComposer.create({ name: 'validType' });
-
-  it('should implements `add` method that accepts only TypeComposer', () => {
-    const storage = new Storage();
+  it('should implements `add` method', () => {
+    const storage = new SchemaComposer();
+    const someTC = storage.TypeComposer.create({ name: 'validType' });
     storage.add(someTC);
     expect(storage.get('validType')).toBe(someTC);
-
-    const errTypeObj1 = {
-      name: 'ValidType1',
-    };
-    expect(() => {
-      storage.add((errTypeObj1: any));
-    }).toThrowError();
-
-    const errTypeObj2 = { name: '123' };
-    expect(() => {
-      storage.add((errTypeObj2: any));
-    }).toThrowError();
   });
 
   it('should implements `get` method', () => {
-    const storage = new Storage();
+    const storage = new SchemaComposer();
+    const someTC = storage.TypeComposer.create({ name: 'validType' });
     storage.add(someTC);
     expect(storage.get('validType')).toBe(someTC);
   });
 
   it('should implements `has` method`', () => {
-    const storage = new Storage();
+    const storage = new SchemaComposer();
+    const someTC = storage.TypeComposer.create({ name: 'validType' });
     storage.add(someTC);
     expect(storage.has('validType')).toBe(true);
     expect(storage.has('unexistedType')).toBe(false);
@@ -39,7 +27,7 @@ describe('Storage [Class]', () => {
 
   describe('buildSchema()', () => {
     it('should throw error, if root fields not defined', () => {
-      const storage = new Storage();
+      const storage = new SchemaComposer();
       storage.clear();
 
       expect(() => {
@@ -50,11 +38,11 @@ describe('Storage [Class]', () => {
 
   describe('removeEmptyTypes()', () => {
     it('should remove fields with Types which have no fields', () => {
-      const storage = new Storage();
-      const typeWithoutFieldsTC = storage.get('Stub');
+      const storage = new SchemaComposer();
+      const typeWithoutFieldsTC = storage.getOrCreateTC('Stub');
       typeWithoutFieldsTC.setFields({});
 
-      const viewerTC = storage.get('Viewer');
+      const viewerTC = storage.getOrCreateTC('Viewer');
       viewerTC.setFields({
         name: 'String',
         stub: typeWithoutFieldsTC,
@@ -76,8 +64,8 @@ describe('Storage [Class]', () => {
     });
 
     it('should not produce Maximum call stack size exceeded', () => {
-      const storage = new Storage();
-      const userTC = storage.get('User');
+      const storage = new SchemaComposer();
+      const userTC = storage.getOrCreateTC('User');
       userTC.setField('friend', userTC);
 
       storage.removeEmptyTypes(userTC);

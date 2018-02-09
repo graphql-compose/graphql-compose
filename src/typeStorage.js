@@ -3,7 +3,7 @@
 import { isFunction } from './utils/is';
 
 // TypeStorage has all methods from Map class
-export default class TypeStorage<V, K = string> {
+export class TypeStorage<V, K = string> {
   types: Map<K, V>;
 
   constructor() {

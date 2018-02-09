@@ -1,15 +1,18 @@
 import * as graphql from './graphql';
+import { SchemaComposer } from './schemaComposer';
 
 export { graphql };
 
-export { default as TypeComposer } from './typeComposer';
-export { default as InputTypeComposer } from './inputTypeComposer';
-export { default as EnumTypeComposer } from './enumTypeComposer';
-export { default as Resolver } from './resolver';
-export { default as TypeStorage } from './typeStorage';
-export { default as TypeMapper } from './typeMapper';
+export { TypeComposer } from './typeComposer';
+export { InputTypeComposer } from './inputTypeComposer';
+export { EnumTypeComposer } from './enumTypeComposer';
+export { Resolver } from './resolver';
+export { TypeMapper } from './typeMapper';
+declare const GQC: SchemaComposer;
+export { SchemaComposer, GQC };
+
+export { TypeStorage } from './typeStorage';
 export { getProjectionFromAST, getFlatProjectionFromAST } from './projection';
-export { default as GQC } from './gqc';
 
 export { GraphQLDate, GraphQLBuffer, GraphQLGeneric, GraphQLJSON } from './type';
 

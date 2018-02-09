@@ -3,7 +3,7 @@
 
 import { GraphQLEnumType, GraphQLList, GraphQLNonNull } from './graphql';
 import { isObject, isString } from './utils/is';
-import TypeMapper from './typeMapper';
+import { TypeMapper } from './typeMapper';
 import {
   GraphQLEnumValueConfig,
   GraphQLEnumTypeConfig,
@@ -15,7 +15,7 @@ export type GraphQLEnumTypeExtended = GraphQLEnumType & {
   _gqcEnumTypeComposer?: EnumTypeComposer,
 };
 
-export default class EnumTypeComposer {
+export class EnumTypeComposer {
   public gqType: GraphQLEnumType;
 
   public constructor(gqType: GraphQLEnumType);

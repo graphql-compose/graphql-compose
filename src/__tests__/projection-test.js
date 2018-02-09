@@ -3,8 +3,7 @@
 import { graphql } from '../graphql';
 import type { GraphQLResolveInfo, GraphQLObjectType } from '../graphql';
 import { getProjectionFromAST, extendByFieldProjection } from '../projection';
-import TypeComposer from '../typeComposer';
-import GQC from '../gqc';
+import { TypeComposer, GQC } from '../';
 
 const Level2TC = TypeComposer.create({
   name: 'Level2',
