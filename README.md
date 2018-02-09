@@ -50,18 +50,18 @@ Utility plugins:
 ## Example
 city.js
 ```js
-import composeWithMongoose from 'graphql-compose-mongoose';
+import { TypeComposer} from 'graphql-compose';
 import { CountryTC } from './country';
 
-export const CitySchema = new mongoose.Schema({
-  name: String,
-  population: Number,
-  countryCode: String, // US
-  tz: String, // 'America/Los_Angeles'
-  // ...
-});
-export const City = mongoose.model('City', CitySchema);
-export const CityTC = composeWithMongoose(CityModel);
+export const CityTC = TypeComposer.create(`
+  type City {
+    code: String!
+    name: String!
+    population: Number
+    countryCode: String
+    tz: String
+  }
+`);
 
 // Define some additional fields
 CityTC.addFields({
@@ -69,7 +69,7 @@ CityTC.addFields({
     type: GraphQLString,
     resolve: (source) => source.name.toUpperCase(),
   },
-  localTime: { // extended GraphQL Compose field definition
+  currentLocalTime: { // extended GraphQL Compose field definition
     type: 'Date',
     resolve: (source) => moment().tz(source.tz).format(),
     projection: { tz: true }, // load `tz` from database, when requested only `localTime` field
@@ -91,6 +91,30 @@ CityTC.addFields({
   list2: ['String'],
   list3: [new GraphQLOutputType(...)],
   list4: [`type Complex2Type { f1: Float, f2: Int }`],
+});
+
+// Add resolver method
+CityTC.addResolver({
+  kind: 'query',
+  name: 'findMany',
+  args: {
+    filter: `input CityFilterInput {
+      code: String!
+    }`,
+    limit: {
+      type: 'Int',
+      defaultValue: 20,
+    },
+    skip: 'Int',
+    // ... other args if needed
+  },
+  type: [CityTC], // array of cities
+  resolve: async ({ args, context }) => {
+    return context.someCityDB
+      .findMany(args.filter)
+      .limit(args.limit)
+      .skip(args.skip);
+  },
 });
 
 // Add relation between City and Country by `countryCode` field.
@@ -121,9 +145,8 @@ import { CityTC } from './city';
 import { CountryTC } from './country';
 
 GQC.rootQuery().addFields({
-  city: CityTC.get('$findOne'),
-  cityConnection: CityTC.get('$connection'),
-  country: CountryTC.get('$findOne'),
+  cities: CityTC.getResolver('findMany'),
+  country: CountryTC.getResolver('findOne'),
   currentTime: {
     type: 'Date',
     resolve: () => Date.now(),
@@ -131,16 +154,16 @@ GQC.rootQuery().addFields({
 });
 
 GQC.rootMutation().addFields({
-  createCity: CityTC.get('$createOne'),
-  updateCity: CityTC.get('$updateById'),
+  createCity: CityTC.getResolver('createOne'),
+  updateCity: CityTC.getResolver('updateById'),
   ...adminAccess({
-    removeCity: CityTC.get('$removeById'),
+    removeCity: CityTC.getResolver('removeById'),
   }),
 });
 
 function adminAccess(resolvers) {
   Object.keys(resolvers).forEach((k) => {
-    resolvers[k] = resolvers[k].wrapResolve(next => (rp) => {
+    resolvers[k] = resolvers[k].wrapResolve(next => rp => {
       // rp = resolveParams = { source, args, context, info }
       if (!rp.context.isAdmin) {
         throw new Error('You should be admin, to have access to this action.');
