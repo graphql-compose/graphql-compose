@@ -21,6 +21,13 @@ export {
   TypeMapper,
 };
 
+// Export Composers' prototype classes for instance check in plugins
+export { TypeComposer as _ProtoTypeComposer } from './typeComposer';
+export { InputTypeComposer as _ProtoInputTypeComposer } from './inputTypeComposer';
+export { EnumTypeComposer as _ProtoEnumTypeComposer } from './enumTypeComposer';
+export { Resolver as _ProtoResolver } from './resolver';
+export { TypeMapper as _ProtoTypeMapper } from './typeMapper';
+
 export { TypeStorage } from './typeStorage';
 export { getProjectionFromAST, getFlatProjectionFromAST } from './projection';
 
