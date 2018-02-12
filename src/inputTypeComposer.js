@@ -98,11 +98,14 @@ export class InputTypeComposer {
     return ITC;
   }
 
-  constructor(gqType: GraphQLInputObjectType) {
+  constructor(gqType: GraphQLInputObjectType): InputTypeComposer {
     if (!(gqType instanceof GraphQLInputObjectType)) {
       throw new Error('InputTypeComposer accept only GraphQLInputObjectType in constructor');
     }
     this.gqType = gqType;
+
+    // alive proper Flow type casting in autosuggestions
+    /* :: return this; */
   }
 
   /**

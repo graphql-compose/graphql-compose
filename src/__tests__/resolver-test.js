@@ -62,8 +62,10 @@ describe('Resolver', () => {
         name: 'myResolver',
         type: 'String!',
       });
-      expect(myResolver.type).toBeInstanceOf(GraphQLNonNull);
-      expect(myResolver.type.ofType).toBe(GraphQLString);
+
+      const type: any = myResolver.type;
+      expect(type).toBeInstanceOf(GraphQLNonNull);
+      expect(type.ofType).toBe(GraphQLString);
     });
 
     it('should convert type definition to GraphQLType', () => {
@@ -75,8 +77,9 @@ describe('Resolver', () => {
           }
         `,
       });
-      expect(myResolver.type).toBeInstanceOf(GraphQLObjectType);
-      expect(myResolver.type.name).toBe('SomeType');
+      const type: any = myResolver.type;
+      expect(type).toBeInstanceOf(GraphQLObjectType);
+      expect(type.name).toBe('SomeType');
     });
 
     it('should accept TypeComposer for `type` option', () => {
@@ -85,8 +88,9 @@ describe('Resolver', () => {
         name: 'myResolver',
         type: typeTC,
       });
-      expect(myResolver.type).toBeInstanceOf(GraphQLObjectType);
-      expect(myResolver.type.name).toBe('SomeType22');
+      const type: any = myResolver.type;
+      expect(type).toBeInstanceOf(GraphQLObjectType);
+      expect(type.name).toBe('SomeType22');
     });
 
     it('should throw error on InputTypeComposer for `type` option', () => {
@@ -115,8 +119,9 @@ describe('Resolver', () => {
         name: 'myResolver',
         type: someOtherResolver,
       });
-      expect(myResolver.type).toBeInstanceOf(GraphQLObjectType);
-      expect(myResolver.type.name).toBe('SomeType');
+      const type: any = myResolver.type;
+      expect(type).toBeInstanceOf(GraphQLObjectType);
+      expect(type.name).toBe('SomeType');
     });
 
     it('should accept array for `type` option', () => {
@@ -124,8 +129,9 @@ describe('Resolver', () => {
         name: 'myResolver',
         type: ['String'],
       });
-      expect(myResolver.type).toBeInstanceOf(GraphQLList);
-      expect(myResolver.type.ofType).toBe(GraphQLString);
+      const type: any = myResolver.type;
+      expect(type).toBeInstanceOf(GraphQLList);
+      expect(type.ofType).toBe(GraphQLString);
     });
 
     it('should have wrapType() method', () => {
@@ -525,8 +531,9 @@ describe('Resolver', () => {
 
       const filterITC = new InputTypeComposer((filterCfg.type: any));
       expect(filterITC.getField('age').description).toBe('Age filter');
-      expect(filterITC.getFieldType('age')).toBeInstanceOf(GraphQLNonNull);
-      expect(filterITC.getFieldType('age').ofType).toBe(GraphQLInt);
+      const ageType: any = filterITC.getFieldType('age');
+      expect(ageType).toBeInstanceOf(GraphQLNonNull);
+      expect(ageType.ofType).toBe(GraphQLInt);
     });
 
     it('should prepare resolveParams.rawQuery when `resolve` called', () => {
@@ -779,12 +786,14 @@ describe('Resolver', () => {
           displayName: 'User.find()',
           resolve: () => {},
         });
-        r1.debugParams().resolve({
-          source: { id: 1 },
-          args: { limit: 1 },
-          context: { isAdmin: true, db: {} },
-          info: { fieldName: 'a', otherAstFields: {} },
-        });
+        r1.debugParams().resolve(
+          ({
+            source: { id: 1 },
+            args: { limit: 1 },
+            context: { isAdmin: true, db: {} },
+            info: { fieldName: 'a', otherAstFields: {} },
+          }: any)
+        );
 
         expect(console.log.mock.calls[0]).toEqual(['ResolveParams for User.find():']);
         expect(console.dir.mock.calls[0]).toEqual([
@@ -969,8 +978,10 @@ describe('Resolver', () => {
         displayName: 'User.find()',
         resolve: () => {},
       });
-      expect(r.type).toBeInstanceOf(GraphQLNonNull);
-      expect(r.type.ofType).toBeInstanceOf(GraphQLList);
+
+      const type: any = r.type;
+      expect(type).toBeInstanceOf(GraphQLNonNull);
+      expect(type.ofType).toBeInstanceOf(GraphQLList);
       expect(r.getTypeComposer()).toBeInstanceOf(TypeComposer);
       expect(r.getTypeComposer().getTypeName()).toBe('MyOutputType');
     });

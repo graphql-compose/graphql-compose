@@ -151,7 +151,7 @@ export type RelationArgsMapper<TSource, TContext> = {
     | GenericMap<any>,
 };
 
-export class TypeComposer<TContext> {
+export class TypeComposer<TContext = any> {
   gqType: GraphQLObjectTypeExtended;
   _fields: GraphQLFieldConfigMap<any, TContext>;
   static _schema: SchemaComposer<TContext>;
@@ -202,8 +202,11 @@ export class TypeComposer<TContext> {
     return TC;
   }
 
-  constructor(gqType: GraphQLObjectType) {
+  constructor(gqType: GraphQLObjectType): TypeComposer<TContext> {
     this.gqType = gqType;
+
+    // alive proper Flow type casting in autosuggestions
+    /* :: return this; */
   }
 
   /**

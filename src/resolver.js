@@ -111,7 +111,7 @@ export type ResolveDebugOpts = {
   colors?: boolean,
 };
 
-export class Resolver<TSource, TContext> {
+export class Resolver<TSource = any, TContext = any> {
   static _schema: SchemaComposer<TContext>;
 
   type: GraphQLOutputType;
@@ -123,7 +123,7 @@ export class Resolver<TSource, TContext> {
   description: ?string;
   parent: ?Resolver<TSource, TContext>;
 
-  constructor(opts: ResolverOpts<TSource, TContext>) {
+  constructor(opts: ResolverOpts<TSource, TContext>): Resolver<TSource, TContext> {
     if (!opts.name) {
       throw new Error('For Resolver constructor the `opts.name` is required option.');
     }
@@ -150,6 +150,9 @@ export class Resolver<TSource, TContext> {
     if (opts.resolve) {
       this.resolve = opts.resolve;
     }
+
+    // alive proper Flow type casting in autosuggestions
+    /* :: return this; */
   }
 
   hasArg(argName: string): boolean {

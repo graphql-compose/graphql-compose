@@ -9,7 +9,7 @@ import { InputTypeComposer as _InputTypeComposer } from './inputTypeComposer';
 import { EnumTypeComposer as _EnumTypeComposer } from './enumTypeComposer';
 import { Resolver as _Resolver } from './resolver';
 
-export class SchemaComposer<TContext> extends TypeStorage<
+export class SchemaComposer<TContext = any> extends TypeStorage<
   _TypeComposer<TContext> | _InputTypeComposer | GraphQLNamedType
 > {
   TypeMapper: _TypeMapper;
@@ -18,7 +18,7 @@ export class SchemaComposer<TContext> extends TypeStorage<
   EnumTypeComposer: typeof _EnumTypeComposer;
   Resolver: Class<_Resolver<any, TContext>>;
 
-  constructor() {
+  constructor(): SchemaComposer<TContext> {
     super();
     const schema = this;
 
@@ -46,6 +46,9 @@ export class SchemaComposer<TContext> extends TypeStorage<
       _schema = schema;
     }
     this.TypeMapper = new TypeMapper();
+
+    // alive proper Flow type casting in autosuggestions
+    /* :: return this; */
   }
 
   getOrCreateTC(typeName: string): _TypeComposer<TContext> {

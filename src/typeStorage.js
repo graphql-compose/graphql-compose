@@ -6,8 +6,11 @@ import { isFunction } from './utils/is';
 export class TypeStorage<V, K = string> {
   types: Map<K, V>;
 
-  constructor() {
+  constructor(): TypeStorage<V, K> {
     this.types = new Map();
+
+    // alive proper Flow type casting in autosuggestions
+    /* :: return this; */
   }
 
   get size(): number {
