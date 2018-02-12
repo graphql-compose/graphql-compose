@@ -10,7 +10,7 @@ const TypeComposer = GQC.TypeComposer;
 const InputTypeComposer = GQC.InputTypeComposer;
 const EnumTypeComposer = GQC.EnumTypeComposer;
 const Resolver = GQC.Resolver;
-const TypeMapper = GQC.TypeMapper;
+const TypeMapper = GQC.typeMapper;
 export {
   GQC,
   SchemaComposer,
