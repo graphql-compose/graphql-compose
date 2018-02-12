@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 /* eslint-disable class-methods-use-this */
 
 import { GraphQLObjectType, GraphQLSchema, type GraphQLNamedType } from './graphql';

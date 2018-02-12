@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 import toDottedObject from '../toDottedObject';
 

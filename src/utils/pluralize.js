@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 const rules = [
   [/(m)an$/gi, '$1en'],

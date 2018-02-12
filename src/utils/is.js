@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 export function isString(value: ?mixed) /* : boolean %checks */ {
   return typeof value === 'string';

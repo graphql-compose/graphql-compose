@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 /* eslint-disable no-param-reassign, no-use-before-define */
 
 import { isFunction, isObject } from './is';

@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 /* eslint-disable no-param-reassign */
 
 import objectPath from 'object-path';

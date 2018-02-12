@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 /* eslint-disable no-restricted-globals */
 
 import { GraphQLScalarType, GraphQLError, Kind } from '../graphql';

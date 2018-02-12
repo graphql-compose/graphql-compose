@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 import { GraphQLInt, GraphQLString } from '../graphql';
 import { GQC } from '../';

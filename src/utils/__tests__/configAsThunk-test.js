@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 import { GraphQLString, GraphQLObjectType, GraphQLInputObjectType } from '../../graphql';
 import { TypeComposer, InputTypeComposer, GQC } from '../../';

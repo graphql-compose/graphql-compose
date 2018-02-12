@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 import GraphQLDate from './date';
 import GraphQLBuffer from './buffer';

@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 /* eslint-disable no-use-before-define */
 
 import { GraphQLInputObjectType, GraphQLNonNull, getNamedType } from './graphql';

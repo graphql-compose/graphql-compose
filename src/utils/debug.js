@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 export function deprecate(msg: string) {
   let stack;

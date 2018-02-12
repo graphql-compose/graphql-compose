@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 import { GraphQLScalarType, GraphQLError, Kind } from '../graphql';
 

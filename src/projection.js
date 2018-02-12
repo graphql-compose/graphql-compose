@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 /* eslint-disable no-param-reassign, no-lonely-if */
 
 import type {
