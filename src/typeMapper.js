@@ -109,8 +109,15 @@ const RegexpOutputTypeDefinition = /type\s[^{]+\{[^}]+\}/im;
 const RegexpInputTypeDefinition = /input\s[^{]+\{[^}]+\}/im;
 const RegexpEnumTypeDefinition = /enum\s[^{]+\{[^}]+\}/im;
 
-export class TypeMapper {
-  _schema: SchemaComposer<*>;
+export class TypeMapper<TContext> {
+  schemaComposer: SchemaComposer<TContext>;
+
+  constructor(schemaComposer: SchemaComposer<TContext>) {
+    if (!schemaComposer) {
+      throw new Error('TypeMapper must have SchemaComposer instance.');
+    }
+    this.schemaComposer = schemaComposer;
+  }
 
   basicScalars: Map<string, GraphQLNamedType> = new Map([
     ['String', GraphQLString],
@@ -127,11 +134,11 @@ export class TypeMapper {
     const basicScalar = this.basicScalars.get(name);
     if (basicScalar) return basicScalar;
 
-    if (!this._schema.has(name)) {
+    if (!this.schemaComposer.has(name)) {
       return null;
     }
 
-    const schemaType = this._schema.get(name);
+    const schemaType = this.schemaComposer.get(name);
     if (isNamedType(schemaType)) {
       return schemaType;
     }
@@ -139,16 +146,16 @@ export class TypeMapper {
   }
 
   set(name: string, type: GraphQLNamedType) {
-    this._schema.set(name, type);
+    this.schemaComposer.set(name, type);
   }
 
   has(name: string): boolean {
-    return this._schema.has(name);
+    return this.schemaComposer.has(name);
   }
 
   getWrapped(str: TypeWrappedString | TypeNameString): ?GraphQLType {
     const inputTypeAST: TypeNode = parseType(str);
-    return typeFromAST(inputTypeAST, this._schema);
+    return typeFromAST(inputTypeAST, this.schemaComposer);
   }
 
   createType(str: TypeDefinitionString): ?GraphQLNamedType {
@@ -161,7 +168,7 @@ export class TypeMapper {
       );
     }
 
-    const types = parseTypes(astDocument, this._schema);
+    const types = parseTypes(astDocument, this.schemaComposer);
 
     const type = types[0];
 
@@ -188,17 +195,17 @@ export class TypeMapper {
 
     for (let i = 0; i < astDocument.definitions.length; i++) {
       const def = astDocument.definitions[i];
-      const type = makeSchemaDef(def, this._schema);
+      const type = makeSchemaDef(def, this.schemaComposer);
       typeStorage.set(type.name, type);
     }
     return typeStorage;
   }
 
-  convertOutputFieldConfig<TSource, TContext>(
-    composeFC: ComposeFieldConfig<TSource, TContext>,
+  convertOutputFieldConfig(
+    composeFC: ComposeFieldConfig<any, TContext>,
     fieldName?: string = '',
     typeName?: string = ''
-  ): GraphQLFieldConfig<TSource, TContext> {
+  ): GraphQLFieldConfig<any, TContext> {
     let composeType;
     let copyProps;
     let copyArgs;
@@ -242,7 +249,7 @@ export class TypeMapper {
       );
     }
 
-    const fieldConfig: GraphQLFieldConfig<TSource, TContext> = ({}: any);
+    const fieldConfig: GraphQLFieldConfig<any, TContext> = ({}: any);
     if (typeof composeType === 'string') {
       if (RegexpInputTypeDefinition.test(composeType)) {
         throw new Error(
@@ -250,8 +257,8 @@ export class TypeMapper {
         );
       }
 
-      if (this._schema.hasInstance(composeType, TypeComposer)) {
-        fieldConfig.type = this._schema.getTC(composeType).getType();
+      if (this.schemaComposer.hasInstance(composeType, TypeComposer)) {
+        fieldConfig.type = this.schemaComposer.getTC(composeType).getType();
       } else {
         const type =
           RegexpOutputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
@@ -312,11 +319,11 @@ export class TypeMapper {
     return fieldConfig;
   }
 
-  convertOutputFieldConfigMap<TSource, TContext>(
-    composeFields: ComposeFieldConfigMap<TSource, TContext>,
+  convertOutputFieldConfigMap(
+    composeFields: ComposeFieldConfigMap<any, TContext>,
     typeName?: string = ''
-  ): GraphQLFieldConfigMap<TSource, TContext> {
-    const fields: GraphQLFieldConfigMap<TSource, TContext> = ({}: any);
+  ): GraphQLFieldConfigMap<any, TContext> {
+    const fields: GraphQLFieldConfigMap<any, TContext> = ({}: any);
     Object.keys(composeFields).forEach(name => {
       fields[name] = this.convertOutputFieldConfig(composeFields[name], name, typeName);
     });
@@ -377,8 +384,8 @@ export class TypeMapper {
         );
       }
 
-      if (this._schema.hasInstance(composeType, InputTypeComposer)) {
-        argConfig.type = this._schema.getITC(composeType).getType();
+      if (this.schemaComposer.hasInstance(composeType, InputTypeComposer)) {
+        argConfig.type = this.schemaComposer.getITC(composeType).getType();
       } else {
         const type =
           RegexpInputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
@@ -506,8 +513,8 @@ export class TypeMapper {
         );
       }
 
-      if (this._schema.hasInstance(composeType, InputTypeComposer)) {
-        fieldConfig.type = this._schema.getITC(composeType).getType();
+      if (this.schemaComposer.hasInstance(composeType, InputTypeComposer)) {
+        fieldConfig.type = this.schemaComposer.getITC(composeType).getType();
       } else {
         const type =
           RegexpInputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
@@ -600,11 +607,11 @@ function typeFromAST(inputTypeAST: TypeNode, schema: SchemaComposer<any>): ?Grap
     return innerType && new GraphQLNonNull(((innerType: any): GraphQLNullableType));
   }
   invariant(inputTypeAST.kind === Kind.NAMED_TYPE, 'Must be a named type.');
-  return schema.TypeMapper.get(inputTypeAST.name.value);
+  return schema.typeMapper.get(inputTypeAST.name.value);
 }
 
 function typeDefNamed(typeName: string, schema: SchemaComposer<any>): GraphQLNamedType {
-  const type = schema.TypeMapper.get(typeName);
+  const type = schema.typeMapper.get(typeName);
   if (type) {
     return type;
   }

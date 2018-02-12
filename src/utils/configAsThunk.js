@@ -17,7 +17,7 @@ export function resolveOutputConfigsAsThunk<T: FieldMaps>(
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(name => {
       if (isFunction(fieldMap[name])) {
-        const fieldConfig: any = schema.TypeMapper.convertOutputFieldConfig(
+        const fieldConfig: any = schema.typeMapper.convertOutputFieldConfig(
           fieldMap[name](),
           name,
           typeName
@@ -28,7 +28,7 @@ export function resolveOutputConfigsAsThunk<T: FieldMaps>(
 
       if (isFunction(fieldMap[name].type)) {
         fieldMap[name]._typeAsThunk = fieldMap[name].type;
-        const fieldConfig = schema.TypeMapper.convertOutputFieldConfig(
+        const fieldConfig = schema.typeMapper.convertOutputFieldConfig(
           fieldMap[name].type(),
           name,
           typeName
@@ -56,7 +56,7 @@ export function resolveInputConfigsAsThunk<T: FieldMaps>(
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(name => {
       if (isFunction(fieldMap[name])) {
-        const fieldConfig: any = schema.TypeMapper.convertInputFieldConfig(
+        const fieldConfig: any = schema.typeMapper.convertInputFieldConfig(
           fieldMap[name](),
           name,
           typeName
@@ -67,7 +67,7 @@ export function resolveInputConfigsAsThunk<T: FieldMaps>(
 
       if (isFunction(fieldMap[name].type)) {
         fieldMap[name]._typeAsThunk = fieldMap[name].type;
-        const fieldConfig = schema.TypeMapper.convertInputFieldConfig(
+        const fieldConfig = schema.typeMapper.convertInputFieldConfig(
           fieldMap[name].type(),
           name,
           typeName

@@ -3,7 +3,7 @@
 
 import { GraphQLObjectType, GraphQLSchema, type GraphQLNamedType } from './graphql';
 import { TypeStorage } from './typeStorage';
-import { TypeMapper as _TypeMapper } from './typeMapper';
+import { TypeMapper } from './typeMapper';
 import { TypeComposer as _TypeComposer } from './typeComposer';
 import { InputTypeComposer as _InputTypeComposer } from './inputTypeComposer';
 import { EnumTypeComposer as _EnumTypeComposer } from './enumTypeComposer';
@@ -12,7 +12,7 @@ import { Resolver as _Resolver } from './resolver';
 export class SchemaComposer<TContext = any> extends TypeStorage<
   _TypeComposer<TContext> | _InputTypeComposer | GraphQLNamedType
 > {
-  TypeMapper: _TypeMapper;
+  typeMapper: TypeMapper<TContext>;
   TypeComposer: Class<_TypeComposer<TContext>>;
   InputTypeComposer: typeof _InputTypeComposer;
   EnumTypeComposer: typeof _EnumTypeComposer;
@@ -23,29 +23,26 @@ export class SchemaComposer<TContext = any> extends TypeStorage<
     const schema = this;
 
     class TypeComposer extends _TypeComposer<TContext> {
-      static _schema = schema;
+      static schemaComposer = schema;
     }
     this.TypeComposer = TypeComposer;
 
     class InputTypeComposer extends _InputTypeComposer {
-      static _schema = schema;
+      static schemaComposer = schema;
     }
     this.InputTypeComposer = InputTypeComposer;
 
     class Resolver extends _Resolver<any, TContext> {
-      static _schema = schema;
+      static schemaComposer = schema;
     }
     this.Resolver = Resolver;
 
     class EnumTypeComposer extends _EnumTypeComposer {
-      static _schema = schema;
+      static schemaComposer = schema;
     }
     this.EnumTypeComposer = EnumTypeComposer;
 
-    class TypeMapper extends _TypeMapper {
-      _schema = schema;
-    }
-    this.TypeMapper = new TypeMapper();
+    this.typeMapper = new TypeMapper(schema);
 
     // alive proper Flow type casting in autosuggestions
     /* :: return this; */

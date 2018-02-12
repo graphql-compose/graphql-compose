@@ -112,7 +112,7 @@ export type ResolveDebugOpts = {
 };
 
 export class Resolver<TSource = any, TContext = any> {
-  static _schema: SchemaComposer<TContext>;
+  static schemaComposer: SchemaComposer<TContext>;
 
   type: GraphQLOutputType;
   args: GraphQLFieldConfigArgumentMap;
@@ -124,6 +124,10 @@ export class Resolver<TSource = any, TContext = any> {
   parent: ?Resolver<TSource, TContext>;
 
   constructor(opts: ResolverOpts<TSource, TContext>): Resolver<TSource, TContext> {
+    if (!this.constructor.schemaComposer) {
+      throw new Error('Class<Resolver> can only be created by a SchemaComposer.');
+    }
+
     if (!opts.name) {
       throw new Error('For Resolver constructor the `opts.name` is required option.');
     }
@@ -138,7 +142,7 @@ export class Resolver<TSource = any, TContext = any> {
     }
 
     if (opts.args) {
-      this.args = this.constructor._schema.TypeMapper.convertArgConfigMap(
+      this.args = this.constructor.schemaComposer.typeMapper.convertArgConfigMap(
         opts.args,
         this.name,
         'Resolver'
@@ -187,7 +191,7 @@ export class Resolver<TSource = any, TContext = any> {
           `This argument should be InputObjectType, but it has type '${argType.constructor.name}'`
       );
     }
-    return new this.constructor._schema.InputTypeComposer(argType);
+    return new this.constructor.schemaComposer.InputTypeComposer(argType);
   }
 
   getArgs(): GraphQLFieldConfigArgumentMap {
@@ -199,7 +203,7 @@ export class Resolver<TSource = any, TContext = any> {
   }
 
   setArgs(args: ComposeFieldConfigArgumentMap): Resolver<TSource, TContext> {
-    this.args = this.constructor._schema.TypeMapper.convertArgConfigMap(
+    this.args = this.constructor.schemaComposer.typeMapper.convertArgConfigMap(
       args,
       this.name,
       'Resolver'
@@ -208,7 +212,7 @@ export class Resolver<TSource = any, TContext = any> {
   }
 
   setArg(argName: string, argConfig: ComposeArgumentConfig): Resolver<TSource, TContext> {
-    this.args[argName] = this.constructor._schema.TypeMapper.convertArgConfig(
+    this.args[argName] = this.constructor.schemaComposer.typeMapper.convertArgConfig(
       argConfig,
       argName,
       this.name,
@@ -279,7 +283,7 @@ export class Resolver<TSource = any, TContext = any> {
       throw new Error('You should provide new type name. It is equal to current name.');
     }
 
-    let clonedType = this.constructor._schema.InputTypeComposer.create(originalType)
+    let clonedType = this.constructor.schemaComposer.InputTypeComposer.create(originalType)
       .clone(newTypeName)
       .getType();
     if (isUnwrapped) {
@@ -362,11 +366,11 @@ export class Resolver<TSource = any, TContext = any> {
           `Cause '${this.type.toString()}' does not instance of GraphQLObjectType.`
       );
     }
-    return new this.constructor._schema.TypeComposer(outputType);
+    return new this.constructor.schemaComposer.TypeComposer(outputType);
   }
 
   setType(gqType: ComposeOutputType<TContext>): Resolver<TSource, TContext> {
-    const fc = this.constructor._schema.TypeMapper.convertOutputFieldConfig(
+    const fc = this.constructor.schemaComposer.typeMapper.convertOutputFieldConfig(
       gqType,
       'setType',
       'Resolver'
@@ -387,7 +391,11 @@ export class Resolver<TSource = any, TContext = any> {
     const resolve = this.getResolve();
     return {
       type: this.getType(),
-      args: (resolveInputConfigsAsThunk(this.constructor._schema, this.getArgs(), undefined): any),
+      args: (resolveInputConfigsAsThunk(
+        this.constructor.schemaComposer,
+        this.getArgs(),
+        undefined
+      ): any),
       description: this.description,
       resolve: (source: TSource, args, context: TContext, info: GraphQLResolveInfo) => {
         let projection = getProjectionFromAST(info);
@@ -438,7 +446,7 @@ export class Resolver<TSource = any, TContext = any> {
     }
     oldOpts.displayName = undefined;
     oldOpts.args = { ...this.args };
-    return new this.constructor._schema.Resolver({ ...oldOpts, ...opts });
+    return new this.constructor.schemaComposer.Resolver({ ...oldOpts, ...opts });
   }
 
   wrap(
@@ -520,7 +528,7 @@ export class Resolver<TSource = any, TContext = any> {
     const filter = resolver.hasArg('filter') ? resolver.getArg('filter') : undefined;
     let filterITC;
     if (filter && filter.type instanceof GraphQLInputObjectType) {
-      filterITC = new this.constructor._schema.InputTypeComposer(filter.type);
+      filterITC = new this.constructor.schemaComposer.InputTypeComposer(filter.type);
     } else {
       if (!opts.filterTypeNameFallback || !isString(opts.filterTypeNameFallback)) {
         throw new Error(
@@ -529,7 +537,9 @@ export class Resolver<TSource = any, TContext = any> {
             'Eg. FilterXXXXXInput'
         );
       }
-      filterITC = this.constructor._schema.InputTypeComposer.create(opts.filterTypeNameFallback);
+      filterITC = this.constructor.schemaComposer.InputTypeComposer.create(
+        opts.filterTypeNameFallback
+      );
     }
 
     let defaultValue: any;
@@ -590,7 +600,7 @@ export class Resolver<TSource = any, TContext = any> {
     if (resolver.hasArg('sort')) {
       const sort = resolver.getArg('sort');
       if (sort.type instanceof GraphQLEnumType) {
-        sortETC = this.constructor._schema.EnumTypeComposer.create(sort.type);
+        sortETC = this.constructor.schemaComposer.EnumTypeComposer.create(sort.type);
       } else {
         throw new Error(
           'Resolver should have `sort` arg with type GraphQLEnumType. ' +
@@ -605,7 +615,7 @@ export class Resolver<TSource = any, TContext = any> {
             'Eg. SortXXXXXEnum'
         );
       }
-      sortETC = this.constructor._schema.EnumTypeComposer.create({
+      sortETC = this.constructor.schemaComposer.EnumTypeComposer.create({
         name: opts.sortTypeNameFallback,
         values: {
           [opts.name]: {},

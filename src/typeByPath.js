@@ -56,11 +56,11 @@ export function typeByPathTC(tc: TypeComposer<any>, parts: Array<string>) {
 
   if (nextName && nextName.startsWith('@')) {
     const arg = tc.getFieldArg(name, nextName.substring(1));
-    return processType(arg && arg.type, parts.slice(2), tc.constructor._schema);
+    return processType(arg && arg.type, parts.slice(2), tc.constructor.schemaComposer);
   }
 
   const fieldType = tc.getFieldType(name);
-  return processType(fieldType, parts.slice(1), tc.constructor._schema);
+  return processType(fieldType, parts.slice(1), tc.constructor.schemaComposer);
 }
 
 export function typeByPathITC(itc: InputTypeComposer, parts: Array<string>) {
@@ -68,7 +68,7 @@ export function typeByPathITC(itc: InputTypeComposer, parts: Array<string>) {
   if (parts.length === 0) return itc;
 
   const fieldType = itc.getFieldType(parts[0]);
-  return processType(fieldType, parts.slice(1), itc.constructor._schema);
+  return processType(fieldType, parts.slice(1), itc.constructor.schemaComposer);
 }
 
 function typeByPathRSV(rsv: Resolver<any, any>, parts: Array<string>) {
@@ -80,10 +80,10 @@ function typeByPathRSV(rsv: Resolver<any, any>, parts: Array<string>) {
   if (name.startsWith('@')) {
     const arg = rsv.getArg(name.substring(1));
     if (!arg) return undefined;
-    return processType(arg.type, parts.slice(1), rsv.constructor._schema);
+    return processType(arg.type, parts.slice(1), rsv.constructor.schemaComposer);
   }
 
-  return processType(rsv.getType(), parts, rsv.constructor._schema);
+  return processType(rsv.getType(), parts, rsv.constructor.schemaComposer);
 }
 
 export function processType(

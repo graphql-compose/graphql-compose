@@ -53,7 +53,7 @@ export function toInputObjectType(
     return typeComposer.getInputTypeComposer();
   }
 
-  const schemaComposer = typeComposer.constructor._schema;
+  const schemaComposer = typeComposer.constructor.schemaComposer;
   const prefix: string = opts.prefix || '';
   const postfix: string = opts.postfix || 'Input';
 
