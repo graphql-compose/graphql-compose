@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 /* eslint-disable no-new, no-unused-vars */
 
 import {

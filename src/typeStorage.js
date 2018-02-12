@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 import { isFunction } from './utils/is';
 

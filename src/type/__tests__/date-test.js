@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 // copied from https://github.com/taion/graphql-type-json
 

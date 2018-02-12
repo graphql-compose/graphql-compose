@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 import { EnumTypeComposer } from '../';
 import { GraphQLList, GraphQLNonNull, GraphQLEnumType } from '../graphql';

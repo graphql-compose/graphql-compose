@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 /**
  * Convert object to dotted-key/value pair

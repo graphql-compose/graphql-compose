@@ -1,19 +1,19 @@
-/* @flow */
+/* @flow strict */
 
 import { SchemaComposer } from '../';
 
-type Context = {
-  a: string,
-  b: number,
-};
+describe('Flowtype tests', () => {
+  it('TContext validation tests', () => {
+    type Context = {
+      a: string,
+      b: number,
+    };
 
-type Context2 = {
-  c2: string,
-  d2: number,
-};
+    type Context2 = {
+      c2: string,
+      d2: number,
+    };
 
-describe('TContext flow tests', () => {
-  it('should', () => {
     const Schema: SchemaComposer<Context> = new SchemaComposer();
     const UserTC = Schema.TypeComposer.create('User');
     UserTC.addResolver({

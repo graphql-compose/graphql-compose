@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 export type ObjMap<T> = { [key: string]: T, __proto__: null };
 
@@ -11,4 +11,4 @@ export type ObjMap<T> = { [key: string]: T, __proto__: null };
 // https://github.com/facebook/flow/issues/946#issuecomment-250781039
 export type GenericMap<T> = { [key: string]: T } & { $call?: void };
 
-export type Thunk<T> = (() => T) | T;
+export type Thunk<+T> = (() => T) | T;

@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 import { graphql } from '../graphql';
 import type { GraphQLResolveInfo, GraphQLObjectType } from '../graphql';

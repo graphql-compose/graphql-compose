@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 /* eslint-disable no-use-before-define, no-restricted-syntax */
 
 import objectPath from 'object-path';

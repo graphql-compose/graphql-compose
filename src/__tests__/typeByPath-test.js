@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 import { GraphQLString, GraphQLInt, GraphQLFloat } from '../graphql';
 import { TypeComposer, InputTypeComposer, Resolver } from '../';

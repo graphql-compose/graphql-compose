@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 /* eslint-disable no-use-before-define */
 
 import { resolveMaybeThunk } from './utils/misc';
@@ -27,7 +27,6 @@ import type {
   GraphQLIsTypeOfFn,
   GraphQLResolveInfo,
   GraphQLFieldResolver,
-  FieldDefinitionNode,
 } from './graphql';
 import type { TypeAsString } from './typeMapper';
 import type { Resolver, ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
@@ -81,7 +80,7 @@ export type ComposeFieldConfigAsObject<TSource, TContext> = {
   subscribe?: GraphQLFieldResolver<TSource, TContext>,
   deprecationReason?: ?string,
   description?: ?string,
-  astNode?: ?FieldDefinitionNode,
+  astNode?: any,
   [key: string]: any,
 } & { $call?: void };
 
@@ -105,14 +104,13 @@ export type ComposeArgumentConfigAsObject = {
   type: Thunk<ComposeArgumentType> | GraphQLInputType,
   defaultValue?: mixed,
   description?: ?string,
+  astNode?: any,
 } & { $call?: void };
 export type ComposeArgumentConfig =
   | ComposeArgumentConfigAsObject
   | ComposeArgumentType
   | (() => ComposeArgumentConfigAsObject | ComposeArgumentType);
-export type ComposeFieldConfigArgumentMap = {
-  [argName: string]: ComposeArgumentConfig,
-};
+export type ComposeFieldConfigArgumentMap = ObjMap<ComposeArgumentConfig>;
 
 // RELATION -----------------------------
 export type RelationThunkMap<TSource, TContext> = {
@@ -256,11 +254,12 @@ export class TypeComposer<TContext = any> {
     return !!fields[fieldName];
   }
 
-  setField<TSource>(
+  setField(
     fieldName: string,
-    fieldConfig: ComposeFieldConfig<TSource, TContext>
+    fieldConfig: ComposeFieldConfig<any, TContext>
   ): TypeComposer<TContext> {
     this.addFields({ [fieldName]: fieldConfig });
+
     return this;
   }
 
@@ -353,22 +352,25 @@ export class TypeComposer<TContext = any> {
 
   addRelation<TSource>(
     fieldName: string,
-    relationOpts: RelationOpts<TSource, TContext>
+    opts: RelationOpts<TSource, TContext>
   ): TypeComposer<TContext> {
+    let relationOpts;
+
     if (!this.gqType._gqcRelations) {
       this.gqType._gqcRelations = {};
     }
-    this.gqType._gqcRelations[fieldName] = relationOpts;
+    this.gqType._gqcRelations[fieldName] = opts;
 
     // @deprecate remove this check in 3.0.0
-    if (isFunction(relationOpts)) {
+    if (isFunction(opts)) {
       deprecate(
-        `${this.getTypeName()}.addRelation('${fieldName}', relationOpts). \n` +
-          'Argument `relationOpts` cannot be a function from v2.0.0. See https://github.com/nodkz/graphql-compose/releases/tag/2.0.0 \n' +
+        `${this.getTypeName()}.addRelation('${fieldName}', opts). \n` +
+          'Argument `opts` cannot be a function from v2.0.0. See https://github.com/nodkz/graphql-compose/releases/tag/2.0.0 \n' +
           'Please change `() => ({ resolver: Resolver, ... })` on `{ resolver: () => Resolver, ... }`'
       );
-      // eslint-disable-next-line
-      relationOpts = relationOpts();
+      relationOpts = opts();
+    } else {
+      relationOpts = opts;
     }
 
     if (relationOpts.hasOwnProperty('resolver')) {
@@ -692,11 +694,12 @@ export class TypeComposer<TContext = any> {
     return this;
   }
 
-  addResolver(
-    resolver: Resolver<any, TContext> | ResolverOpts<any, TContext>
-  ): TypeComposer<TContext> {
-    if (!(resolver instanceof this.constructor._schema.Resolver)) {
-      resolver = new this.constructor._schema.Resolver((resolver: any)); // eslint-disable-line no-param-reassign
+  addResolver(opts: Resolver<any, TContext> | ResolverOpts<any, TContext>): TypeComposer<TContext> {
+    let resolver;
+    if (!(opts instanceof this.constructor._schema.Resolver)) {
+      resolver = new this.constructor._schema.Resolver((opts: any));
+    } else {
+      resolver = opts;
     }
 
     if (!resolver.name) {

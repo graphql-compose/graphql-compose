@@ -1,4 +1,4 @@
-/* @flow */
+/* @flow strict */
 
 import pluralize from './pluralize';
 import type { Thunk } from './definitions';
