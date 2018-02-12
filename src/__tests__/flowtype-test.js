@@ -20,7 +20,7 @@ describe('TContext flow tests', () => {
       name: 'findOne',
       resolve: ({ context }) => {
         context.a;
-        // $FlowFixMe property `c2` not found in Context1
+        // $FlowFixMe property `c2` not found in Context
         context.c2;
       },
     });

@@ -60,8 +60,11 @@ export class EnumTypeComposer {
     return ETC;
   }
 
-  constructor(gqType: GraphQLEnumType) {
+  constructor(gqType: GraphQLEnumType): EnumTypeComposer {
     this.gqType = gqType;
+
+    // alive proper Flow type casting in autosuggestions
+    /* :: return this; */
   }
 
   hasField(name: string): boolean {
