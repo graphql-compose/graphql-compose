@@ -14,6 +14,9 @@ import {
 } from '../graphql';
 import { GQC, TypeComposer, InputTypeComposer, EnumTypeComposer, Resolver, TypeMapper } from '../';
 import { graphqlVersion } from '../utils/graphqlVersion';
+import GraphQLJSON from '../type/json';
+import GraphQLDate from '../type/date';
+import GraphQLBuffer from '../type/buffer';
 
 beforeEach(() => {
   GQC.clear();
@@ -33,6 +36,13 @@ describe('TypeMapper', () => {
     expect(TypeMapper.get('Int')).toBe(GraphQLInt);
     expect(TypeMapper.get('Boolean')).toBe(GraphQLBoolean);
     expect(TypeMapper.get('ID')).toBe(GraphQLID);
+  });
+
+  it('should add basic graphql-compose types', () => {
+    expect(TypeMapper.get('JSON')).toBe(GraphQLJSON);
+    expect(TypeMapper.get('Json')).toBe(GraphQLJSON);
+    expect(TypeMapper.get('Date')).toBe(GraphQLDate);
+    expect(TypeMapper.get('Buffer')).toBe(GraphQLBuffer);
   });
 
   it('should create object type from template string', () => {
