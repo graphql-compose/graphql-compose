@@ -9,7 +9,7 @@ import { InputTypeComposer as _InputTypeComposer } from './inputTypeComposer';
 import { EnumTypeComposer as _EnumTypeComposer } from './enumTypeComposer';
 import { Resolver as _Resolver } from './resolver';
 
-export class SchemaComposer<TContext = any> extends TypeStorage<
+export class SchemaComposer<TContext> extends TypeStorage<
   _TypeComposer<TContext> | _InputTypeComposer | GraphQLNamedType
 > {
   typeMapper: TypeMapper<TContext>;

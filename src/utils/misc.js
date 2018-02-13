@@ -3,7 +3,7 @@
 import pluralize from './pluralize';
 import type { Thunk } from './definitions';
 
-export function resolveMaybeThunk<T>(thingOrThunk: Thunk<T>): T {
+export function resolveMaybeThunk<+T>(thingOrThunk: Thunk<T>): T {
   // eslint-disable-line
   return typeof thingOrThunk === 'function' ? thingOrThunk() : thingOrThunk;
 }

@@ -34,7 +34,7 @@ describe('typeAsThunk', () => {
           description: 'Field5',
         }),
       };
-      const unwrapped = resolveOutputConfigsAsThunk(GQC, fieldMap);
+      const unwrapped: any = resolveOutputConfigsAsThunk(GQC, fieldMap);
       expect(unwrapped.f0.type).toBe(GraphQLString);
       expect(unwrapped.f0.description).toBe('Field0');
       expect(unwrapped.f0._fieldAsThunk).toBeTruthy();
@@ -118,7 +118,7 @@ describe('typeAsThunk', () => {
           description: 'Field4',
         }),
       };
-      const unwrapped = resolveOutputConfigsAsThunk(GQC, fieldMap);
+      const unwrapped: any = resolveOutputConfigsAsThunk(GQC, fieldMap);
 
       expect(unwrapped.f3.type).toBe(GraphQLString);
       expect(unwrapped.f3._fieldAsThunk).toBeTruthy();
@@ -149,7 +149,7 @@ describe('typeAsThunk', () => {
         },
       };
       const unwrapped = resolveOutputConfigsAsThunk(GQC, fieldMap);
-      const { args } = unwrapped.f6;
+      const { args }: any = unwrapped.f6;
       expect(args.a1.type).toBe(GraphQLString);
       expect(args.a2.type).toBe(GraphQLString);
       expect(args.a2.description).toBe('Desc');
