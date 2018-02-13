@@ -176,16 +176,6 @@ export class TypeComposer {
     public getRelations(): RelationThunkMap<any, any>;
 
     /**
-     * @deprecated 3.0.0
-     */
-    public buildRelations(): this;
-
-    /**
-     * @deprecated 3.0.0
-     */
-    public buildRelation(): this;
-
-    /**
      * Get fields from a GraphQL type
      * WARNING: this method read an internal GraphQL instance variable.
      */

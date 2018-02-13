@@ -30,7 +30,7 @@ import { isObject, isFunction, isString } from './utils/is';
 import { resolveOutputConfigsAsThunk } from './utils/configAsThunk';
 import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath } from './utils/typeByPath';
-import { deprecate } from './utils/debug';
+// import { deprecate } from './utils/debug';
 import type { ProjectionType } from './utils/projection';
 import type { GenericMap, ObjMap, Thunk } from './utils/definitions';
 
@@ -372,31 +372,17 @@ export class TypeComposer<TContext> {
     fieldName: string,
     opts: RelationOpts<TSource, TContext>
   ): TypeComposer<TContext> {
-    let relationOpts;
-
     if (!this.gqType._gqcRelations) {
       this.gqType._gqcRelations = {};
     }
     this.gqType._gqcRelations[fieldName] = opts;
 
-    // @deprecate remove this check in 3.0.0
-    if (isFunction(opts)) {
-      deprecate(
-        `${this.getTypeName()}.addRelation('${fieldName}', opts). \n` +
-          'Argument `opts` cannot be a function from v2.0.0. See https://github.com/nodkz/graphql-compose/releases/tag/2.0.0 \n' +
-          'Please change `() => ({ resolver: Resolver, ... })` on `{ resolver: () => Resolver, ... }`'
-      );
-      relationOpts = opts();
-    } else {
-      relationOpts = opts;
-    }
-
-    if (relationOpts.hasOwnProperty('resolver')) {
+    if (opts.hasOwnProperty('resolver')) {
       this.setField(fieldName, () => {
-        return this._relationWithResolverToFC(relationOpts, fieldName);
+        return this._relationWithResolverToFC(opts, fieldName);
       });
-    } else if (relationOpts.hasOwnProperty('type')) {
-      const fc: RelationOptsWithFieldConfig<TSource, TContext> = (relationOpts: any);
+    } else if (opts.hasOwnProperty('type')) {
+      const fc: RelationOptsWithFieldConfig<TSource, TContext> = (opts: any);
       this.setField(fieldName, fc); // was: () => fc
     }
 
@@ -408,22 +394,6 @@ export class TypeComposer<TContext> {
       this.gqType._gqcRelations = {};
     }
     return this.gqType._gqcRelations;
-  }
-
-  /**
-   * @deprecated 3.0.0
-   */
-  buildRelations(): TypeComposer<TContext> {
-    deprecate('No need in calling TC.buildRelations(). You may safely remove call of this method.');
-    return this;
-  }
-
-  /**
-   * @deprecated 3.0.0
-   */
-  buildRelation(): TypeComposer<TContext> {
-    deprecate('No need in calling TC.buildRelation(). You may safely remove call of this method.');
-    return this;
   }
 
   _relationWithResolverToFC<TSource>(
@@ -462,20 +432,8 @@ export class TypeComposer<TContext> {
     //       is `null`, then just remove arg field from config
     //       is `function`, then remove arg field and run it in resolve
     //       is any other value, then put it to args prototype for resolve
-    let optsArgs = opts.prepareArgs || {};
+    const optsArgs = opts.prepareArgs || {};
 
-    /*
-    * It's done for better naming. Cause `args` name should be reserver under GraphQLArgConfigMap
-    * In terms of graphql-compose `args` is map of preparation functions, so better name is `prepareArgs`
-    * @deprecated 3.0.0
-    */
-    if (opts.args) {
-      optsArgs = ((opts.args: any): RelationArgsMapper<TSource, TContext>);
-      deprecate(
-        `Please rename 'args' option to 'prepareArgs' in type '${this.getTypeName()}' ` +
-          `in method call addRelation('${fieldName}', { /* rename option 'args' to 'prepareArgs' */ }).`
-      );
-    }
     Object.keys(optsArgs).forEach(argName => {
       const argMapVal = optsArgs[argName];
       if (argMapVal !== undefined) {
