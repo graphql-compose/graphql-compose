@@ -1,12 +1,12 @@
 /* @flow strict */
 /* eslint-disable no-use-before-define */
 
-import { GraphQLObjectType, GraphQLInputObjectType, getNamedType } from './graphql';
-import { TypeComposer } from './typeComposer';
-import { InputTypeComposer } from './inputTypeComposer';
-import { Resolver } from './resolver';
-import type { GraphQLInputType, GraphQLOutputType } from './graphql';
-import type { SchemaComposer } from './schemaComposer';
+import { GraphQLObjectType, GraphQLInputObjectType, getNamedType } from '../graphql';
+import type { GraphQLInputType, GraphQLOutputType } from '../graphql';
+import { TypeComposer } from '../TypeComposer';
+import { InputTypeComposer } from '../InputTypeComposer';
+import { Resolver } from '../Resolver';
+import type { SchemaComposer } from '../SchemaComposer';
 
 /**
  * fieldName

@@ -1,9 +1,9 @@
 /* @flow strict */
 
-import { graphql } from '../graphql';
-import type { GraphQLResolveInfo, GraphQLObjectType } from '../graphql';
+import { graphql } from '../../graphql';
+import type { GraphQLResolveInfo, GraphQLObjectType } from '../../graphql';
 import { getProjectionFromAST, extendByFieldProjection } from '../projection';
-import { TypeComposer, GQC } from '../';
+import { TypeComposer, GQC } from '../../';
 
 const Level2TC = TypeComposer.create({
   name: 'Level2',

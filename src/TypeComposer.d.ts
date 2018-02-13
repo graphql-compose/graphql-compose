@@ -4,12 +4,11 @@ import {
     GraphQLOutputType, GraphQLFieldResolver, GraphQLIsTypeOfFn, GraphQLResolveInfo,
     FieldDefinitionNode, GraphQLNonNull
 } from './graphql';
-import { TypeAsString } from './typeMapper';
-import { ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
-import { ProjectionType } from './projection';
-import { InputTypeComposer } from './inputTypeComposer';
-import { EnumTypeComposer } from './enumTypeComposer';
-import { Resolver } from './resolver';
+import { InputTypeComposer } from './InputTypeComposer';
+import { EnumTypeComposer } from './EnumTypeComposer';
+import { TypeAsString } from './TypeMapper';
+import { Resolver, ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './Resolver';
+import { ProjectionType } from './utils/projection';
 import { GenericMap, ObjMap, Thunk } from './utils/definitions';
 
 export type GetRecordIdFn<TSource, TContext> = (source: TSource, args: any, context: TContext) => string;

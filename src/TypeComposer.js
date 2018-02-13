@@ -1,14 +1,6 @@
 /* @flow strict */
 /* eslint-disable no-use-before-define */
 
-import { resolveMaybeThunk } from './utils/misc';
-import { isObject, isFunction, isString } from './utils/is';
-import { resolveOutputConfigsAsThunk } from './utils/configAsThunk';
-import { deprecate } from './utils/debug';
-import { toInputObjectType } from './toInputObjectType';
-import { type InputTypeComposer } from './inputTypeComposer';
-import { type EnumTypeComposer } from './enumTypeComposer';
-import { typeByPath } from './typeByPath';
 import {
   GraphQLObjectType,
   GraphQLList,
@@ -28,11 +20,19 @@ import type {
   GraphQLResolveInfo,
   GraphQLFieldResolver,
 } from './graphql';
-import type { TypeAsString } from './typeMapper';
-import type { Resolver, ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './resolver';
-import type { ProjectionType } from './projection';
+import { type InputTypeComposer } from './InputTypeComposer';
+import { type EnumTypeComposer } from './EnumTypeComposer';
+import type { TypeAsString } from './TypeMapper';
+import type { Resolver, ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './Resolver';
+import type { SchemaComposer } from './SchemaComposer';
+import { resolveMaybeThunk } from './utils/misc';
+import { isObject, isFunction, isString } from './utils/is';
+import { resolveOutputConfigsAsThunk } from './utils/configAsThunk';
+import { toInputObjectType } from './utils/toInputObjectType';
+import { typeByPath } from './utils/typeByPath';
+import { deprecate } from './utils/debug';
+import type { ProjectionType } from './utils/projection';
 import type { GenericMap, ObjMap, Thunk } from './utils/definitions';
-import type { SchemaComposer } from './schemaComposer';
 
 export type GetRecordIdFn<TSource, TContext> = (
   source: TSource,

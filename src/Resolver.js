@@ -19,26 +19,26 @@ import type {
   GraphQLInputType,
   GraphQLResolveInfo,
 } from './graphql';
-// import { deprecate } from './utils/debug';
-import deepmerge from './utils/deepmerge';
-import { resolveInputConfigsAsThunk } from './utils/configAsThunk';
-import { only, clearName } from './utils/misc';
-import { isFunction, isString } from './utils/is';
-import filterByDotPaths from './utils/filterByDotPaths';
-import { getProjectionFromAST } from './projection';
 import type {
   TypeComposer,
   ComposeOutputType,
   ComposeArgumentConfig,
   ComposeFieldConfigArgumentMap,
   ComposeArgumentType,
-} from './typeComposer';
-import { typeByPath } from './typeByPath';
-import type { ProjectionType } from './projection';
+} from './TypeComposer';
+import type { InputTypeComposer, ComposeInputFieldConfig } from './InputTypeComposer';
+import type { EnumTypeComposer } from './EnumTypeComposer';
+import type { SchemaComposer } from './SchemaComposer';
+import deepmerge from './utils/deepmerge';
+import { resolveInputConfigsAsThunk } from './utils/configAsThunk';
+import { only, clearName } from './utils/misc';
+import { isFunction, isString } from './utils/is';
+import filterByDotPaths from './utils/filterByDotPaths';
+import { getProjectionFromAST } from './utils/projection';
+import type { ProjectionType } from './utils/projection';
 import type { GenericMap } from './utils/definitions';
-import type { InputTypeComposer, ComposeInputFieldConfig } from './inputTypeComposer';
-import type { EnumTypeComposer } from './enumTypeComposer';
-import type { SchemaComposer } from './schemaComposer';
+import { typeByPath } from './utils/typeByPath';
+// import { deprecate } from './utils/debug';
 
 export type ResolveParams<TSource, TContext> = {
   source: TSource,

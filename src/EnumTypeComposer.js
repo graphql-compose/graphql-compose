@@ -10,9 +10,9 @@ import type {
   GraphQLEnumValueConfigMap,
   GraphQLEnumValue,
 } from './graphql';
-import type { TypeAsString } from './typeMapper';
 import { graphqlVersion } from './utils/graphqlVersion';
-import type { SchemaComposer } from './schemaComposer';
+import type { TypeAsString } from './TypeMapper';
+import type { SchemaComposer } from './SchemaComposer';
 
 export type GraphQLEnumTypeExtended = GraphQLEnumType & {
   _gqcEnumTypeComposer?: EnumTypeComposer,

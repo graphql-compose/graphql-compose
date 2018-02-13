@@ -2,12 +2,12 @@
 /* eslint-disable class-methods-use-this */
 
 import { GraphQLObjectType, GraphQLSchema, type GraphQLNamedType } from './graphql';
-import { TypeStorage } from './typeStorage';
-import { TypeMapper } from './typeMapper';
-import { TypeComposer as _TypeComposer } from './typeComposer';
-import { InputTypeComposer as _InputTypeComposer } from './inputTypeComposer';
-import { EnumTypeComposer as _EnumTypeComposer } from './enumTypeComposer';
-import { Resolver as _Resolver } from './resolver';
+import { TypeStorage } from './TypeStorage';
+import { TypeMapper } from './TypeMapper';
+import { TypeComposer as _TypeComposer } from './TypeComposer';
+import { InputTypeComposer as _InputTypeComposer } from './InputTypeComposer';
+import { EnumTypeComposer as _EnumTypeComposer } from './EnumTypeComposer';
+import { Resolver as _Resolver } from './Resolver';
 
 export class SchemaComposer<TContext> extends TypeStorage<
   _TypeComposer<TContext> | _InputTypeComposer | GraphQLNamedType

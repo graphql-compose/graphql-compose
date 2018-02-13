@@ -5,11 +5,11 @@ import {
 import {
     ComposeArgumentConfig, ComposeFieldConfig, ComposeFieldConfigArgumentMap,
     ComposeFieldConfigMap
-} from './typeComposer';
+} from './TypeComposer';
+import { TypeDefinitionString, TypeNameString, TypeWrappedString } from './TypeMapper';
+import { ComposeInputFieldConfig, ComposeInputFieldConfigMap } from './InputTypeComposer';
+import { TypeStorage } from './TypeStorage';
 import { Thunk } from './utils/definitions';
-import { TypeDefinitionString, TypeNameString, TypeWrappedString } from './typeMapper';
-import { ComposeInputFieldConfig, ComposeInputFieldConfigMap } from './inputTypeComposer';
-import { TypeStorage } from './typeStorage';
 
 export type TypeDefinitionString = string; // eg. type Name { field: Int }
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]

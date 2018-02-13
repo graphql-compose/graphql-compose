@@ -3,7 +3,6 @@
 
 import { parse, parseType } from 'graphql/language/parser';
 import { Kind } from 'graphql/language';
-
 import { getDescription } from 'graphql/utilities/buildASTSchema';
 import keyValMap from 'graphql/jsutils/keyValMap';
 import invariant from 'graphql/jsutils/invariant';
@@ -20,7 +19,6 @@ import type {
   EnumTypeDefinitionNode,
   InputObjectTypeDefinitionNode,
 } from 'graphql/language/ast';
-
 import {
   GraphQLInt,
   GraphQLFloat,
@@ -44,11 +42,6 @@ import {
   isNamedType,
   valueFromAST,
 } from './graphql';
-
-import GraphQLJSON from './type/json';
-import GraphQLDate from './type/date';
-import GraphQLBuffer from './type/buffer';
-import { isFunction, isObject } from './utils/is';
 import type {
   GraphQLType,
   GraphQLNamedType,
@@ -62,22 +55,26 @@ import type {
   GraphQLInputFieldConfigMap,
   GraphQLInputFieldConfig,
 } from './graphql';
-import type { ComposeInputFieldConfigMap, ComposeInputFieldConfig } from './inputTypeComposer';
+import GraphQLJSON from './type/json';
+import GraphQLDate from './type/date';
+import GraphQLBuffer from './type/buffer';
+
+import type { ComposeInputFieldConfigMap, ComposeInputFieldConfig } from './InputTypeComposer';
 import type {
   ComposeOutputType,
   ComposeFieldConfigMap,
   ComposeFieldConfig,
   ComposeArgumentConfig,
   ComposeFieldConfigArgumentMap,
-} from './typeComposer';
+} from './TypeComposer';
+import { TypeComposer } from './TypeComposer';
+import type { SchemaComposer } from './SchemaComposer';
+import { InputTypeComposer } from './InputTypeComposer';
+import { EnumTypeComposer } from './EnumTypeComposer';
+import { Resolver } from './Resolver';
+import { TypeStorage } from './TypeStorage';
 import type { Thunk } from './utils/definitions';
-import type { SchemaComposer } from './schemaComposer';
-
-import { TypeComposer } from './typeComposer';
-import { InputTypeComposer } from './inputTypeComposer';
-import { EnumTypeComposer } from './enumTypeComposer';
-import { Resolver } from './resolver';
-import { TypeStorage } from './typeStorage';
+import { isFunction, isObject } from './utils/is';
 
 export type TypeDefinitionString = string; // eg type Name { field: Int }
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]

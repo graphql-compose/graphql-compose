@@ -1,7 +1,7 @@
 /* @flow strict */
 
 import * as graphql from './graphql';
-import { SchemaComposer } from './schemaComposer';
+import { SchemaComposer } from './SchemaComposer';
 
 export { graphql };
 
@@ -27,18 +27,18 @@ export {
 };
 
 // Export Composers' prototype classes for instance check in plugins
-export { TypeComposer as _ProtoTypeComposer } from './typeComposer';
-export { InputTypeComposer as _ProtoInputTypeComposer } from './inputTypeComposer';
-export { EnumTypeComposer as _ProtoEnumTypeComposer } from './enumTypeComposer';
-export { Resolver as _ProtoResolver } from './resolver';
-export { TypeMapper as _ProtoTypeMapper } from './typeMapper';
+export { TypeComposer as _ProtoTypeComposer } from './TypeComposer';
+export { InputTypeComposer as _ProtoInputTypeComposer } from './InputTypeComposer';
+export { EnumTypeComposer as _ProtoEnumTypeComposer } from './EnumTypeComposer';
+export { Resolver as _ProtoResolver } from './Resolver';
+export { TypeMapper as _ProtoTypeMapper } from './TypeMapper';
 
-export { TypeStorage } from './typeStorage';
-export { getProjectionFromAST, getFlatProjectionFromAST } from './projection';
+export { TypeStorage } from './TypeStorage';
+export { getProjectionFromAST, getFlatProjectionFromAST } from './utils/projection';
 
 export { GraphQLDate, GraphQLBuffer, GraphQLGeneric, GraphQLJSON } from './type';
 
-export { toInputObjectType, convertInputObjectFieldOpts } from './toInputObjectType';
+export { toInputObjectType, convertInputObjectFieldOpts } from './utils/toInputObjectType';
 
 export * from './utils/misc';
 export * from './utils/is';
@@ -66,7 +66,7 @@ export type {
   ArgsType,
   RelationArgsMapperFn,
   RelationArgsMapper,
-} from './typeComposer';
+} from './TypeComposer';
 
 export {
   ComposeInputType,
@@ -74,7 +74,7 @@ export {
   ComposeInputFieldConfigAsObject,
   ComposeInputFieldConfigMap,
   ComposeInputObjectTypeConfig,
-} from './inputTypeComposer';
+} from './InputTypeComposer';
 
 export {
   ResolveParams,
@@ -90,8 +90,8 @@ export {
   ResolverWrapArgsCb,
   ResolverWrapTypeCb,
   ResolveDebugOpts,
-} from './resolver';
+} from './Resolver';
 
-export { ProjectionType, ProjectionNode } from './projection';
+export { ProjectionType, ProjectionNode } from './utils/projection';
 
-export type { TypeDefinitionString, TypeWrappedString, TypeNameString } from './typeMapper';
+export type { TypeDefinitionString, TypeWrappedString, TypeNameString } from './TypeMapper';

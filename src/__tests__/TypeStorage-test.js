@@ -1,6 +1,6 @@
 /* @flow strict */
 
-import { TypeStorage } from '../typeStorage';
+import { TypeStorage } from '../TypeStorage';
 
 const GraphQLType = 'SomeTypeInstance';
 

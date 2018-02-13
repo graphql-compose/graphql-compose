@@ -6,11 +6,11 @@ import { resolveMaybeThunk } from './utils/misc';
 // import { deprecate } from './utils/debug';
 import { isObject, isString } from './utils/is';
 import { resolveInputConfigsAsThunk, keepConfigsAsThunk } from './utils/configAsThunk';
-import { typeByPath } from './typeByPath';
+import { typeByPath } from './utils/typeByPath';
 import type { Thunk, ObjMap } from './utils/definitions';
-import type { EnumTypeComposer } from './enumTypeComposer';
-import type { TypeAsString } from './typeMapper';
-import type { SchemaComposer } from './schemaComposer';
+import type { EnumTypeComposer } from './EnumTypeComposer';
+import type { TypeAsString } from './TypeMapper';
+import type { SchemaComposer } from './SchemaComposer';
 import type {
   // GraphQLInputFieldConfig,
   GraphQLInputFieldConfigMap,
