@@ -5,14 +5,19 @@ import { SchemaComposer } from './schemaComposer';
 
 export { graphql };
 
-const GQC: SchemaComposer<*> = new SchemaComposer();
+const schemaComposer = new SchemaComposer();
+const GQC: SchemaComposer<*> = schemaComposer;
 const TypeComposer = GQC.TypeComposer;
 const InputTypeComposer = GQC.InputTypeComposer;
 const EnumTypeComposer = GQC.EnumTypeComposer;
 const Resolver = GQC.Resolver;
 const TypeMapper = GQC.typeMapper;
 export {
+  // SchemaComposer default global instance (alias for schemaComposer)
   GQC,
+  // SchemaComposer default global instance
+  schemaComposer,
+  // SchemaComposer class
   SchemaComposer,
   TypeComposer,
   InputTypeComposer,
