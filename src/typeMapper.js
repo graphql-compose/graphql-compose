@@ -47,6 +47,7 @@ import {
 
 import GraphQLJSON from './type/json';
 import GraphQLDate from './type/date';
+import GraphQLBuffer from './type/buffer';
 import { isFunction, isObject } from './utils/is';
 import type {
   GraphQLType,
@@ -120,14 +121,17 @@ export class TypeMapper<TContext> {
   }
 
   basicScalars: Map<string, GraphQLNamedType> = new Map([
+    // graphql basic types
     ['String', GraphQLString],
     ['Float', GraphQLFloat],
     ['Int', GraphQLInt],
     ['Boolean', GraphQLBoolean],
     ['ID', GraphQLID],
+    // graphql-compose basic types
     ['JSON', GraphQLJSON],
     ['Json', GraphQLJSON],
     ['Date', GraphQLDate],
+    ['Buffer', GraphQLBuffer],
   ]);
 
   get(name: string): ?GraphQLNamedType {
