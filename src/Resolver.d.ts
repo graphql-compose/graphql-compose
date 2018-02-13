@@ -4,10 +4,10 @@ import {
 import * as graphql from './graphql';
 import {
     ComposeArgumentConfig, ComposeFieldConfigArgumentMap, ComposeOutputType, ComposeArgumentType
-} from './typeComposer';
-import { InputTypeComposer } from './inputTypeComposer';
-import { TypeComposer } from './typeComposer';
-import { ProjectionType } from './projection';
+} from './TypeComposer';
+import { InputTypeComposer } from './InputTypeComposer';
+import { TypeComposer } from './TypeComposer';
+import { ProjectionType } from './utils/projection';
 import { GenericMap } from './utils/definitions';
 
 export type ResolveParams<TSource, TContext> = {

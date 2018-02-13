@@ -1,28 +1,28 @@
 import * as graphql from './graphql';
-import { SchemaComposer } from './schemaComposer';
+import { SchemaComposer } from './SchemaComposer';
 
 export { graphql };
 
-export { TypeComposer } from './typeComposer';
-export { InputTypeComposer } from './inputTypeComposer';
-export { EnumTypeComposer } from './enumTypeComposer';
-export { Resolver } from './resolver';
-export { TypeMapper } from './typeMapper';
+export { TypeComposer } from './TypeComposer';
+export { InputTypeComposer } from './InputTypeComposer';
+export { EnumTypeComposer } from './EnumTypeComposer';
+export { Resolver } from './Resolver';
+export { TypeMapper } from './TypeMapper';
 declare const GQC: SchemaComposer;
 export { SchemaComposer, GQC };
 
-export { TypeComposer as _ProtoTypeComposer } from './typeComposer';
-export { InputTypeComposer as _ProtoInputTypeComposer } from './inputTypeComposer';
-export { EnumTypeComposer as _ProtoEnumTypeComposer } from './enumTypeComposer';
-export { Resolver as _ProtoResolver } from './resolver';
-export { TypeMapper as _ProtoTypeMapper } from './typeMapper';
+export { TypeComposer as _ProtoTypeComposer } from './TypeComposer';
+export { InputTypeComposer as _ProtoInputTypeComposer } from './InputTypeComposer';
+export { EnumTypeComposer as _ProtoEnumTypeComposer } from './EnumTypeComposer';
+export { Resolver as _ProtoResolver } from './Resolver';
+export { TypeMapper as _ProtoTypeMapper } from './TypeMapper';
 
-export { TypeStorage } from './typeStorage';
-export { getProjectionFromAST, getFlatProjectionFromAST } from './projection';
+export { TypeStorage } from './TypeStorage';
+export { getProjectionFromAST, getFlatProjectionFromAST } from './utils/projection';
 
 export { GraphQLDate, GraphQLBuffer, GraphQLGeneric, GraphQLJSON } from './type';
 
-export { toInputObjectType, ConvertInputObjectFieldOpts } from './toInputObjectType';
+export { toInputObjectType, ConvertInputObjectFieldOpts } from './utils/toInputObjectType';
 
 export * from './utils/misc';
 export * from './utils/is';
@@ -50,7 +50,7 @@ export {
   ArgsType,
   RelationArgsMapperFn,
   RelationArgsMapper,
-} from './typeComposer';
+} from './TypeComposer';
 
 export {
   ComposeInputType,
@@ -58,7 +58,7 @@ export {
   ComposeInputFieldConfigAsObject,
   ComposeInputFieldConfigMap,
   ComposeInputObjectTypeConfig,
-} from './inputTypeComposer';
+} from './InputTypeComposer';
 
 export {
   ResolveParams,
@@ -74,11 +74,11 @@ export {
   ResolverWrapArgsCb,
   ResolverWrapTypeCb,
   ResolveDebugOpts,
-} from './resolver';
+} from './Resolver';
 
 export {
   ProjectionType,
   ProjectionNode,
-} from './projection';
+} from './utils/projection';
 
-export { TypeDefinitionString, TypeWrappedString, TypeNameString } from './typeMapper';
+export { TypeDefinitionString, TypeWrappedString, TypeNameString } from './TypeMapper';

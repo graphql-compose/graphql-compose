@@ -1,10 +1,10 @@
 import { GraphQLSchema, GraphQLNamedType } from './graphql';
-import { TypeComposer } from './typeComposer';
-import { InputTypeComposer } from './inputTypeComposer';
-import { TypeStorage } from './typeStorage';
-import { TypeMapper } from './typeMapper';
-import { EnumTypeComposer } from './enumTypeComposer';
-import { Resolver } from './resolver';
+import { TypeComposer } from './TypeComposer';
+import { InputTypeComposer } from './InputTypeComposer';
+import { TypeStorage } from './TypeStorage';
+import { TypeMapper } from './TypeMapper';
+import { EnumTypeComposer } from './EnumTypeComposer';
+import { Resolver } from './Resolver';
 
 export class SchemaComposer extends TypeStorage<TypeComposer | InputTypeComposer | GraphQLNamedType> {
     public TypeMapper: TypeMapper;

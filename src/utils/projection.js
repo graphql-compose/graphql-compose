@@ -8,9 +8,9 @@ import type {
   InlineFragmentNode,
   GraphQLResolveInfo,
   GraphQLOutputType,
-} from './graphql';
-import { Kind, GraphQLObjectType, GraphQLList, GraphQLNonNull } from './graphql';
-import deepmerge from './utils/deepmerge';
+} from '../graphql';
+import { Kind, GraphQLObjectType, GraphQLList, GraphQLNonNull } from '../graphql';
+import deepmerge from './deepmerge';
 
 const { FIELD, FRAGMENT_SPREAD, INLINE_FRAGMENT } = Kind;
 

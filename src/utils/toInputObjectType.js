@@ -9,19 +9,19 @@ import {
   isAbstractType,
   GraphQLList,
   GraphQLNonNull,
-} from './graphql';
-import type { TypeComposer } from './typeComposer';
-import type { InputTypeComposer } from './inputTypeComposer';
-import type { SchemaComposer } from './schemaComposer';
-import GenericType from './type/generic';
-import { upperFirst } from './utils/misc';
+} from '../graphql';
+import type { TypeComposer } from '../TypeComposer';
+import type { InputTypeComposer } from '../InputTypeComposer';
+import type { SchemaComposer } from '../SchemaComposer';
+import GenericType from '../type/generic';
+import { upperFirst } from './misc';
 import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
   GraphQLType,
   GraphQLInputFieldConfig,
   GraphQLInputType,
-} from './graphql';
+} from '../graphql';
 
 export function removeWrongFields<TSource, TContext>(
   fields: GraphQLFieldConfigMap<TSource, TContext>

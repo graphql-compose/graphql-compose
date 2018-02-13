@@ -1,6 +1,6 @@
 import {
     FieldNode, FragmentDefinitionNode, GraphQLResolveInfo, InlineFragmentNode, GraphQLOutputType
-} from './graphql';
+} from '../graphql';
 
 export type ProjectionType = { [fieldName: string]: any };
 export type ProjectionNode = { [fieldName: string]: any };

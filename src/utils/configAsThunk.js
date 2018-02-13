@@ -2,7 +2,7 @@
 /* eslint-disable no-param-reassign, no-use-before-define */
 
 import { isFunction, isObject } from './is';
-import type { SchemaComposer } from '../schemaComposer';
+import type { SchemaComposer } from '../SchemaComposer';
 import type { GraphQLFieldConfig } from '../graphql';
 import type { ObjMap } from '../utils/definitions';
 

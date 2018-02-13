@@ -1,7 +1,7 @@
-import { GraphQLFieldConfig, GraphQLFieldConfigMap, GraphQLInputFieldConfig, GraphQLObjectType } from './graphql';
-import { InputTypeComposer } from './inputTypeComposer';
-import { TypeComposer } from './typeComposer';
-import { SchemaComposer } from './schemaComposer';
+import { GraphQLFieldConfig, GraphQLFieldConfigMap, GraphQLInputFieldConfig, GraphQLObjectType } from '../graphql';
+import { InputTypeComposer } from '../InputTypeComposer';
+import { TypeComposer } from '../TypeComposer';
+import { SchemaComposer } from '../SchemaComposer';
 
 export function removeWrongFields<TSource, TContext>(
     fields: GraphQLFieldConfigMap<TSource, TContext>): GraphQLFieldConfigMap<TSource, TContext>;
