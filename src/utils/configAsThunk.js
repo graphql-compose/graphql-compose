@@ -3,17 +3,23 @@
 
 import { isFunction, isObject } from './is';
 import type { SchemaComposer } from '../schemaComposer';
+import type { GraphQLFieldConfig } from '../graphql';
+import type { ObjMap } from '../utils/definitions';
 
-export type FieldMaps = {
+export type FieldMap = {
   [fieldName: string]: any,
   __proto__: null,
 };
 
-export function resolveOutputConfigsAsThunk<T: FieldMaps>(
-  schema: SchemaComposer<any>,
-  fieldMap: T,
+export type GraphQLFieldConfigMapExtended<TSource, TContext> = ObjMap<
+  GraphQLFieldConfig<TSource, TContext> & { _fieldAsThunk?: () => any, _typeAsThunk?: () => any }
+>;
+
+export function resolveOutputConfigsAsThunk<TContext>(
+  schema: SchemaComposer<TContext>,
+  fieldMap: FieldMap,
   typeName?: string = ''
-): T {
+): GraphQLFieldConfigMapExtended<any, TContext> {
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(name => {
       if (isFunction(fieldMap[name])) {
@@ -48,7 +54,7 @@ export function resolveOutputConfigsAsThunk<T: FieldMaps>(
   return fieldMap;
 }
 
-export function resolveInputConfigsAsThunk<T: FieldMaps>(
+export function resolveInputConfigsAsThunk<T: FieldMap>(
   schema: SchemaComposer<any>,
   fieldMap: T,
   typeName?: string
@@ -79,7 +85,7 @@ export function resolveInputConfigsAsThunk<T: FieldMaps>(
   return fieldMap;
 }
 
-export function keepConfigsAsThunk<T: FieldMaps>(fieldMap: T): T {
+export function keepConfigsAsThunk<T: FieldMap>(fieldMap: T): T {
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(key => {
       if (fieldMap[key]._fieldAsThunk) {

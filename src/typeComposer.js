@@ -36,15 +36,15 @@ import type { SchemaComposer } from './schemaComposer';
 
 export type GetRecordIdFn<TSource, TContext> = (
   source: TSource,
-  args: ?mixed,
-  context: TContext
+  args?: ?mixed,
+  context?: TContext
 ) => string;
 
-export type GraphQLObjectTypeExtended = GraphQLObjectType & {
+export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
   _gqcInputTypeComposer?: InputTypeComposer,
-  _gqcResolvers?: Map<string, Resolver<any, any>>,
-  _gqcGetRecordIdFn?: GetRecordIdFn<any, any>,
-  _gqcRelations?: RelationThunkMap<any, any>,
+  _gqcResolvers?: Map<string, Resolver<TSource, TContext>>,
+  _gqcGetRecordIdFn?: GetRecordIdFn<TSource, TContext>,
+  _gqcRelations?: RelationThunkMap<TSource, TContext>,
   description?: ?string,
 };
 
@@ -149,8 +149,8 @@ export type RelationArgsMapper<TSource, TContext> = {
     | GenericMap<any>,
 };
 
-export class TypeComposer<TContext = any> {
-  gqType: GraphQLObjectTypeExtended;
+export class TypeComposer<TContext> {
+  gqType: GraphQLObjectTypeExtended<any, TContext>;
   _fields: GraphQLFieldConfigMap<any, TContext>;
   static schemaComposer: SchemaComposer<TContext>;
 
@@ -232,7 +232,7 @@ export class TypeComposer<TContext = any> {
    */
   getFields(): ObjMap<any> {
     if (!this._fields) {
-      const fields: Thunk<GraphQLFieldConfigMap<any, any>> = this.gqType._typeConfig.fields;
+      const fields: Thunk<GraphQLFieldConfigMap<any, TContext>> = this.gqType._typeConfig.fields;
       this._fields = resolveMaybeThunk(fields) || {};
     }
 
@@ -258,11 +258,11 @@ export class TypeComposer<TContext = any> {
 
     this._fields = prepearedFields;
     this.gqType._typeConfig.fields = () =>
-      resolveOutputConfigsAsThunk(
+      (resolveOutputConfigsAsThunk(
         this.constructor.schemaComposer,
         prepearedFields,
         this.getTypeName()
-      );
+      ): any);
     delete this.gqType._fields; // clear builded fields in type
     return this;
   }
@@ -592,7 +592,7 @@ export class TypeComposer<TContext = any> {
       // no problem, clone without resolveIdFn
     }
     this.getResolvers().forEach(resolver => {
-      const newResolver = resolver.clone(cloned);
+      const newResolver = resolver.clone();
       cloned.addResolver(newResolver);
     });
 
@@ -713,9 +713,11 @@ export class TypeComposer<TContext = any> {
   }
 
   addResolver(opts: Resolver<any, TContext> | ResolverOpts<any, TContext>): TypeComposer<TContext> {
-    let resolver;
+    let resolver: Resolver<any, TContext>;
     if (!(opts instanceof this.constructor.schemaComposer.Resolver)) {
-      resolver = new this.constructor.schemaComposer.Resolver((opts: any));
+      resolver = new this.constructor.schemaComposer.Resolver(
+        ((opts: any): ResolverOpts<any, TContext>)
+      );
     } else {
       resolver = opts;
     }
@@ -836,7 +838,9 @@ export class TypeComposer<TContext = any> {
     return typeByPath(this, path);
   }
 
-  deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this {
+  deprecateFields(
+    fields: { [fieldName: string]: string } | string[] | string
+  ): TypeComposer<TContext> {
     const existedFieldNames = this.getFieldNames();
 
     if (typeof fields === 'string') {
