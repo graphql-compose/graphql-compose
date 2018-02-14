@@ -18,7 +18,7 @@ export class SchemaComposer<TContext> extends TypeStorage<
   EnumTypeComposer: typeof _EnumTypeComposer;
   Resolver: Class<_Resolver<any, TContext>>;
 
-  constructor(): SchemaComposer<TContext> {
+  constructor() {
     super();
     const schema = this;
 
@@ -43,10 +43,6 @@ export class SchemaComposer<TContext> extends TypeStorage<
     this.EnumTypeComposer = EnumTypeComposer;
 
     this.typeMapper = new TypeMapper(schema);
-
-    // alive proper Flow type casting in autosuggestions
-    /* :: return this; */
-  }
 
   getOrCreateTC(typeName: string): _TypeComposer<TContext> {
     if (!this.hasInstance(typeName, this.TypeComposer)) {

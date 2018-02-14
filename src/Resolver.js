@@ -166,7 +166,9 @@ export class Resolver<TSource, TContext> {
       this.resolve = opts.resolve;
     }
 
-    // alive proper Flow type casting in autosuggestions
+    // Alive proper Flow type casting in autosuggestions for class with Generics
+    // it's required due using <TSource, TContext>
+    // and Class<> utility type in SchemaComposer
     /* :: return this; */
   }
 

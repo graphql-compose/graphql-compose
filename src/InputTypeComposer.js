@@ -102,7 +102,7 @@ export class InputTypeComposer {
     return ITC;
   }
 
-  constructor(gqType: GraphQLInputObjectType): InputTypeComposer {
+  constructor(gqType: GraphQLInputObjectType) {
     if (!this.constructor.schemaComposer) {
       throw new Error('Class<InputTypeComposer> can only be created by a SchemaComposer.');
     }
@@ -111,9 +111,6 @@ export class InputTypeComposer {
       throw new Error('InputTypeComposer accept only GraphQLInputObjectType in constructor');
     }
     this.gqType = gqType;
-
-    // alive proper Flow type casting in autosuggestions
-    /* :: return this; */
   }
 
   /**

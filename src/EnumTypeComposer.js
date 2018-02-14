@@ -64,7 +64,7 @@ export class EnumTypeComposer {
     return ETC;
   }
 
-  constructor(gqType: GraphQLEnumType): EnumTypeComposer {
+  constructor(gqType: GraphQLEnumType) {
     if (!this.constructor.schemaComposer) {
       throw new Error('Class<EnumTypeComposer> can only be created by a SchemaComposer.');
     }
@@ -73,9 +73,6 @@ export class EnumTypeComposer {
       throw new Error('EnumTypeComposer accept only GraphQLEnumType in constructor');
     }
     this.gqType = gqType;
-
-    // alive proper Flow type casting in autosuggestions
-    /* :: return this; */
   }
 
   hasField(name: string): boolean {

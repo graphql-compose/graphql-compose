@@ -214,7 +214,9 @@ export class TypeComposer<TContext> {
     }
     this.gqType = gqType;
 
-    // alive proper Flow type casting in autosuggestions
+    // Alive proper Flow type casting in autosuggestions for class with Generics
+    // it's required due using <TContext>
+    // and Class<> utility type in SchemaComposer
     /* :: return this; */
   }
 
