@@ -1,24 +1,23 @@
 /* @flow strict */
 /* eslint-disable class-methods-use-this */
 
-import { GraphQLObjectType, GraphQLSchema, type GraphQLNamedType } from './graphql';
+import { GraphQLObjectType, GraphQLSchema } from './graphql';
 import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
 import { TypeComposer as _TypeComposer } from './TypeComposer';
 import { InputTypeComposer as _InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer as _EnumTypeComposer } from './EnumTypeComposer';
 import { Resolver as _Resolver } from './Resolver';
+import { isFunction } from './utils/is';
 
-export class SchemaComposer<TContext> extends TypeStorage<
-  _TypeComposer<TContext> | _InputTypeComposer | GraphQLNamedType
-> {
+export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   typeMapper: TypeMapper<TContext>;
   TypeComposer: Class<_TypeComposer<TContext>>;
   InputTypeComposer: typeof _InputTypeComposer;
   EnumTypeComposer: typeof _EnumTypeComposer;
   Resolver: Class<_Resolver<any, TContext>>;
 
-  constructor() {
+  constructor(): SchemaComposer<TContext> {
     super();
     const schema = this;
 
@@ -44,32 +43,8 @@ export class SchemaComposer<TContext> extends TypeStorage<
 
     this.typeMapper = new TypeMapper(schema);
 
-  getOrCreateTC(typeName: string): _TypeComposer<TContext> {
-    if (!this.hasInstance(typeName, this.TypeComposer)) {
-      this.set(typeName, this.TypeComposer.create(typeName));
-    }
-    return (this.get(typeName): any);
-  }
-
-  getOrCreateITC(typeName: string): _InputTypeComposer {
-    if (!this.hasInstance(typeName, this.InputTypeComposer)) {
-      this.set(typeName, this.InputTypeComposer.create(typeName));
-    }
-    return (this.get(typeName): any);
-  }
-
-  getTC(typeName: string): _TypeComposer<TContext> {
-    if (!this.hasInstance(typeName, this.TypeComposer)) {
-      throw new Error(`GQC does not have TypeComposer with name ${typeName}`);
-    }
-    return (this.get(typeName): any);
-  }
-
-  getITC(typeName: string): _InputTypeComposer {
-    if (!this.hasInstance(typeName, this.InputTypeComposer)) {
-      throw new Error(`GQC does not have InputTypeComposer with name ${typeName}`);
-    }
-    return (this.get(typeName): any);
+    // alive proper Flow type casting in autosuggestions
+    /* :: return this; */
   }
 
   rootQuery(): _TypeComposer<TContext> {
@@ -140,18 +115,44 @@ export class SchemaComposer<TContext> extends TypeStorage<
     typeComposer.setFields(fields);
   }
 
+  getOrCreateTC(
+    typeName: string,
+    onCreate?: (_TypeComposer<TContext>) => any
+  ): _TypeComposer<TContext> {
+    if (!this.hasInstance(typeName, _TypeComposer)) {
+      const tc = this.TypeComposer.create(typeName);
+      this.set(typeName, tc);
+      if (onCreate && isFunction(onCreate)) onCreate(tc);
+    }
+    return (this.get(typeName): any);
+  }
+
+  getOrCreateITC(typeName: string, onCreate?: _InputTypeComposer => any): _InputTypeComposer {
+    if (!this.hasInstance(typeName, _InputTypeComposer)) {
+      const itc = this.InputTypeComposer.create(typeName);
+      this.set(typeName, itc);
+      if (onCreate && isFunction(onCreate)) onCreate(itc);
+    }
+    return (this.get(typeName): any);
+  }
+
+  getOrCreateETC(typeName: string, onCreate?: _EnumTypeComposer => any): _EnumTypeComposer {
+    if (!this.hasInstance(typeName, _EnumTypeComposer)) {
+      const etc = this.EnumTypeComposer.create(typeName);
+      this.set(typeName, etc);
+      if (onCreate && isFunction(onCreate)) onCreate(etc);
+    }
+    return (this.get(typeName): any);
+  }
+
+  // disable redundant noise in console.logs
   toString(): string {
-    // disable redundant noise in console.logs
     return 'SchemaComposer';
   }
-
   toJSON() {
-    // disable redundant noise in console.logs
     return 'SchemaComposer';
   }
-
   inspect() {
-    // disable redundant noise in console.logs
     return 'SchemaComposer';
   }
 }
