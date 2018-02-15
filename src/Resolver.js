@@ -124,7 +124,6 @@ export type ResolveDebugOpts = {
 export class Resolver<TSource, TContext> {
   static schemaComposer: SchemaComposer<TContext>;
 
-  /* :: context: TContext */
   type: GraphQLOutputType;
   args: GraphQLFieldConfigArgumentMap;
   resolve: ResolverRpCb<TSource, TContext>;

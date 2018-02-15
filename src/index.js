@@ -5,7 +5,7 @@ import { SchemaComposer } from './SchemaComposer';
 
 export { graphql };
 
-const schemaComposer: SchemaComposer<mixed> = new SchemaComposer();
+const schemaComposer: SchemaComposer<any> = new SchemaComposer();
 const GQC = schemaComposer;
 const TypeComposer = GQC.TypeComposer;
 const InputTypeComposer = GQC.InputTypeComposer;

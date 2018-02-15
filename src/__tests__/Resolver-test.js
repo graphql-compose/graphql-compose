@@ -145,13 +145,13 @@ describe('Resolver', () => {
   describe('`args` methods', () => {
     it('should have setArg and getArg methods', () => {
       resolver.setArg('a1', { type: GraphQLString });
-      expect(resolver.getArg('a1').type).toBe(GraphQLString);
+      expect(resolver.getArgType('a1')).toBe(GraphQLString);
 
       resolver.setArg('a2', { type: 'String' });
-      expect(resolver.getArg('a2').type).toBe(GraphQLString);
+      expect(resolver.getArgType('a2')).toBe(GraphQLString);
 
       resolver.setArg('a3', 'String');
-      expect(resolver.getArg('a3').type).toBe(GraphQLString);
+      expect(resolver.getArgType('a3')).toBe(GraphQLString);
     });
 
     it('should have setArgs method', () => {
@@ -160,9 +160,9 @@ describe('Resolver', () => {
         b2: { type: 'String' },
         b3: 'String',
       });
-      expect(resolver.getArg('b1').type).toBe(GraphQLString);
-      expect(resolver.getArg('b2').type).toBe(GraphQLString);
-      expect(resolver.getArg('b3').type).toBe(GraphQLString);
+      expect(resolver.getArgType('b1')).toBe(GraphQLString);
+      expect(resolver.getArgType('b2')).toBe(GraphQLString);
+      expect(resolver.getArgType('b3')).toBe(GraphQLString);
     });
 
     it('should have getArgType method', () => {
@@ -227,7 +227,7 @@ describe('Resolver', () => {
         return { ...prevArgs, arg1: 'String' };
       });
 
-      expect(newResolver.getArg('arg1').type).toBe(GraphQLString);
+      expect(newResolver.getArgType('arg1')).toBe(GraphQLString);
     });
 
     it('should make args required', () => {
@@ -674,7 +674,7 @@ describe('Resolver', () => {
         value: { price: 1 },
       });
 
-      const sortEnum: any = newResolver.getArg('sort').type;
+      const sortEnum: any = newResolver.getArgType('sort');
       expect(sortEnum.parseValue('AGE_ASC')).toBe('AGE_ASC');
       expect(sortEnum.parseValue('PRICE_ASC')).toEqual({ price: 1 });
     });
