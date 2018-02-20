@@ -186,6 +186,11 @@ describe('EnumTypeComposer', () => {
       expect(myTC.getType()).toBe(objType);
       expect(myTC.getFieldNames()).toEqual(['v1', 'v2']);
     });
+
+    it('should create TC without values from string', () => {
+      const myTC = EnumTypeComposer.create('MyEnum');
+      expect(myTC.getFieldNames()).toEqual([]);
+    });
   });
 
   describe('type methods', () => {

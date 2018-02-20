@@ -37,7 +37,7 @@ export class EnumTypeComposer {
         ETC = new this.schemaComposer.EnumTypeComposer(
           new GraphQLEnumType({
             name: typeName,
-            values: {},
+            values: graphqlVersion < 13 ? { _OldGraphqlStubValue_: {} } : {},
           })
         );
       } else {
@@ -86,6 +86,7 @@ export class EnumTypeComposer {
         // Support for graphql@0.11 and below
         this.gqType._values = defineEnumValues(this.gqType, this.gqType._enumConfig.values);
       }
+      this.gqType._values = this.gqType._values.filter(o => o.name !== '_OldGraphqlStubValue_');
     }
   }
 
