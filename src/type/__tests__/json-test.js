@@ -111,5 +111,18 @@ describe('GraphQLJSON', () => {
         done();
       });
     });
+
+    it('should reject invalid literals', async () => {
+      const { data } = await graphql(
+        schema,
+        `
+        {
+          value(arg: NaN){
+            string: "string"
+        }
+       `
+      );
+      expect(data).toBeUndefined();
+    });
   });
 });
