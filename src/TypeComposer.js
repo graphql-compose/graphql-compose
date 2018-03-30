@@ -25,7 +25,7 @@ import { type EnumTypeComposer } from './EnumTypeComposer';
 import type { TypeAsString } from './TypeMapper';
 import type { Resolver, ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './Resolver';
 import type { SchemaComposer } from './SchemaComposer';
-import { resolveMaybeThunk } from './utils/misc';
+import { resolveMaybeThunk, upperFirst } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveOutputConfigsAsThunk } from './utils/configAsThunk';
 import { toInputObjectType } from './utils/toInputObjectType';
@@ -288,6 +288,39 @@ export class TypeComposer<TContext> {
    */
   addFields(newFields: ComposeFieldConfigMap<any, TContext>): TypeComposer<TContext> {
     this.setFields({ ...this.getFields(), ...newFields });
+    return this;
+  }
+
+  /**
+   * Add new fields or replace existed (where field name may have dots)
+   */
+  addNestedFields(newFields: ComposeFieldConfigMap<any, TContext>): TypeComposer<TContext> {
+    Object.keys(newFields).forEach(fieldName => {
+      const fc = newFields[fieldName];
+      const names = fieldName.split('.');
+      const name = names.shift();
+
+      if (names.length === 0) {
+        // single field
+        this.setField(name, fc);
+      } else {
+        // nested field
+        let childTC;
+        if (!this.hasField(name)) {
+          childTC = this.constructor.schemaComposer.TypeComposer.create({
+            name: `${this.getTypeName()}${upperFirst(name)}`,
+          });
+          this.setField(name, {
+            type: childTC,
+            resolve: () => ({}),
+          });
+        } else {
+          childTC = this.getFieldTC(name);
+        }
+        childTC.addNestedFields({ [names.join('.')]: fc });
+      }
+    });
+
     return this;
   }
 

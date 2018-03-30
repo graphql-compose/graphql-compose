@@ -51,6 +51,7 @@ LonLatTC.getFields(); // { lon: GraphQLFieldConfig, lat: GraphQLFieldConfig }
 LonLatTC.setFields(GraphQLFieldMapConfig); // completely replace all fields
 LonLatTC.setField('lon', GraphQLFieldConfig); // replace `lon` field with new FieldConfig
 LonLatTC.addFields(GraphQLFieldMapConfig); // add new fields, replace existed, rest fields keep untouched
+LonLatTC.addNestedFields(GraphQLFieldMapConfig); // add new fields where field name may have dots
 LonLatTC.hasField('lon'); // true
 LonLatTC.removeField('lon');
 LonLatTC.removeField(['lon', 'field2', 'field3']);

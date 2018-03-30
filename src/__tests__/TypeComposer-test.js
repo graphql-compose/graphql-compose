@@ -131,6 +131,24 @@ describe('TypeComposer', () => {
       expect((tc.getField('field5').type: any).ofType).toBe(GraphQLBoolean);
     });
 
+    it('addNestedFields()', () => {
+      tc.addNestedFields({
+        'fieldNested1.f1': { type: GraphQLString },
+        fieldNested2: { type: '[Int]' },
+        'fieldNested1.f2': 'Boolean!',
+      });
+
+      expect(tc.getField('fieldNested1').type).toBeInstanceOf(GraphQLObjectType);
+      const fieldTC = tc.getFieldTC('fieldNested1');
+      expect(fieldTC.getTypeName()).toBe('ReadableFieldNested1');
+      expect(fieldTC.getField('f1').type).toBe(GraphQLString);
+      expect(fieldTC.getField('f2').type).toBeInstanceOf(GraphQLNonNull);
+      expect((fieldTC.getField('f2').type: any).ofType).toBe(GraphQLBoolean);
+
+      expect(tc.getField('fieldNested2').type).toBeInstanceOf(GraphQLList);
+      expect((tc.getField('fieldNested2').type: any).ofType).toBe(GraphQLInt);
+    });
+
     describe('removeField()', () => {
       it('should remove one field', () => {
         tc.removeField('field1');
