@@ -158,7 +158,6 @@ export class TypeComposer {
      */
     public addFields(newFields: ComposeFieldConfigMap<any, any>): this;
 
-
     /**
      * Add new fields or replace existed (where field name may have dots)
      */
