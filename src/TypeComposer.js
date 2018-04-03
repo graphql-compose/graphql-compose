@@ -443,13 +443,13 @@ export class TypeComposer<TContext> {
           `${this.getTypeName()}.${fieldName}`
       );
     }
-    if (opts.type) {
+    if ((opts: any).type) {
       throw new Error(
         'You can not use `resolver` and `type` properties simultaneously for relation ' +
           `${this.getTypeName()}.${fieldName}`
       );
     }
-    if (opts.resolve) {
+    if ((opts: any).resolve) {
       throw new Error(
         'You can not use `resolver` and `resolve` properties simultaneously for relation ' +
           `${this.getTypeName()}.${fieldName}`

@@ -29,10 +29,7 @@ export function removeWrongFields<TSource, TContext>(
   const result = {};
   Object.keys(fields).forEach(key => {
     const field = fields[key];
-    if (
-      !isAbstractType(field.type) && // skip interface fields
-      !field._gqcResolver // skip fields that obtained via Resolver
-    ) {
+    if (!isAbstractType(field.type)) {
       result[key] = field;
     }
   });
