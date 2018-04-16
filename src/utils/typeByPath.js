@@ -78,9 +78,10 @@ function typeByPathRSV(rsv: Resolver<any, any>, parts: Array<string>) {
   if (!name) return undefined;
 
   if (name.startsWith('@')) {
-    const arg = rsv.getArg(name.substring(1));
+    const argName = name.substring(1);
+    const arg = rsv.getArg(argName);
     if (!arg) return undefined;
-    return processType(arg.type, parts.slice(1), rsv.constructor.schemaComposer);
+    return processType(rsv.getArgType(argName), parts.slice(1), rsv.constructor.schemaComposer);
   }
 
   return processType(rsv.getType(), parts, rsv.constructor.schemaComposer);

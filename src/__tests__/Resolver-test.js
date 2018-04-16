@@ -347,6 +347,18 @@ describe('Resolver', () => {
         expect(resolver.getArg('filter').description).toBe('Data filtering arg');
       });
     });
+
+    it('should work with arg as thunk', () => {
+      resolver.setArgs({
+        a: () => 'String',
+        b: () => InputTypeComposer.create(`input ArgAsThunk1 { b: Int }`),
+        c: () => GraphQLNonNull(InputTypeComposer.create(`input ArgAsThunk2 { b: Int }`).getType()),
+      });
+      expect(resolver.getArgType('a')).toBe(GraphQLString);
+      expect((resolver.getArgType('b'): any).name).toBe('ArgAsThunk1');
+      expect(resolver.getArgTC('c')).toBeInstanceOf(InputTypeComposer);
+      expect(resolver.getArgTC('c').getTypeName()).toBe('ArgAsThunk2');
+    });
   });
 
   describe('getFieldConfig()', () => {

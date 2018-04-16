@@ -193,7 +193,8 @@ export class Resolver<TSource, TContext> {
 
   getArgType(argName: string): GraphQLInputType {
     const arg = this.getArg(argName);
-    return arg.type;
+    const ac = resolveInputConfigAsThunk(this.constructor.schemaComposer, arg, argName, this.name);
+    return ac.type;
   }
 
   getArgTC(argName: string): InputTypeComposer {
@@ -276,7 +277,7 @@ export class Resolver<TSource, TContext> {
       );
     }
 
-    let originalType = this.args[argName].type;
+    let originalType = this.getArgType(argName);
     let isUnwrapped = false;
     if (originalType instanceof GraphQLNonNull) {
       originalType = originalType.ofType;
