@@ -38,7 +38,7 @@ describe('TypeComposer', () => {
 
     describe('getField()', () => {
       it('should return field config', () => {
-        expect(tc.getField('field1').type).toBe(GraphQLString);
+        expect(tc.getFieldType('field1')).toBe(GraphQLString);
       });
 
       it('should throw error if field does not exist', () => {
@@ -63,11 +63,11 @@ describe('TypeComposer', () => {
           field5: 'Boolean!',
         });
 
-        expect(tc.getField('field3').type).toBe(GraphQLString);
-        expect(tc.getField('field4').type).toBeInstanceOf(GraphQLList);
-        expect((tc.getField('field4').type: any).ofType).toBe(GraphQLInt);
-        expect(tc.getField('field5').type).toBeInstanceOf(GraphQLNonNull);
-        expect((tc.getField('field5').type: any).ofType).toBe(GraphQLBoolean);
+        expect(tc.getFieldType('field3')).toBe(GraphQLString);
+        expect(tc.getFieldType('field4')).toBeInstanceOf(GraphQLList);
+        expect((tc.getFieldType('field4'): any).ofType).toBe(GraphQLInt);
+        expect(tc.getFieldType('field5')).toBeInstanceOf(GraphQLNonNull);
+        expect((tc.getFieldType('field5'): any).ofType).toBe(GraphQLBoolean);
       });
 
       it('should add fields with converting args types from string to object', () => {
@@ -81,10 +81,10 @@ describe('TypeComposer', () => {
           },
         });
 
-        expect(tc.getFieldArg('field3', 'arg1').type).toBeInstanceOf(GraphQLNonNull);
-        expect((tc.getFieldArg('field3', 'arg1').type: any).ofType).toBe(GraphQLString);
-        expect(tc.getFieldArg('field3', 'arg2').type).toBeInstanceOf(GraphQLList);
-        expect((tc.getFieldArg('field3', 'arg2').type: any).ofType).toBe(GraphQLFloat);
+        expect(tc.getFieldArgType('field3', 'arg1')).toBeInstanceOf(GraphQLNonNull);
+        expect((tc.getFieldArgType('field3', 'arg1'): any).ofType).toBe(GraphQLString);
+        expect(tc.getFieldArgType('field3', 'arg2')).toBeInstanceOf(GraphQLList);
+        expect((tc.getFieldArgType('field3', 'arg2'): any).ofType).toBe(GraphQLFloat);
       });
 
       it('should add projection via `setField` and `addFields`', () => {
@@ -103,7 +103,8 @@ describe('TypeComposer', () => {
         tc.setFields({
           input3: { type: typeAsFn },
         });
-        expect(tc.getFieldType('input3')).toBe(typeAsFn);
+        expect((tc.getField('input3'): any).type).toBe(typeAsFn);
+        expect(tc.getFieldType('input3')).toBe(GraphQLString);
 
         // show provide unwrapped/unhoisted type for graphql
         expect((tc.getType()._typeConfig: any).fields().input3.type).toBe(GraphQLString);
@@ -124,11 +125,11 @@ describe('TypeComposer', () => {
         field4: { type: '[Int]' },
         field5: 'Boolean!',
       });
-      expect(tc.getField('field3').type).toBe(GraphQLString);
-      expect(tc.getField('field4').type).toBeInstanceOf(GraphQLList);
-      expect((tc.getField('field4').type: any).ofType).toBe(GraphQLInt);
-      expect(tc.getField('field5').type).toBeInstanceOf(GraphQLNonNull);
-      expect((tc.getField('field5').type: any).ofType).toBe(GraphQLBoolean);
+      expect(tc.getFieldType('field3')).toBe(GraphQLString);
+      expect(tc.getFieldType('field4')).toBeInstanceOf(GraphQLList);
+      expect((tc.getFieldType('field4'): any).ofType).toBe(GraphQLInt);
+      expect(tc.getFieldType('field5')).toBeInstanceOf(GraphQLNonNull);
+      expect((tc.getFieldType('field5'): any).ofType).toBe(GraphQLBoolean);
     });
 
     it('addNestedFields()', () => {
@@ -138,15 +139,15 @@ describe('TypeComposer', () => {
         'fieldNested1.f2': 'Boolean!',
       });
 
-      expect(tc.getField('fieldNested1').type).toBeInstanceOf(GraphQLObjectType);
+      expect(tc.getFieldType('fieldNested1')).toBeInstanceOf(GraphQLObjectType);
       const fieldTC = tc.getFieldTC('fieldNested1');
       expect(fieldTC.getTypeName()).toBe('ReadableFieldNested1');
-      expect(fieldTC.getField('f1').type).toBe(GraphQLString);
-      expect(fieldTC.getField('f2').type).toBeInstanceOf(GraphQLNonNull);
-      expect((fieldTC.getField('f2').type: any).ofType).toBe(GraphQLBoolean);
+      expect(fieldTC.getFieldType('f1')).toBe(GraphQLString);
+      expect(fieldTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      expect((fieldTC.getFieldType('f2'): any).ofType).toBe(GraphQLBoolean);
 
-      expect(tc.getField('fieldNested2').type).toBeInstanceOf(GraphQLList);
-      expect((tc.getField('fieldNested2').type: any).ofType).toBe(GraphQLInt);
+      expect(tc.getFieldType('fieldNested2')).toBeInstanceOf(GraphQLList);
+      expect((tc.getFieldType('fieldNested2'): any).ofType).toBe(GraphQLInt);
     });
 
     describe('removeField()', () => {
@@ -213,6 +214,7 @@ describe('TypeComposer', () => {
         const args = tc.getFieldArgs('field1');
         expect(Object.keys(args)).toEqual(['arg1', 'arg2']);
         expect(args.arg1.type).toBe(GraphQLInt);
+        expect(tc.getFieldArgType('field1', 'arg1')).toBe(GraphQLInt);
         expect(() => tc.getFieldArgs('unexistedField')).toThrow();
       });
 
@@ -240,26 +242,17 @@ describe('TypeComposer', () => {
         tc.extendField('field3', {
           description: 'this is field #3',
         });
-        expect(tc.getField('field3').type).toBe(GraphQLString);
-        expect(tc.getField('field3').description).toBe('this is field #3');
+        expect(tc.getFieldConfig('field3').type).toBe(GraphQLString);
+        expect(tc.getFieldConfig('field3').description).toBe('this is field #3');
         tc.extendField('field3', {
           type: 'Int',
         });
-        expect(tc.getField('field3').type).toBe(GraphQLInt);
+        expect(tc.getFieldType('field3')).toBe(GraphQLInt);
       });
 
       it('should throw error if field does not exists', () => {
         expect(() => tc.extendField('unexisted', { description: '123' })).toThrow(
           /Cannot extend field.*Field does not exist/
-        );
-      });
-
-      it('should throw error if field declared as function', () => {
-        tc.setField('hoistedField', () => ({
-          type: 'String', // type may be imported from another module
-        }));
-        expect(() => tc.extendField('hoistedField', { description: '123' })).toThrow(
-          /Cannot extend field.*FieldConfig declared as a function/
         );
       });
     });
@@ -712,27 +705,28 @@ describe('TypeComposer', () => {
     let tc1: TypeComposer;
 
     beforeEach(() => {
-      tc1 = TypeComposer.create(`
-        type MyType {
-          name: String
-          age: Int
-          dob: Date
-        }
-        `);
+      tc1 = TypeComposer.create({
+        name: 'MyType',
+        fields: {
+          name: 'String',
+          age: 'Int',
+          dob: 'Date',
+        },
+      });
     });
 
     it('should accept string', () => {
       tc1.deprecateFields('name');
-      expect(tc1.getField('name').deprecationReason).toBe('deprecated');
-      expect(tc1.getField('age').deprecationReason).toBeUndefined();
-      expect(tc1.getField('dob').deprecationReason).toBeUndefined();
+      expect(tc1.getFieldConfig('name').deprecationReason).toBe('deprecated');
+      expect(tc1.getFieldConfig('age').deprecationReason).toBeUndefined();
+      expect(tc1.getFieldConfig('dob').deprecationReason).toBeUndefined();
     });
 
     it('should accept array of string', () => {
       tc1.deprecateFields(['name', 'age']);
-      expect(tc1.getField('name').deprecationReason).toBe('deprecated');
-      expect(tc1.getField('age').deprecationReason).toBe('deprecated');
-      expect(tc1.getField('dob').deprecationReason).toBeUndefined();
+      expect(tc1.getFieldConfig('name').deprecationReason).toBe('deprecated');
+      expect(tc1.getFieldConfig('age').deprecationReason).toBe('deprecated');
+      expect(tc1.getFieldConfig('dob').deprecationReason).toBeUndefined();
     });
 
     it('should accept object with fields and reasons', () => {
@@ -740,9 +734,9 @@ describe('TypeComposer', () => {
         age: 'dont use',
         dob: 'old field',
       });
-      expect(tc1.getField('name').deprecationReason).toBeUndefined();
-      expect(tc1.getField('age').deprecationReason).toBe('dont use');
-      expect(tc1.getField('dob').deprecationReason).toBe('old field');
+      expect(tc1.getFieldConfig('name').deprecationReason).toBeUndefined();
+      expect(tc1.getFieldConfig('age').deprecationReason).toBe('dont use');
+      expect(tc1.getFieldConfig('dob').deprecationReason).toBe('old field');
     });
 
     it('should throw error on unexisted field', () => {

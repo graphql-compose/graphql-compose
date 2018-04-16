@@ -27,7 +27,7 @@ import type { Resolver, ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from '.
 import type { SchemaComposer } from './SchemaComposer';
 import { resolveMaybeThunk, upperFirst } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
-import { resolveOutputConfigsAsThunk } from './utils/configAsThunk';
+import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './utils/configAsThunk';
 import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath } from './utils/typeByPath';
 // import { deprecate } from './utils/debug';
@@ -45,16 +45,17 @@ export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
   _gqcResolvers?: Map<string, Resolver<TSource, TContext>>,
   _gqcGetRecordIdFn?: GetRecordIdFn<TSource, TContext>,
   _gqcRelations?: RelationThunkMap<TSource, TContext>,
+  _gqcFields?: ComposeFieldConfigMap<TSource, TContext>,
   description?: ?string,
 };
 
 export type ComposeObjectTypeConfig<TSource, TContext> = {
-  name: string,
-  interfaces?: Thunk<?Array<GraphQLInterfaceType>>,
-  fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>,
-  isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>,
-  description?: ?string,
-  isIntrospection?: boolean,
+  +name: string,
+  +interfaces?: Thunk<?Array<GraphQLInterfaceType>>,
+  +fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>,
+  +isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>,
+  +description?: ?string,
+  +isIntrospection?: boolean,
 };
 
 // extended GraphQLFieldConfigMap
@@ -74,15 +75,25 @@ export type GraphqlFieldConfigExtended<TSource, TContext> = GraphQLFieldConfig<
 > & { projection?: any };
 
 export type ComposeFieldConfigAsObject<TSource, TContext> = {
-  type: Thunk<ComposeOutputType<TContext>> | GraphQLOutputType,
-  args?: ComposeFieldConfigArgumentMap,
-  resolve?: GraphQLFieldResolver<TSource, TContext>,
-  subscribe?: GraphQLFieldResolver<TSource, TContext>,
-  deprecationReason?: ?string,
-  description?: ?string,
-  astNode?: any,
-  [key: string]: any,
+  +type: Thunk<ComposeOutputType<TContext>> | GraphQLOutputType,
+  +args?: ComposeFieldConfigArgumentMap,
+  +resolve?: GraphQLFieldResolver<TSource, TContext>,
+  +subscribe?: GraphQLFieldResolver<TSource, TContext>,
+  +deprecationReason?: ?string,
+  +description?: ?string,
+  // +astNode?: any,
+  +[key: string]: any,
 } & { $call?: void };
+
+export type ComposePartialFieldConfigAsObject<TSource, TContext> = {
+  +type?: Thunk<ComposeOutputType<TContext>> | GraphQLOutputType,
+  +args?: ComposeFieldConfigArgumentMap,
+  +resolve?: GraphQLFieldResolver<TSource, TContext>,
+  +subscribe?: GraphQLFieldResolver<TSource, TContext>,
+  +deprecationReason?: ?string,
+  +description?: ?string,
+  +[key: string]: any,
+};
 
 // extended GraphQLOutputType
 export type ComposeOutputType<TContext> =
@@ -101,11 +112,18 @@ export type ComposeArgumentType =
   | EnumTypeComposer
   | Array<ComposeArgumentType>;
 export type ComposeArgumentConfigAsObject = {
-  type: Thunk<ComposeArgumentType> | GraphQLInputType,
-  defaultValue?: mixed,
-  description?: ?string,
-  astNode?: any,
-} & { $call?: void };
+  +type: Thunk<ComposeArgumentType> | GraphQLInputType,
+  +defaultValue?: mixed,
+  +description?: ?string,
+  // +astNode?: any,
+  +[key: string]: any,
+} & { +$call?: void };
+export type ComposePartialArgumentConfigAsObject = {
+  +type: Thunk<ComposeArgumentType> | GraphQLInputType,
+  +defaultValue?: mixed,
+  +description?: ?string,
+  +[key: string]: any,
+};
 export type ComposeArgumentConfig =
   | ComposeArgumentConfigAsObject
   | ComposeArgumentType
@@ -120,12 +138,12 @@ export type RelationOpts<TSource, TContext> =
   | RelationOptsWithResolver<TSource, TContext>
   | RelationOptsWithFieldConfig<TSource, TContext>;
 export type RelationOptsWithResolver<TSource, TContext> = {
-  resolver: Thunk<Resolver<TSource, TContext>>,
-  prepareArgs?: RelationArgsMapper<TSource, TContext>,
-  projection?: ProjectionType,
-  description?: ?string,
-  deprecationReason?: ?string,
-  catchErrors?: boolean,
+  +resolver: Thunk<Resolver<TSource, TContext>>,
+  +prepareArgs?: RelationArgsMapper<TSource, TContext>,
+  +projection?: ProjectionType,
+  +description?: ?string,
+  +deprecationReason?: ?string,
+  +catchErrors?: boolean,
 };
 export type RelationOptsWithFieldConfig<TSource, TContext> = ComposeFieldConfigAsObject<
   TSource,
@@ -151,7 +169,6 @@ export type RelationArgsMapper<TSource, TContext> = {
 
 export class TypeComposer<TContext> {
   gqType: GraphQLObjectTypeExtended<any, TContext>;
-  _fields: GraphQLFieldConfigMap<any, TContext>;
   static schemaComposer: SchemaComposer<TContext>;
 
   static create(
@@ -223,22 +240,14 @@ export class TypeComposer<TContext> {
   /**
    * Get fields from a GraphQL type
    * WARNING: this method read an internal GraphQL instance variable.
-   *
-   * TODO: should return GraphQLFieldConfigMap<any, any>
-   * BUT if setFields(fields: ComposeFieldConfigMap<any, any> | GraphQLFieldConfigMap<any, any>)
-   * then flow producess error with such common case TC.setFields(TC.getFields())
-   * with following message "Could not decide which case to select"
-   * More info about solution
-   *  https://twitter.com/nodkz/status/925010361815851008
-   *  https://github.com/facebook/flow/issues/2892
    */
-  getFields(): ObjMap<any> {
-    if (!this._fields) {
+  getFields(): ComposeFieldConfigMap<any, TContext> {
+    if (!this.gqType._gqcFields) {
       const fields: Thunk<GraphQLFieldConfigMap<any, TContext>> = this.gqType._typeConfig.fields;
-      this._fields = resolveMaybeThunk(fields) || {};
+      this.gqType._gqcFields = (resolveMaybeThunk(fields) || {}: any);
     }
 
-    return this._fields;
+    return this.gqType._gqcFields;
   }
 
   getFieldNames(): string[] {
@@ -250,21 +259,15 @@ export class TypeComposer<TContext> {
    * WARNING: this method rewrite an internal GraphQL instance properties.
    */
   setFields(fields: ComposeFieldConfigMap<any, TContext>): TypeComposer<TContext> {
-    const prepearedFields: GraphQLFieldConfigMap<
-      any,
-      TContext
-    > = this.constructor.schemaComposer.typeMapper.convertOutputFieldConfigMap(
-      fields,
-      this.getTypeName()
-    );
+    this.gqType._gqcFields = fields;
 
-    this._fields = prepearedFields;
-    this.gqType._typeConfig.fields = () =>
-      (resolveOutputConfigsAsThunk(
+    this.gqType._typeConfig.fields = () => {
+      return (resolveOutputConfigMapAsThunk(
         this.constructor.schemaComposer,
-        prepearedFields,
+        fields,
         this.getTypeName()
       ): any);
+    };
     delete this.gqType._fields; // clear builded fields in type
     return this;
   }
@@ -326,10 +329,8 @@ export class TypeComposer<TContext> {
 
   /**
    * Get fieldConfig by name
-   * TODO should be GraphQLFieldConfig<any, any>
-   * see getFields() method for details
    */
-  getField(fieldName: string): any {
+  getField(fieldName: string): ComposeFieldConfig<any, TContext> {
     const fields = this.getFields();
 
     if (!fields[fieldName]) {
@@ -363,30 +364,21 @@ export class TypeComposer<TContext> {
 
   extendField(
     fieldName: string,
-    parialFieldConfig: $Shape<ComposeFieldConfigAsObject<any, TContext>>
+    parialFieldConfig: ComposePartialFieldConfigAsObject<any, TContext>
   ): TypeComposer<TContext> {
     let prevFieldConfig;
     try {
-      prevFieldConfig = this.getField(fieldName);
+      prevFieldConfig = this.getFieldConfig(fieldName);
     } catch (e) {
       throw new Error(
         `Cannot extend field '${fieldName}' from type '${this.getTypeName()}'. Field does not exist.`
       );
     }
 
-    if (isFunction(prevFieldConfig)) {
-      throw new Error(
-        `Cannot extend field '${fieldName}' from type '${this.getTypeName()}'. ` +
-          'FieldConfig declared as a function. ' +
-          'Such declaration helps to solve hoisting problems between two types which import each other'
-      );
-    }
-
-    const fieldConfig: ComposeFieldConfigAsObject<any, TContext> = {
+    this.setField(fieldName, {
       ...(prevFieldConfig: any),
-      ...(parialFieldConfig: any),
-    };
-    this.setField(fieldName, fieldConfig);
+      ...parialFieldConfig,
+    });
     return this;
   }
 
@@ -565,10 +557,10 @@ export class TypeComposer<TContext> {
       throw new Error('You should provide newTypeName:string for TypeComposer.clone()');
     }
 
-    const fields = this.getFields();
     const newFields = {};
-    Object.keys(fields).forEach(fieldName => {
-      newFields[fieldName] = { ...fields[fieldName] };
+    this.getFieldNames().forEach(fieldName => {
+      const fc = this.getFieldConfig(fieldName);
+      newFields[fieldName] = { ...(fc: any) };
     });
 
     const cloned = new this.constructor.schemaComposer.TypeComposer(
@@ -623,29 +615,27 @@ export class TypeComposer<TContext> {
 
   makeFieldNonNull(fieldNameOrArray: string | Array<string>): TypeComposer<TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    const fields = this.getFields();
     fieldNames.forEach(fieldName => {
-      if (fields[fieldName] && fields[fieldName].type) {
-        if (!(fields[fieldName].type instanceof GraphQLNonNull)) {
-          fields[fieldName].type = new GraphQLNonNull(fields[fieldName].type);
+      if (this.hasField(fieldName)) {
+        const fieldType = this.getFieldType(fieldName);
+        if (!(fieldType instanceof GraphQLNonNull)) {
+          this.extendField(fieldName, { type: new GraphQLNonNull(fieldType) });
         }
       }
     });
-    this.setFields(fields);
     return this;
   }
 
   makeFieldNullable(fieldNameOrArray: string | Array<string>): TypeComposer<TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    const fields = this.getFields();
     fieldNames.forEach(fieldName => {
-      if (fieldNames.indexOf(fieldName) > -1) {
-        if (fields[fieldName] && fields[fieldName].type instanceof GraphQLNonNull) {
-          fields[fieldName].type = fields[fieldName].type.ofType;
+      if (this.hasField(fieldName)) {
+        const fieldType = this.getFieldType(fieldName);
+        if (fieldType instanceof GraphQLNonNull) {
+          this.extendField(fieldName, { type: fieldType.ofType });
         }
       }
     });
-    this.setFields(fields);
     return this;
   }
 
@@ -807,8 +797,8 @@ export class TypeComposer<TContext> {
 
   getFieldArgs(fieldName: string): GraphQLFieldConfigArgumentMap {
     try {
-      const field = this.getField(fieldName);
-      return field.args || {};
+      const fc = this.getFieldConfig(fieldName);
+      return fc.args || {};
     } catch (e) {
       throw new Error(
         `Cannot get field args. Field '${fieldName}' from type '${this.getTypeName()}' does not exist.`
