@@ -252,13 +252,22 @@ export class InputTypeComposer {
     return this.getFieldType(fieldName) instanceof GraphQLNonNull;
   }
 
-  getFieldType(fieldName: string): GraphQLInputType {
-    const field = this.getField(fieldName);
-    if (!field) {
+  getFieldConfig(fieldName: string): GraphQLInputFieldConfig {
+    const fc = this.getField(fieldName);
+    if (!fc) {
       throw new Error(`Type ${this.getTypeName()} does not have field with name '${fieldName}'`);
     }
 
-    return field.type;
+    return resolveInputConfigAsThunk(
+      this.constructor.schemaComposer,
+      fc,
+      fieldName,
+      this.getTypeName()
+    );
+  }
+
+  getFieldType(fieldName: string): GraphQLInputType {
+    return this.getFieldConfig(fieldName).type;
   }
 
   getFieldTC(fieldName: string): InputTypeComposer {
