@@ -592,16 +592,22 @@ export class TypeComposer<TContext> {
     return cloned;
   }
 
-  /**
-   * Get fieldType by name
-   */
-  getFieldType(fieldName: string): GraphQLOutputType {
-    const field = this.getField(fieldName);
-    if (!field) {
+  getFieldConfig(fieldName: string): GraphQLFieldConfig<any, TContext> {
+    const fc = this.getField(fieldName);
+    if (!fc) {
       throw new Error(`Type ${this.getTypeName()} does not have field with name '${fieldName}'`);
     }
 
-    return field.type;
+    return resolveOutputConfigAsThunk(
+      this.constructor.schemaComposer,
+      fc,
+      fieldName,
+      this.getTypeName()
+    );
+  }
+
+  getFieldType(fieldName: string): GraphQLOutputType {
+    return this.getFieldConfig(fieldName).type;
   }
 
   getFieldTC(fieldName: string): TypeComposer<TContext> {
@@ -825,6 +831,11 @@ export class TypeComposer<TContext> {
     }
 
     return fieldArgs[argName];
+  }
+
+  getFieldArgType(fieldName: string, argName: string): GraphQLInputType {
+    const ac = this.getFieldArg(fieldName, argName);
+    return ac.type;
   }
 
   get(path: string | Array<string>): any {
