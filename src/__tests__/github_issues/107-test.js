@@ -152,7 +152,7 @@ describe('github issue #107 merge Schema types on GQL', () => {
     const RemoteQueryType: any = remoteSchema._queryType;
     const RemoteQueryTC = TypeComposer.create(RemoteQueryType);
     const RemoteUserTC = RemoteQueryTC.getFieldTC('users');
-    const remoteUsersFC = RemoteQueryTC.getField('users');
+    const remoteUsersFC = RemoteQueryTC.getFieldConfig('users');
 
     const LocalArticleTC = TypeComposer.create({
       name: 'Article',
@@ -162,9 +162,10 @@ describe('github issue #107 merge Schema types on GQL', () => {
         },
         author: {
           type: RemoteUserTC,
-          args: remoteUsersFC.args || {},
+          args: { ...remoteUsersFC.args },
           resolve: (source, args, context, info) => {
-            const users = remoteUsersFC.resolve(source, args, context, info);
+            if (!remoteUsersFC.resolve) return null;
+            const users: any = remoteUsersFC.resolve(source, args, context, info);
             // for simplicity return first user
             return users[0];
           },

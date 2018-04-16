@@ -17,12 +17,11 @@ describe('github issue #72', () => {
       description: 'Relation with OtherType',
     });
 
-    expect(typeof MyTypeTC._fields.field1).toBe('function');
+    expect(typeof (MyTypeTC.gqType._gqcFields: any).field1).toBe('function');
 
-    expect(() => {
-      MyTypeTC.extendField('field1', {
-        description: 'Extended desc',
-      });
-    }).toThrowError('Cannot extend field');
+    MyTypeTC.extendField('field1', {
+      description: 'Extended desc',
+    });
+    expect(MyTypeTC.getFieldConfig('field1').description).toBe('Extended desc');
   });
 });

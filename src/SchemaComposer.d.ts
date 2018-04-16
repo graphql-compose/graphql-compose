@@ -6,7 +6,7 @@ import { TypeMapper } from './TypeMapper';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { Resolver } from './Resolver';
 
-export class SchemaComposer extends TypeStorage<TypeComposer | InputTypeComposer | GraphQLNamedType> {
+export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     public TypeMapper: TypeMapper;
     public TypeComposer: typeof TypeComposer;
     public InputTypeComposer: typeof InputTypeComposer;
@@ -15,21 +15,21 @@ export class SchemaComposer extends TypeStorage<TypeComposer | InputTypeComposer
 
     public constructor();
 
-    public getOrCreateTC(typeName: string): TypeComposer;
+    public getOrCreateTC(typeName: string): TypeComposer<TContext>;
 
     public getOrCreateITC(typeName: string): InputTypeComposer;
 
-    public getTC(typeName: string): TypeComposer;
+    public getTC(typeName: string): TypeComposer<TContext>;
 
     public getITC(typeName: string): InputTypeComposer;
 
-    public rootQuery(): TypeComposer;
+    public rootQuery(): TypeComposer<TContext>;
 
-    public rootMutation(): TypeComposer;
+    public rootMutation(): TypeComposer<TContext>;
 
-    public rootSubscription(): TypeComposer;
+    public rootSubscription(): TypeComposer<TContext>;
 
     public buildSchema(): GraphQLSchema;
 
-    public removeEmptyTypes(typeComposer: TypeComposer, passedTypes: Set<string>): void;
+    public removeEmptyTypes(typeComposer: TypeComposer<TContext>, passedTypes: Set<string>): void;
 }

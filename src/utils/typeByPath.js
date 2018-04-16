@@ -55,8 +55,8 @@ export function typeByPathTC(tc: TypeComposer<any>, parts: Array<string>) {
   }
 
   if (nextName && nextName.startsWith('@')) {
-    const arg = tc.getFieldArg(name, nextName.substring(1));
-    return processType(arg && arg.type, parts.slice(2), tc.constructor.schemaComposer);
+    const argType = tc.getFieldArgType(name, nextName.substring(1));
+    return processType(argType, parts.slice(2), tc.constructor.schemaComposer);
   }
 
   const fieldType = tc.getFieldType(name);

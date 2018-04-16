@@ -26,19 +26,12 @@ export {
   TypeMapper,
 };
 
-// Export Composers' prototype classes for instance check in plugins
-export { TypeComposer as _ProtoTypeComposer } from './TypeComposer';
-export { InputTypeComposer as _ProtoInputTypeComposer } from './InputTypeComposer';
-export { EnumTypeComposer as _ProtoEnumTypeComposer } from './EnumTypeComposer';
-export { Resolver as _ProtoResolver } from './Resolver';
-export { TypeMapper as _ProtoTypeMapper } from './TypeMapper';
-
 export { TypeStorage } from './TypeStorage';
 export { getProjectionFromAST, getFlatProjectionFromAST } from './utils/projection';
 
 export { GraphQLDate, GraphQLBuffer, GraphQLGeneric, GraphQLJSON } from './type';
 
-export { toInputObjectType, convertInputObjectFieldOpts } from './utils/toInputObjectType';
+export { toInputObjectType, convertInputObjectField } from './utils/toInputObjectType';
 
 export * from './utils/misc';
 export * from './utils/is';

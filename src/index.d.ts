@@ -8,14 +8,9 @@ export { InputTypeComposer } from './InputTypeComposer';
 export { EnumTypeComposer } from './EnumTypeComposer';
 export { Resolver } from './Resolver';
 export { TypeMapper } from './TypeMapper';
-declare const GQC: SchemaComposer;
-export { SchemaComposer, GQC };
-
-export { TypeComposer as _ProtoTypeComposer } from './TypeComposer';
-export { InputTypeComposer as _ProtoInputTypeComposer } from './InputTypeComposer';
-export { EnumTypeComposer as _ProtoEnumTypeComposer } from './EnumTypeComposer';
-export { Resolver as _ProtoResolver } from './Resolver';
-export { TypeMapper as _ProtoTypeMapper } from './TypeMapper';
+declare const GQC: SchemaComposer<any>;
+declare const schemaComposer: SchemaComposer<any>;
+export { SchemaComposer, schemaComposer, GQC };
 
 export { TypeStorage } from './TypeStorage';
 export { getProjectionFromAST, getFlatProjectionFromAST } from './utils/projection';
