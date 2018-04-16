@@ -191,9 +191,19 @@ export class Resolver<TSource, TContext> {
     return this.args[argName];
   }
 
-  getArgType(argName: string): GraphQLInputType {
+  getArgConfig(argName: string): GraphQLArgumentConfig {
     const arg = this.getArg(argName);
-    const ac = resolveInputConfigAsThunk(this.constructor.schemaComposer, arg, argName, this.name);
+    return resolveArgConfigAsThunk(
+      this.constructor.schemaComposer,
+      arg,
+      argName,
+      this.name,
+      'Resolver'
+    );
+  }
+
+  getArgType(argName: string): GraphQLInputType {
+    const ac = this.getArgConfig(argName);
     return ac.type;
   }
 
@@ -232,6 +242,27 @@ export class Resolver<TSource, TContext> {
       this.name,
       'Resolver'
     );
+    return this;
+  }
+
+  extendArg(
+    argName: string,
+    partialArgConfig: ComposePartialArgumentConfigAsObject
+  ): Resolver<TSource, TContext> {
+    let prevArgConfig;
+    try {
+      prevArgConfig = this.getArgConfig(argName);
+    } catch (e) {
+      throw new Error(
+        `Cannot extend arg '${argName}' in Resolver '${this.name}'. Argument does not exist.`
+      );
+    }
+
+    this.setArg(argName, {
+      ...prevArgConfig,
+      ...partialArgConfig,
+    });
+
     return this;
   }
 
