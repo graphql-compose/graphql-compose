@@ -1,5 +1,5 @@
 import {
-    GraphQLFieldConfig, GraphQLFieldConfigArgumentMap, GraphQLInputType, GraphQLOutputType
+    GraphQLFieldConfig, GraphQLFieldConfigArgumentMap, GraphQLInputType, GraphQLOutputType, GraphQLArgumentConfig
 } from './graphql';
 import * as graphql from './graphql';
 import {
@@ -45,7 +45,7 @@ export type ResolverSortArgConfig<TSource, TContext> = {
 };
 
 export type ResolverOpts<TSource, TContext> = {
-    type?: ComposeOutputType,
+    type?: ComposeOutputType<TContext>,
     resolve?: ResolverRpCb<TSource, TContext>,
     args?: ComposeFieldConfigArgumentMap,
     name?: string,
@@ -66,7 +66,7 @@ export type ResolverNextRpCb<TSource, TContext> = (
 
 export type ResolverWrapArgsCb = (prevArgs: graphql.GraphQLFieldConfigArgumentMap) => ComposeFieldConfigArgumentMap;
 
-export type ResolverWrapTypeCb = (prevType: graphql.GraphQLOutputType) => ComposeOutputType;
+export type ResolverWrapTypeCb = (prevType: graphql.GraphQLOutputType) => ComposeOutputType<any>;
 
 export type ResolveDebugOpts = {
     showHidden?: boolean,
@@ -75,8 +75,8 @@ export type ResolveDebugOpts = {
 };
 
 export class Resolver<TSource, TContext> {
-    public type: GraphQLOutputType;
-    public args: GraphQLFieldConfigArgumentMap;
+    public type: ComposeOutputType<TContext>;
+    public args: ComposeFieldConfigArgumentMap;
     public resolve: ResolverRpCb<TSource, TContext>;
     public name: string;
     public displayName: string | null;
@@ -88,19 +88,23 @@ export class Resolver<TSource, TContext> {
 
     public hasArg(argName: string): boolean;
 
-    public getArg(argName: string): any;
+    public getArg(argName: string): ComposeArgumentConfig;
+
+    public getArgConfig(argName: string): GraphQLArgumentConfig;
 
     public getArgType(argName: string): GraphQLInputType;
 
     public getArgTC(argName: string): InputTypeComposer;
 
-    public getArgs(): GraphQLFieldConfigArgumentMap;
+    public getArgs(): ComposeFieldConfigArgumentMap;
 
     public getArgNames(): string[];
 
     public setArgs(args: ComposeFieldConfigArgumentMap): this;
 
     public setArg(argName: string, argConfig: ComposeArgumentConfig): this;
+
+    public extendArg(argName: string, partialArgConfig: any): this;
 
     public addArgs(newArgs: ComposeFieldConfigArgumentMap): this;
 
@@ -124,9 +128,9 @@ export class Resolver<TSource, TContext> {
 
     public getType(): GraphQLOutputType;
 
-    public getTypeComposer(): TypeComposer;
+    public getTypeComposer(): TypeComposer<TContext>;
 
-    public setType(gqType: ComposeOutputType): this;
+    public setType(gqType: ComposeOutputType<TContext>): this;
 
     public getFieldConfig(opts?: { projection?: ProjectionType }): GraphQLFieldConfig<TSource, TContext>;
 

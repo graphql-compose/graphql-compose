@@ -63,7 +63,7 @@ describe('Resolver', () => {
         type: 'String!',
       });
 
-      const type: any = myResolver.type;
+      const type: any = myResolver.getType();
       expect(type).toBeInstanceOf(GraphQLNonNull);
       expect(type.ofType).toBe(GraphQLString);
     });
@@ -77,7 +77,7 @@ describe('Resolver', () => {
           }
         `,
       });
-      const type: any = myResolver.type;
+      const type: any = myResolver.getType();
       expect(type).toBeInstanceOf(GraphQLObjectType);
       expect(type.name).toBe('SomeType');
     });
@@ -88,7 +88,7 @@ describe('Resolver', () => {
         name: 'myResolver',
         type: typeTC,
       });
-      const type: any = myResolver.type;
+      const type: any = myResolver.getType();
       expect(type).toBeInstanceOf(GraphQLObjectType);
       expect(type.name).toBe('SomeType22');
     });
@@ -119,7 +119,7 @@ describe('Resolver', () => {
         name: 'myResolver',
         type: someOtherResolver,
       });
-      const type: any = myResolver.type;
+      const type: any = myResolver.getType();
       expect(type).toBeInstanceOf(GraphQLObjectType);
       expect(type.name).toBe('SomeType');
     });
@@ -129,7 +129,7 @@ describe('Resolver', () => {
         name: 'myResolver',
         type: ['String'],
       });
-      const type: any = myResolver.type;
+      const type: any = myResolver.getType();
       expect(type).toBeInstanceOf(GraphQLList);
       expect(type.ofType).toBe(GraphQLString);
     });
@@ -344,7 +344,7 @@ describe('Resolver', () => {
       it('should clone arg type', () => {
         resolver.cloneArg('filter', 'NewFilterInput');
         expect((resolver.getArgType('filter'): any).name).toBe('NewFilterInput');
-        expect(resolver.getArg('filter').description).toBe('Data filtering arg');
+        expect(resolver.getArgConfig('filter').description).toBe('Data filtering arg');
       });
     });
 
@@ -479,8 +479,8 @@ describe('Resolver', () => {
     });
 
     it('should keep untouched other args', () => {
-      expect(newResolver.getArg('other')).not.toBe(resolver.getArg('other'));
-      expect(newResolver.getArgType('other')).toBe(resolver.getArgType('other'));
+      expect(newResolver.getArg('other')).toBe(resolver.getArg('other'));
+      expect(newResolver.getArgType('other')).not.toBe(resolver.getArgType('other'));
     });
 
     it('should unwrap GraphQLNonNull types', () => {
@@ -536,7 +536,7 @@ describe('Resolver', () => {
 
       expect(resolver.hasArg('filter')).toBeFalsy();
 
-      const filterCfg = newResolver.getArg('filter');
+      const filterCfg = newResolver.getArgConfig('filter');
       expect(filterCfg).toBeTruthy();
       expect(filterCfg.type).toBeInstanceOf(GraphQLInputObjectType);
       expect(filterCfg.defaultValue).toEqual({ age: 20 });
@@ -611,7 +611,7 @@ describe('Resolver', () => {
         filterTypeNameFallback: 'FilterUniqueNameInput',
       });
 
-      expect(newResolver.getArg('filter').defaultValue).toEqual({
+      expect(newResolver.getArgConfig('filter').defaultValue).toEqual({
         name: 'User',
         age: 33,
       });
@@ -976,7 +976,7 @@ describe('Resolver', () => {
         displayName: 'User.find()',
         resolve: () => {},
       });
-      expect(r.type).toBeInstanceOf(GraphQLObjectType);
+      expect(r.getType()).toBeInstanceOf(GraphQLObjectType);
       expect(r.getTypeComposer()).toBeInstanceOf(TypeComposer);
       expect(r.getTypeComposer().getTypeName()).toBe('MyOutputType');
     });
@@ -991,7 +991,8 @@ describe('Resolver', () => {
         resolve: () => {},
       });
 
-      const type: any = r.type;
+      expect(r.type).toBe('[MyOutputType!]!');
+      const type: any = r.getType();
       expect(type).toBeInstanceOf(GraphQLNonNull);
       expect(type.ofType).toBeInstanceOf(GraphQLList);
       expect(r.getTypeComposer()).toBeInstanceOf(TypeComposer);
@@ -1005,7 +1006,8 @@ describe('Resolver', () => {
         displayName: 'User.find()',
         resolve: () => {},
       });
-      expect(r.type).toBe(GraphQLString);
+      expect(r.type).toBe('String');
+      expect(r.getType()).toBe(GraphQLString);
       expect(() => r.getTypeComposer()).toThrow();
     });
   });
