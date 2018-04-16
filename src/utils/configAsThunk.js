@@ -1,58 +1,63 @@
 /* @flow strict */
-/* eslint-disable no-param-reassign, no-use-before-define */
+/* eslint-disable no-use-before-define */
 
 import { isFunction, isObject } from './is';
 import type { SchemaComposer } from '../SchemaComposer';
-import type { GraphQLFieldConfig, GraphQLArgumentConfig } from '../graphql';
-import type { ObjMap } from '../utils/definitions';
-import type { ComposeInputFieldConfig } from '../InputTypeComposer';
+import type {
+  GraphQLFieldConfig,
+  GraphQLArgumentConfig,
+  GraphQLFieldConfigArgumentMap,
+  GraphQLFieldConfigMap,
+  GraphQLInputFieldConfig,
+  GraphQLInputFieldConfigMap,
+} from '../graphql';
+import type { ComposeInputFieldConfig, ComposeInputFieldConfigMap } from '../InputTypeComposer';
+import type {
+  ComposeFieldConfig,
+  ComposeFieldConfigMap,
+  ComposeArgumentConfig,
+  ComposeFieldConfigArgumentMap,
+} from '../TypeComposer';
 
-export type FieldMap = {
-  [fieldName: string]: any,
-  __proto__: null,
-};
-
-export type GraphQLFieldConfigMapExtended<TSource, TContext> = ObjMap<
-  GraphQLFieldConfig<TSource, TContext> & { _fieldAsThunk?: () => any, _typeAsThunk?: () => any }
->;
-
-export function resolveOutputConfigsAsThunk<TContext>(
+export function resolveOutputConfigAsThunk<TSource, TContext>(
   schema: SchemaComposer<TContext>,
-  fieldMap: FieldMap,
+  fc: ComposeFieldConfig<TSource, TContext>,
+  name: string,
   typeName?: string = ''
-): GraphQLFieldConfigMapExtended<any, TContext> {
+): GraphQLFieldConfig<TSource, TContext> {
+  const fieldConfig = schema.typeMapper.convertOutputFieldConfig(
+    isFunction(fc) ? fc() : fc,
+    name,
+    typeName
+  );
+
+  if (isFunction(fieldConfig.type)) {
+    fieldConfig.type = schema.typeMapper.convertOutputFieldConfig(
+      fieldConfig.type(),
+      name,
+      typeName
+    ).type;
+  }
+
+  if (isObject(fieldConfig.args)) {
+    fieldConfig.args = resolveArgConfigMapAsThunk(schema, (fieldConfig.args: any), name, typeName);
+  }
+
+  return fieldConfig;
+}
+
+export function resolveOutputConfigMapAsThunk<TSource, TContext>(
+  schema: SchemaComposer<TContext>,
+  fieldMap: ComposeFieldConfigMap<TSource, TContext>,
+  typeName?: string = ''
+): GraphQLFieldConfigMap<TSource, TContext> {
+  const fields = {};
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(name => {
-      if (isFunction(fieldMap[name])) {
-        const fieldConfig: any = schema.typeMapper.convertOutputFieldConfig(
-          fieldMap[name](),
-          name,
-          typeName
-        );
-        fieldConfig._fieldAsThunk = fieldMap[name];
-        fieldMap[name] = fieldConfig;
-      }
-
-      if (isFunction(fieldMap[name].type)) {
-        fieldMap[name]._typeAsThunk = fieldMap[name].type;
-        const fieldConfig = schema.typeMapper.convertOutputFieldConfig(
-          fieldMap[name].type(),
-          name,
-          typeName
-        );
-        fieldMap[name].type = fieldConfig.type;
-      }
-
-      if (isObject(fieldMap[name].args)) {
-        fieldMap[name].args = resolveInputConfigMapAsThunk(
-          schema,
-          fieldMap[name].args,
-          `${typeName}.${name}.args`
-        );
-      }
+      fields[name] = resolveOutputConfigAsThunk(schema, fieldMap[name], name, typeName);
     });
   }
-  return fieldMap;
+  return fields;
 }
 
 export function resolveInputConfigAsThunk(
@@ -60,17 +65,14 @@ export function resolveInputConfigAsThunk(
   fc: ComposeInputFieldConfig,
   name: string,
   typeName?: string
-): GraphQLArgumentConfig {
-  let fieldConfig: GraphQLArgumentConfig;
-  if (isFunction(fc)) {
-    fieldConfig = (schema.typeMapper.convertInputFieldConfig(fc(), name, typeName): any);
-    fieldConfig._fieldAsThunk = fc;
-  } else {
-    fieldConfig = (fc: any);
-  }
+): GraphQLInputFieldConfig {
+  const fieldConfig = schema.typeMapper.convertInputFieldConfig(
+    isFunction(fc) ? fc() : fc,
+    name,
+    typeName
+  );
 
   if (isFunction(fieldConfig.type)) {
-    fieldConfig._typeAsThunk = fieldConfig.type;
     fieldConfig.type = schema.typeMapper.convertInputFieldConfig(
       fieldConfig.type(),
       name,
@@ -81,33 +83,52 @@ export function resolveInputConfigAsThunk(
   return fieldConfig;
 }
 
-export function resolveInputConfigMapAsThunk<T: FieldMap>(
+export function resolveInputConfigMapAsThunk(
   schema: SchemaComposer<any>,
-  fieldMap: T,
+  fieldMap: ComposeInputFieldConfigMap,
   typeName?: string
-): T {
+): GraphQLInputFieldConfigMap {
+  const fields = {};
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(name => {
-      fieldMap[name] = resolveInputConfigAsThunk(schema, fieldMap[name], name, typeName);
+      fields[name] = resolveInputConfigAsThunk(schema, fieldMap[name], name, typeName);
     });
   }
-  return fieldMap;
+  return fields;
 }
 
-export function keepConfigsAsThunk<T: FieldMap>(fieldMap: T): T {
-  if (isObject(fieldMap)) {
-    Object.keys(fieldMap).forEach(key => {
-      if (fieldMap[key]._fieldAsThunk) {
-        fieldMap[key] = fieldMap[key]._fieldAsThunk;
-      } else {
-        if (fieldMap[key]._typeAsThunk) {
-          fieldMap[key].type = fieldMap[key]._typeAsThunk;
-        }
-        if (fieldMap[key].args) {
-          fieldMap[key].args = keepConfigsAsThunk(fieldMap[key].args);
-        }
-      }
+export function resolveArgConfigAsThunk(
+  schema: SchemaComposer<any>,
+  ac: ComposeArgumentConfig,
+  name: string,
+  fieldName?: string,
+  typeName?: string
+): GraphQLArgumentConfig {
+  const argConfig = schema.typeMapper.convertArgConfig(
+    isFunction(ac) ? ac() : ac,
+    name,
+    fieldName,
+    typeName
+  );
+
+  if (isFunction(argConfig.type)) {
+    argConfig.type = schema.typeMapper.convertArgConfig(argConfig.type(), name, typeName).type;
+  }
+
+  return argConfig;
+}
+
+export function resolveArgConfigMapAsThunk(
+  schema: SchemaComposer<any>,
+  argMap: ComposeFieldConfigArgumentMap,
+  fieldName?: string,
+  typeName?: string
+): GraphQLFieldConfigArgumentMap {
+  const args = {};
+  if (isObject(argMap)) {
+    Object.keys(argMap).forEach(name => {
+      args[name] = resolveArgConfigAsThunk(schema, argMap[name], name, fieldName, typeName);
     });
   }
-  return fieldMap;
+  return args;
 }
