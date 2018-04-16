@@ -5,18 +5,22 @@ import { GraphQLInputObjectType, GraphQLNonNull, getNamedType } from './graphql'
 import { resolveMaybeThunk } from './utils/misc';
 // import { deprecate } from './utils/debug';
 import { isObject, isString } from './utils/is';
-import { resolveInputConfigMapAsThunk, keepConfigsAsThunk } from './utils/configAsThunk';
+import { resolveInputConfigMapAsThunk, resolveInputConfigAsThunk } from './utils/configAsThunk';
 import { typeByPath } from './utils/typeByPath';
 import type { Thunk, ObjMap } from './utils/definitions';
 import type { EnumTypeComposer } from './EnumTypeComposer';
 import type { TypeAsString } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
 import type {
-  // GraphQLInputFieldConfig,
+  GraphQLInputFieldConfig,
   GraphQLInputFieldConfigMap,
   GraphQLInputType,
   InputValueDefinitionNode,
 } from './graphql';
+
+export type GraphQLInputObjectTypeExtended = GraphQLInputObjectType & {
+  _gqcFields?: ComposeInputFieldConfigMap,
+};
 
 export type ComposeInputFieldConfigMap = ObjMap<ComposeInputFieldConfig>;
 
@@ -47,7 +51,7 @@ export type ComposeInputObjectTypeConfig = {
 };
 
 export class InputTypeComposer {
-  gqType: GraphQLInputObjectType;
+  gqType: GraphQLInputObjectTypeExtended;
 
   static schemaComposer: SchemaComposer<any>;
 
@@ -116,23 +120,14 @@ export class InputTypeComposer {
   /**
    * Get fields from a GraphQL type
    * WARNING: this method read an internal GraphQL instance variable.
-   * TODO: should return GraphQLInputFieldConfigMap
-   * BUT if setFields(fields: ComposeInputFieldConfigMap | GraphQLInputFieldConfigMap)
-   * then flow producess error with such common case ITC.setFields(ITC.getFields())
-   * with following message "Could not decide which case to select"
-   * More info about solution
-   *  https://twitter.com/nodkz/status/925010361815851008
-   *  https://github.com/facebook/flow/issues/2892
    */
-  getFields(): ObjMap<any> {
-    const fields: Thunk<GraphQLInputFieldConfigMap> = this.gqType._typeConfig.fields;
-
-    const fieldMap: mixed = keepConfigsAsThunk(resolveMaybeThunk(fields));
-
-    if (isObject(fieldMap)) {
-      return { ...fieldMap };
+  getFields(): ComposeInputFieldConfigMap {
+    if (!this.gqType._gqcFields) {
+      const fields: Thunk<GraphQLInputFieldConfigMap> = this.gqType._typeConfig.fields;
+      this.gqType._gqcFields = (resolveMaybeThunk(fields) || {}: any);
     }
-    return {};
+
+    return this.gqType._gqcFields;
   }
 
   getFieldNames(): string[] {
@@ -149,17 +144,15 @@ export class InputTypeComposer {
    * WARNING: this method rewrite an internal GraphQL instance variable.
    */
   setFields(fields: ComposeInputFieldConfigMap): InputTypeComposer {
-    const prepearedFields = this.constructor.schemaComposer.typeMapper.convertInputFieldConfigMap(
-      fields,
-      this.getTypeName()
-    );
+    this.gqType._gqcFields = fields;
 
-    this.gqType._typeConfig.fields = () =>
-      resolveInputConfigMapAsThunk(
+    this.gqType._typeConfig.fields = () => {
+      return resolveInputConfigMapAsThunk(
         this.constructor.schemaComposer,
-        prepearedFields,
+        fields,
         this.getTypeName()
       );
+    };
     delete this.gqType._fields; // if schema was builded, delete defineFieldMap
     return this;
   }
@@ -179,10 +172,8 @@ export class InputTypeComposer {
 
   /**
    * Get fieldConfig by name
-   * TODO should be GraphQLInputFieldConfig
-   * see getFields() method for details
    */
-  getField(fieldName: string): any {
+  getField(fieldName: string): ComposeInputFieldConfig {
     const fields = this.getFields();
 
     if (!fields[fieldName]) {
@@ -220,18 +211,17 @@ export class InputTypeComposer {
   ): InputTypeComposer {
     let prevFieldConfig;
     try {
-      prevFieldConfig = this.getField(fieldName);
+      prevFieldConfig = this.getFieldConfig(fieldName);
     } catch (e) {
       throw new Error(
         `Cannot extend field '${fieldName}' from input type '${this.getTypeName()}'. Field does not exist.`
       );
     }
 
-    const fieldConfig: ComposeInputFieldConfig = {
-      ...(prevFieldConfig: any),
-      ...(parialFieldConfig: any),
-    };
-    this.setField(fieldName, fieldConfig);
+    this.setField(fieldName, {
+      ...prevFieldConfig,
+      ...parialFieldConfig,
+    });
     return this;
   }
 
@@ -283,29 +273,27 @@ export class InputTypeComposer {
 
   makeRequired(fieldNameOrArray: string | Array<string>): InputTypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    const fields = this.getFields();
     fieldNames.forEach(fieldName => {
-      if (fields[fieldName] && fields[fieldName].type) {
-        if (!(fields[fieldName].type instanceof GraphQLNonNull)) {
-          fields[fieldName].type = new GraphQLNonNull(fields[fieldName].type);
+      if (this.hasField(fieldName)) {
+        const fieldType = this.getFieldType(fieldName);
+        if (!(fieldType instanceof GraphQLNonNull)) {
+          this.extendField(fieldName, { type: new GraphQLNonNull(fieldType) });
         }
       }
     });
-    this.setFields(fields);
     return this;
   }
 
   makeOptional(fieldNameOrArray: string | Array<string>): InputTypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    const fields = this.getFields();
     fieldNames.forEach(fieldName => {
-      if (fieldNames.indexOf(fieldName) > -1) {
-        if (fields[fieldName] && fields[fieldName].type instanceof GraphQLNonNull) {
-          fields[fieldName].type = fields[fieldName].type.ofType;
+      if (this.hasField(fieldName)) {
+        const fieldType = this.getFieldType(fieldName);
+        if (fieldType instanceof GraphQLNonNull) {
+          this.extendField(fieldName, { type: fieldType.ofType });
         }
       }
     });
-    this.setFields(fields);
     return this;
   }
 
@@ -314,10 +302,10 @@ export class InputTypeComposer {
       throw new Error('You should provide new type name for clone() method');
     }
 
-    const fields = this.getFields();
     const newFields = {};
-    Object.keys(fields).forEach(fieldName => {
-      newFields[fieldName] = { ...fields[fieldName] };
+    this.getFieldNames().forEach(fieldName => {
+      const fc = this.getFieldConfig(fieldName);
+      newFields[fieldName] = { ...(fc: any) };
     });
 
     return new this.constructor.schemaComposer.InputTypeComposer(

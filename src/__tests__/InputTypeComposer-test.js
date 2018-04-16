@@ -38,7 +38,7 @@ describe('InputTypeComposer', () => {
 
     describe('getField()', () => {
       it('should return field config', () => {
-        expect(itc.getField('input1').type).toBe(GraphQLString);
+        expect(itc.getFieldType('input1')).toBe(GraphQLString);
       });
 
       it('should throw error if field does not exist', () => {
@@ -83,7 +83,8 @@ describe('InputTypeComposer', () => {
         itc.setFields({
           input3: { type: typeAsFn },
         });
-        expect(itc.getFieldType('input3')).toBe(typeAsFn);
+        expect((itc.getField('input3'): any).type).toBe(typeAsFn);
+        expect(itc.getFieldType('input3')).toBe(GraphQLString);
 
         // show provide unwrapped/unhoisted type for graphql
         expect((itc.getType(): any)._typeConfig.fields().input3.type).toBe(GraphQLString);
@@ -168,12 +169,12 @@ describe('InputTypeComposer', () => {
         itc.extendField('input3', {
           description: 'this is input #3',
         });
-        expect(itc.getField('input3').type).toBe(GraphQLString);
-        expect(itc.getField('input3').description).toBe('this is input #3');
+        expect(itc.getFieldConfig('input3').type).toBe(GraphQLString);
+        expect(itc.getFieldConfig('input3').description).toBe('this is input #3');
         itc.extendField('input3', {
           type: 'Int',
         });
-        expect(itc.getField('input3').type).toBe(GraphQLInt);
+        expect(itc.getFieldConfig('input3').type).toBe(GraphQLInt);
       });
 
       it('should throw error if field does not exists', () => {
@@ -193,8 +194,8 @@ describe('InputTypeComposer', () => {
 
     it('makeRequired()', () => {
       itc.makeRequired('input1');
-      expect(itc.getField('input1').type).toBeInstanceOf(GraphQLNonNull);
-      expect((itc.getField('input1'): any).type.ofType).toBe(GraphQLString);
+      expect(itc.getFieldType('input1')).toBeInstanceOf(GraphQLNonNull);
+      expect((itc.getFieldType('input1'): any).ofType).toBe(GraphQLString);
       expect(itc.isRequired('input1')).toBe(true);
     });
 
@@ -212,11 +213,11 @@ describe('InputTypeComposer', () => {
         input5: { type: 'Boolean!' },
       });
 
-      expect(itc.getField('input3').type).toBe(GraphQLString);
-      expect(itc.getField('input4').type).toBeInstanceOf(GraphQLList);
-      expect((itc.getField('input4'): any).type.ofType).toBe(GraphQLInt);
-      expect(itc.getField('input5').type).toBeInstanceOf(GraphQLNonNull);
-      expect((itc.getField('input5'): any).type.ofType).toBe(GraphQLBoolean);
+      expect(itc.getFieldType('input3')).toBe(GraphQLString);
+      expect(itc.getFieldType('input4')).toBeInstanceOf(GraphQLList);
+      expect((itc.getFieldType('input4'): any).ofType).toBe(GraphQLInt);
+      expect(itc.getFieldType('input5')).toBeInstanceOf(GraphQLNonNull);
+      expect((itc.getFieldType('input5'): any).ofType).toBe(GraphQLBoolean);
     });
   });
 

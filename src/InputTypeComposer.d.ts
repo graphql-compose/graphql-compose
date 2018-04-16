@@ -69,7 +69,7 @@ export class InputTypeComposer {
     /**
      * Get fieldConfig by name
      */
-    public getField(fieldName: string): GraphQLInputFieldConfig;
+    public getField(fieldName: string): ComposeInputFieldConfig;
 
     public removeField(fieldNameOrArray: string | string[]): this;
 
@@ -80,6 +80,10 @@ export class InputTypeComposer {
     public reorderFields(names: string[]): this;
 
     public isRequired(fieldName: string): boolean;
+
+    public getFieldConfig(fieldName: string): GraphQLInputFieldConfig;
+
+    public getFieldType(fieldName: string): GraphQLInputType;
 
     public getFieldTC(fieldName: string): InputTypeComposer;
 
