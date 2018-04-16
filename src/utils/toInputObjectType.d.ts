@@ -1,10 +1,7 @@
-import { GraphQLFieldConfig, GraphQLFieldConfigMap, GraphQLInputFieldConfig, GraphQLObjectType } from '../graphql';
+import { GraphQLType, GraphQLInputType, GraphQLObjectType } from '../graphql';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { TypeComposer } from '../TypeComposer';
 import { SchemaComposer } from '../SchemaComposer';
-
-export function removeWrongFields<TSource, TContext>(
-    fields: GraphQLFieldConfigMap<TSource, TContext>): GraphQLFieldConfigMap<TSource, TContext>;
 
 export interface ToInputObjectTypeOpts {
     prefix?: string;
@@ -12,7 +9,7 @@ export interface ToInputObjectTypeOpts {
 }
 
 export function toInputObjectType(
-    typeComposer: TypeComposer,
+    typeComposer: TypeComposer<any>,
     opts?: ToInputObjectTypeOpts,
     cache?: Map<GraphQLObjectType, InputTypeComposer>): InputTypeComposer;
 
@@ -23,8 +20,8 @@ export interface ConvertInputObjectFieldOpts {
     outputTypeName?: string;
 }
 
-export function convertInputObjectField<TSource, TContext>(
-    field: GraphQLFieldConfig<TSource, TContext>,
+export function convertInputObjectField(
+    field: GraphQLType,
     opts: ConvertInputObjectFieldOpts,
     cache: Map<GraphQLObjectType, InputTypeComposer>,
-    schemaComposer: SchemaComposer): GraphQLInputFieldConfig;
+    schemaComposer: SchemaComposer<any>): GraphQLInputType;

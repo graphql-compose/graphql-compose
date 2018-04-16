@@ -15,26 +15,7 @@ import type { InputTypeComposer } from '../InputTypeComposer';
 import type { SchemaComposer } from '../SchemaComposer';
 import GenericType from '../type/generic';
 import { upperFirst } from './misc';
-import type {
-  GraphQLFieldConfig,
-  GraphQLFieldConfigMap,
-  GraphQLType,
-  GraphQLInputFieldConfig,
-  GraphQLInputType,
-} from '../graphql';
-
-export function removeWrongFields<TSource, TContext>(
-  fields: GraphQLFieldConfigMap<TSource, TContext>
-): GraphQLFieldConfigMap<TSource, TContext> {
-  const result = {};
-  Object.keys(fields).forEach(key => {
-    const field = fields[key];
-    if (!isAbstractType(field.type)) {
-      result[key] = field;
-    }
-  });
-  return result;
-}
+import type { GraphQLType, GraphQLInputType } from '../graphql';
 
 export type toInputObjectTypeOpts = {
   prefix?: string,
@@ -69,35 +50,42 @@ export function toInputObjectType(
   );
   cache.set(typeComposer.getType(), inputTypeComposer);
 
-  const outputFields = removeWrongFields(typeComposer.getFields());
+  const fieldNames = typeComposer.getFieldNames();
   const inputFields = {};
-  Object.keys(outputFields).forEach(key => {
+  fieldNames.forEach(fieldName => {
     const fieldOpts = {
       ...opts,
-      fieldName: key,
+      fieldName,
       outputTypeName: typeComposer.getTypeName(),
     };
-    inputFields[key] = convertInputObjectField(outputFields[key], fieldOpts, cache, schemaComposer);
+    const fc = typeComposer.getFieldConfig(fieldName);
+    if (!isAbstractType(fc.type)) {
+      const inputType = convertInputObjectField(fc.type, fieldOpts, cache, schemaComposer);
+      inputFields[fieldName] = {
+        type: inputType,
+        description: fc.description,
+      };
+    }
   });
   inputTypeComposer.addFields(inputFields);
 
   return inputTypeComposer;
 }
 
-export type convertInputObjectFieldOpts = {
+export type ConvertInputObjectFieldOpts = {
   prefix?: string,
   postfix?: string,
   fieldName?: string,
   outputTypeName?: string,
 };
 
-export function convertInputObjectField<TSource, TContext>(
-  field: GraphQLFieldConfig<TSource, TContext>,
-  opts: convertInputObjectFieldOpts,
+export function convertInputObjectField(
+  field: GraphQLType,
+  opts: ConvertInputObjectFieldOpts,
   cache: Map<GraphQLObjectType, InputTypeComposer>,
   schemaComposer: SchemaComposer<any>
-): GraphQLInputFieldConfig {
-  let fieldType: GraphQLType = field.type;
+): GraphQLInputType {
+  let fieldType = field;
 
   const wrappers = [];
   while (fieldType instanceof GraphQLList || fieldType instanceof GraphQLNonNull) {
@@ -130,5 +118,5 @@ export function convertInputObjectField<TSource, TContext>(
     fieldType
   );
 
-  return { type: inputFieldType, description: field.description };
+  return inputFieldType;
 }

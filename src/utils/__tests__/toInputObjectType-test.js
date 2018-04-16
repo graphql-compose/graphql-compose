@@ -11,14 +11,13 @@ import { TypeComposer, InputTypeComposer } from '../../';
 import { toInputObjectType } from '../toInputObjectType';
 
 describe('toInputObjectType()', () => {
-  let PersonType: GraphQLObjectType;
   let PersonTC: TypeComposer;
 
   beforeEach(() => {
-    PersonType = new GraphQLObjectType({
+    PersonTC = TypeComposer.create({
       name: 'Person',
-      fields: () => ({
-        name: { type: GraphQLString },
+      fields: {
+        name: 'String',
         age: { type: GraphQLInt },
         address: {
           type: new GraphQLObjectType({
@@ -29,9 +28,8 @@ describe('toInputObjectType()', () => {
             },
           }),
         },
-      }),
+      },
     });
-    PersonTC = TypeComposer.create(PersonType);
   });
 
   it('should return InputTypeComposer', () => {
@@ -64,14 +62,15 @@ describe('toInputObjectType()', () => {
   });
 
   it('should reuse generated input type for recursive types', () => {
-    PersonTC.setField('spouce', { type: PersonType });
+    PersonTC.setField('spouce', PersonTC);
     const itc = toInputObjectType(PersonTC);
     expect(itc.getFieldType('spouce')).toBe(itc.getType());
   });
 
   it('should reuse generated input type for recursive types in List', () => {
-    PersonTC.setField('friends', { type: new GraphQLList(PersonType) });
+    PersonTC.setField('friends', PersonTC.getTypePlural());
     const itc = toInputObjectType(PersonTC);
+    expect(itc.getFieldType('friends')).toBeInstanceOf(GraphQLList);
     expect((itc.getFieldType('friends'): any).ofType).toBe(itc.getType());
   });
 });
