@@ -160,6 +160,9 @@ export class TypeMapper<TContext> {
   }
 
   createType(str: TypeDefinitionString): ?GraphQLNamedType {
+    const existedType = this.get(str);
+    if (existedType) return existedType;
+
     const astDocument: DocumentNode = parse(str);
 
     if (!astDocument || astDocument.kind !== 'Document') {
@@ -175,6 +178,8 @@ export class TypeMapper<TContext> {
 
     if (type) {
       this.set(type.name, type);
+      // Also keep type string representation for avoiding duplicates type defs for same strings
+      this.set(str, type);
       return type;
     }
 

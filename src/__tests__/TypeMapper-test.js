@@ -72,10 +72,10 @@ describe('TypeMapper', () => {
     const IntRangeTC = new TypeComposer(type);
     expect(IntRangeTC.getTypeName()).toBe('IntRange');
     expect(IntRangeTC.getFieldNames()).toEqual(expect.arrayContaining(['max', 'min', 'arr']));
-    expect(IntRangeTC.getField('max').type).toBe(GraphQLInt);
-    expect(IntRangeTC.getField('max').description).toBe('Max value');
-    expect(IntRangeTC.getField('min').type).toBeInstanceOf(GraphQLNonNull);
-    expect(IntRangeTC.getField('arr').type).toBeInstanceOf(GraphQLList);
+    expect(IntRangeTC.getFieldType('max')).toBe(GraphQLInt);
+    expect(IntRangeTC.getFieldConfig('max').description).toBe('Max value');
+    expect(IntRangeTC.getFieldType('min')).toBeInstanceOf(GraphQLNonNull);
+    expect(IntRangeTC.getFieldType('arr')).toBeInstanceOf(GraphQLList);
   });
 
   it('should create input object type from template string', () => {
@@ -737,6 +737,18 @@ describe('TypeMapper', () => {
       expect(ts.get('User')).toBeInstanceOf(GraphQLObjectType);
       expect(ts.get('Article')).toBeInstanceOf(GraphQLObjectType);
       expect(ts.get('Record')).toBeInstanceOf(GraphQLInputObjectType);
+    });
+  });
+
+  describe('creatType()', () => {
+    it('should return same type for same TypeDefinitionString', () => {
+      const t1 = TypeMapper.createType('type SameType { a: Int }');
+      const t2 = TypeMapper.createType('type SameType { a: Int }');
+      expect(t1).toBe(t2);
+
+      const tc = TypeComposer.create((t1: any));
+      expect(tc.getTypeName()).toBe('SameType');
+      expect(tc.getFieldType('a')).toBe(GraphQLInt);
     });
   });
 });
