@@ -3,8 +3,9 @@
 
 import { isFunction, isObject } from './is';
 import type { SchemaComposer } from '../SchemaComposer';
-import type { GraphQLFieldConfig } from '../graphql';
+import type { GraphQLFieldConfig, GraphQLArgumentConfig } from '../graphql';
 import type { ObjMap } from '../utils/definitions';
+import type { ComposeInputFieldConfig } from '../InputTypeComposer';
 
 export type FieldMap = {
   [fieldName: string]: any,
@@ -43,7 +44,7 @@ export function resolveOutputConfigsAsThunk<TContext>(
       }
 
       if (isObject(fieldMap[name].args)) {
-        fieldMap[name].args = resolveInputConfigsAsThunk(
+        fieldMap[name].args = resolveInputConfigMapAsThunk(
           schema,
           fieldMap[name].args,
           `${typeName}.${name}.args`
@@ -54,32 +55,40 @@ export function resolveOutputConfigsAsThunk<TContext>(
   return fieldMap;
 }
 
-export function resolveInputConfigsAsThunk<T: FieldMap>(
+export function resolveInputConfigAsThunk(
+  schema: SchemaComposer<any>,
+  fc: ComposeInputFieldConfig,
+  name: string,
+  typeName?: string
+): GraphQLArgumentConfig {
+  let fieldConfig: GraphQLArgumentConfig;
+  if (isFunction(fc)) {
+    fieldConfig = (schema.typeMapper.convertInputFieldConfig(fc(), name, typeName): any);
+    fieldConfig._fieldAsThunk = fc;
+  } else {
+    fieldConfig = (fc: any);
+  }
+
+  if (isFunction(fieldConfig.type)) {
+    fieldConfig._typeAsThunk = fieldConfig.type;
+    fieldConfig.type = schema.typeMapper.convertInputFieldConfig(
+      fieldConfig.type(),
+      name,
+      typeName
+    ).type;
+  }
+
+  return fieldConfig;
+}
+
+export function resolveInputConfigMapAsThunk<T: FieldMap>(
   schema: SchemaComposer<any>,
   fieldMap: T,
   typeName?: string
 ): T {
   if (isObject(fieldMap)) {
     Object.keys(fieldMap).forEach(name => {
-      if (isFunction(fieldMap[name])) {
-        const fieldConfig: any = schema.typeMapper.convertInputFieldConfig(
-          fieldMap[name](),
-          name,
-          typeName
-        );
-        fieldConfig._fieldAsThunk = fieldMap[name];
-        fieldMap[name] = fieldConfig;
-      }
-
-      if (isFunction(fieldMap[name].type)) {
-        fieldMap[name]._typeAsThunk = fieldMap[name].type;
-        const fieldConfig = schema.typeMapper.convertInputFieldConfig(
-          fieldMap[name].type(),
-          name,
-          typeName
-        );
-        fieldMap[name].type = fieldConfig.type;
-      }
+      fieldMap[name] = resolveInputConfigAsThunk(schema, fieldMap[name], name, typeName);
     });
   }
   return fieldMap;

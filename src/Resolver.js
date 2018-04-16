@@ -30,7 +30,7 @@ import type { InputTypeComposer, ComposeInputFieldConfig } from './InputTypeComp
 import type { EnumTypeComposer } from './EnumTypeComposer';
 import type { SchemaComposer } from './SchemaComposer';
 import deepmerge from './utils/deepmerge';
-import { resolveInputConfigsAsThunk } from './utils/configAsThunk';
+import { resolveInputConfigMapAsThunk, resolveInputConfigAsThunk } from './utils/configAsThunk';
 import { only, clearName } from './utils/misc';
 import { isFunction, isString } from './utils/is';
 import filterByDotPaths from './utils/filterByDotPaths';
@@ -404,7 +404,7 @@ export class Resolver<TSource, TContext> {
     const resolve = this.getResolve();
     return {
       type: this.getType(),
-      args: (resolveInputConfigsAsThunk(
+      args: (resolveInputConfigMapAsThunk(
         this.constructor.schemaComposer,
         this.getArgs(),
         undefined

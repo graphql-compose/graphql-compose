@@ -4,7 +4,7 @@ import { GraphQLString, GraphQLObjectType, GraphQLInputObjectType } from '../../
 import { TypeComposer, InputTypeComposer, GQC } from '../../';
 import {
   resolveOutputConfigsAsThunk,
-  resolveInputConfigsAsThunk,
+  resolveInputConfigMapAsThunk,
   keepConfigsAsThunk,
 } from '../configAsThunk';
 
@@ -162,7 +162,7 @@ describe('typeAsThunk', () => {
     });
   });
 
-  describe('resolveInputConfigsAsThunk()', () => {
+  describe('resolveInputConfigMapAsThunk()', () => {
     it('should unwrap fields from functions', () => {
       const fieldMap = {
         f0: () => ({
@@ -187,7 +187,7 @@ describe('typeAsThunk', () => {
           description: 'Field5',
         }),
       };
-      const unwrapped = resolveInputConfigsAsThunk(GQC, fieldMap);
+      const unwrapped = resolveInputConfigMapAsThunk(GQC, fieldMap);
       expect(unwrapped.f0.type).toBe(GraphQLString);
       expect(unwrapped.f0.description).toBe('Field0');
       expect(unwrapped.f0._fieldAsThunk).toBeTruthy();
@@ -240,7 +240,7 @@ describe('typeAsThunk', () => {
         },
       };
 
-      const unwrapped: any = resolveInputConfigsAsThunk(GQC, fieldMap);
+      const unwrapped: any = resolveInputConfigMapAsThunk(GQC, fieldMap);
 
       expect(unwrapped.f1.type).toBe(GraphQLString);
 
@@ -272,7 +272,7 @@ describe('typeAsThunk', () => {
           description: 'Field4',
         }),
       };
-      const unwrapped = resolveInputConfigsAsThunk(GQC, fieldMap);
+      const unwrapped = resolveInputConfigMapAsThunk(GQC, fieldMap);
 
       expect(unwrapped.f3.type).toBe(GraphQLString);
       expect(unwrapped.f3.description).toBe('Field3');
@@ -294,8 +294,8 @@ describe('typeAsThunk', () => {
     });
 
     it('should pass null, undefined', () => {
-      expect(resolveInputConfigsAsThunk(GQC, (null: any))).toBe(null);
-      expect(resolveInputConfigsAsThunk(GQC, (undefined: any))).toBe(undefined);
+      expect(resolveInputConfigMapAsThunk(GQC, (null: any))).toBe(null);
+      expect(resolveInputConfigMapAsThunk(GQC, (undefined: any))).toBe(undefined);
     });
   });
 

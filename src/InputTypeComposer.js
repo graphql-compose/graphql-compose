@@ -5,7 +5,7 @@ import { GraphQLInputObjectType, GraphQLNonNull, getNamedType } from './graphql'
 import { resolveMaybeThunk } from './utils/misc';
 // import { deprecate } from './utils/debug';
 import { isObject, isString } from './utils/is';
-import { resolveInputConfigsAsThunk, keepConfigsAsThunk } from './utils/configAsThunk';
+import { resolveInputConfigMapAsThunk, keepConfigsAsThunk } from './utils/configAsThunk';
 import { typeByPath } from './utils/typeByPath';
 import type { Thunk, ObjMap } from './utils/definitions';
 import type { EnumTypeComposer } from './EnumTypeComposer';
@@ -155,7 +155,7 @@ export class InputTypeComposer {
     );
 
     this.gqType._typeConfig.fields = () =>
-      resolveInputConfigsAsThunk(
+      resolveInputConfigMapAsThunk(
         this.constructor.schemaComposer,
         prepearedFields,
         this.getTypeName()
