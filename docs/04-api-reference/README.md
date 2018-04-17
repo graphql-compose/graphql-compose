@@ -14,20 +14,18 @@ Main class that gets `GraphQLObjectType` (complex **output** type with fields) a
 - create output types with `GraphQL schema language`
 
 ```js
-// creating TypeComposer from GraphQLObjectType
-const LonLatTC = new TypeComposer(
-  new GraphQLObjectType({
-    name: 'LonLat',
-    fields: {
-      lon: {
-        type: GraphQLFloat,
-      },
-      lat: {
-        type: GraphQLFloat,
-      },
+// creating TypeComposer from GraphQLObjectType or GraphQLObjectTypeConfig
+const LonLatTC = new TypeComposer({
+  name: 'LonLat',
+  fields: {
+    lon: {
+      type: GraphQLFloat,
     },
-  })
-);
+    lat: {
+      type: GraphQLFloat,
+    },
+  },
+});
 
 // creating TypeComposer via series of methods
 const LonLatTC = TypeComposer.create('LonLat'); // create LonLat without fields
@@ -46,12 +44,13 @@ LonLatTC.addFields({
 const LonLatTC = TypeComposer.create(`type LonLat { lon: Float, lat: Float }`);
 
 LonLatTC.getFieldNames(); // ['lon', 'lat']
-LonLatTC.getField('lon'); // return GraphQLFieldConfig
-LonLatTC.getFields(); // { lon: GraphQLFieldConfig, lat: GraphQLFieldConfig }
-LonLatTC.setFields(GraphQLFieldMapConfig); // completely replace all fields
-LonLatTC.setField('lon', GraphQLFieldConfig); // replace `lon` field with new FieldConfig
-LonLatTC.addFields(GraphQLFieldMapConfig); // add new fields, replace existed, rest fields keep untouched
-LonLatTC.addNestedFields(GraphQLFieldMapConfig); // add new fields where field name may have dots
+LonLatTC.getField('lon'); // return ComposeFieldConfig
+LonLatTC.getFieldConfig('lon'); // return GraphQLFieldConfig
+LonLatTC.getFields(); // { lon: ComposeFieldConfig, lat: ComposeFieldConfig }
+LonLatTC.setFields(ComposeFieldMapConfig); // completely replace all fields
+LonLatTC.setField('lon', ComposeFieldConfig); // replace `lon` field with new FieldConfig
+LonLatTC.addFields(ComposeFieldMapConfig); // add new fields, replace existed, rest fields keep untouched
+LonLatTC.addNestedFields(ComposeFieldMapConfig); // add new fields where field name may have dots
 LonLatTC.hasField('lon'); // true
 LonLatTC.removeField('lon');
 LonLatTC.removeField(['lon', 'field2', 'field3']);
@@ -78,6 +77,7 @@ LonLatTC.clone('newTypeName'); // new TypeComposer with cloned fields and resolv
 LonLatTC.get('dotted.path'); // described below in `typeByPath` section
 LonLatTC.getFieldArgs('lat'); // returns map of args config or empty {} if no args
 LonLatTC.hasFieldArg('lat', 'arg1'); // false
+LonLatTC.getFieldArgType('lat', 'arg1'); // return GraphQLObjectType
 LonLatTC.getFieldArg('lat', 'arg1'); // returns arg config
 LonLatTC.addRelation('facilities', { // add relation with some other TypeComposer
   resolver: () => FacilitiesTC.getResolver('findMany'),
@@ -123,20 +123,18 @@ Class that get `GraphQLInputObjectType` (complex **input** type with fields) and
 - create input types with `GraphQL schema language`
 
 ```js
-// creating InputTypeComposer from GraphQLInputObjectType
-const LonLatITC = new InputTypeComposer(
-  new GraphQLInputObjectType({
-    name: 'LonLatInput',
-    fields: {
-      lon: {
-        type: new GraphQLNonNull(GraphQLFloat),
-      },
-      lat: {
-        type: new GraphQLNonNull(GraphQLFloat),
-      },
+// creating InputTypeComposer from GraphQLInputObjectType or GraphQLInputObjectTypeConfig
+const LonLatITC = new InputTypeComposer({
+  name: 'LonLatInput',
+  fields: {
+    lon: {
+      type: new GraphQLNonNull(GraphQLFloat),
     },
-  })
-);
+    lat: {
+      type: new GraphQLNonNull(GraphQLFloat),
+    },
+  },
+});
 
 // creating TypeComposer via series of methods
 const LonLatITC = InputTypeComposer.create('LonLatInput'); // create LonLat without fields
@@ -154,12 +152,14 @@ LonLatITC.addFields({
 const LonLatITC = InputTypeComposer.create(`input LonLatInput { lon: Float!, lat: Float! }`);
 
 LonLatITC.getFieldNames(); // ['lon', 'lat']
-LonLatITC.getFields(); // GraphQLInputFieldConfigMap
+LonLatITC.getFields(); // ComposeInputFieldConfigMap
 LonLatITC.hasField('lon'); // true
-LonLatITC.setFields(GraphQLInputFieldConfigMap); // completely replace all fields
-LonLatITC.setField('lon', GraphQLInputFieldConfig); // replace `lon` field
-LonLatITC.addFields(GraphQLInputFieldConfigMap); // add new fields, replace existed, rest fields keep untouched
-LonLatITC.getField('lon'); // GraphQLInputFieldConfig
+LonLatITC.setFields(ComposeInputFieldConfigMap); // completely replace all fields
+LonLatITC.setField('lon', ComposeInputFieldConfig); // replace `lon` field
+LonLatITC.addFields(ComposeInputFieldConfigMap); // add new fields, replace existed, rest fields keep untouched
+LonLatITC.getField('lon'); // ComposeInputFieldConfig
+LonLatITC.getFieldConfig('lon'); // GraphQLInputFieldConfig
+LonLatITC.getFieldType('lon'); // GraphQLInputType
 LonLatITC.removeField('lon');
 LonLatITC.removeOtherFields(['lon', 'lat']); // will remove all other fields
 LonLatITC.extendField('lat', { defaultValue: 51.46, description: 'Prime Meridian' }); // override some field config values
@@ -203,6 +203,7 @@ const resolver = new Resolver({
   type: LonLatTC, // or GraphQLOutputType
   args: {
     id: 'Int!',
+    filter: `input MyComplexFilter { min: Date, max: Date } `,
   },
   resolve: ({ source, args, context, info }) => {
     return DB.findById(args.id);
@@ -212,14 +213,16 @@ const resolver = new Resolver({
 LonLatTC.addResolver(resolver); // or you may just provide ResolverOpts from above
 
 resolver.hasArg('id'); // true
-resolver.getArg('id'): // GraphQLArgumentConfig
-resolver.getArgType('id'); // GraphQLInt
+resolver.getArg('id'): // ComposeArgumentConfig
+resolver.getArgType('id'); // GraphQLInt (GraphQLInputType)
+resolver.getArgConfig('id'); // GraphQLArgumentConfig
 resolver.getArgTC('complexArg'); // InputTypeComposer
 resolver.getArgs(); // GraphQLFieldConfigArgumentMap
 resolver.getArgNames(); // ['id'], list of arg names
-resolver.setArgs(GraphQLFieldConfigArgumentMap); // completely replace all args
-resolver.setArg('code', GraphQLArgumentConfig); // set or replace arg
-resolver.addArgs(GraphQLFieldConfigArgumentMap); // add new args, replace existed, rest args keep untouched
+resolver.setArgs(ComposeFieldConfigArgumentMap); // completely replace all args
+resolver.setArg('code', ComposeArgumentConfig); // set or replace arg
+resolver.addArgs(ComposeFieldConfigArgumentMap); // add new args, replace existed, rest args keep untouched
+resolver.extendArg('code', $Shape<ComposeArgumentConfig>); // partially change config
 resolver.cloneArg('filter', 'NewFilterInput'); // clone complex input argument (GraphQLInputObjectType) with new name
 resolver.removeArg('code');
 resolver.removeOtherArgs(['arg1', 'arg2']); // will remove all other args
@@ -266,15 +269,15 @@ resolver.addSortArg(...)  // see https://github.com/nodkz/graphql-compose/issues
 ### TypeMapper
 Type storage and type generator from `GraphQL schema language`. This is slightly rewritten [buildASTSchema](https://github.com/graphql/graphql-js/blob/master/src/utilities/buildASTSchema.js) utility from `graphql-js` that allows to create type from string. Eg
 ```js
-const LonLatGraphQLObjectType = TypeMapperInstance.createType(`
+const LonLatGraphQLObjectType = TypeMapper.createType(`
   type LonLat { lon: Float, lat: Float }
 `));
 
-const LonLatPointsGraphQLObjectType = TypeMapperInstance.createType(`
+const LonLatPointsGraphQLObjectType = TypeMapper.createType(`
   type LonLatPoints { points: [LonLat] }
 `));
 
-const IntRangeGraphQLInputObjectType = TypeMapperInstance.createType(`
+const IntRangeGraphQLInputObjectType = TypeMapper.createType(`
   input IntRangeInput {
     # Min required value
     min: Int!,
@@ -304,8 +307,8 @@ import { GQC } from 'graphql-compose';
 import { CityTC } from './city';
 
 GQC.rootQuery().addFields({
-  city: CityTC.get('$findOne'),
-  cityConnection: CityTC.get('$connection'),
+  city: CityTC.getResolver('findOne'),
+  cityConnection: CityTC.getResolver('connection'),
   currentTime: {
     type: 'Date',
     resolve: () => Date.now(),
@@ -314,8 +317,8 @@ GQC.rootQuery().addFields({
 });
 
 GQC.rootMutation().addFields({
-  createCity: CityTC.get('$createOne'),
-  updateCity: CityTC.get('$updateById'),
+  createCity: CityTC.getResolver('createOne'),
+  updateCity: CityTC.getResolver('updateById'),
   // ...
 });
 
@@ -367,9 +370,9 @@ Traverse in depth by dot notation by type-tree and returns `TypeComposer`, `Inpu
   typeByPath(UserTC, 'address'); // returns TypeComposer(AddressGraphQLType)
   typeByPath(UserTC, 'address.city'); // returns GraphQLString
   typeByPath(UserTC, '$findOne'); // returns Resolver from UserTC which stored by `findOne` name
-  typeByPath(UserTC, '$findOne.@filter.firstname'); // get `findOne` resolver, find `filter` arg in resolver, get `firstname` field from it and return it graphql scalar type
+  typeByPath(UserTC, '$findOne.@filter.firstname'); // get `findOne` resolver, find `filter` arg in resolver, get `firstname` field from it and return its graphql scalar type
 ```
-Or this method can be called directly from graphql-compose main classes:
+Or this method can be called directly from graphql-compose instances:
 ```js
   TypeComposer.get('fieldName.subField'); // returns TypeComposer | GraphQLScalar
   TypeComposer.get('$resolverName.@argumentName.subFieldName.subSubField'); // returns InputTypeComposer | GraphQLScalar
