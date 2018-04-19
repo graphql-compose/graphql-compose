@@ -640,13 +640,13 @@ export class Resolver<TSource, TContext> {
     // get sortETC or create new one
     let sortETC: EnumTypeComposer;
     if (resolver.hasArg('sort')) {
-      const sort = resolver.getArg('sort');
-      if (sort.type instanceof GraphQLEnumType) {
-        sortETC = this.constructor.schemaComposer.EnumTypeComposer.create(sort.type);
+      const sortConfig = resolver.getArgConfig('sort');
+      if (sortConfig.type instanceof GraphQLEnumType) {
+        sortETC = this.constructor.schemaComposer.EnumTypeComposer.create(sortConfig.type);
       } else {
         throw new Error(
-          'Resolver should have `sort` arg with type GraphQLEnumType. ' +
-            `But got: ${util.inspect(sort.type, { depth: 2 })} `
+          'Resolver must have `sort` arg with type GraphQLEnumType. ' +
+            `But got: ${util.inspect(sortConfig.type, { depth: 2 })} `
         );
       }
     } else {

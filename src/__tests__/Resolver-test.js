@@ -13,7 +13,7 @@ import {
   GraphQLList,
 } from '../graphql';
 import GQC from '../__mocks__/gqc';
-import { Resolver, TypeComposer, InputTypeComposer } from '../';
+import { Resolver, TypeComposer, InputTypeComposer, EnumTypeComposer } from '../';
 
 describe('Resolver', () => {
   let resolver: Resolver;
@@ -720,6 +720,18 @@ describe('Resolver', () => {
       expect(whereSnap).toEqual({ price: { $gt: 0 } });
     });
 
+    it('should work with arg defined as TypeStringDefinition', () => {
+      resolver.setArg('sort', `enum CustomEnum { ID_ASC, ID_DESC }`);
+      resolver.addSortArg({
+        name: 'PRICE_ASC',
+        value: 123,
+      });
+
+      const sortType: any = resolver.getArgType('sort');
+      const etc = EnumTypeComposer.create(sortType);
+      expect(etc.getFieldNames()).toEqual(['ID_ASC', 'ID_DESC', 'PRICE_ASC']);
+    });
+
     it('should throw errors if provided incorrect options', () => {
       expect(() => {
         resolver.addSortArg(({}: any));
@@ -742,7 +754,7 @@ describe('Resolver', () => {
           name: 'PRICE_ASC',
           value: 123,
         });
-      }).toThrowError('should have `sort` arg with type GraphQLEnumType');
+      }).toThrowError('must have `sort` arg with type GraphQLEnumType');
     });
   });
 
