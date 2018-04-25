@@ -47,12 +47,24 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     /* :: return this; */
   }
 
+  get Query(): _TypeComposer<TContext> {
+    return this.rootQuery();
+  }
+
   rootQuery(): _TypeComposer<TContext> {
     return this.getOrCreateTC('Query');
   }
 
+  get Mutation(): _TypeComposer<TContext> {
+    return this.rootMutation();
+  }
+
   rootMutation(): _TypeComposer<TContext> {
     return this.getOrCreateTC('Mutation');
+  }
+
+  get Subscription(): _TypeComposer<TContext> {
+    return this.rootSubscription();
   }
 
   rootSubscription(): _TypeComposer<TContext> {

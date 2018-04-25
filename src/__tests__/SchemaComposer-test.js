@@ -167,4 +167,24 @@ describe('SchemaComposer', () => {
       sc.removeEmptyTypes(UserTC);
     });
   });
+
+  describe('root type getters', () => {
+    it('Query', () => {
+      const sc = new SchemaComposer();
+      expect(sc.Query).toBe(sc.rootQuery());
+      expect(sc.Query.getTypeName()).toBe('Query');
+    });
+
+    it('Mutation', () => {
+      const sc = new SchemaComposer();
+      expect(sc.Mutation).toBe(sc.rootMutation());
+      expect(sc.Mutation.getTypeName()).toBe('Mutation');
+    });
+
+    it('Subscription', () => {
+      const sc = new SchemaComposer();
+      expect(sc.Subscription).toBe(sc.rootSubscription());
+      expect(sc.Subscription.getTypeName()).toBe('Subscription');
+    });
+  });
 });
