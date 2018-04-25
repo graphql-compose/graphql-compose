@@ -117,7 +117,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
           } else {
             // eslint-disable-next-line
             console.log(
-              `GQC: Delete field '${typeComposer.getTypeName()}.${fieldName}' ` +
+              `graphql-compose: Delete field '${typeComposer.getTypeName()}.${fieldName}' ` +
                 `with type '${tc.getTypeName()}', cause it does not have fields.`
             );
             typeComposer.removeField(fieldName);

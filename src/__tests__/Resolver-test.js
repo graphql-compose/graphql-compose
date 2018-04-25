@@ -12,7 +12,7 @@ import {
   GraphQLEnumType,
   GraphQLList,
 } from '../graphql';
-import GQC from '../__mocks__/gqc';
+import schemaComposer from '../__mocks__/schemaComposer';
 import { Resolver, TypeComposer, InputTypeComposer, EnumTypeComposer } from '../';
 
 describe('Resolver', () => {
@@ -508,12 +508,12 @@ describe('Resolver', () => {
       `,
     });
 
-    GQC.rootQuery().addRelation('resolveUser', {
+    schemaComposer.rootQuery().addRelation('resolveUser', {
       resolver: () => myResolver,
       projection: { _id: true },
     });
 
-    const schema = GQC.buildSchema();
+    const schema = schemaComposer.buildSchema();
     const result = await graphql(schema, '{ resolveUser { name } }');
     expect(result).toEqual({
       data: {

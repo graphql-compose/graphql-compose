@@ -8,7 +8,7 @@ import {
   GraphQLList,
   graphql,
 } from 'graphql';
-import { TypeComposer, GQC } from '../../';
+import { TypeComposer, schemaComposer } from '../../';
 
 const remoteSchema = new GraphQLSchema({
   query: new GraphQLObjectType({
@@ -42,7 +42,7 @@ const remoteSchema = new GraphQLSchema({
 });
 
 beforeEach(() => {
-  GQC.clear();
+  schemaComposer.clear();
 });
 
 describe('github issue #107 merge Schema types on GQL', () => {
@@ -71,7 +71,7 @@ describe('github issue #107 merge Schema types on GQL', () => {
     const RemoteQueryType: any = remoteSchema._queryType;
     const RemoteQueryTC = TypeComposer.create(RemoteQueryType);
 
-    GQC.rootQuery().addFields({
+    schemaComposer.Query.addFields({
       tag: {
         type: TypeComposer.create(`type Tag { id: Int, title: String}`),
         resolve: () => ({ id: 1, title: 'Some tag' }),
@@ -79,9 +79,9 @@ describe('github issue #107 merge Schema types on GQL', () => {
       ...RemoteQueryTC.getFields(),
     });
 
-    expect(GQC.rootQuery().getFieldNames()).toEqual(['tag', 'users']);
+    expect(schemaComposer.Query.getFieldNames()).toEqual(['tag', 'users']);
 
-    const schema = GQC.buildSchema();
+    const schema = schemaComposer.buildSchema();
     expect(
       await graphql(
         schema,
@@ -106,7 +106,7 @@ describe('github issue #107 merge Schema types on GQL', () => {
     const RemoteQueryType: any = remoteSchema._queryType;
     const RemoteQueryTC = TypeComposer.create(RemoteQueryType);
 
-    GQC.rootQuery().addFields({
+    schemaComposer.Query.addFields({
       tag: {
         type: TypeComposer.create(`type Tag { id: Int, title: String}`),
         resolve: () => ({ id: 1, title: 'Some tag' }),
@@ -120,9 +120,9 @@ describe('github issue #107 merge Schema types on GQL', () => {
       },
     });
 
-    expect(GQC.rootQuery().getFieldNames()).toEqual(['tag', 'remote']);
+    expect(schemaComposer.Query.getFieldNames()).toEqual(['tag', 'remote']);
 
-    const schema = GQC.buildSchema();
+    const schema = schemaComposer.buildSchema();
     expect(
       await graphql(
         schema,
@@ -173,14 +173,14 @@ describe('github issue #107 merge Schema types on GQL', () => {
       },
     });
 
-    GQC.rootQuery().addFields({
+    schemaComposer.Query.addFields({
       article: {
         type: LocalArticleTC,
         resolve: () => ({ text: 'Article 1' }),
       },
     });
 
-    const schema = GQC.buildSchema();
+    const schema = schemaComposer.buildSchema();
     expect(
       await graphql(
         schema,
@@ -209,11 +209,11 @@ describe('github issue #107 merge Schema types on GQL', () => {
     });
   });
 
-  it('adding remote type to GQC and check reference by name', () => {
+  it('adding remote type to SchemaComposer and check reference by name', () => {
     const RemoteQueryType: any = remoteSchema._queryType;
     const RemoteQueryTC = TypeComposer.create(RemoteQueryType);
     const UserTC = RemoteQueryTC.getFieldTC('users');
-    GQC.add(UserTC);
+    schemaComposer.add(UserTC);
 
     const ArticleTC = TypeComposer.create({
       name: 'Article',

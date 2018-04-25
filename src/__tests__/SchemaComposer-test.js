@@ -151,7 +151,7 @@ describe('SchemaComposer', () => {
       sc.removeEmptyTypes(ViewerTC);
 
       expect(console.log).lastCalledWith(
-        "GQC: Delete field 'Viewer.stub' with type 'Stub', cause it does not have fields.",
+        "graphql-compose: Delete field 'Viewer.stub' with type 'Stub', cause it does not have fields.",
       );
       global.console.log = oldConsoleLog;
       /* eslint-enable */

@@ -1,7 +1,7 @@
 /* @flow strict */
 
 import { GraphQLString, GraphQLObjectType, GraphQLInputObjectType } from '../../graphql';
-import { TypeComposer, InputTypeComposer, GQC } from '../../';
+import { TypeComposer, InputTypeComposer, schemaComposer } from '../../';
 import {
   resolveOutputConfigMapAsThunk,
   resolveInputConfigMapAsThunk,
@@ -34,7 +34,7 @@ describe('configAsThunk', () => {
           description: 'Field5',
         }),
       };
-      const unwrapped: any = resolveOutputConfigMapAsThunk(GQC, fieldMap);
+      const unwrapped: any = resolveOutputConfigMapAsThunk(schemaComposer, fieldMap);
       expect(unwrapped.f0.type).toBe(GraphQLString);
       expect(unwrapped.f0.description).toBe('Field0');
 
@@ -76,7 +76,7 @@ describe('configAsThunk', () => {
           description: 'Field5',
         },
       };
-      const unwrapped: any = resolveOutputConfigMapAsThunk(GQC, fieldMap);
+      const unwrapped: any = resolveOutputConfigMapAsThunk(schemaComposer, fieldMap);
 
       expect(unwrapped.f1.type).toBe(GraphQLString);
 
@@ -104,7 +104,7 @@ describe('configAsThunk', () => {
           description: 'Field4',
         }),
       };
-      const unwrapped: any = resolveOutputConfigMapAsThunk(GQC, fieldMap);
+      const unwrapped: any = resolveOutputConfigMapAsThunk(schemaComposer, fieldMap);
 
       expect(unwrapped.f3.type).toBe(GraphQLString);
       expect(unwrapped.f4.type).toBe(GraphQLString);
@@ -121,7 +121,7 @@ describe('configAsThunk', () => {
           },
         },
       };
-      const unwrapped = resolveOutputConfigMapAsThunk(GQC, fieldMap);
+      const unwrapped = resolveOutputConfigMapAsThunk(schemaComposer, fieldMap);
       const { args }: any = unwrapped.f6;
       expect(args.a1.type).toBe(GraphQLString);
       expect(args.a2.type).toBe(GraphQLString);
@@ -155,7 +155,7 @@ describe('configAsThunk', () => {
           description: 'Field5',
         }),
       };
-      const unwrapped: any = resolveInputConfigMapAsThunk(GQC, fieldMap);
+      const unwrapped: any = resolveInputConfigMapAsThunk(schemaComposer, fieldMap);
       expect(unwrapped.f0.type).toBe(GraphQLString);
       expect(unwrapped.f0.description).toBe('Field0');
 
@@ -198,7 +198,7 @@ describe('configAsThunk', () => {
         },
       };
 
-      const unwrapped: any = resolveInputConfigMapAsThunk(GQC, fieldMap);
+      const unwrapped: any = resolveInputConfigMapAsThunk(schemaComposer, fieldMap);
 
       expect(unwrapped.f1.type).toBe(GraphQLString);
 
@@ -226,7 +226,7 @@ describe('configAsThunk', () => {
           description: 'Field4',
         }),
       };
-      const unwrapped = resolveInputConfigMapAsThunk(GQC, fieldMap);
+      const unwrapped = resolveInputConfigMapAsThunk(schemaComposer, fieldMap);
 
       expect(unwrapped.f3.type).toBe(GraphQLString);
       expect(unwrapped.f3.description).toBe('Field3');
@@ -261,7 +261,7 @@ describe('configAsThunk', () => {
           description: 'Field5',
         }),
       };
-      const unwrapped: any = resolveArgConfigMapAsThunk(GQC, argMap);
+      const unwrapped: any = resolveArgConfigMapAsThunk(schemaComposer, argMap);
       expect(unwrapped.f0.type).toBe(GraphQLString);
       expect(unwrapped.f0.description).toBe('Field0');
 
@@ -304,7 +304,7 @@ describe('configAsThunk', () => {
         },
       };
 
-      const unwrapped: any = resolveArgConfigMapAsThunk(GQC, argMap);
+      const unwrapped: any = resolveArgConfigMapAsThunk(schemaComposer, argMap);
 
       expect(unwrapped.f1.type).toBe(GraphQLString);
 
@@ -332,7 +332,7 @@ describe('configAsThunk', () => {
           description: 'Field4',
         }),
       };
-      const unwrapped = resolveArgConfigMapAsThunk(GQC, argMap);
+      const unwrapped = resolveArgConfigMapAsThunk(schemaComposer, argMap);
 
       expect(unwrapped.f3.type).toBe(GraphQLString);
       expect(unwrapped.f3.description).toBe('Field3');

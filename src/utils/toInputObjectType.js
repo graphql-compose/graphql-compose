@@ -104,7 +104,7 @@ export function convertInputObjectField(
     } else {
       // eslint-disable-next-line
       console.error(
-        `GQC: can not convert field '${opts.outputTypeName || ''}.${opts.fieldName ||
+        `graphql-compose: can not convert field '${opts.outputTypeName || ''}.${opts.fieldName ||
           ''}' to InputType` +
           '\nIt should be GraphQLObjectType, but got \n' +
           util.inspect(fieldType, { depth: 2, colors: true })
