@@ -23,7 +23,12 @@ import type {
 import { type InputTypeComposer } from './InputTypeComposer';
 import { type EnumTypeComposer } from './EnumTypeComposer';
 import type { TypeAsString } from './TypeMapper';
-import type { Resolver, ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './Resolver';
+import {
+  Resolver,
+  type ResolverOpts,
+  type ResolverNextRpCb,
+  type ResolverWrapCb,
+} from './Resolver';
 import type { SchemaComposer } from './SchemaComposer';
 import { resolveMaybeThunk, upperFirst } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
@@ -440,7 +445,7 @@ export class TypeComposer<TContext> {
   ): ComposeFieldConfigAsObject<TSource, TContext> {
     const resolver = isFunction(opts.resolver) ? opts.resolver() : opts.resolver;
 
-    if (!(resolver instanceof this.constructor.schemaComposer.Resolver)) {
+    if (!(resolver instanceof Resolver)) {
       throw new Error(
         'You should provide correct Resolver object for relation ' +
           `${this.getTypeName()}.${fieldName}`
@@ -704,7 +709,7 @@ export class TypeComposer<TContext> {
     if (!this.gqType._gqcResolvers) {
       this.gqType._gqcResolvers = new Map();
     }
-    if (!(resolver instanceof this.constructor.schemaComposer.Resolver)) {
+    if (!(resolver instanceof Resolver)) {
       throw new Error('setResolver() accept only Resolver instance');
     }
     this.gqType._gqcResolvers.set(name, resolver);
@@ -713,17 +718,26 @@ export class TypeComposer<TContext> {
   }
 
   addResolver(opts: Resolver<any, TContext> | ResolverOpts<any, TContext>): TypeComposer<TContext> {
+    if (!opts) {
+      throw new Error('addResolver called with empty Resolver');
+    }
+
     let resolver: Resolver<any, TContext>;
-    if (!(opts instanceof this.constructor.schemaComposer.Resolver)) {
+    if (!(opts instanceof Resolver)) {
+      const resolverOpts = { ...opts };
+      // add resolve method, otherwise added resolver will not return any data by graphql-js
+      if (!resolverOpts.hasOwnProperty('resolve')) {
+        resolverOpts.resolve = () => ({});
+      }
       resolver = new this.constructor.schemaComposer.Resolver(
-        ((opts: any): ResolverOpts<any, TContext>)
+        (resolverOpts: ResolverOpts<any, TContext>)
       );
     } else {
       resolver = opts;
     }
 
     if (!resolver.name) {
-      throw new Error('resolver should have non-empty name property');
+      throw new Error('resolver should have non-empty `name` property');
     }
     this.setResolver(resolver.name, resolver);
     return this;

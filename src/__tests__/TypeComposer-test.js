@@ -470,6 +470,14 @@ describe('TypeComposer', () => {
       expect(tc.getResolver('myResolver2').name).toBe('myResolver2');
     });
 
+    it('addResolver() should add stub resolve method', () => {
+      const resolverOpts = {
+        name: 'myResolver3',
+      };
+      tc.addResolver(resolverOpts);
+      expect(tc.getResolver('myResolver3').resolve()).toEqual({});
+    });
+
     it('removeResolver() should work', () => {
       const resolver = new Resolver({
         name: 'myResolver3',
