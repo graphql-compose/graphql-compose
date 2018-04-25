@@ -40,6 +40,7 @@ import {
   // isOutputType,
   // isInputType,
   isNamedType,
+  isScalarType,
   valueFromAST,
 } from './graphql';
 import type {
@@ -124,11 +125,6 @@ export class TypeMapper<TContext> {
     ['Int', GraphQLInt],
     ['Boolean', GraphQLBoolean],
     ['ID', GraphQLID],
-    // graphql-compose basic types
-    ['JSON', GraphQLJSON],
-    ['Json', GraphQLJSON],
-    ['Date', GraphQLDate],
-    ['Buffer', GraphQLBuffer],
   ]);
 
   get(name: string): ?GraphQLNamedType {
@@ -136,11 +132,19 @@ export class TypeMapper<TContext> {
     if (basicScalar) return basicScalar;
 
     if (!this.schemaComposer.has(name)) {
-      return null;
+      if (name === 'JSON' || name === 'Json') {
+        this.schemaComposer.set(name, GraphQLJSON);
+      } else if (name === 'Date') {
+        this.schemaComposer.set(name, GraphQLDate);
+      } else if (name === 'Buffer') {
+        this.schemaComposer.set(name, GraphQLBuffer);
+      } else {
+        return null;
+      }
     }
 
     const schemaType = this.schemaComposer.get(name);
-    if (isNamedType(schemaType)) {
+    if (isNamedType(schemaType) || isScalarType(schemaType)) {
       return schemaType;
     }
     return schemaType.getType();

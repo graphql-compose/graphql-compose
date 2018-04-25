@@ -4,10 +4,15 @@ import { isFunction } from './utils/is';
 import { TypeComposer } from './TypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
-import type { GraphQLNamedType } from './graphql';
+import type { GraphQLNamedType, GraphQLScalarType } from './graphql';
 
 type K = string;
-type V<TContext> = TypeComposer<TContext> | InputTypeComposer | EnumTypeComposer | GraphQLNamedType;
+type V<TContext> =
+  | TypeComposer<TContext>
+  | InputTypeComposer
+  | EnumTypeComposer
+  | GraphQLNamedType
+  | GraphQLScalarType;
 
 // TypeStorage has all methods from Map class
 export class TypeStorage<TContext> {

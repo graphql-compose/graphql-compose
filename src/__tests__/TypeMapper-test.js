@@ -11,6 +11,7 @@ import {
   GraphQLList,
   GraphQLNonNull,
   GraphQLEnumType,
+  GraphQLScalarType,
 } from '../graphql';
 import {
   schemaComposer,
@@ -50,6 +51,29 @@ describe('TypeMapper', () => {
     expect(TypeMapper.get('Json')).toBe(GraphQLJSON);
     expect(TypeMapper.get('Date')).toBe(GraphQLDate);
     expect(TypeMapper.get('Buffer')).toBe(GraphQLBuffer);
+  });
+
+  it('should allow to override basic graphql-compose types', () => {
+    const CustomJSON = new GraphQLScalarType({
+      name: 'CustomJSON',
+      serialize: () => {},
+    });
+    const CustomDate = new GraphQLScalarType({
+      name: 'CustomDate',
+      serialize: () => {},
+    });
+    const CustomBuffer = new GraphQLScalarType({
+      name: 'CustomBuffer',
+      serialize: () => {},
+    });
+    schemaComposer.set('JSON', CustomJSON);
+    schemaComposer.set('Json', CustomJSON);
+    schemaComposer.set('Date', CustomDate);
+    schemaComposer.set('Buffer', CustomBuffer);
+    expect(TypeMapper.get('JSON')).toBe(CustomJSON);
+    expect(TypeMapper.get('Json')).toBe(CustomJSON);
+    expect(TypeMapper.get('Date')).toBe(CustomDate);
+    expect(TypeMapper.get('Buffer')).toBe(CustomBuffer);
   });
 
   it('should create object type from template string', () => {
