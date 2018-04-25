@@ -6,6 +6,7 @@
     "lib"
   ],
   "main": "lib/index.js",
+  "module": "mjs/index.js",
   "types": "lib/index.d.ts",
   "repository": {
     "type": "git",
@@ -37,7 +38,7 @@
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-config-prettier": "^2.9.0",
-    "eslint-plugin-flowtype": "^2.46.2",
+    "eslint-plugin-flowtype": "^2.46.3",
     "eslint-plugin-import": "^2.11.0",
     "eslint-plugin-prettier": "^2.6.0",
     "flow-bin": "0.70.0",
@@ -47,7 +48,7 @@
     "rimraf": "^2.6.2",
     "semantic-release": "^15.1.7",
     "tslint": "^5.9.1",
-    "typescript": "^2.8.1"
+    "typescript": "^2.8.3"
   },
   "dependencies": {
     "babel-runtime": "^6.26.0",
@@ -64,10 +65,11 @@
     ]
   },
   "scripts": {
-    "build": "npm run build-cjs && npm run build-flow && npm run build-ts",
-    "build-cjs": "rimraf lib && babel src --ignore __tests__,__mocks__ -d lib",
-    "build-flow": "find ./src -name '*.js' -not -path '*/__*' | while read filepath; do cp $filepath `echo $filepath | sed 's/\\/src\\//\\/lib\\//g'`.flow; done",
-    "build-ts": "find ./src -name '*.d.ts' -not -path '*/__*' | while read filepath; do cp $filepath `echo $filepath | sed 's/\\/src\\//\\/lib\\//g'`; done",
+    "build": "npm run build-cjs && npm run build-mjs",
+    "build-cjs": "rimraf lib && BABEL_ENV=cjs babel src --ignore __tests__,__mocks__ -d lib && COPY_TO_FOLDER=lib npm run build-flow && COPY_TO_FOLDER=lib npm run build-ts",
+    "build-mjs": "rimraf mjs && BABEL_ENV=mjs babel src --ignore __tests__,__mocks__ -d mjs && COPY_TO_FOLDER=mjs npm run build-flow && COPY_TO_FOLDER=mjs npm run build-ts",
+    "build-flow": "find ./src -name '*.js' -not -path '*/__*' | while read filepath; do cp $filepath `echo ./${COPY_TO_FOLDER:-lib}$filepath | sed 's/.\\/src\\//\\//g'`.flow; done",
+    "build-ts": "find ./src -name '*.d.ts' -not -path '*/__*' | while read filepath; do cp $filepath `echo ./${COPY_TO_FOLDER:-lib}$filepath | sed 's/.\\/src\\//\\//g'`; done",
     "watch": "jest --watch",
     "coverage": "jest --coverage",
     "lint": "npm run eslint && npm run tslint",
