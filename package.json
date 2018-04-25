@@ -3,10 +3,11 @@
   "version": "0.0.0-semantically-released",
   "description": "GraphQL schema builder from different data sources with middleware extensions.",
   "files": [
-    "lib"
+    "lib",
+    "esm"
   ],
   "main": "lib/index.js",
-  "module": "mjs/index.js",
+  "module": "esm/index.js",
   "types": "lib/index.d.ts",
   "repository": {
     "type": "git",
@@ -65,9 +66,9 @@
     ]
   },
   "scripts": {
-    "build": "npm run build-cjs && npm run build-mjs",
+    "build": "npm run build-cjs && npm run build-esm",
     "build-cjs": "rimraf lib && BABEL_ENV=cjs babel src --ignore __tests__,__mocks__ -d lib && COPY_TO_FOLDER=lib npm run build-flow && COPY_TO_FOLDER=lib npm run build-ts",
-    "build-mjs": "rimraf mjs && BABEL_ENV=mjs babel src --ignore __tests__,__mocks__ -d mjs && COPY_TO_FOLDER=mjs npm run build-flow && COPY_TO_FOLDER=mjs npm run build-ts",
+    "build-esm": "rimraf esm && BABEL_ENV=esm babel src --ignore __tests__,__mocks__ -d esm && COPY_TO_FOLDER=esm npm run build-flow && COPY_TO_FOLDER=esm npm run build-ts",
     "build-flow": "find ./src -name '*.js' -not -path '*/__*' | while read filepath; do cp $filepath `echo ./${COPY_TO_FOLDER:-lib}$filepath | sed 's/.\\/src\\//\\//g'`.flow; done",
     "build-ts": "find ./src -name '*.d.ts' -not -path '*/__*' | while read filepath; do cp $filepath `echo ./${COPY_TO_FOLDER:-lib}$filepath | sed 's/.\\/src\\//\\//g'`; done",
     "watch": "jest --watch",

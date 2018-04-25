@@ -41,7 +41,7 @@ node_modules
 # Transpiled code
 /es
 /lib
-/mjs
+/esm
 
 coverage
 .nyc_output
