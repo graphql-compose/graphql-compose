@@ -24,6 +24,14 @@ export class EnumTypeComposer {
   static schemaComposer: SchemaComposer<any>;
 
   static create(opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType): EnumTypeComposer {
+    const etc = this.createTemp(opts);
+    this.schemaComposer.add(etc);
+    return etc;
+  }
+
+  static createTemp(
+    opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType
+  ): EnumTypeComposer {
     if (!this.schemaComposer) {
       throw new Error('Class<EnumTypeComposer> must be created by a SchemaComposer.');
     }
@@ -217,6 +225,7 @@ export class EnumTypeComposer {
   setTypeName(name: string): EnumTypeComposer {
     this.gqType.name = name;
     this.gqType._enumConfig.name = name;
+    this.constructor.schemaComposer.add(this);
     return this;
   }
 

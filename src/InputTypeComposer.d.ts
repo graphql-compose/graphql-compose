@@ -43,6 +43,10 @@ export class InputTypeComposer {
         ComposeInputObjectTypeConfig |
         GraphQLInputObjectType): InputTypeComposer;
 
+    public static createTemp(opts: TypeAsString |
+        ComposeInputObjectTypeConfig |
+        GraphQLInputObjectType): InputTypeComposer;
+
     /**
      * Get fields from a GraphQL type
      * WARNING: this method read an internal GraphQL instance variable.

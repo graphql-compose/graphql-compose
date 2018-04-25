@@ -31,7 +31,7 @@ export class TypeStorage<TContext> {
 
   public values(): Iterator<V<TContext>>;
 
-  public add(value: V<TContext>): void;
+  public add(value: V<TContext>): string | null;
 
   public hasInstance(key: K, ClassObj: any): boolean;
 

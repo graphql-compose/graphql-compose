@@ -1,8 +1,12 @@
 /* @flow strict */
 
-import { EnumTypeComposer } from '../';
+import { EnumTypeComposer, schemaComposer } from '../';
 import { GraphQLList, GraphQLNonNull, GraphQLEnumType } from '../graphql';
 import { graphqlVersion } from '../utils/graphqlVersion';
+
+beforeEach(() => {
+  schemaComposer.clear();
+});
 
 describe('EnumTypeComposer', () => {
   let enumType: GraphQLEnumType;
@@ -190,6 +194,16 @@ describe('EnumTypeComposer', () => {
     it('should create TC without values from string', () => {
       const myTC = EnumTypeComposer.create('MyEnum');
       expect(myTC.getFieldNames()).toEqual([]);
+    });
+
+    it('should create type and store it in schemaComposer', () => {
+      const SomeUserETC = EnumTypeComposer.create('SomeUserEnum');
+      expect(schemaComposer.getETC('SomeUserEnum')).toBe(SomeUserETC);
+    });
+
+    it('createTemp() should not store type in schemaComposer', () => {
+      EnumTypeComposer.createTemp('SomeUserEnum');
+      expect(schemaComposer.has('SomeUserEnum')).toBeFalsy();
     });
   });
 

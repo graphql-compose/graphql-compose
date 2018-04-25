@@ -58,6 +58,14 @@ export class InputTypeComposer {
   static create(
     opts: TypeAsString | ComposeInputObjectTypeConfig | GraphQLInputObjectType
   ): InputTypeComposer {
+    const itc = this.createTemp(opts);
+    this.schemaComposer.add(itc);
+    return itc;
+  }
+
+  static createTemp(
+    opts: TypeAsString | ComposeInputObjectTypeConfig | GraphQLInputObjectType
+  ): InputTypeComposer {
     if (!this.schemaComposer) {
       throw new Error('Class<InputTypeComposer> must be created by a SchemaComposer.');
     }
@@ -268,7 +276,7 @@ export class InputTypeComposer {
           `This field should be InputObjectType, but it has type '${fieldType.constructor.name}'`
       );
     }
-    return this.constructor.schemaComposer.InputTypeComposer.create(fieldType);
+    return this.constructor.schemaComposer.InputTypeComposer.createTemp(fieldType);
   }
 
   makeRequired(fieldNameOrArray: string | Array<string>): InputTypeComposer {
@@ -330,6 +338,7 @@ export class InputTypeComposer {
 
   setTypeName(name: string): InputTypeComposer {
     this.gqType.name = name;
+    this.constructor.schemaComposer.add(this);
     return this;
   }
 

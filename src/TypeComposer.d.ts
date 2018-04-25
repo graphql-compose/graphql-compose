@@ -135,6 +135,12 @@ export class TypeComposer<TContext> {
             | ComposeObjectTypeConfig<any, TCtx>
             | GraphQLObjectType): TypeComposer<TCtx>;
 
+    public static createTemp<TCtx>(
+        opts:
+            | TypeAsString
+            | ComposeObjectTypeConfig<any, TCtx>
+            | GraphQLObjectType): TypeComposer<TCtx>;
+
     /**
      * Get fields from a GraphQL type
      * WARNING: this method read an internal GraphQL instance variable.

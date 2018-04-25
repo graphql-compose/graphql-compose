@@ -1,15 +1,15 @@
 /* @flow strict */
 
 import { TypeStorage } from '../TypeStorage';
-import { GraphQLString } from '../graphql';
+import { GraphQLString, GraphQLObjectType } from '../graphql';
+import { TypeComposer, InputTypeComposer, EnumTypeComposer } from '../';
 
 let typeStorage;
+beforeEach(() => {
+  typeStorage = new TypeStorage();
+});
 
 describe('typeStorage', () => {
-  beforeEach(() => {
-    typeStorage = new TypeStorage();
-  });
-
   it('should be instance of Map', () => {
     expect(typeStorage).toBeInstanceOf(TypeStorage);
   });
@@ -43,6 +43,42 @@ describe('typeStorage', () => {
     it('should not set new value if it is empty', () => {
       expect(typeStorage.getOrSet('MyType', () => (null: any))).toEqual(null);
       expect(typeStorage.has('MyType')).toEqual(false);
+    });
+  });
+
+  describe('add()', () => {
+    it('should add TypeComposer', () => {
+      const tc = TypeComposer.createTemp('User');
+      const typeName = typeStorage.add(tc);
+      expect(typeName).toBe('User');
+      expect(typeStorage.get('User')).toBe(tc);
+      expect(typeStorage.getTC('User')).toBe(tc);
+    });
+
+    it('should add InputTypeComposer', () => {
+      const itc = InputTypeComposer.createTemp('UserInput');
+      const typeName = typeStorage.add(itc);
+      expect(typeName).toBe('UserInput');
+      expect(typeStorage.get('UserInput')).toBe(itc);
+      expect(typeStorage.getITC('UserInput')).toBe(itc);
+    });
+
+    it('should add EnumTypeComposer', () => {
+      const etc = EnumTypeComposer.createTemp('UserEnum');
+      const typeName = typeStorage.add(etc);
+      expect(typeName).toBe('UserEnum');
+      expect(typeStorage.get('UserEnum')).toBe(etc);
+      expect(typeStorage.getETC('UserEnum')).toBe(etc);
+    });
+
+    it('should add GraphQLObjectType', () => {
+      const t = new GraphQLObjectType({
+        name: 'NativeType',
+        fields: (() => {}: any),
+      });
+      const typeName = typeStorage.add(t);
+      expect(typeName).toBe('NativeType');
+      expect(typeStorage.get('NativeType')).toBe(t);
     });
   });
 });

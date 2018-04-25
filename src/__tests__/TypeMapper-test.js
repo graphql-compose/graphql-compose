@@ -12,14 +12,21 @@ import {
   GraphQLNonNull,
   GraphQLEnumType,
 } from '../graphql';
-import { GQC, TypeComposer, InputTypeComposer, EnumTypeComposer, Resolver, TypeMapper } from '../';
+import {
+  schemaComposer,
+  TypeComposer,
+  InputTypeComposer,
+  EnumTypeComposer,
+  Resolver,
+  TypeMapper,
+} from '../';
 import { graphqlVersion } from '../utils/graphqlVersion';
 import GraphQLJSON from '../type/json';
 import GraphQLDate from '../type/date';
 import GraphQLBuffer from '../type/buffer';
 
 beforeEach(() => {
-  GQC.clear();
+  schemaComposer.clear();
 });
 
 describe('TypeMapper', () => {
@@ -165,12 +172,13 @@ describe('TypeMapper', () => {
         expect(fc.type).toBe(GraphQLString);
       });
 
-      it('should lookup type name as string in GQC', () => {
+      it('should lookup type name as string in schemaComposer', () => {
         const tc = TypeComposer.create(`type MyType { a: Int }`);
-        GQC.add(tc);
-
         const fc = TypeMapper.convertOutputFieldConfig('MyType');
         expect(fc.type).toBe(tc.getType());
+
+        const fc2: any = TypeMapper.convertOutputFieldConfig({ type: '[MyType]' });
+        expect(fc2.type.ofType).toBe(tc.getType());
       });
 
       it('should create field config from GraphQL Schema Language', () => {
@@ -395,10 +403,8 @@ describe('TypeMapper', () => {
       expect(ic.type).toBe(GraphQLString);
     });
 
-    it('should lookup type name as string in GQC', () => {
+    it('should lookup type name as string in schemaComposer', () => {
       const itc = InputTypeComposer.create(`input MyInput { a: Int }`);
-      GQC.add(itc);
-
       const ic = TypeMapper.convertInputFieldConfig('MyInput');
       expect(ic.type).toBe(itc.getType());
     });
@@ -584,10 +590,8 @@ describe('TypeMapper', () => {
       expect(ac.type).toBe(GraphQLString);
     });
 
-    it('should lookup type name as string in GQC', () => {
+    it('should lookup type name as string in schemaComposer', () => {
       const itc = InputTypeComposer.create(`input MyArg { a: Int }`);
-      GQC.add(itc);
-
       const ac = TypeMapper.convertArgConfig('MyArg');
       expect(ac.type).toBe(itc.getType());
     });

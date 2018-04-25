@@ -68,16 +68,22 @@ export class TypeStorage<TContext> {
     return this.types.values();
   }
 
-  add(value: V<TContext>): void {
+  add(value: V<TContext>): ?string {
     if (value) {
+      let typeName: ?string;
       if (value.getTypeName && value.getTypeName.call) {
         // $FlowFixMe
-        this.set(value.getTypeName(), value);
+        typeName = (value.getTypeName(): any);
       } else if (value.name) {
-        // $FlowFixMe
-        this.set(value.name, value);
+        typeName = (value.name: any);
+      }
+
+      if (typeName) {
+        this.set(typeName, value);
+        return typeName;
       }
     }
+    return null;
   }
 
   hasInstance(typeName: K, ClassObj: any): boolean {

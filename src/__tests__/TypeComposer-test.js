@@ -10,7 +10,11 @@ import {
   GraphQLBoolean,
   GraphQLInterfaceType,
 } from '../graphql';
-import { TypeComposer, Resolver } from '../';
+import { TypeComposer, Resolver, schemaComposer } from '../';
+
+beforeEach(() => {
+  schemaComposer.clear();
+});
 
 describe('TypeComposer', () => {
   let objectType: GraphQLObjectType;
@@ -384,6 +388,27 @@ describe('TypeComposer', () => {
       expect(myTC).toBeInstanceOf(TypeComposer);
       expect(myTC.getType()).toBe(objType);
       expect(myTC.getFieldType('f1')).toBe(GraphQLString);
+    });
+
+    it('should create type and store it in schemaComposer', () => {
+      const SomeUserTC = TypeComposer.create('SomeUser');
+      expect(schemaComposer.getTC('SomeUser')).toBe(SomeUserTC);
+    });
+
+    it('should create type and NOTE store root types in schemaComposer', () => {
+      TypeComposer.create('Query');
+      expect(schemaComposer.has('Query')).toBeFalsy();
+
+      TypeComposer.create('Mutation');
+      expect(schemaComposer.has('Query')).toBeFalsy();
+
+      TypeComposer.create('Subscription');
+      expect(schemaComposer.has('Query')).toBeFalsy();
+    });
+
+    it('createTemp() should not store type in schemaComposer', () => {
+      TypeComposer.createTemp('SomeUser');
+      expect(schemaComposer.has('SomeUser')).toBeFalsy();
     });
   });
 

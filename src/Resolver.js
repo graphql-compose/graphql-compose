@@ -312,7 +312,7 @@ export class Resolver<TSource, TContext> {
       throw new Error('You should provide new type name. It is equal to current name.');
     }
 
-    let clonedType = this.constructor.schemaComposer.InputTypeComposer.create(originalType)
+    let clonedType = this.constructor.schemaComposer.InputTypeComposer.createTemp(originalType)
       .clone(newTypeName)
       .getType();
     if (isUnwrapped) {
@@ -579,7 +579,7 @@ export class Resolver<TSource, TContext> {
             'Eg. FilterXXXXXInput'
         );
       }
-      filterITC = this.constructor.schemaComposer.InputTypeComposer.create(
+      filterITC = this.constructor.schemaComposer.InputTypeComposer.createTemp(
         opts.filterTypeNameFallback
       );
     }
@@ -642,7 +642,7 @@ export class Resolver<TSource, TContext> {
     if (resolver.hasArg('sort')) {
       const sortConfig = resolver.getArgConfig('sort');
       if (sortConfig.type instanceof GraphQLEnumType) {
-        sortETC = this.constructor.schemaComposer.EnumTypeComposer.create(sortConfig.type);
+        sortETC = this.constructor.schemaComposer.EnumTypeComposer.createTemp(sortConfig.type);
       } else {
         throw new Error(
           'Resolver must have `sort` arg with type GraphQLEnumType. ' +
@@ -657,7 +657,7 @@ export class Resolver<TSource, TContext> {
             'Eg. SortXXXXXEnum'
         );
       }
-      sortETC = this.constructor.schemaComposer.EnumTypeComposer.create({
+      sortETC = this.constructor.schemaComposer.EnumTypeComposer.createTemp({
         name: opts.sortTypeNameFallback,
         values: {
           [opts.name]: {},

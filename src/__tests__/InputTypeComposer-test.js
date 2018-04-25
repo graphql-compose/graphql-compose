@@ -8,7 +8,11 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from '../graphql';
-import { InputTypeComposer } from '../';
+import { InputTypeComposer, schemaComposer } from '../';
+
+beforeEach(() => {
+  schemaComposer.clear();
+});
 
 describe('InputTypeComposer', () => {
   let objectType: GraphQLInputObjectType;
@@ -305,6 +309,16 @@ describe('InputTypeComposer', () => {
       expect(itc1).toBeInstanceOf(InputTypeComposer);
       expect(itc1.getType()).toBe(objType);
       expect(itc1.getFieldType('f1')).toBe(GraphQLString);
+    });
+
+    it('should create type and store it in schemaComposer', () => {
+      const SomeUserITC = InputTypeComposer.create('SomeUserInput');
+      expect(schemaComposer.getITC('SomeUserInput')).toBe(SomeUserITC);
+    });
+
+    it('createTemp() should not store type in schemaComposer', () => {
+      InputTypeComposer.createTemp('SomeUserInput');
+      expect(schemaComposer.has('SomeUserInput')).toBeFalsy();
     });
   });
 

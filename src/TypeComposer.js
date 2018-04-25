@@ -174,6 +174,17 @@ export class TypeComposer<TContext> {
   static create(
     opts: TypeAsString | ComposeObjectTypeConfig<any, TContext> | GraphQLObjectType
   ): TypeComposer<TContext> {
+    const tc = this.createTemp(opts);
+    const typeName = tc.getTypeName();
+    if (typeName !== 'Query' && typeName !== 'Mutation' && typeName !== 'Subscription') {
+      this.schemaComposer.add(tc);
+    }
+    return tc;
+  }
+
+  static createTemp(
+    opts: TypeAsString | ComposeObjectTypeConfig<any, TContext> | GraphQLObjectType
+  ): TypeComposer<TContext> {
     if (!this.schemaComposer) {
       throw new Error('Class<TypeComposer> must be created by a SchemaComposer.');
     }
@@ -310,7 +321,7 @@ export class TypeComposer<TContext> {
         // nested field
         let childTC;
         if (!this.hasField(name)) {
-          childTC = this.constructor.schemaComposer.TypeComposer.create({
+          childTC = this.constructor.schemaComposer.TypeComposer.createTemp({
             name: `${this.getTypeName()}${upperFirst(name)}`,
           });
           this.setField(name, {
@@ -610,7 +621,7 @@ export class TypeComposer<TContext> {
           `This field should be ObjectType, but it has type '${fieldType.constructor.name}'`
       );
     }
-    return this.constructor.schemaComposer.TypeComposer.create(fieldType);
+    return this.constructor.schemaComposer.TypeComposer.createTemp(fieldType);
   }
 
   makeFieldNonNull(fieldNameOrArray: string | Array<string>): TypeComposer<TContext> {
@@ -761,6 +772,7 @@ export class TypeComposer<TContext> {
 
   setTypeName(name: string): TypeComposer<TContext> {
     this.gqType.name = name;
+    this.constructor.schemaComposer.add(this);
     return this;
   }
 

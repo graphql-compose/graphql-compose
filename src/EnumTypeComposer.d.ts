@@ -22,6 +22,8 @@ export class EnumTypeComposer {
 
   public static create(opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType): EnumTypeComposer;
 
+  public static createTemp(opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType): EnumTypeComposer;
+
   public hasField(name: string): boolean;
 
   public getFields(): GraphQLEnumValueConfigMap;
