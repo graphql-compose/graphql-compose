@@ -193,14 +193,38 @@ describe('InputTypeComposer', () => {
     });
 
     it('isRequired()', () => {
+      itc.setField('input1', 'String');
       expect(itc.isRequired('input1')).toBe(false);
+      itc.setField('input1', 'String!');
+      expect(itc.isRequired('input1')).toBe(true);
+    });
+
+    it('isFieldNonNull()', () => {
+      itc.setField('input1', 'String');
+      expect(itc.isFieldNonNull('input1')).toBe(false);
+      itc.setField('input1', 'String!');
+      expect(itc.isFieldNonNull('input1')).toBe(true);
+    });
+
+    it('makeFieldNonNull()', () => {
+      itc.makeFieldNonNull('input1');
+      expect(itc.getFieldType('input1')).toBeInstanceOf(GraphQLNonNull);
+      expect((itc.getFieldType('input1'): any).ofType).toBe(GraphQLString);
+      expect(itc.isFieldNonNull('input1')).toBe(true);
+      expect(itc.isRequired('input1')).toBe(true);
     });
 
     it('makeRequired()', () => {
+      itc.setField('input1', 'String');
       itc.makeRequired('input1');
-      expect(itc.getFieldType('input1')).toBeInstanceOf(GraphQLNonNull);
-      expect((itc.getFieldType('input1'): any).ofType).toBe(GraphQLString);
-      expect(itc.isRequired('input1')).toBe(true);
+      expect(itc.isFieldNonNull('input1')).toBe(true);
+    });
+
+    it('makeFieldNullable()', () => {
+      itc.makeFieldNonNull('input1');
+      expect(itc.isFieldNonNull('input1')).toBe(true);
+      itc.makeFieldNullable('input1');
+      expect(itc.isFieldNonNull('input1')).toBe(false);
     });
 
     it('makeOptional()', () => {

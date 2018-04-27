@@ -246,8 +246,13 @@ export class InputTypeComposer {
     return this;
   }
 
-  isRequired(fieldName: string): boolean {
+  isFieldNonNull(fieldName: string): boolean {
     return this.getFieldType(fieldName) instanceof GraphQLNonNull;
+  }
+
+  // alias for isFieldNonNull
+  isRequired(fieldName: string): boolean {
+    return this.isFieldNonNull(fieldName);
   }
 
   getFieldConfig(fieldName: string): GraphQLInputFieldConfig {
@@ -279,7 +284,7 @@ export class InputTypeComposer {
     return this.constructor.schemaComposer.InputTypeComposer.createTemp(fieldType);
   }
 
-  makeRequired(fieldNameOrArray: string | Array<string>): InputTypeComposer {
+  makeFieldNonNull(fieldNameOrArray: string | Array<string>): InputTypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     fieldNames.forEach(fieldName => {
       if (this.hasField(fieldName)) {
@@ -292,7 +297,12 @@ export class InputTypeComposer {
     return this;
   }
 
-  makeOptional(fieldNameOrArray: string | Array<string>): InputTypeComposer {
+  // alias for makeFieldNonNull
+  makeRequired(fieldNameOrArray: string | Array<string>): InputTypeComposer {
+    return this.makeFieldNonNull(fieldNameOrArray);
+  }
+
+  makeFieldNullable(fieldNameOrArray: string | Array<string>): InputTypeComposer {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     fieldNames.forEach(fieldName => {
       if (this.hasField(fieldName)) {
@@ -303,6 +313,10 @@ export class InputTypeComposer {
       }
     });
     return this;
+  }
+
+  makeOptional(fieldNameOrArray: string | Array<string>): InputTypeComposer {
+    return this.makeFieldNullable(fieldNameOrArray);
   }
 
   clone(newTypeName: string): InputTypeComposer {

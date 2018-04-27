@@ -83,6 +83,9 @@ export class InputTypeComposer {
 
     public reorderFields(names: string[]): this;
 
+    public isFieldNonNull(fieldName: string): boolean ;
+
+    // alias for isFieldNonNull
     public isRequired(fieldName: string): boolean;
 
     public getFieldConfig(fieldName: string): GraphQLInputFieldConfig;
@@ -91,8 +94,14 @@ export class InputTypeComposer {
 
     public getFieldTC(fieldName: string): InputTypeComposer;
 
+    public makeFieldNonNull(fieldNameOrArray: string | string[]): this;
+
+    // alias for makeFieldNonNull
     public makeRequired(fieldNameOrArray: string | string[]): this;
 
+    public makeFieldNullable(fieldNameOrArray: string | string[]): this;
+
+    // alias for makeFieldNullable
     public makeOptional(fieldNameOrArray: string | string[]): this;
 
     public clone(newTypeName: string): InputTypeComposer;
