@@ -253,10 +253,10 @@ export class TypeComposer<TContext> {
     /* :: return this; */
   }
 
-  /**
-   * Get fields from a GraphQL type
-   * WARNING: this method read an internal GraphQL instance variable.
-   */
+  // -----------------------------------------------
+  // Field methods
+  // -----------------------------------------------
+
   getFields(): ComposeFieldConfigMap<any, TContext> {
     if (!this.gqType._gqcFields) {
       const fields: Thunk<GraphQLFieldConfigMap<any, TContext>> = this.gqType._typeConfig.fields;
@@ -270,10 +270,6 @@ export class TypeComposer<TContext> {
     return Object.keys(this.getFields());
   }
 
-  /**
-   * Completely replace all fields in GraphQL type
-   * WARNING: this method rewrite an internal GraphQL instance properties.
-   */
   setFields(fields: ComposeFieldConfigMap<any, TContext>): TypeComposer<TContext> {
     this.gqType._gqcFields = fields;
 
@@ -415,6 +411,370 @@ export class TypeComposer<TContext> {
     return this.getFieldType(fieldName) instanceof GraphQLNonNull;
   }
 
+  getFieldConfig(fieldName: string): GraphQLFieldConfig<any, TContext> {
+    const fc = this.getField(fieldName);
+    if (!fc) {
+      throw new Error(`Type ${this.getTypeName()} does not have field with name '${fieldName}'`);
+    }
+
+    return resolveOutputConfigAsThunk(
+      this.constructor.schemaComposer,
+      fc,
+      fieldName,
+      this.getTypeName()
+    );
+  }
+
+  getFieldType(fieldName: string): GraphQLOutputType {
+    return this.getFieldConfig(fieldName).type;
+  }
+
+  getFieldTC(fieldName: string): TypeComposer<TContext> {
+    const fieldType = getNamedType(this.getFieldType(fieldName));
+    if (!(fieldType instanceof GraphQLObjectType)) {
+      throw new Error(
+        `Cannot get TypeComposer for field '${fieldName}' in type ${this.getTypeName()}. ` +
+          `This field should be ObjectType, but it has type '${fieldType.constructor.name}'`
+      );
+    }
+    return this.constructor.schemaComposer.TypeComposer.createTemp(fieldType);
+  }
+
+  makeFieldNonNull(fieldNameOrArray: string | Array<string>): TypeComposer<TContext> {
+    const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
+    fieldNames.forEach(fieldName => {
+      if (this.hasField(fieldName)) {
+        const fieldType = this.getFieldType(fieldName);
+        if (!(fieldType instanceof GraphQLNonNull)) {
+          this.extendField(fieldName, { type: new GraphQLNonNull(fieldType) });
+        }
+      }
+    });
+    return this;
+  }
+
+  makeFieldNullable(fieldNameOrArray: string | Array<string>): TypeComposer<TContext> {
+    const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
+    fieldNames.forEach(fieldName => {
+      if (this.hasField(fieldName)) {
+        const fieldType = this.getFieldType(fieldName);
+        if (fieldType instanceof GraphQLNonNull) {
+          this.extendField(fieldName, { type: fieldType.ofType });
+        }
+      }
+    });
+    return this;
+  }
+
+  deprecateFields(
+    fields: { [fieldName: string]: string } | string[] | string
+  ): TypeComposer<TContext> {
+    const existedFieldNames = this.getFieldNames();
+
+    if (typeof fields === 'string') {
+      if (existedFieldNames.indexOf(fields) === -1) {
+        throw new Error(
+          `Cannot deprecate unexisted field '${fields}' from type '${this.getTypeName()}'`
+        );
+      }
+      this.extendField(fields, { deprecationReason: 'deprecated' });
+    } else if (Array.isArray(fields)) {
+      fields.forEach(field => {
+        if (existedFieldNames.indexOf(field) === -1) {
+          throw new Error(
+            `Cannot deprecate unexisted field '${field}' from type '${this.getTypeName()}'`
+          );
+        }
+        this.extendField(field, { deprecationReason: 'deprecated' });
+      });
+    } else {
+      const fieldMap: Object = (fields: any);
+      Object.keys(fieldMap).forEach(field => {
+        if (existedFieldNames.indexOf(field) === -1) {
+          throw new Error(
+            `Cannot deprecate unexisted field '${field}' from type '${this.getTypeName()}'`
+          );
+        }
+        const deprecationReason: string = fieldMap[field];
+        this.extendField(field, { deprecationReason });
+      });
+    }
+
+    return this;
+  }
+
+  getFieldArgs(fieldName: string): GraphQLFieldConfigArgumentMap {
+    try {
+      const fc = this.getFieldConfig(fieldName);
+      return fc.args || {};
+    } catch (e) {
+      throw new Error(
+        `Cannot get field args. Field '${fieldName}' from type '${this.getTypeName()}' does not exist.`
+      );
+    }
+  }
+
+  hasFieldArg(fieldName: string, argName: string): boolean {
+    const fieldArgs = this.getFieldArgs(fieldName);
+    return !!fieldArgs[argName];
+  }
+
+  getFieldArg(fieldName: string, argName: string): GraphQLArgumentConfig {
+    const fieldArgs = this.getFieldArgs(fieldName);
+
+    if (!fieldArgs[argName]) {
+      throw new Error(
+        `Cannot get arg '${argName}' from type.field '${this.getTypeName()}.${fieldName}'. Argument does not exist.`
+      );
+    }
+
+    return fieldArgs[argName];
+  }
+
+  getFieldArgType(fieldName: string, argName: string): GraphQLInputType {
+    const ac = this.getFieldArg(fieldName, argName);
+    return ac.type;
+  }
+
+  // -----------------------------------------------
+  // Type methods
+  // -----------------------------------------------
+
+  getType(): GraphQLObjectType {
+    return this.gqType;
+  }
+
+  getTypePlural(): GraphQLList<GraphQLObjectType> {
+    return new GraphQLList(this.gqType);
+  }
+
+  getTypeNonNull(): GraphQLNonNull<GraphQLObjectType> {
+    return new GraphQLNonNull(this.gqType);
+  }
+
+  getTypeName(): string {
+    return this.gqType.name;
+  }
+
+  setTypeName(name: string): TypeComposer<TContext> {
+    this.gqType.name = name;
+    this.constructor.schemaComposer.add(this);
+    return this;
+  }
+
+  getDescription(): string {
+    return this.gqType.description || '';
+  }
+
+  setDescription(description: string): TypeComposer<TContext> {
+    this.gqType.description = description;
+    return this;
+  }
+
+  clone(newTypeName: string): TypeComposer<TContext> {
+    if (!newTypeName) {
+      throw new Error('You should provide newTypeName:string for TypeComposer.clone()');
+    }
+
+    const newFields = {};
+    this.getFieldNames().forEach(fieldName => {
+      const fc = this.getFieldConfig(fieldName);
+      newFields[fieldName] = { ...(fc: any) };
+    });
+
+    const cloned = new this.constructor.schemaComposer.TypeComposer(
+      new GraphQLObjectType({
+        name: newTypeName,
+        fields: newFields,
+      })
+    );
+
+    cloned.setDescription(this.getDescription());
+    try {
+      cloned.setRecordIdFn(this.getRecordIdFn());
+    } catch (e) {
+      // no problem, clone without resolveIdFn
+    }
+    this.getResolvers().forEach(resolver => {
+      const newResolver = resolver.clone();
+      cloned.addResolver(newResolver);
+    });
+
+    return cloned;
+  }
+
+  // -----------------------------------------------
+  // InputType methods
+  // -----------------------------------------------
+
+  getInputType(): GraphQLInputObjectType {
+    return this.getInputTypeComposer().getType();
+  }
+
+  hasInputTypeComposer(): boolean {
+    return !!this.gqType._gqcInputTypeComposer;
+  }
+
+  getInputTypeComposer(): InputTypeComposer {
+    if (!this.gqType._gqcInputTypeComposer) {
+      this.gqType._gqcInputTypeComposer = toInputObjectType(this);
+    }
+
+    return this.gqType._gqcInputTypeComposer;
+  }
+
+  // Alias for getInputTypeComposer()
+  getITC(): InputTypeComposer {
+    return this.getInputTypeComposer();
+  }
+
+  // -----------------------------------------------
+  // Resolver methods
+  // -----------------------------------------------
+
+  getResolvers(): Map<string, Resolver<any, TContext>> {
+    if (!this.gqType._gqcResolvers) {
+      this.gqType._gqcResolvers = new Map();
+    }
+    return this.gqType._gqcResolvers;
+  }
+
+  hasResolver(name: string): boolean {
+    if (!this.gqType._gqcResolvers) {
+      return false;
+    }
+    return this.gqType._gqcResolvers.has(name);
+  }
+
+  getResolver(name: string): Resolver<any, TContext> {
+    if (!this.hasResolver(name)) {
+      throw new Error(`Type ${this.getTypeName()} does not have resolver with name '${name}'`);
+    }
+    const resolverMap: any = this.gqType._gqcResolvers;
+    return resolverMap.get(name);
+  }
+
+  setResolver(name: string, resolver: Resolver<any, TContext>): TypeComposer<TContext> {
+    if (!this.gqType._gqcResolvers) {
+      this.gqType._gqcResolvers = new Map();
+    }
+    if (!(resolver instanceof Resolver)) {
+      throw new Error('setResolver() accept only Resolver instance');
+    }
+    this.gqType._gqcResolvers.set(name, resolver);
+    resolver.setDisplayName(`${this.getTypeName()}.${resolver.name}`);
+    return this;
+  }
+
+  addResolver(opts: Resolver<any, TContext> | ResolverOpts<any, TContext>): TypeComposer<TContext> {
+    if (!opts) {
+      throw new Error('addResolver called with empty Resolver');
+    }
+
+    let resolver: Resolver<any, TContext>;
+    if (!(opts instanceof Resolver)) {
+      const resolverOpts = { ...opts };
+      // add resolve method, otherwise added resolver will not return any data by graphql-js
+      if (!resolverOpts.hasOwnProperty('resolve')) {
+        resolverOpts.resolve = () => ({});
+      }
+      resolver = new this.constructor.schemaComposer.Resolver(
+        (resolverOpts: ResolverOpts<any, TContext>)
+      );
+    } else {
+      resolver = opts;
+    }
+
+    if (!resolver.name) {
+      throw new Error('resolver should have non-empty `name` property');
+    }
+    this.setResolver(resolver.name, resolver);
+    return this;
+  }
+
+  removeResolver(resolverName: string): TypeComposer<TContext> {
+    if (resolverName) {
+      this.getResolvers().delete(resolverName);
+    }
+    return this;
+  }
+
+  wrapResolver(
+    resolverName: string,
+    cbResolver: ResolverWrapCb<any, TContext>
+  ): TypeComposer<TContext> {
+    const resolver = this.getResolver(resolverName);
+    const newResolver = resolver.wrap(cbResolver);
+    this.setResolver(resolverName, newResolver);
+    return this;
+  }
+
+  wrapResolverAs(
+    resolverName: string,
+    fromResolverName: string,
+    cbResolver: ResolverWrapCb<any, TContext>
+  ): TypeComposer<TContext> {
+    const resolver = this.getResolver(fromResolverName);
+    const newResolver = resolver.wrap(cbResolver);
+    this.setResolver(resolverName, newResolver);
+    return this;
+  }
+
+  wrapResolverResolve(
+    resolverName: string,
+    cbNextRp: ResolverNextRpCb<any, TContext>
+  ): TypeComposer<TContext> {
+    const resolver = this.getResolver(resolverName);
+    this.setResolver(resolverName, resolver.wrapResolve(cbNextRp));
+    return this;
+  }
+
+  // -----------------------------------------------
+  // Interface methods
+  // -----------------------------------------------
+
+  getInterfaces(): Array<GraphQLInterfaceType> {
+    const interfaces: Array<GraphQLInterfaceType> | Thunk<?Array<GraphQLInterfaceType>> = this
+      .gqType._typeConfig.interfaces;
+
+    if (typeof interfaces === 'function') {
+      return interfaces() || [];
+    }
+
+    return interfaces || [];
+  }
+
+  setInterfaces(interfaces: Array<GraphQLInterfaceType>): TypeComposer<TContext> {
+    this.gqType._typeConfig.interfaces = interfaces;
+    delete this.gqType._interfaces; // if schema was builded, delete _interfaces
+    return this;
+  }
+
+  hasInterface(interfaceObj: GraphQLInterfaceType): boolean {
+    return this.getInterfaces().indexOf(interfaceObj) > -1;
+  }
+
+  addInterface(interfaceObj: GraphQLInterfaceType): TypeComposer<TContext> {
+    if (!this.hasInterface(interfaceObj)) {
+      this.setInterfaces([...this.getInterfaces(), interfaceObj]);
+    }
+    return this;
+  }
+
+  removeInterface(interfaceObj: GraphQLInterfaceType): TypeComposer<TContext> {
+    const interfaces = this.getInterfaces();
+    const idx = interfaces.indexOf(interfaceObj);
+    if (idx > -1) {
+      interfaces.splice(idx, 1);
+      this.setInterfaces(interfaces);
+    }
+    return this;
+  }
+
+  // -----------------------------------------------
+  // Misc methods
+  // -----------------------------------------------
+
   addRelation<TSource>(
     fieldName: string,
     opts: RelationOpts<TSource, TContext>
@@ -526,288 +886,6 @@ export class TypeComposer<TContext> {
     };
   }
 
-  /**
-   * Get fields from a GraphQL type
-   * WARNING: this method read an internal GraphQL instance variable.
-   */
-  getInterfaces(): Array<GraphQLInterfaceType> {
-    const interfaces: Array<GraphQLInterfaceType> | Thunk<?Array<GraphQLInterfaceType>> = this
-      .gqType._typeConfig.interfaces;
-
-    if (typeof interfaces === 'function') {
-      return interfaces() || [];
-    }
-
-    return interfaces || [];
-  }
-
-  /**
-   * Completely replace all interfaces in GraphQL type
-   * WARNING: this method rewrite an internal GraphQL instance variable.
-   */
-  setInterfaces(interfaces: Array<GraphQLInterfaceType>): TypeComposer<TContext> {
-    this.gqType._typeConfig.interfaces = interfaces;
-    delete this.gqType._interfaces; // if schema was builded, delete _interfaces
-    return this;
-  }
-
-  hasInterface(interfaceObj: GraphQLInterfaceType): boolean {
-    return this.getInterfaces().indexOf(interfaceObj) > -1;
-  }
-
-  addInterface(interfaceObj: GraphQLInterfaceType): TypeComposer<TContext> {
-    if (!this.hasInterface(interfaceObj)) {
-      this.setInterfaces([...this.getInterfaces(), interfaceObj]);
-    }
-    return this;
-  }
-
-  removeInterface(interfaceObj: GraphQLInterfaceType): TypeComposer<TContext> {
-    const interfaces = this.getInterfaces();
-    const idx = interfaces.indexOf(interfaceObj);
-    if (idx > -1) {
-      interfaces.splice(idx, 1);
-      this.setInterfaces(interfaces);
-    }
-    return this;
-  }
-
-  clone(newTypeName: string): TypeComposer<TContext> {
-    if (!newTypeName) {
-      throw new Error('You should provide newTypeName:string for TypeComposer.clone()');
-    }
-
-    const newFields = {};
-    this.getFieldNames().forEach(fieldName => {
-      const fc = this.getFieldConfig(fieldName);
-      newFields[fieldName] = { ...(fc: any) };
-    });
-
-    const cloned = new this.constructor.schemaComposer.TypeComposer(
-      new GraphQLObjectType({
-        name: newTypeName,
-        fields: newFields,
-      })
-    );
-
-    cloned.setDescription(this.getDescription());
-    try {
-      cloned.setRecordIdFn(this.getRecordIdFn());
-    } catch (e) {
-      // no problem, clone without resolveIdFn
-    }
-    this.getResolvers().forEach(resolver => {
-      const newResolver = resolver.clone();
-      cloned.addResolver(newResolver);
-    });
-
-    return cloned;
-  }
-
-  getFieldConfig(fieldName: string): GraphQLFieldConfig<any, TContext> {
-    const fc = this.getField(fieldName);
-    if (!fc) {
-      throw new Error(`Type ${this.getTypeName()} does not have field with name '${fieldName}'`);
-    }
-
-    return resolveOutputConfigAsThunk(
-      this.constructor.schemaComposer,
-      fc,
-      fieldName,
-      this.getTypeName()
-    );
-  }
-
-  getFieldType(fieldName: string): GraphQLOutputType {
-    return this.getFieldConfig(fieldName).type;
-  }
-
-  getFieldTC(fieldName: string): TypeComposer<TContext> {
-    const fieldType = getNamedType(this.getFieldType(fieldName));
-    if (!(fieldType instanceof GraphQLObjectType)) {
-      throw new Error(
-        `Cannot get TypeComposer for field '${fieldName}' in type ${this.getTypeName()}. ` +
-          `This field should be ObjectType, but it has type '${fieldType.constructor.name}'`
-      );
-    }
-    return this.constructor.schemaComposer.TypeComposer.createTemp(fieldType);
-  }
-
-  makeFieldNonNull(fieldNameOrArray: string | Array<string>): TypeComposer<TContext> {
-    const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
-      if (this.hasField(fieldName)) {
-        const fieldType = this.getFieldType(fieldName);
-        if (!(fieldType instanceof GraphQLNonNull)) {
-          this.extendField(fieldName, { type: new GraphQLNonNull(fieldType) });
-        }
-      }
-    });
-    return this;
-  }
-
-  makeFieldNullable(fieldNameOrArray: string | Array<string>): TypeComposer<TContext> {
-    const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
-      if (this.hasField(fieldName)) {
-        const fieldType = this.getFieldType(fieldName);
-        if (fieldType instanceof GraphQLNonNull) {
-          this.extendField(fieldName, { type: fieldType.ofType });
-        }
-      }
-    });
-    return this;
-  }
-
-  getType(): GraphQLObjectType {
-    return this.gqType;
-  }
-
-  getTypePlural(): GraphQLList<GraphQLObjectType> {
-    return new GraphQLList(this.gqType);
-  }
-
-  getTypeNonNull(): GraphQLNonNull<GraphQLObjectType> {
-    return new GraphQLNonNull(this.gqType);
-  }
-
-  getInputType(): GraphQLInputObjectType {
-    return this.getInputTypeComposer().getType();
-  }
-
-  hasInputTypeComposer(): boolean {
-    return !!this.gqType._gqcInputTypeComposer;
-  }
-
-  getInputTypeComposer(): InputTypeComposer {
-    if (!this.gqType._gqcInputTypeComposer) {
-      this.gqType._gqcInputTypeComposer = toInputObjectType(this);
-    }
-
-    return this.gqType._gqcInputTypeComposer;
-  }
-
-  // Alias for getInputTypeComposer()
-  getITC(): InputTypeComposer {
-    return this.getInputTypeComposer();
-  }
-
-  getResolvers(): Map<string, Resolver<any, TContext>> {
-    if (!this.gqType._gqcResolvers) {
-      this.gqType._gqcResolvers = new Map();
-    }
-    return this.gqType._gqcResolvers;
-  }
-
-  hasResolver(name: string): boolean {
-    if (!this.gqType._gqcResolvers) {
-      return false;
-    }
-    return this.gqType._gqcResolvers.has(name);
-  }
-
-  getResolver(name: string): Resolver<any, TContext> {
-    if (!this.hasResolver(name)) {
-      throw new Error(`Type ${this.getTypeName()} does not have resolver with name '${name}'`);
-    }
-    const resolverMap: any = this.gqType._gqcResolvers;
-    return resolverMap.get(name);
-  }
-
-  setResolver(name: string, resolver: Resolver<any, TContext>): TypeComposer<TContext> {
-    if (!this.gqType._gqcResolvers) {
-      this.gqType._gqcResolvers = new Map();
-    }
-    if (!(resolver instanceof Resolver)) {
-      throw new Error('setResolver() accept only Resolver instance');
-    }
-    this.gqType._gqcResolvers.set(name, resolver);
-    resolver.setDisplayName(`${this.getTypeName()}.${resolver.name}`);
-    return this;
-  }
-
-  addResolver(opts: Resolver<any, TContext> | ResolverOpts<any, TContext>): TypeComposer<TContext> {
-    if (!opts) {
-      throw new Error('addResolver called with empty Resolver');
-    }
-
-    let resolver: Resolver<any, TContext>;
-    if (!(opts instanceof Resolver)) {
-      const resolverOpts = { ...opts };
-      // add resolve method, otherwise added resolver will not return any data by graphql-js
-      if (!resolverOpts.hasOwnProperty('resolve')) {
-        resolverOpts.resolve = () => ({});
-      }
-      resolver = new this.constructor.schemaComposer.Resolver(
-        (resolverOpts: ResolverOpts<any, TContext>)
-      );
-    } else {
-      resolver = opts;
-    }
-
-    if (!resolver.name) {
-      throw new Error('resolver should have non-empty `name` property');
-    }
-    this.setResolver(resolver.name, resolver);
-    return this;
-  }
-
-  removeResolver(resolverName: string): TypeComposer<TContext> {
-    if (resolverName) {
-      this.getResolvers().delete(resolverName);
-    }
-    return this;
-  }
-
-  wrapResolver(
-    resolverName: string,
-    cbResolver: ResolverWrapCb<any, TContext>
-  ): TypeComposer<TContext> {
-    const resolver = this.getResolver(resolverName);
-    const newResolver = resolver.wrap(cbResolver);
-    this.setResolver(resolverName, newResolver);
-    return this;
-  }
-
-  wrapResolverAs(
-    resolverName: string,
-    fromResolverName: string,
-    cbResolver: ResolverWrapCb<any, TContext>
-  ): TypeComposer<TContext> {
-    const resolver = this.getResolver(fromResolverName);
-    const newResolver = resolver.wrap(cbResolver);
-    this.setResolver(resolverName, newResolver);
-    return this;
-  }
-
-  wrapResolverResolve(
-    resolverName: string,
-    cbNextRp: ResolverNextRpCb<any, TContext>
-  ): TypeComposer<TContext> {
-    const resolver = this.getResolver(resolverName);
-    this.setResolver(resolverName, resolver.wrapResolve(cbNextRp));
-    return this;
-  }
-
-  getTypeName(): string {
-    return this.gqType.name;
-  }
-
-  setTypeName(name: string): TypeComposer<TContext> {
-    this.gqType.name = name;
-    this.constructor.schemaComposer.add(this);
-    return this;
-  }
-
-  getDescription(): string {
-    return this.gqType.description || '';
-  }
-
-  setDescription(description: string): TypeComposer<TContext> {
-    this.gqType.description = description;
-    return this;
-  }
-
   setRecordIdFn(fn: GetRecordIdFn<any, TContext>): TypeComposer<TContext> {
     this.gqType._gqcGetRecordIdFn = fn;
     return this;
@@ -830,77 +908,7 @@ export class TypeComposer<TContext> {
     return this.getRecordIdFn()(source, args, context);
   }
 
-  getFieldArgs(fieldName: string): GraphQLFieldConfigArgumentMap {
-    try {
-      const fc = this.getFieldConfig(fieldName);
-      return fc.args || {};
-    } catch (e) {
-      throw new Error(
-        `Cannot get field args. Field '${fieldName}' from type '${this.getTypeName()}' does not exist.`
-      );
-    }
-  }
-
-  hasFieldArg(fieldName: string, argName: string): boolean {
-    const fieldArgs = this.getFieldArgs(fieldName);
-    return !!fieldArgs[argName];
-  }
-
-  getFieldArg(fieldName: string, argName: string): GraphQLArgumentConfig {
-    const fieldArgs = this.getFieldArgs(fieldName);
-
-    if (!fieldArgs[argName]) {
-      throw new Error(
-        `Cannot get arg '${argName}' from type.field '${this.getTypeName()}.${fieldName}'. Argument does not exist.`
-      );
-    }
-
-    return fieldArgs[argName];
-  }
-
-  getFieldArgType(fieldName: string, argName: string): GraphQLInputType {
-    const ac = this.getFieldArg(fieldName, argName);
-    return ac.type;
-  }
-
   get(path: string | Array<string>): any {
     return typeByPath(this, path);
-  }
-
-  deprecateFields(
-    fields: { [fieldName: string]: string } | string[] | string
-  ): TypeComposer<TContext> {
-    const existedFieldNames = this.getFieldNames();
-
-    if (typeof fields === 'string') {
-      if (existedFieldNames.indexOf(fields) === -1) {
-        throw new Error(
-          `Cannot deprecate unexisted field '${fields}' from type '${this.getTypeName()}'`
-        );
-      }
-      this.extendField(fields, { deprecationReason: 'deprecated' });
-    } else if (Array.isArray(fields)) {
-      fields.forEach(field => {
-        if (existedFieldNames.indexOf(field) === -1) {
-          throw new Error(
-            `Cannot deprecate unexisted field '${field}' from type '${this.getTypeName()}'`
-          );
-        }
-        this.extendField(field, { deprecationReason: 'deprecated' });
-      });
-    } else {
-      const fieldMap: Object = (fields: any);
-      Object.keys(fieldMap).forEach(field => {
-        if (existedFieldNames.indexOf(field) === -1) {
-          throw new Error(
-            `Cannot deprecate unexisted field '${field}' from type '${this.getTypeName()}'`
-          );
-        }
-        const deprecationReason: string = fieldMap[field];
-        this.extendField(field, { deprecationReason });
-      });
-    }
-
-    return this;
   }
 }

@@ -141,18 +141,14 @@ export class TypeComposer<TContext> {
             | ComposeObjectTypeConfig<any, TCtx>
             | GraphQLObjectType): TypeComposer<TCtx>;
 
-    /**
-     * Get fields from a GraphQL type
-     * WARNING: this method read an internal GraphQL instance variable.
-     */
+    // -----------------------------------------------
+    // Field methods
+    // -----------------------------------------------
+
     public getFields(): GraphQLFieldConfigMap<any, TContext>;
 
     public getFieldNames(): string[];
 
-    /**
-     * Completely replace all fields in GraphQL type
-     * WARNING: this method rewrite an internal GraphQL instance variable.
-     */
     public setFields(fields: ComposeFieldConfigMap<any, TContext> | GraphQLFieldConfigMap<any, TContext>): this;
 
     public hasField(fieldName: string): boolean;
@@ -182,30 +178,6 @@ export class TypeComposer<TContext> {
 
     public reorderFields(names: string[]): this;
 
-    public addRelation(fieldName: string, relationOpts: RelationOpts<any, TContext>): this;
-
-    public getRelations(): RelationThunkMap<any, TContext>;
-
-    /**
-     * Get fields from a GraphQL type
-     * WARNING: this method read an internal GraphQL instance variable.
-     */
-    public getInterfaces(): GraphQLInterfaceType[];
-
-    /**
-     * Completely replace all interfaces in GraphQL type
-     * WARNING: this method rewrite an internal GraphQL instance variable.
-     */
-    public setInterfaces(interfaces: GraphQLInterfaceType[]): this;
-
-    public hasInterface(interfaceObj: GraphQLInterfaceType): boolean;
-
-    public addInterface(interfaceObj: GraphQLInterfaceType): this;
-
-    public removeInterface(interfaceObj: GraphQLInterfaceType): this;
-
-    public clone(newTypeName: string): TypeComposer<TContext>;
-
     public getFieldConfig(fieldName: string): GraphQLFieldConfig<any, TContext>;
 
     public getFieldType(fieldName: string): GraphQLOutputType;
@@ -218,11 +190,39 @@ export class TypeComposer<TContext> {
 
     public makeFieldNullable(fieldNameOrArray: string | string[]): TypeComposer<TContext>;
 
+    public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
+
+    public getFieldArgs(fieldName: string): GraphQLFieldConfigArgumentMap;
+
+    public hasFieldArg(fieldName: string, argName: string): boolean;
+
+    public getFieldArg(fieldName: string, argName: string): GraphQLArgumentConfig;
+
+    public getFieldArgType(fieldName: string, argName: string): GraphQLInputType;
+
+    // -----------------------------------------------
+    // Type methods
+    // -----------------------------------------------
+
     public getType(): GraphQLObjectType;
 
     public getTypePlural(): GraphQLList<GraphQLObjectType>;
 
     public getTypeNonNull(): GraphQLNonNull<GraphQLObjectType>;
+
+    public getTypeName(): string;
+
+    public setTypeName(name: string): this;
+
+    public getDescription(): string;
+
+    public setDescription(description: string): this;
+
+    public clone(newTypeName: string): TypeComposer<TContext>;
+
+    // -----------------------------------------------
+    // InputType methods
+    // -----------------------------------------------
 
     public getInputType(): GraphQLInputObjectType;
 
@@ -231,6 +231,10 @@ export class TypeComposer<TContext> {
     public getInputTypeComposer(): InputTypeComposer;
 
     public getITC(): InputTypeComposer;
+
+    // -----------------------------------------------
+    // Resolver methods
+    // -----------------------------------------------
 
     public getResolvers(): Map<string, Resolver<any, TContext>>;
 
@@ -251,13 +255,27 @@ export class TypeComposer<TContext> {
 
     public wrapResolverResolve(resolverName: string, cbNextRp: ResolverNextRpCb<any, TContext>): this;
 
-    public getTypeName(): string;
+    // -----------------------------------------------
+    // Interface methods
+    // -----------------------------------------------
 
-    public setTypeName(name: string): this;
+    public getInterfaces(): GraphQLInterfaceType[];
 
-    public getDescription(): string;
+    public setInterfaces(interfaces: GraphQLInterfaceType[]): this;
 
-    public setDescription(description: string): this;
+    public hasInterface(interfaceObj: GraphQLInterfaceType): boolean;
+
+    public addInterface(interfaceObj: GraphQLInterfaceType): this;
+
+    public removeInterface(interfaceObj: GraphQLInterfaceType): this;
+
+    // -----------------------------------------------
+    // Misc methods
+    // -----------------------------------------------
+
+    public addRelation(fieldName: string, relationOpts: RelationOpts<any, TContext>): this;
+
+    public getRelations(): RelationThunkMap<any, TContext>;
 
     public setRecordIdFn(fn: GetRecordIdFn<any, TContext>): this;
 
@@ -270,17 +288,7 @@ export class TypeComposer<TContext> {
      */
     public getRecordId(source: any, args: any, context: TContext): string | number;
 
-    public getFieldArgs(fieldName: string): GraphQLFieldConfigArgumentMap;
-
-    public hasFieldArg(fieldName: string, argName: string): boolean;
-
-    public getFieldArg(fieldName: string, argName: string): GraphQLArgumentConfig;
-
-    public getFieldArgType(fieldName: string, argName: string): GraphQLInputType;
-
     public get(path: string | string[]): any;
-
-    public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
 
     private _relationWithResolverToFC<TSource>(
         opts: RelationOptsWithResolver<TSource, TContext>,
