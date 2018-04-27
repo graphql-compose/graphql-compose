@@ -261,6 +261,13 @@ describe('TypeComposer', () => {
       });
     });
 
+    it('isFieldNonNull()', () => {
+      tc.setField('fieldNN', 'String');
+      expect(tc.isFieldNonNull('fieldNN')).toBe(false);
+      tc.setField('fieldNN', 'String!');
+      expect(tc.isFieldNonNull('fieldNN')).toBe(true);
+    });
+
     it('makeFieldNonNull()', () => {
       tc.setField('fieldNN', 'String');
       expect(tc.getFieldType('fieldNN')).toBe(GraphQLString);

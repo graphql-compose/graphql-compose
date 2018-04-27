@@ -212,6 +212,8 @@ export class TypeComposer<TContext> {
 
     public getFieldTC(fieldName: string): TypeComposer<TContext>;
 
+    public isFieldNonNull(fieldName: string): boolean;
+
     public makeFieldNonNull(fieldNameOrArray: string | string[]): TypeComposer<TContext>;
 
     public makeFieldNullable(fieldNameOrArray: string | string[]): TypeComposer<TContext>;

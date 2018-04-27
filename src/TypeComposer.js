@@ -629,6 +629,10 @@ export class TypeComposer<TContext> {
     return this.constructor.schemaComposer.TypeComposer.createTemp(fieldType);
   }
 
+  isFieldNonNull(fieldName: string): boolean {
+    return this.getFieldType(fieldName) instanceof GraphQLNonNull;
+  }
+
   makeFieldNonNull(fieldNameOrArray: string | Array<string>): TypeComposer<TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     fieldNames.forEach(fieldName => {
