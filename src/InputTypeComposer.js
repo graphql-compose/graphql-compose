@@ -1,9 +1,9 @@
 /* @flow strict */
 /* eslint-disable no-use-before-define */
 
-import { GraphQLInputObjectType, GraphQLNonNull, getNamedType } from './graphql';
+import { GraphQLInputObjectType, GraphQLNonNull, GraphQLList, getNamedType } from './graphql';
 import { resolveMaybeThunk } from './utils/misc';
-// import { deprecate } from './utils/debug';
+import { deprecate } from './utils/debug';
 import { isObject, isString } from './utils/is';
 import { resolveInputConfigMapAsThunk, resolveInputConfigAsThunk } from './utils/configAsThunk';
 import { typeByPath } from './utils/typeByPath';
@@ -342,8 +342,18 @@ export class InputTypeComposer {
     return this.gqType;
   }
 
-  getTypeAsRequired(): GraphQLNonNull<GraphQLInputObjectType> {
+  getTypePlural(): GraphQLList<GraphQLInputObjectType> {
+    return new GraphQLList(this.gqType);
+  }
+
+  getTypeNonNull(): GraphQLNonNull<GraphQLInputObjectType> {
     return new GraphQLNonNull(this.gqType);
+  }
+
+  /** @deprecated 5.0.0 */
+  getTypeAsRequired(): GraphQLNonNull<GraphQLInputObjectType> {
+    deprecate('Use `InputTypeComposer.getTypeNonNull` method instead of `getTypeAsRequired`');
+    return this.getTypeNonNull();
   }
 
   getTypeName(): string {

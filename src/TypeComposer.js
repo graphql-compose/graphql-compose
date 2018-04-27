@@ -411,6 +411,10 @@ export class TypeComposer<TContext> {
     return this;
   }
 
+  isFieldNonNull(fieldName: string): boolean {
+    return this.getFieldType(fieldName) instanceof GraphQLNonNull;
+  }
+
   addRelation<TSource>(
     fieldName: string,
     opts: RelationOpts<TSource, TContext>
@@ -627,10 +631,6 @@ export class TypeComposer<TContext> {
       );
     }
     return this.constructor.schemaComposer.TypeComposer.createTemp(fieldType);
-  }
-
-  isFieldNonNull(fieldName: string): boolean {
-    return this.getFieldType(fieldName) instanceof GraphQLNonNull;
   }
 
   makeFieldNonNull(fieldNameOrArray: string | Array<string>): TypeComposer<TContext> {

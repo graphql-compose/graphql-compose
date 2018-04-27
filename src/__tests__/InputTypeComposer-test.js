@@ -264,9 +264,14 @@ describe('InputTypeComposer', () => {
       expect(itc.getType().name).toBe('InputType');
     });
 
-    it('getTypeAsRequired()', () => {
-      expect(itc.getTypeAsRequired()).toBeInstanceOf(GraphQLNonNull);
-      expect(itc.getTypeAsRequired().ofType.name).toBe('InputType');
+    it('getTypeNonNull()', () => {
+      expect(itc.getTypeNonNull()).toBeInstanceOf(GraphQLNonNull);
+      expect(itc.getTypeNonNull().ofType.name).toBe('InputType');
+    });
+
+    it('getTypePlural()', () => {
+      expect(itc.getTypePlural()).toBeInstanceOf(GraphQLList);
+      expect(itc.getTypePlural().ofType.name).toBe('InputType');
     });
 
     it('getTypeName()', () => {
