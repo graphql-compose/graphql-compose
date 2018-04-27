@@ -47,20 +47,16 @@ export class InputTypeComposer {
         ComposeInputObjectTypeConfig |
         GraphQLInputObjectType): InputTypeComposer;
 
-    /**
-     * Get fields from a GraphQL type
-     * WARNING: this method read an internal GraphQL instance variable.
-     */
+    // -----------------------------------------------
+    // Field methods
+    // -----------------------------------------------
+
     public getFields(): ComposeInputFieldConfigMap;
 
     public getFieldNames(): string[];
 
     public hasField(fieldName: string): boolean;
 
-    /**
-     * Completely replace all fields in GraphQL type
-     * WARNING: this method rewrite an internal GraphQL instance variable.
-     */
     public setFields(fields: ComposeInputFieldConfigMap): this;
 
     public setField(fieldName: string, fieldConfig: ComposeInputFieldConfig): this;
@@ -109,7 +105,9 @@ export class InputTypeComposer {
     // alias for makeFieldNullable
     public makeOptional(fieldNameOrArray: string | string[]): this;
 
-    public clone(newTypeName: string): InputTypeComposer;
+    // -----------------------------------------------
+    // Type methods
+    // -----------------------------------------------
 
     public getType(): GraphQLInputObjectType;
 
@@ -124,6 +122,12 @@ export class InputTypeComposer {
     public getDescription(): string;
 
     public setDescription(description: string): this;
+
+    public clone(newTypeName: string): InputTypeComposer;
+
+    // -----------------------------------------------
+    // Misc methods
+    // -----------------------------------------------
 
     public get(path: string | string[]): any;
 }

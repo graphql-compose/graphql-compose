@@ -125,10 +125,10 @@ export class InputTypeComposer {
     this.gqType = gqType;
   }
 
-  /**
-   * Get fields from a GraphQL type
-   * WARNING: this method read an internal GraphQL instance variable.
-   */
+  // -----------------------------------------------
+  // Field methods
+  // -----------------------------------------------
+
   getFields(): ComposeInputFieldConfigMap {
     if (!this.gqType._gqcFields) {
       const fields: Thunk<GraphQLInputFieldConfigMap> = this.gqType._typeConfig.fields;
@@ -349,24 +349,9 @@ export class InputTypeComposer {
     return this.makeFieldNullable(fieldNameOrArray);
   }
 
-  clone(newTypeName: string): InputTypeComposer {
-    if (!newTypeName) {
-      throw new Error('You should provide new type name for clone() method');
-    }
-
-    const newFields = {};
-    this.getFieldNames().forEach(fieldName => {
-      const fc = this.getFieldConfig(fieldName);
-      newFields[fieldName] = { ...(fc: any) };
-    });
-
-    return new this.constructor.schemaComposer.InputTypeComposer(
-      new GraphQLInputObjectType({
-        name: newTypeName,
-        fields: newFields,
-      })
-    );
-  }
+  // -----------------------------------------------
+  // Type methods
+  // -----------------------------------------------
 
   getType(): GraphQLInputObjectType {
     return this.gqType;
@@ -404,6 +389,29 @@ export class InputTypeComposer {
     this.gqType.description = description;
     return this;
   }
+
+  clone(newTypeName: string): InputTypeComposer {
+    if (!newTypeName) {
+      throw new Error('You should provide new type name for clone() method');
+    }
+
+    const newFields = {};
+    this.getFieldNames().forEach(fieldName => {
+      const fc = this.getFieldConfig(fieldName);
+      newFields[fieldName] = { ...(fc: any) };
+    });
+
+    return new this.constructor.schemaComposer.InputTypeComposer(
+      new GraphQLInputObjectType({
+        name: newTypeName,
+        fields: newFields,
+      })
+    );
+  }
+
+  // -----------------------------------------------
+  // Misc methods
+  // -----------------------------------------------
 
   get(path: string | Array<string>): any {
     return typeByPath(this, path);
