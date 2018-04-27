@@ -71,6 +71,11 @@ export class InputTypeComposer {
     public addFields(newFields: ComposeInputFieldConfigMap): this;
 
     /**
+     * Add new fields or replace existed (where field name may have dots)
+     */
+    public addNestedFields(newFields: ComposeInputFieldConfigMap): InputTypeComposer;
+
+    /**
      * Get fieldConfig by name
      */
     public getField(fieldName: string): ComposeInputFieldConfig;

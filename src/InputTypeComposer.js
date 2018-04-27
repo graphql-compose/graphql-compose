@@ -2,7 +2,7 @@
 /* eslint-disable no-use-before-define */
 
 import { GraphQLInputObjectType, GraphQLNonNull, GraphQLList, getNamedType } from './graphql';
-import { resolveMaybeThunk } from './utils/misc';
+import { resolveMaybeThunk, upperFirst } from './utils/misc';
 import { deprecate } from './utils/debug';
 import { isObject, isString } from './utils/is';
 import { resolveInputConfigMapAsThunk, resolveInputConfigAsThunk } from './utils/configAsThunk';
@@ -175,6 +175,36 @@ export class InputTypeComposer {
    */
   addFields(newFields: ComposeInputFieldConfigMap): InputTypeComposer {
     this.setFields({ ...this.getFields(), ...newFields });
+    return this;
+  }
+
+  /**
+   * Add new fields or replace existed (where field name may have dots)
+   */
+  addNestedFields(newFields: ComposeInputFieldConfigMap): InputTypeComposer {
+    Object.keys(newFields).forEach(fieldName => {
+      const fc = newFields[fieldName];
+      const names = fieldName.split('.');
+      const name = names.shift();
+
+      if (names.length === 0) {
+        // single field
+        this.setField(name, fc);
+      } else {
+        // nested field
+        let childTC;
+        if (!this.hasField(name)) {
+          childTC = this.constructor.schemaComposer.InputTypeComposer.createTemp(
+            `${this.getTypeName()}${upperFirst(name)}`
+          );
+          this.setField(name, childTC);
+        } else {
+          childTC = this.getFieldTC(name);
+        }
+        childTC.addNestedFields({ [names.join('.')]: fc });
+      }
+    });
+
     return this;
   }
 

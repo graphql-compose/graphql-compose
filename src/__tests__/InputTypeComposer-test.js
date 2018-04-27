@@ -105,6 +105,24 @@ describe('InputTypeComposer', () => {
       );
     });
 
+    it('addNestedFields()', () => {
+      itc.addNestedFields({
+        'fieldNested1.f1': { type: GraphQLString },
+        fieldNested2: { type: '[Int]' },
+        'fieldNested1.f2': 'Boolean!',
+      });
+
+      expect(itc.getFieldType('fieldNested1')).toBeInstanceOf(GraphQLInputObjectType);
+      const fieldTC = itc.getFieldTC('fieldNested1');
+      expect(fieldTC.getTypeName()).toBe('InputTypeFieldNested1');
+      expect(fieldTC.getFieldType('f1')).toBe(GraphQLString);
+      expect(fieldTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      expect((fieldTC.getFieldType('f2'): any).ofType).toBe(GraphQLBoolean);
+
+      expect(itc.getFieldType('fieldNested2')).toBeInstanceOf(GraphQLList);
+      expect((itc.getFieldType('fieldNested2'): any).ofType).toBe(GraphQLInt);
+    });
+
     it('removeField()', () => {
       itc.removeField('input1');
       expect(itc.getFieldNames()).not.toContain('input1');

@@ -326,9 +326,9 @@ export class TypeComposer<TContext> {
         // nested field
         let childTC;
         if (!this.hasField(name)) {
-          childTC = this.constructor.schemaComposer.TypeComposer.createTemp({
-            name: `${this.getTypeName()}${upperFirst(name)}`,
-          });
+          childTC = this.constructor.schemaComposer.TypeComposer.createTemp(
+            `${this.getTypeName()}${upperFirst(name)}`
+          );
           this.setField(name, {
             type: childTC,
             resolve: () => ({}),
