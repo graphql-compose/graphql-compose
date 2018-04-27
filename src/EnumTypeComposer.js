@@ -83,6 +83,10 @@ export class EnumTypeComposer {
     this.gqType = gqType;
   }
 
+  // -----------------------------------------------
+  // Value methods
+  // -----------------------------------------------
+
   hasField(name: string): boolean {
     const values = this.getFields();
     return !!values[name];
@@ -206,39 +210,6 @@ export class EnumTypeComposer {
     return this;
   }
 
-  getType(): GraphQLEnumType {
-    return this.gqType;
-  }
-
-  getTypePlural(): GraphQLList<GraphQLEnumType> {
-    return new GraphQLList(this.gqType);
-  }
-
-  getTypeNonNull(): GraphQLNonNull<GraphQLEnumType> {
-    return new GraphQLNonNull(this.gqType);
-  }
-
-  getTypeName(): string {
-    return this.gqType.name;
-  }
-
-  setTypeName(name: string): EnumTypeComposer {
-    this.gqType.name = name;
-    this.gqType._enumConfig.name = name;
-    this.constructor.schemaComposer.add(this);
-    return this;
-  }
-
-  getDescription(): string {
-    return this.gqType.description || '';
-  }
-
-  setDescription(description: string): EnumTypeComposer {
-    this.gqType.description = description;
-    this.gqType._enumConfig.description = description;
-    return this;
-  }
-
   deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this {
     const existedFieldNames = this.getFieldNames();
 
@@ -271,6 +242,43 @@ export class EnumTypeComposer {
       });
     }
 
+    return this;
+  }
+
+  // -----------------------------------------------
+  // Type methods
+  // -----------------------------------------------
+
+  getType(): GraphQLEnumType {
+    return this.gqType;
+  }
+
+  getTypePlural(): GraphQLList<GraphQLEnumType> {
+    return new GraphQLList(this.gqType);
+  }
+
+  getTypeNonNull(): GraphQLNonNull<GraphQLEnumType> {
+    return new GraphQLNonNull(this.gqType);
+  }
+
+  getTypeName(): string {
+    return this.gqType.name;
+  }
+
+  setTypeName(name: string): EnumTypeComposer {
+    this.gqType.name = name;
+    this.gqType._enumConfig.name = name;
+    this.constructor.schemaComposer.add(this);
+    return this;
+  }
+
+  getDescription(): string {
+    return this.gqType.description || '';
+  }
+
+  setDescription(description: string): EnumTypeComposer {
+    this.gqType.description = description;
+    this.gqType._enumConfig.description = description;
     return this;
   }
 

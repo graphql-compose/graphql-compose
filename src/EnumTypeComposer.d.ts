@@ -24,6 +24,10 @@ export class EnumTypeComposer {
 
   public static createTemp(opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType): EnumTypeComposer;
 
+  // -----------------------------------------------
+  // Value methods
+  // -----------------------------------------------
+
   public hasField(name: string): boolean;
 
   public getFields(): GraphQLEnumValueConfigMap;
@@ -46,6 +50,12 @@ export class EnumTypeComposer {
 
   public extendField(name: string, partialValueConfig: GraphQLEnumValueConfig): this;
 
+  public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
+
+  // -----------------------------------------------
+  // Type methods
+  // -----------------------------------------------
+
   public getType(): GraphQLEnumType;
 
   public getTypePlural(): GraphQLList<GraphQLEnumType>;
@@ -59,8 +69,6 @@ export class EnumTypeComposer {
   public getDescription(): string;
 
   public setDescription(description: string): this;
-
-  public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
 
   public clone(newTypeName: string): EnumTypeComposer;
 }
