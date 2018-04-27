@@ -113,8 +113,8 @@ describe('TypeMapper', () => {
     const type: GraphQLInputObjectType = (TypeMapper.createType(
       `
       input InputIntRange {
-        max: Int,
-        min: Int!
+        min: Int @default(value: 0)
+        max: Int!
       }
     `
     ): any);
@@ -124,8 +124,9 @@ describe('TypeMapper', () => {
 
     const IntRangeTC = new InputTypeComposer(type);
     expect(IntRangeTC.getTypeName()).toBe('InputIntRange');
-    expect(IntRangeTC.getField('max').type).toBe(GraphQLInt);
-    expect(IntRangeTC.getField('min').type).toBeInstanceOf(GraphQLNonNull);
+    expect(IntRangeTC.getField('min').defaultValue).toBe(0);
+    expect(IntRangeTC.getField('min').type).toBe(GraphQLInt);
+    expect(IntRangeTC.getField('max').type).toBeInstanceOf(GraphQLNonNull);
   });
 
   it('should return wrapped type', () => {

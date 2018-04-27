@@ -228,6 +228,8 @@ export class TypeComposer<TContext> {
 
     public getInputTypeComposer(): InputTypeComposer;
 
+    public getITC(): InputTypeComposer;
+
     public getResolvers(): Map<string, Resolver<any, TContext>>;
 
     public hasResolver(name: string): boolean;

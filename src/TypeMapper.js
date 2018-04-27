@@ -7,7 +7,7 @@ import { getDescription } from 'graphql/utilities/buildASTSchema';
 import keyValMap from 'graphql/jsutils/keyValMap';
 import invariant from 'graphql/jsutils/invariant';
 import find from 'graphql/jsutils/find';
-import { getArgumentValues } from 'graphql/execution/values';
+import { getArgumentValues, getDirectiveValues } from 'graphql/execution/values';
 import type {
   DocumentNode,
   ObjectTypeDefinitionNode,
@@ -76,6 +76,7 @@ import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
 import type { Thunk } from './utils/definitions';
 import { isFunction, isObject } from './utils/is';
+import DefaultDerective from './directive/default';
 
 export type TypeDefinitionString = string; // eg type Name { field: Int }
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]
@@ -651,6 +652,15 @@ function makeSchemaDef(def, schema: SchemaComposer<any>) {
   }
 }
 
+function getInputDefaultValue(value: InputValueDefinitionNode, type: GraphQLInputType): mixed {
+  // check getDirectiveValues become avaliable from 0.10.2
+  if (Array.isArray(value.directives) && getDirectiveValues) {
+    const vars = getDirectiveValues(DefaultDerective, value);
+    if (vars && vars.hasOwnProperty('value')) return vars.value;
+  }
+  return valueFromAST(value.defaultValue, type);
+}
+
 function makeInputValues(
   values: ?$ReadOnlyArray<InputValueDefinitionNode>,
   schema: SchemaComposer<any>
@@ -664,7 +674,7 @@ function makeInputValues(
       return {
         type,
         description: getDescription(value),
-        defaultValue: valueFromAST(value.defaultValue, type),
+        defaultValue: getInputDefaultValue(value, type),
       };
     }
   );

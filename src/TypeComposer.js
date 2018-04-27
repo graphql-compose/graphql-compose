@@ -683,6 +683,11 @@ export class TypeComposer<TContext> {
     return this.gqType._gqcInputTypeComposer;
   }
 
+  // Alias for getInputTypeComposer()
+  getITC(): InputTypeComposer {
+    return this.getInputTypeComposer();
+  }
+
   getResolvers(): Map<string, Resolver<any, TContext>> {
     if (!this.gqType._gqcResolvers) {
       this.gqType._gqcResolvers = new Map();
