@@ -1,6 +1,6 @@
 import {
     GraphQLInputFieldConfig, GraphQLInputFieldConfigMap, GraphQLInputObjectType,
-    GraphQLNonNull, GraphQLInputType, InputValueDefinitionNode
+    GraphQLNonNull, GraphQLList, GraphQLInputType, InputValueDefinitionNode
 } from './graphql';
 import { Thunk, ObjMap } from './utils/definitions';
 import { TypeAsString } from './TypeMapper';
@@ -108,7 +108,9 @@ export class InputTypeComposer {
 
     public getType(): GraphQLInputObjectType;
 
-    public getTypeAsRequired(): GraphQLNonNull<GraphQLInputObjectType>;
+    public getTypePlural(): GraphQLList<GraphQLInputObjectType>;
+
+    public getTypeNonNull(): GraphQLNonNull<GraphQLInputObjectType>;
 
     public getTypeName(): string;
 
