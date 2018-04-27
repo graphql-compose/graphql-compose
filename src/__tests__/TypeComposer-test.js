@@ -254,6 +254,15 @@ describe('TypeComposer', () => {
         expect(tc.getFieldType('field3')).toBe(GraphQLInt);
       });
 
+      it('should work with fieldConfig as string', () => {
+        tc.setField('field4', 'String');
+        tc.extendField('field4', {
+          description: 'this is field #4',
+        });
+        expect(tc.getFieldConfig('field4').type).toBe(GraphQLString);
+        expect(tc.getFieldConfig('field4').description).toBe('this is field #4');
+      });
+
       it('should throw error if field does not exists', () => {
         expect(() => tc.extendField('unexisted', { description: '123' })).toThrow(
           /Cannot extend field.*Field does not exist/
