@@ -170,6 +170,52 @@ export class Resolver<TSource, TContext> {
     /* :: return this; */
   }
 
+  // -----------------------------------------------
+  // Output type methods
+  // -----------------------------------------------
+
+  getType(): GraphQLOutputType {
+    if (!this.type) {
+      return GraphQLJSON;
+    }
+
+    const fc = resolveOutputConfigAsThunk(
+      this.constructor.schemaComposer,
+      this.type,
+      this.name,
+      'Resolver'
+    );
+
+    return fc.type;
+  }
+
+  getTypeComposer(): TypeComposer<TContext> {
+    const outputType = getNamedType(this.getType());
+    if (!(outputType instanceof GraphQLObjectType)) {
+      throw new Error(
+        `Resolver ${this.name} cannot return its output type as TypeComposer instance. ` +
+          `Cause '${this.type.toString()}' does not instance of GraphQLObjectType.`
+      );
+    }
+    return new this.constructor.schemaComposer.TypeComposer(outputType);
+  }
+
+  setType(composeType: ComposeOutputType<TContext>): Resolver<TSource, TContext> {
+    // check that `composeType` has correct data
+    this.constructor.schemaComposer.typeMapper.convertOutputFieldConfig(
+      composeType,
+      'setType',
+      'Resolver'
+    );
+
+    this.type = composeType;
+    return this;
+  }
+
+  // -----------------------------------------------
+  // Args methods
+  // -----------------------------------------------
+
   hasArg(argName: string): boolean {
     return !!this.args[argName];
   }
@@ -360,201 +406,6 @@ export class Resolver<TSource, TContext> {
     return this;
   }
 
-  /*
-  * This method should be overriden via constructor
-  */
-  /* eslint-disable */
-  resolve(
-    resolveParams: ResolveParams<TSource, TContext> | $Shape<ResolveParams<TSource, TContext>>
-  ): Promise<mixed> {
-    return Promise.resolve();
-  }
-  /* eslint-enable */
-
-  getResolve(): ResolverRpCb<TSource, TContext> {
-    return this.resolve;
-  }
-
-  setResolve(resolve: ResolverRpCb<TSource, TContext>): Resolver<TSource, TContext> {
-    this.resolve = resolve;
-    return this;
-  }
-
-  getType(): GraphQLOutputType {
-    if (!this.type) {
-      return GraphQLJSON;
-    }
-
-    const fc = resolveOutputConfigAsThunk(
-      this.constructor.schemaComposer,
-      this.type,
-      this.name,
-      'Resolver'
-    );
-
-    return fc.type;
-  }
-
-  getTypeComposer(): TypeComposer<TContext> {
-    const outputType = getNamedType(this.getType());
-    if (!(outputType instanceof GraphQLObjectType)) {
-      throw new Error(
-        `Resolver ${this.name} cannot return its output type as TypeComposer instance. ` +
-          `Cause '${this.type.toString()}' does not instance of GraphQLObjectType.`
-      );
-    }
-    return new this.constructor.schemaComposer.TypeComposer(outputType);
-  }
-
-  setType(composeType: ComposeOutputType<TContext>): Resolver<TSource, TContext> {
-    // check that `composeType` has correct data
-    this.constructor.schemaComposer.typeMapper.convertOutputFieldConfig(
-      composeType,
-      'setType',
-      'Resolver'
-    );
-
-    this.type = composeType;
-    return this;
-  }
-
-  getFieldConfig(
-    opts: {
-      projection?: ProjectionType,
-    } = {}
-  ): GraphQLFieldConfig<TSource, TContext> {
-    const resolve = this.getResolve();
-    return {
-      type: this.getType(),
-      args: resolveArgConfigMapAsThunk(
-        this.constructor.schemaComposer,
-        this.getArgs(),
-        this.name,
-        'Resolver'
-      ),
-      description: this.description,
-      resolve: (source: TSource, args, context: TContext, info: GraphQLResolveInfo) => {
-        let projection = getProjectionFromAST(info);
-        if (opts.projection) {
-          projection = ((deepmerge(projection, opts.projection): any): ProjectionType);
-        }
-        return resolve({ source, args, context, info, projection });
-      },
-    };
-  }
-
-  getKind(): ?ResolverKinds {
-    return this.kind;
-  }
-
-  setKind(kind: string): Resolver<TSource, TContext> {
-    if (kind !== 'query' && kind !== 'mutation' && kind !== 'subscription') {
-      throw new Error(
-        `You provide incorrect value '${kind}' for Resolver.setKind method. ` +
-          'Valid values are: query | mutation | subscription'
-      );
-    }
-    this.kind = kind;
-    return this;
-  }
-
-  getDescription(): ?string {
-    return this.description;
-  }
-
-  setDescription(description: string): Resolver<TSource, TContext> {
-    this.description = description;
-    return this;
-  }
-
-  get(path: string | Array<string>): any {
-    return typeByPath(this, path);
-  }
-
-  clone(opts: $Shape<ResolverOpts<TSource, TContext>> = {}): Resolver<TSource, TContext> {
-    const oldOpts = {};
-
-    const self: Resolver<TSource, TContext> = this;
-    for (const key in self) {
-      if (self.hasOwnProperty(key)) {
-        // $FlowFixMe
-        oldOpts[key] = self[key];
-      }
-    }
-    oldOpts.displayName = undefined;
-    oldOpts.args = ({ ...this.args }: GraphQLFieldConfigArgumentMap);
-    return new this.constructor.schemaComposer.Resolver(
-      (({ ...oldOpts, ...opts }: any): ResolverOpts<TSource, TContext>)
-    );
-  }
-
-  wrap(
-    cb: ?ResolverWrapCb<TSource, TContext>,
-    newResolverOpts: ?$Shape<ResolverOpts<TSource, TContext>> = {}
-  ): Resolver<TSource, TContext> {
-    const prevResolver: Resolver<TSource, TContext> = this;
-    const newResolver = this.clone({
-      name: 'wrap',
-      parent: prevResolver,
-      ...newResolverOpts,
-    });
-
-    if (isFunction(cb)) {
-      const resolver = cb(newResolver, prevResolver);
-      if (resolver) return resolver;
-    }
-
-    return newResolver;
-  }
-
-  wrapResolve(
-    cb: ResolverNextRpCb<TSource, TContext>,
-    wrapperName: string = 'wrapResolve'
-  ): Resolver<TSource, TContext> {
-    return this.wrap(
-      (newResolver, prevResolver) => {
-        const newResolve = cb(prevResolver.getResolve());
-        newResolver.setResolve(newResolve);
-        return newResolver;
-      },
-      { name: wrapperName }
-    );
-  }
-
-  wrapArgs(cb: ResolverWrapArgsCb, wrapperName: string = 'wrapArgs'): Resolver<TSource, TContext> {
-    return this.wrap(
-      (newResolver, prevResolver) => {
-        // clone prevArgs, to avoid changing args in callback
-        const prevArgs = { ...prevResolver.getArgs() };
-        const newArgs = cb(prevArgs);
-        newResolver.setArgs(newArgs);
-        return newResolver;
-      },
-      { name: wrapperName }
-    );
-  }
-
-  wrapCloneArg(argName: string, newTypeName: string): Resolver<TSource, TContext> {
-    return this.wrap(newResolver => newResolver.cloneArg(argName, newTypeName), {
-      name: 'cloneFilterArg',
-    });
-  }
-
-  wrapType(
-    cb: ResolverWrapTypeCb<TContext>,
-    wrapperName: string = 'wrapType'
-  ): Resolver<TSource, TContext> {
-    return this.wrap(
-      (newResolver, prevResolver) => {
-        const prevType = prevResolver.getType();
-        const newType = cb(prevType);
-        newResolver.setType(newType);
-        return newResolver;
-      },
-      { name: wrapperName }
-    );
-  }
-
   addFilterArg(opts: ResolverFilterArgConfig<TSource, TContext>): Resolver<TSource, TContext> {
     if (!opts.name) {
       throw new Error('For Resolver.addFilterArg the arg name `opts.name` is required.');
@@ -691,34 +542,185 @@ export class Resolver<TSource, TContext> {
     return resolver;
   }
 
+  // -----------------------------------------------
+  // Resolve methods
+  // -----------------------------------------------
+
+  /*
+  * This method should be overriden via constructor
+  */
+  /* eslint-disable */
+  resolve(
+    resolveParams: ResolveParams<TSource, TContext> | $Shape<ResolveParams<TSource, TContext>>
+  ): Promise<mixed> {
+    return Promise.resolve();
+  }
+  /* eslint-enable */
+
+  getResolve(): ResolverRpCb<TSource, TContext> {
+    return this.resolve;
+  }
+
+  setResolve(resolve: ResolverRpCb<TSource, TContext>): Resolver<TSource, TContext> {
+    this.resolve = resolve;
+    return this;
+  }
+
+  // -----------------------------------------------
+  // Wrap methods
+  // -----------------------------------------------
+
+  wrap(
+    cb: ?ResolverWrapCb<TSource, TContext>,
+    newResolverOpts: ?$Shape<ResolverOpts<TSource, TContext>> = {}
+  ): Resolver<TSource, TContext> {
+    const prevResolver: Resolver<TSource, TContext> = this;
+    const newResolver = this.clone({
+      name: 'wrap',
+      parent: prevResolver,
+      ...newResolverOpts,
+    });
+
+    if (isFunction(cb)) {
+      const resolver = cb(newResolver, prevResolver);
+      if (resolver) return resolver;
+    }
+
+    return newResolver;
+  }
+
+  wrapResolve(
+    cb: ResolverNextRpCb<TSource, TContext>,
+    wrapperName: string = 'wrapResolve'
+  ): Resolver<TSource, TContext> {
+    return this.wrap(
+      (newResolver, prevResolver) => {
+        const newResolve = cb(prevResolver.getResolve());
+        newResolver.setResolve(newResolve);
+        return newResolver;
+      },
+      { name: wrapperName }
+    );
+  }
+
+  wrapArgs(cb: ResolverWrapArgsCb, wrapperName: string = 'wrapArgs'): Resolver<TSource, TContext> {
+    return this.wrap(
+      (newResolver, prevResolver) => {
+        // clone prevArgs, to avoid changing args in callback
+        const prevArgs = { ...prevResolver.getArgs() };
+        const newArgs = cb(prevArgs);
+        newResolver.setArgs(newArgs);
+        return newResolver;
+      },
+      { name: wrapperName }
+    );
+  }
+
+  wrapCloneArg(argName: string, newTypeName: string): Resolver<TSource, TContext> {
+    return this.wrap(newResolver => newResolver.cloneArg(argName, newTypeName), {
+      name: 'cloneFilterArg',
+    });
+  }
+
+  wrapType(
+    cb: ResolverWrapTypeCb<TContext>,
+    wrapperName: string = 'wrapType'
+  ): Resolver<TSource, TContext> {
+    return this.wrap(
+      (newResolver, prevResolver) => {
+        const prevType = prevResolver.getType();
+        const newType = cb(prevType);
+        newResolver.setType(newType);
+        return newResolver;
+      },
+      { name: wrapperName }
+    );
+  }
+
+  // -----------------------------------------------
+  // Misc methods
+  // -----------------------------------------------
+
+  getFieldConfig(
+    opts: {
+      projection?: ProjectionType,
+    } = {}
+  ): GraphQLFieldConfig<TSource, TContext> {
+    const resolve = this.getResolve();
+    return {
+      type: this.getType(),
+      args: resolveArgConfigMapAsThunk(
+        this.constructor.schemaComposer,
+        this.getArgs(),
+        this.name,
+        'Resolver'
+      ),
+      description: this.description,
+      resolve: (source: TSource, args, context: TContext, info: GraphQLResolveInfo) => {
+        let projection = getProjectionFromAST(info);
+        if (opts.projection) {
+          projection = ((deepmerge(projection, opts.projection): any): ProjectionType);
+        }
+        return resolve({ source, args, context, info, projection });
+      },
+    };
+  }
+
+  getKind(): ?ResolverKinds {
+    return this.kind;
+  }
+
+  setKind(kind: string): Resolver<TSource, TContext> {
+    if (kind !== 'query' && kind !== 'mutation' && kind !== 'subscription') {
+      throw new Error(
+        `You provide incorrect value '${kind}' for Resolver.setKind method. ` +
+          'Valid values are: query | mutation | subscription'
+      );
+    }
+    this.kind = kind;
+    return this;
+  }
+
+  getDescription(): ?string {
+    return this.description;
+  }
+
+  setDescription(description: string): Resolver<TSource, TContext> {
+    this.description = description;
+    return this;
+  }
+
+  get(path: string | Array<string>): any {
+    return typeByPath(this, path);
+  }
+
+  clone(opts: $Shape<ResolverOpts<TSource, TContext>> = {}): Resolver<TSource, TContext> {
+    const oldOpts = {};
+
+    const self: Resolver<TSource, TContext> = this;
+    for (const key in self) {
+      if (self.hasOwnProperty(key)) {
+        // $FlowFixMe
+        oldOpts[key] = self[key];
+      }
+    }
+    oldOpts.displayName = undefined;
+    oldOpts.args = ({ ...this.args }: GraphQLFieldConfigArgumentMap);
+    return new this.constructor.schemaComposer.Resolver(
+      (({ ...oldOpts, ...opts }: any): ResolverOpts<TSource, TContext>)
+    );
+  }
+
+  // -----------------------------------------------
+  // Debug methods
+  // -----------------------------------------------
+
   getNestedName() {
     const name = this.displayName || this.name;
     if (this.parent) {
       return `${name}(${this.parent.getNestedName()})`;
     }
     return name;
-  }
-
-  toStringOld() {
-    function extendedInfo(resolver, spaces = '') {
-      return [
-        'Resolver(',
-        `  name: ${resolver.name},`,
-        `  displayName: ${resolver.displayName || ''},`,
-        `  type: ${util.inspect(resolver.type, { depth: 2 })},`,
-        `  args: ${util.inspect(resolver.args, { depth: 3 }).replace('\n', `\n  ${spaces}`)},`,
-        `  resolve: ${
-          resolver.resolve
-            ? resolver.resolve.toString().replace('\n', `\n  ${spaces}`)
-            : 'undefined'
-        },`,
-        `  parent: ${resolver.parent ? extendedInfo(resolver.parent, `  ${spaces}`) : ''}`,
-        ')',
-      ]
-        .filter(s => !!s)
-        .join(`\n  ${spaces}`);
-    }
-    return extendedInfo(this);
   }
 
   toString(colors: boolean = true) {

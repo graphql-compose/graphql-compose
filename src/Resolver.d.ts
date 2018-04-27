@@ -86,6 +86,20 @@ export class Resolver<TSource, TContext> {
 
     constructor(opts: ResolverOpts<TSource, TContext>);
 
+    // -----------------------------------------------
+    // Output type methods
+    // -----------------------------------------------
+
+    public getType(): GraphQLOutputType;
+
+    public getTypeComposer(): TypeComposer<TContext>;
+
+    public setType(gqType: ComposeOutputType<TContext>): this;
+
+    // -----------------------------------------------
+    // Args methods
+    // -----------------------------------------------
+
     public hasArg(argName: string): boolean;
 
     public getArg(argName: string): ComposeArgumentConfig;
@@ -122,15 +136,37 @@ export class Resolver<TSource, TContext> {
 
     public makeOptional(argNameOrArray: string | string[]): this;
 
+    public addFilterArg(opts: ResolverFilterArgConfig<TSource, TContext>): Resolver<TSource, TContext>;
+
+    public addSortArg(opts: ResolverSortArgConfig<TSource, TContext>): Resolver<TSource, TContext>;
+
+    // -----------------------------------------------
+    // Resolve methods
+    // -----------------------------------------------
+
     public getResolve(): ResolverRpCb<TSource, TContext>;
 
     public setResolve(resolve: ResolverRpCb<TSource, TContext>): Resolver<TSource, TContext>;
 
-    public getType(): GraphQLOutputType;
+    // -----------------------------------------------
+    // Wrap methods
+    // -----------------------------------------------
 
-    public getTypeComposer(): TypeComposer<TContext>;
+    public wrap(
+        cb: ResolverWrapCb<TSource, TContext> | null,
+        newResolverOpts: ResolverOpts<TSource, TContext> | null): Resolver<TSource, TContext>;
 
-    public setType(gqType: ComposeOutputType<TContext>): this;
+    public wrapResolve(cb: ResolverNextRpCb<TSource, TContext>, wrapperName?: string): Resolver<TSource, TContext>;
+
+    public wrapArgs(cb: ResolverWrapArgsCb, wrapperName?: string): Resolver<TSource, TContext>;
+
+    public wrapCloneArg(argName: string, newTypeName: string): Resolver<TSource, TContext>;
+
+    public wrapType(cb: ResolverWrapTypeCb, wrapperName?: string): Resolver<TSource, TContext>;
+
+    // -----------------------------------------------
+    // Misc methods
+    // -----------------------------------------------
 
     public getFieldConfig(opts?: { projection?: ProjectionType }): GraphQLFieldConfig<TSource, TContext>;
 
@@ -146,25 +182,11 @@ export class Resolver<TSource, TContext> {
 
     public clone(opts?: ResolverOpts<TSource, TContext>): Resolver<TSource, TContext>;
 
-    public wrap(
-        cb: ResolverWrapCb<TSource, TContext> | null,
-        newResolverOpts: ResolverOpts<TSource, TContext> | null): Resolver<TSource, TContext>;
-
-    public wrapResolve(cb: ResolverNextRpCb<TSource, TContext>, wrapperName?: string): Resolver<TSource, TContext>;
-
-    public wrapArgs(cb: ResolverWrapArgsCb, wrapperName?: string): Resolver<TSource, TContext>;
-
-    public wrapCloneArg(argName: string, newTypeName: string): Resolver<TSource, TContext>;
-
-    public wrapType(cb: ResolverWrapTypeCb, wrapperName?: string): Resolver<TSource, TContext>;
-
-    public addFilterArg(opts: ResolverFilterArgConfig<TSource, TContext>): Resolver<TSource, TContext>;
-
-    public addSortArg(opts: ResolverSortArgConfig<TSource, TContext>): Resolver<TSource, TContext>;
+    // -----------------------------------------------
+    // Debug methods
+    // -----------------------------------------------
 
     public getNestedName(): string;
-
-    public toStringOld(): string;
 
     public toString(colors?: boolean): string;
 
