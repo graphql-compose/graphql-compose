@@ -27,12 +27,13 @@ export {
 };
 
 export { TypeStorage } from './TypeStorage';
-export { getProjectionFromAST, getFlatProjectionFromAST } from './utils/projection';
 
+// Scalar types
 export { GraphQLDate, GraphQLBuffer, GraphQLGeneric, GraphQLJSON } from './type';
 
+// Utils
+export { getProjectionFromAST, getFlatProjectionFromAST } from './utils/projection';
 export { toInputObjectType, convertInputObjectField } from './utils/toInputObjectType';
-
 export * from './utils/misc';
 export * from './utils/is';
 export * from './utils/graphqlVersion';
@@ -61,7 +62,7 @@ export type {
   RelationArgsMapper,
 } from './TypeComposer';
 
-export {
+export type {
   ComposeInputType,
   ComposeInputFieldConfig,
   ComposeInputFieldConfigAsObject,
@@ -69,7 +70,7 @@ export {
   ComposeInputObjectTypeConfig,
 } from './InputTypeComposer';
 
-export {
+export type {
   ResolveParams,
   ResolverKinds,
   ResolverFilterArgFn,
@@ -85,6 +86,6 @@ export {
   ResolveDebugOpts,
 } from './Resolver';
 
-export { ProjectionType, ProjectionNode } from './utils/projection';
+export type { ProjectionType, ProjectionNode } from './utils/projection';
 
 export type { TypeDefinitionString, TypeWrappedString, TypeNameString } from './TypeMapper';

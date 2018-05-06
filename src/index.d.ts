@@ -13,12 +13,13 @@ declare const schemaComposer: SchemaComposer<any>;
 export { SchemaComposer, schemaComposer, GQC };
 
 export { TypeStorage } from './TypeStorage';
-export { getProjectionFromAST, getFlatProjectionFromAST } from './utils/projection';
 
+// Scalar types
 export { GraphQLDate, GraphQLBuffer, GraphQLGeneric, GraphQLJSON } from './type';
 
+// Utils
+export { getProjectionFromAST, getFlatProjectionFromAST } from './utils/projection';
 export { toInputObjectType, ConvertInputObjectFieldOpts } from './utils/toInputObjectType';
-
 export * from './utils/misc';
 export * from './utils/is';
 export * from './utils/graphqlVersion';
