@@ -29,12 +29,12 @@ export function clearName(str: string): string {
   return str.replace(/[^_a-zA-Z0-9]/g, '');
 }
 
-export function omit(obj: Object, keys: string[]) {
+export function omit(obj: Object, keys: string | string[]) {
   if (!obj) {
     return {};
   }
 
-  const result = Object.assign({}, obj);
+  const result = { ...obj };
   if (Array.isArray(keys)) {
     keys.forEach(k => {
       delete result[k];
@@ -46,7 +46,7 @@ export function omit(obj: Object, keys: string[]) {
   return result;
 }
 
-export function only(obj: Object, keys: string[]) {
+export function only(obj: Object, keys: string | string[]) {
   if (!obj) {
     return {};
   }
