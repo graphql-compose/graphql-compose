@@ -54,7 +54,8 @@
   "dependencies": {
     "babel-runtime": "^6.26.0",
     "graphql-type-json": "^0.2.1",
-    "object-path": "^0.11.4"
+    "object-path": "^0.11.4",
+    "opencollective": "^1.0.3"
   },
   "config": {
     "commitizen": {
@@ -84,6 +85,12 @@
     "link": "yarn link graphql && yarn link",
     "unlink": "yarn unlink graphql && yarn add graphql",
     "semantic-release": "semantic-release",
-    "test-vers": "yarn add graphql@0.9.0 && jest && yarn add graphql@0.10.0 && jest && yarn add graphql@0.11.0 && jest && yarn add graphql@0.13.0-rc.1 && jest"
+    "test-vers": "yarn add graphql@0.9.0 && jest && yarn add graphql@0.10.0 && jest && yarn add graphql@0.11.0 && jest && yarn add graphql@0.13.0-rc.1 && jest",
+    "postinstall": "opencollective postinstall"
+  },
+  "collective": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/graphql-compose",
+    "logo": "https://opencollective.com/graphql-compose/logo.txt"
   }
 }
