@@ -1,3 +1,5 @@
+<p align="center"><img src="https://raw.githubusercontent.com/graphql-compose/graphql-compose/master/docs/logo.png" width="200" /></p>
+
 # GraphQL-compose
 
 [![](https://img.shields.io/npm/v/graphql-compose.svg)](https://www.npmjs.com/package/graphql-compose)
