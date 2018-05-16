@@ -85,5 +85,10 @@
     "unlink": "yarn unlink graphql && yarn add graphql",
     "semantic-release": "semantic-release",
     "test-vers": "yarn add graphql@0.9.0 && jest && yarn add graphql@0.10.0 && jest && yarn add graphql@0.11.0 && jest && yarn add graphql@0.13.0-rc.1 && jest"
+  },
+  "collective": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/graphql-compose",
+    "logo": "https://opencollective.com/graphql-compose/logo.txt"
   }
 }
