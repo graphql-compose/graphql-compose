@@ -13,17 +13,15 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   public EnumTypeComposer: typeof EnumTypeComposer;
   public Resolver: typeof Resolver;
 
-  public constructor();
-
   public Query: TypeComposer<TContext>;
+  public Mutation: TypeComposer<TContext>;
+  public Subscription: TypeComposer<TContext>;
+
+  public constructor();
 
   public rootQuery(): TypeComposer<TContext>;
 
-  public Mutation: TypeComposer<TContext>;
-
   public rootMutation(): TypeComposer<TContext>;
-
-  public Subscription: TypeComposer<TContext>;
 
   public rootSubscription(): TypeComposer<TContext>;
 
