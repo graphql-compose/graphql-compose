@@ -7,29 +7,42 @@ import { EnumTypeComposer } from './EnumTypeComposer';
 import { Resolver } from './Resolver';
 
 export class SchemaComposer<TContext> extends TypeStorage<TContext> {
-    public TypeMapper: TypeMapper;
-    public TypeComposer: typeof TypeComposer;
-    public InputTypeComposer: typeof InputTypeComposer;
-    public EnumTypeComposer: typeof EnumTypeComposer;
-    public Resolver: typeof Resolver;
+  public TypeMapper: TypeMapper;
+  public TypeComposer: typeof TypeComposer;
+  public InputTypeComposer: typeof InputTypeComposer;
+  public EnumTypeComposer: typeof EnumTypeComposer;
+  public Resolver: typeof Resolver;
 
-    public constructor();
+  public constructor();
 
-    public getOrCreateTC(typeName: string): TypeComposer<TContext>;
+  public Query: TypeComposer<TContext>;
 
-    public getOrCreateITC(typeName: string): InputTypeComposer;
+  public rootQuery(): TypeComposer<TContext>;
 
-    public getTC(typeName: string): TypeComposer<TContext>;
+  public Mutation: TypeComposer<TContext>;
 
-    public getITC(typeName: string): InputTypeComposer;
+  public rootMutation(): TypeComposer<TContext>;
 
-    public rootQuery(): TypeComposer<TContext>;
+  public Subscription: TypeComposer<TContext>;
 
-    public rootMutation(): TypeComposer<TContext>;
+  public rootSubscription(): TypeComposer<TContext>;
 
-    public rootSubscription(): TypeComposer<TContext>;
+  public buildSchema(): GraphQLSchema;
 
-    public buildSchema(): GraphQLSchema;
+  public removeEmptyTypes(typeComposer: TypeComposer<TContext>, passedTypes: Set<string>): void;
 
-    public removeEmptyTypes(typeComposer: TypeComposer<TContext>, passedTypes: Set<string>): void;
+  public getOrCreateTC(
+    typeName: string,
+    onCreate?: (tc: TypeComposer<TContext>) => any
+  ): TypeComposer<TContext>;
+
+  public getOrCreateITC(
+    typeName: string,
+    onCreate?: (itc: InputTypeComposer) => any
+  ): InputTypeComposer;
+
+  public getOrCreateETC(
+    typeName: string,
+    onCreate?: (etc: EnumTypeComposer) => any
+  ): EnumTypeComposer;
 }
