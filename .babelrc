@@ -17,6 +17,21 @@
         }]
       ],
     },
+    "mjs": {
+      "plugins": ["transform-class-properties"],
+      "presets": [
+        [
+          "env",
+          {
+            "targets": {
+              "node": "8.0.0"
+            },
+            "loose": true,
+            "modules": false
+          }
+        ]
+      ]
+    },
     "esm": {
       "plugins": [
         "transform-class-properties",
