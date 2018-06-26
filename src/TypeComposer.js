@@ -37,7 +37,7 @@ import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath } from './utils/typeByPath';
 // import { deprecate } from './utils/debug';
 import type { ProjectionType } from './utils/projection';
-import type { GenericMap, ObjMap, Thunk } from './utils/definitions';
+import type { ObjMap, Thunk } from './utils/definitions';
 
 export type GetRecordIdFn<TSource, TContext> = (
   source: TSource,
@@ -88,7 +88,7 @@ export type ComposeFieldConfigAsObject<TSource, TContext> = {
   +description?: ?string,
   // +astNode?: any,
   +[key: string]: any,
-} & { $call?: void };
+};
 
 export type ComposePartialFieldConfigAsObject<TSource, TContext> = {
   +type?: Thunk<ComposeOutputType<TContext>> | GraphQLOutputType,
@@ -122,7 +122,7 @@ export type ComposeArgumentConfigAsObject = {
   +description?: ?string,
   // +astNode?: any,
   +[key: string]: any,
-} & { +$call?: void };
+};
 export type ComposePartialArgumentConfigAsObject = {
   +type: Thunk<ComposeArgumentType> | GraphQLInputType,
   +defaultValue?: mixed,
@@ -163,13 +163,13 @@ export type RelationArgsMapperFn<TSource, TContext> = (
 ) => any;
 export type RelationArgsMapper<TSource, TContext> = {
   [argName: string]:
+    | { [key: string]: any }
     | RelationArgsMapperFn<TSource, TContext>
     | null
     | void
     | string
     | number
-    | Array<any>
-    | GenericMap<any>,
+    | Array<any>,
 };
 
 export class TypeComposer<TContext> {

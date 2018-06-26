@@ -35,7 +35,7 @@ export type ComposeInputFieldConfigAsObject = {
   description?: ?string,
   astNode?: ?InputValueDefinitionNode,
   [key: string]: any,
-} & { $call?: void };
+};
 
 export type ComposeInputType =
   | InputTypeComposer

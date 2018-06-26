@@ -41,7 +41,6 @@ import { isFunction, isString } from './utils/is';
 import filterByDotPaths from './utils/filterByDotPaths';
 import { getProjectionFromAST } from './utils/projection';
 import type { ProjectionType } from './utils/projection';
-import type { GenericMap } from './utils/definitions';
 import { typeByPath } from './utils/typeByPath';
 import GraphQLJSON from './type/json';
 // import { deprecate } from './utils/debug';
@@ -81,12 +80,12 @@ export type ResolverSortArgConfig<TSource, TContext> = {
   // value also can be an `Object`, but flow does not understande union with object and function
   // see https://github.com/facebook/flow/issues/1948
   value:
+    | { [key: string]: any }
     | ResolverSortArgFn<TSource, TContext>
     | string
     | number
     | boolean
-    | Array<any>
-    | GenericMap<any>,
+    | Array<any>,
   deprecationReason?: ?string,
   description?: ?string,
 };
