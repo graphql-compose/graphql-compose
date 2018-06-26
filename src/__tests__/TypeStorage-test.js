@@ -2,7 +2,7 @@
 
 import { TypeStorage } from '../TypeStorage';
 import { GraphQLString, GraphQLObjectType } from '../graphql';
-import { TypeComposer, InputTypeComposer, EnumTypeComposer } from '../';
+import { TypeComposer, InputTypeComposer, EnumTypeComposer } from '..';
 
 let typeStorage;
 beforeEach(() => {

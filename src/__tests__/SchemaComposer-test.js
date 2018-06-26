@@ -1,6 +1,6 @@
 /* @flow strict */
 
-import { SchemaComposer } from '../';
+import { SchemaComposer } from '..';
 import { TypeComposer } from '../TypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';

@@ -1,6 +1,6 @@
 /* @flow */
 
-import { TypeComposer, schemaComposer } from '../';
+import { TypeComposer, schemaComposer } from '..';
 
 beforeEach(() => {
   schemaComposer.clear();

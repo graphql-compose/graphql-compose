@@ -8,7 +8,7 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from '../graphql';
-import { InputTypeComposer, schemaComposer } from '../';
+import { InputTypeComposer, schemaComposer } from '..';
 
 beforeEach(() => {
   schemaComposer.clear();

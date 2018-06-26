@@ -1,6 +1,6 @@
 /* @flow strict */
 
-import { EnumTypeComposer, schemaComposer } from '../';
+import { EnumTypeComposer, schemaComposer } from '..';
 import { GraphQLList, GraphQLNonNull, GraphQLEnumType } from '../graphql';
 import { graphqlVersion } from '../utils/graphqlVersion';
 

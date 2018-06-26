@@ -13,7 +13,7 @@ import {
   GraphQLList,
 } from '../graphql';
 import schemaComposer from '../__mocks__/schemaComposer';
-import { Resolver, TypeComposer, InputTypeComposer, EnumTypeComposer } from '../';
+import { Resolver, TypeComposer, InputTypeComposer, EnumTypeComposer } from '..';
 
 describe('Resolver', () => {
   let resolver: Resolver;

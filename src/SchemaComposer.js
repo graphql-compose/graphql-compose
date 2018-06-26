@@ -162,9 +162,11 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   toString(): string {
     return 'SchemaComposer';
   }
+
   toJSON() {
     return 'SchemaComposer';
   }
+
   inspect() {
     return 'SchemaComposer';
   }

@@ -3,7 +3,7 @@
 import { graphql } from '../../graphql';
 import type { GraphQLResolveInfo, GraphQLObjectType } from '../../graphql';
 import { getProjectionFromAST, extendByFieldProjection } from '../projection';
-import { TypeComposer, schemaComposer } from '../../';
+import { TypeComposer, schemaComposer } from '../..';
 
 const Level2TC = TypeComposer.create({
   name: 'Level2',

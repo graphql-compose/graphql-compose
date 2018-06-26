@@ -901,6 +901,7 @@ export class TypeComposer<TContext> {
     }
     return this.gqType._gqcGetRecordIdFn;
   }
+
   /**
    * Get function that returns record id, from provided object.
    */

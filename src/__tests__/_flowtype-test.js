@@ -1,6 +1,6 @@
 /* @flow strict */
 
-import { SchemaComposer } from '../';
+import { SchemaComposer } from '..';
 
 describe('Flowtype tests', () => {
   it('TContext validation tests', () => {

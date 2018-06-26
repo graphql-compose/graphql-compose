@@ -1,7 +1,7 @@
 /* @flow strict */
 
 import { GraphQLString, GraphQLObjectType, GraphQLInputObjectType } from '../../graphql';
-import { TypeComposer, InputTypeComposer, schemaComposer } from '../../';
+import { TypeComposer, InputTypeComposer, schemaComposer } from '../..';
 import {
   resolveOutputConfigMapAsThunk,
   resolveInputConfigMapAsThunk,

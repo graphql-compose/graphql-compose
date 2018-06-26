@@ -1,7 +1,7 @@
 /* @flow strict */
 
 import { GraphQLInt, GraphQLString } from '../graphql';
-import { schemaComposer } from '../';
+import { schemaComposer } from '..';
 
 schemaComposer.getOrCreateTC('User').addFields({
   name: {

@@ -8,7 +8,7 @@ import {
   GraphQLList,
   graphql,
 } from 'graphql';
-import { TypeComposer, schemaComposer } from '../../';
+import { TypeComposer, schemaComposer } from '../..';
 
 const remoteSchema = new GraphQLSchema({
   query: new GraphQLObjectType({

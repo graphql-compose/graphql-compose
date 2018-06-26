@@ -10,6 +10,8 @@
     "no-unused-expressions": 0,
     "no-plusplus": 0,
     "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*-test.js"]}],
+    "import/named": 0,
+    "import/no-cycle": 0,
     "no-prototype-builtins": 0,
     "no-restricted-syntax": 0,
     "no-mixed-operators": 0,
@@ -28,7 +30,9 @@
     "import/prefer-default-export": 0,
     "arrow-parens": 0,
     "no-use-before-define": ["error", { "functions": false }],
-    "prefer-destructuring": 0
+    "prefer-destructuring": 0,
+    "lines-between-class-members": ["error", "always", { exceptAfterSingleLine: true }],
+    "no-else-return": 0
   },
   "env": {
     "jasmine": true,

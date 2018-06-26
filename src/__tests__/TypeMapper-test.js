@@ -20,7 +20,7 @@ import {
   EnumTypeComposer,
   Resolver,
   TypeMapper,
-} from '../';
+} from '..';
 import { graphqlVersion } from '../utils/graphqlVersion';
 import GraphQLJSON from '../type/json';
 import GraphQLDate from '../type/date';

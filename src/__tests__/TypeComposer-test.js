@@ -10,7 +10,7 @@ import {
   GraphQLBoolean,
   GraphQLInterfaceType,
 } from '../graphql';
-import { TypeComposer, Resolver, schemaComposer } from '../';
+import { TypeComposer, Resolver, schemaComposer } from '..';
 
 beforeEach(() => {
   schemaComposer.clear();
