@@ -8,7 +8,7 @@
     "mjs"
   ],
   "main": "lib/index.js",
-  "module": "mjs/index.js",
+  "module": "mjs/index.mjs",
   "types": "lib/index.d.ts",
   "repository": {
     "type": "git",
