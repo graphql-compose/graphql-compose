@@ -217,6 +217,8 @@ export class TypeMapper<TContext> {
     fieldName?: string = '',
     typeName?: string = ''
   ): GraphQLFieldConfig<any, TContext> {
+    invariant(composeFC, `You provide empty argument field config for ${typeName}.${fieldName}`);
+
     let composeType;
     let copyProps;
     let copyArgs;
@@ -348,6 +350,11 @@ export class TypeMapper<TContext> {
     fieldName?: string = '',
     typeName?: string = ''
   ): GraphQLArgumentConfig {
+    invariant(
+      composeAC,
+      `You provide empty argument config for ${typeName}.${fieldName}.${argName}`
+    );
+
     let composeType;
     let copyProps;
 
@@ -477,6 +484,8 @@ export class TypeMapper<TContext> {
     fieldName?: string = '',
     typeName?: string = ''
   ): GraphQLInputFieldConfig {
+    invariant(composeIFC, `You provide empty input field config for ${typeName}.${fieldName}`);
+
     let composeType;
     let copyProps;
 
