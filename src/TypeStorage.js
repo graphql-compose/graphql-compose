@@ -6,7 +6,7 @@ import { InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import type { GraphQLNamedType, GraphQLScalarType } from './graphql';
 
-type K = string;
+type K = any;
 type V<TContext> =
   | TypeComposer<TContext>
   | InputTypeComposer
@@ -114,21 +114,21 @@ export class TypeStorage<TContext> {
     return gqType;
   }
 
-  getTC(typeName: string): TypeComposer<TContext> {
+  getTC(typeName: K): TypeComposer<TContext> {
     if (!this.hasInstance(typeName, TypeComposer)) {
       throw new Error(`Cannot find TypeComposer with name ${typeName}`);
     }
     return (this.get(typeName): any);
   }
 
-  getITC(typeName: string): InputTypeComposer {
+  getITC(typeName: K): InputTypeComposer {
     if (!this.hasInstance(typeName, InputTypeComposer)) {
       throw new Error(`Cannot find InputTypeComposer with name ${typeName}`);
     }
     return (this.get(typeName): any);
   }
 
-  getETC(typeName: string): EnumTypeComposer {
+  getETC(typeName: K): EnumTypeComposer {
     if (!this.hasInstance(typeName, EnumTypeComposer)) {
       throw new Error(`Cannot find EnumTypeComposer with name ${typeName}`);
     }
