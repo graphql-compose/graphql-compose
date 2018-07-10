@@ -4,7 +4,7 @@ import { InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { Resolver } from './Resolver';
 
-type K = string;
+type K = any;
 type V<TContext> = TypeComposer<TContext> | InputTypeComposer | EnumTypeComposer | GraphQLNamedType;
 
 export class TypeStorage<TContext> {
@@ -37,9 +37,9 @@ export class TypeStorage<TContext> {
 
   public getOrSet(key: K, typeOrThunk: V<TContext> | (() => V<TContext>)): V<TContext>;
 
-  public getTC(typeName: string): TypeComposer<TContext>;
+  public getTC(typeName: K): TypeComposer<TContext>;
 
-  public getITC(typeName: string): InputTypeComposer;
+  public getITC(typeName: K): InputTypeComposer;
 
-  public getETC(typeName: string): EnumTypeComposer;
+  public getETC(typeName: K): EnumTypeComposer;
 }
