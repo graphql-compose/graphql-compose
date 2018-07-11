@@ -11,10 +11,6 @@ import {
 } from './graphql';
 import { TypeAsString } from './TypeMapper';
 
-export type GraphQLEnumTypeExtended = GraphQLEnumType & {
-  _gqcEnumTypeComposer?: EnumTypeComposer,
-};
-
 export class EnumTypeComposer {
   public gqType: GraphQLEnumType;
 
