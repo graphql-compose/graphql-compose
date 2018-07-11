@@ -4,6 +4,7 @@ import {
     GraphQLOutputType, GraphQLFieldResolver, GraphQLIsTypeOfFn, GraphQLResolveInfo,
     FieldDefinitionNode, GraphQLNonNull
 } from './graphql';
+import { SchemaComposer } from './SchemaComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { TypeAsString } from './TypeMapper';
@@ -124,6 +125,8 @@ export type RelationArgsMapper<TSource, TContext> = {
 };
 
 export class TypeComposer<TContext> {
+    public static schemaComposer: SchemaComposer<any>;
+
     public gqType: GraphQLObjectTypeExtended<any, TContext>;
     private _fields: GraphQLFieldConfigMap<any, TContext>;
 
