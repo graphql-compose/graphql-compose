@@ -294,7 +294,7 @@ export class InterfaceTypeComposer<TContext> {
     if (typeof fields === 'string') {
       if (existedFieldNames.indexOf(fields) === -1) {
         throw new Error(
-          `Cannot deprecate unexisted value '${fields}' from enum '${this.getTypeName()}'`
+          `Cannot deprecate unexisted field '${fields}' from interface type '${this.getTypeName()}'`
         );
       }
       this.extendField(fields, { deprecationReason: 'deprecated' });
@@ -302,7 +302,7 @@ export class InterfaceTypeComposer<TContext> {
       fields.forEach(field => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
-            `Cannot deprecate unexisted value '${field}' from enum '${this.getTypeName()}'`
+            `Cannot deprecate unexisted field '${field}' from interface type '${this.getTypeName()}'`
           );
         }
         this.extendField(field, { deprecationReason: 'deprecated' });
@@ -312,7 +312,7 @@ export class InterfaceTypeComposer<TContext> {
       Object.keys(fieldMap).forEach(field => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
-            `Cannot deprecate unexisted value '${field}' from enum '${this.getTypeName()}'`
+            `Cannot deprecate unexisted field '${field}' from interface type '${this.getTypeName()}'`
           );
         }
         const deprecationReason: string = fieldMap[field];
