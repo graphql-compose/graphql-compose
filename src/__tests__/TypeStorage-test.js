@@ -2,7 +2,7 @@
 
 import { TypeStorage } from '../TypeStorage';
 import { GraphQLString, GraphQLObjectType } from '../graphql';
-import { TypeComposer, InputTypeComposer, EnumTypeComposer } from '..';
+import { TypeComposer, InputTypeComposer, EnumTypeComposer, InterfaceTypeComposer } from '..';
 
 let typeStorage;
 beforeEach(() => {
@@ -79,6 +79,14 @@ describe('typeStorage', () => {
       const typeName = typeStorage.add(t);
       expect(typeName).toBe('NativeType');
       expect(typeStorage.get('NativeType')).toBe(t);
+    });
+
+    it('should add InterfaceTypeComposer', () => {
+      const iftc = InterfaceTypeComposer.createTemp('UserInterface');
+      const typeName = typeStorage.add(iftc);
+      expect(typeName).toBe('UserInterface');
+      expect(typeStorage.get('UserInterface')).toBe(iftc);
+      expect(typeStorage.getIFTC('UserInterface')).toBe(iftc);
     });
   });
 });

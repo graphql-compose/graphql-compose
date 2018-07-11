@@ -165,6 +165,18 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     return (this.get(typeName): any);
   }
 
+  getOrCreateIFTC(
+    typeName: string,
+    onCreate?: (_InterfaceTypeComposer<TContext>) => any
+  ): _InterfaceTypeComposer<TContext> {
+    if (!this.hasInstance(typeName, _InterfaceTypeComposer)) {
+      const iftc = this.InterfaceTypeComposer.create(typeName);
+      this.set(typeName, iftc);
+      if (onCreate && isFunction(onCreate)) onCreate(iftc);
+    }
+    return (this.get(typeName): any);
+  }
+
   // disable redundant noise in console.logs
   toString(): string {
     return 'SchemaComposer';

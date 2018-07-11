@@ -4,6 +4,7 @@ import { SchemaComposer } from '..';
 import { TypeComposer } from '../TypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
+import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 
 describe('SchemaComposer', () => {
   it('should implements `add` method', () => {
@@ -118,6 +119,37 @@ describe('SchemaComposer', () => {
       });
       expect(UserETC).toBe(UserETC2);
       expect(UserETC.getDescription()).toBe('User enum');
+    });
+  });
+
+  describe('getOrCreateIFTC()', () => {
+    it('should create IFTC if not exists', () => {
+      const sc = new SchemaComposer();
+      const UserIFTC = sc.getOrCreateIFTC('UserInterface');
+      expect(UserIFTC).toBeInstanceOf(InterfaceTypeComposer);
+      expect(sc.has('UserInterface')).toBeTruthy();
+      expect(sc.hasInstance('UserInterface', InterfaceTypeComposer)).toBeTruthy();
+      expect(sc.getIFTC('UserInterface')).toBe(UserIFTC);
+    });
+
+    it('should create IFTC if not exists with onCreate', () => {
+      const sc = new SchemaComposer();
+      const UserIFTC = sc.getOrCreateIFTC('UserInterface', tc => {
+        tc.setDescription('User interface');
+      });
+      expect(UserIFTC.getDescription()).toBe('User interface');
+    });
+
+    it('should return already created IFTC without onCreate', () => {
+      const sc = new SchemaComposer();
+      const UserIFTC = sc.getOrCreateIFTC('UserInterface', tc => {
+        tc.setDescription('User interface');
+      });
+      const UserIFTC2 = sc.getOrCreateIFTC('UserInterface', tc => {
+        tc.setDescription('updated description');
+      });
+      expect(UserIFTC).toBe(UserIFTC2);
+      expect(UserIFTC.getDescription()).toBe('User interface');
     });
   });
 

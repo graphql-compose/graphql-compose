@@ -136,4 +136,11 @@ export class TypeStorage<TContext> {
     }
     return (this.get(typeName): any);
   }
+
+  getIFTC(typeName: K): InterfaceTypeComposer<TContext> {
+    if (!this.hasInstance(typeName, InterfaceTypeComposer)) {
+      throw new Error(`Cannot find InterfaceTypeComposer with name ${typeName}`);
+    }
+    return (this.get(typeName): any);
+  }
 }
