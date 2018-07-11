@@ -12,12 +12,14 @@ import {
   GraphQLNonNull,
   GraphQLEnumType,
   GraphQLScalarType,
+  GraphQLInterfaceType,
 } from '../graphql';
 import {
   schemaComposer,
   TypeComposer,
   InputTypeComposer,
   EnumTypeComposer,
+  InterfaceTypeComposer,
   Resolver,
   TypeMapper,
 } from '..';
@@ -127,6 +129,39 @@ describe('TypeMapper', () => {
     expect(IntRangeTC.getField('min').defaultValue).toBe(0);
     expect(IntRangeTC.getField('min').type).toBe(GraphQLInt);
     expect(IntRangeTC.getField('max').type).toBeInstanceOf(GraphQLNonNull);
+  });
+
+  it('should create interface type from template string', () => {
+    const type: GraphQLInterfaceType = (TypeMapper.createType(
+      graphqlVersion < 12
+        ? `
+          interface IntRangeInterface {
+            # Max value
+            max: Int,
+            min: Int!
+            arr: [String]
+          }
+        `
+        : `
+          interface IntRangeInterface {
+            """Max value"""
+            max: Int,
+            min: Int!
+            arr: [String]
+          }
+        `
+    ): any);
+
+    expect(type).toBeInstanceOf(GraphQLInterfaceType);
+    expect(TypeMapper.get('IntRangeInterface')).toBe(type);
+
+    const IntRangeTC = new InterfaceTypeComposer(type);
+    expect(IntRangeTC.getTypeName()).toBe('IntRangeInterface');
+    expect(IntRangeTC.getFieldNames()).toEqual(expect.arrayContaining(['max', 'min', 'arr']));
+    expect(IntRangeTC.getFieldType('max')).toBe(GraphQLInt);
+    expect(IntRangeTC.getFieldConfig('max').description).toBe('Max value');
+    expect(IntRangeTC.getFieldType('min')).toBeInstanceOf(GraphQLNonNull);
+    expect(IntRangeTC.getFieldType('arr')).toBeInstanceOf(GraphQLList);
   });
 
   it('should return wrapped type', () => {
@@ -769,8 +804,8 @@ describe('TypeMapper', () => {
     });
   });
 
-  describe('creatType()', () => {
-    it('should return same type for same TypeDefinitionString', () => {
+  describe('createType()', () => {
+    it('should return same type for the same TypeDefinitionString', () => {
       const t1 = TypeMapper.createType('type SameType { a: Int }');
       const t2 = TypeMapper.createType('type SameType { a: Int }');
       expect(t1).toBe(t2);
