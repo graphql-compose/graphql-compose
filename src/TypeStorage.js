@@ -4,6 +4,7 @@ import { isFunction } from './utils/is';
 import { TypeComposer } from './TypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
+import { InterfaceTypeComposer } from './InterfaceTypeComposer';
 import type { GraphQLNamedType, GraphQLScalarType } from './graphql';
 
 type K = any;
@@ -11,6 +12,7 @@ type V<TContext> =
   | TypeComposer<TContext>
   | InputTypeComposer
   | EnumTypeComposer
+  | InterfaceTypeComposer<TContext>
   | GraphQLNamedType
   | GraphQLScalarType;
 

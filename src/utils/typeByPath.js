@@ -5,6 +5,7 @@ import { GraphQLObjectType, GraphQLInputObjectType, getNamedType } from '../grap
 import type { GraphQLInputType, GraphQLOutputType } from '../graphql';
 import { TypeComposer } from '../TypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
+import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { Resolver } from '../Resolver';
 import type { SchemaComposer } from '../SchemaComposer';
 
@@ -14,7 +15,7 @@ import type { SchemaComposer } from '../SchemaComposer';
  * #resolver
  */
 export function typeByPath(
-  src: TypeComposer<any> | InputTypeComposer | Resolver<any, any>,
+  src: TypeComposer<any> | InputTypeComposer | Resolver<any, any> | InterfaceTypeComposer<any>,
   path: string | Array<string>
 ) {
   const parts = Array.isArray(path) ? path : String(path).split('.');
@@ -29,6 +30,8 @@ export function typeByPath(
     return typeByPathITC(src, parts);
   } else if (src instanceof Resolver) {
     return typeByPathRSV(src, parts);
+  } else if (src instanceof InterfaceTypeComposer) {
+    return typeByPathFTC(src, parts);
   }
 
   return src;
@@ -85,6 +88,28 @@ function typeByPathRSV(rsv: Resolver<any, any>, parts: Array<string>) {
   }
 
   return processType(rsv.getType(), parts, rsv.constructor.schemaComposer);
+}
+
+export function typeByPathFTC(tc: InterfaceTypeComposer<any>, parts: Array<string>) {
+  if (!tc) return undefined;
+  if (parts.length === 0) return tc;
+
+  const name = parts[0];
+  if (!name) return undefined;
+  const nextName = parts[1];
+
+  if (name.startsWith('$')) {
+    // Interface does not have resolvers
+    return undefined;
+  }
+
+  if (nextName && nextName.startsWith('@')) {
+    const argType = tc.getFieldArgType(name, nextName.substring(1));
+    return processType(argType, parts.slice(2), tc.constructor.schemaComposer);
+  }
+
+  const fieldType = tc.getFieldType(name);
+  return processType(fieldType, parts.slice(1), tc.constructor.schemaComposer);
 }
 
 export function processType(

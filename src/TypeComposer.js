@@ -558,6 +558,7 @@ export class TypeComposer<TContext> {
 
   setTypeName(name: string): TypeComposer<TContext> {
     this.gqType.name = name;
+    this.gqType._typeConfig.name = name;
     this.constructor.schemaComposer.add(this);
     return this;
   }
@@ -568,6 +569,7 @@ export class TypeComposer<TContext> {
 
   setDescription(description: string): TypeComposer<TContext> {
     this.gqType.description = description;
+    this.gqType._typeConfig.description = description;
     return this;
   }
 

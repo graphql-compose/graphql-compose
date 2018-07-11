@@ -10,6 +10,7 @@ const GQC = schemaComposer;
 const TypeComposer = schemaComposer.TypeComposer;
 const InputTypeComposer = schemaComposer.InputTypeComposer;
 const EnumTypeComposer = schemaComposer.EnumTypeComposer;
+const InterfaceTypeComposer = schemaComposer.InterfaceTypeComposer;
 const Resolver = schemaComposer.Resolver;
 const TypeMapper = schemaComposer.typeMapper;
 export {
@@ -22,6 +23,7 @@ export {
   TypeComposer,
   InputTypeComposer,
   EnumTypeComposer,
+  InterfaceTypeComposer,
   Resolver,
   TypeMapper,
 };

@@ -7,6 +7,7 @@ import { TypeMapper } from './TypeMapper';
 import { TypeComposer as _TypeComposer } from './TypeComposer';
 import { InputTypeComposer as _InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer as _EnumTypeComposer } from './EnumTypeComposer';
+import { InterfaceTypeComposer as _InterfaceTypeComposer } from './InterfaceTypeComposer';
 import { Resolver as _Resolver } from './Resolver';
 import { isFunction } from './utils/is';
 
@@ -15,6 +16,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   TypeComposer: Class<_TypeComposer<TContext>>;
   InputTypeComposer: typeof _InputTypeComposer;
   EnumTypeComposer: typeof _EnumTypeComposer;
+  InterfaceTypeComposer: Class<_InterfaceTypeComposer<TContext>>;
   Resolver: Class<_Resolver<any, TContext>>;
 
   constructor(): SchemaComposer<TContext> {
@@ -40,6 +42,11 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
       static schemaComposer = schema;
     }
     this.EnumTypeComposer = EnumTypeComposer;
+
+    class InterfaceTypeComposer extends _InterfaceTypeComposer<TContext> {
+      static schemaComposer = schema;
+    }
+    this.InterfaceTypeComposer = InterfaceTypeComposer;
 
     this.typeMapper = new TypeMapper(schema);
 
