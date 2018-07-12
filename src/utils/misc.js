@@ -1,4 +1,5 @@
 /* @flow strict */
+/* eslint-disable no-nested-ternary */
 
 import pluralize from './pluralize';
 import type { Thunk } from './definitions';
@@ -63,4 +64,23 @@ export function only(obj: Object, keys: string | string[]) {
   }
 
   return result;
+}
+
+/**
+ * Used to print values in error messages.
+ */
+export function inspect(value: mixed): string {
+  return value && typeof value === 'object'
+    ? typeof value.inspect === 'function'
+      ? value.inspect()
+      : Array.isArray(value)
+        ? `[${value.map(inspect).join(', ')}]`
+        : `{${Object.keys(value)
+            .map(k => `${k}: ${inspect((value: any)[k])}`)
+            .join(', ')}}`
+    : typeof value === 'string'
+      ? `"${value}"`
+      : typeof value === 'function'
+        ? `[function ${value.name}]`
+        : String(value);
 }

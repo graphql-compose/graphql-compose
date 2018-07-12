@@ -7,22 +7,23 @@ import {
   GraphQLNonNull,
   GraphQLInputObjectType,
   getNamedType,
+  GraphQLInterfaceType,
 } from './graphql';
 import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
   GraphQLOutputType,
   GraphQLInputType,
-  GraphQLInterfaceType,
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
   GraphQLIsTypeOfFn,
   GraphQLResolveInfo,
   GraphQLFieldResolver,
 } from './graphql';
-import { type InputTypeComposer } from './InputTypeComposer';
-import { type EnumTypeComposer } from './EnumTypeComposer';
+import type { InputTypeComposer } from './InputTypeComposer';
+import type { EnumTypeComposer } from './EnumTypeComposer';
 import type { TypeAsString } from './TypeMapper';
+import { InterfaceTypeComposer } from './InterfaceTypeComposer';
 import {
   Resolver,
   type ResolverOpts,
@@ -30,7 +31,7 @@ import {
   type ResolverWrapCb,
 } from './Resolver';
 import type { SchemaComposer } from './SchemaComposer';
-import { resolveMaybeThunk, upperFirst } from './utils/misc';
+import { resolveMaybeThunk, upperFirst, inspect } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './utils/configAsThunk';
 import { toInputObjectType } from './utils/toInputObjectType';
@@ -51,6 +52,7 @@ export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
   _gqcGetRecordIdFn?: GetRecordIdFn<TSource, TContext>,
   _gqcRelations?: RelationThunkMap<TSource, TContext>,
   _gqcFields?: ComposeFieldConfigMap<TSource, TContext>,
+  _gqcInterfaces?: Array<GraphQLInterfaceType | InterfaceTypeComposer<TContext>>,
   description?: ?string,
 };
 
@@ -735,35 +737,51 @@ export class TypeComposer<TContext> {
   // Interface methods
   // -----------------------------------------------
 
-  getInterfaces(): Array<GraphQLInterfaceType> {
-    const interfaces: Array<GraphQLInterfaceType> | Thunk<?Array<GraphQLInterfaceType>> = this
-      .gqType._typeConfig.interfaces;
-
-    if (typeof interfaces === 'function') {
-      return interfaces() || [];
+  getInterfaces(): Array<GraphQLInterfaceType | InterfaceTypeComposer<TContext>> {
+    if (!this.gqType._gqcInterfaces) {
+      const interfaces: any = this.gqType._typeConfig.interfaces;
+      this.gqType._gqcInterfaces = (resolveMaybeThunk(interfaces) || []: any);
     }
 
-    return interfaces || [];
+    return this.gqType._gqcInterfaces;
   }
 
-  setInterfaces(interfaces: Array<GraphQLInterfaceType>): TypeComposer<TContext> {
-    this.gqType._typeConfig.interfaces = interfaces;
+  setInterfaces(
+    interfaces: Array<GraphQLInterfaceType | InterfaceTypeComposer<TContext>>
+  ): TypeComposer<TContext> {
+    this.gqType._gqcInterfaces = interfaces;
+    this.gqType._typeConfig.interfaces = () => {
+      return interfaces.map(iface => {
+        if (iface instanceof GraphQLInterfaceType) {
+          return iface;
+        } else if (iface instanceof InterfaceTypeComposer) {
+          return iface.getType();
+        }
+        throw new Error(
+          `For type ${this.getTypeName()} you provide incorrect interface object ${inspect(iface)}`
+        );
+      });
+    };
     delete this.gqType._interfaces; // if schema was builded, delete _interfaces
     return this;
   }
 
-  hasInterface(interfaceObj: GraphQLInterfaceType): boolean {
+  hasInterface(interfaceObj: GraphQLInterfaceType | InterfaceTypeComposer<TContext>): boolean {
     return this.getInterfaces().indexOf(interfaceObj) > -1;
   }
 
-  addInterface(interfaceObj: GraphQLInterfaceType): TypeComposer<TContext> {
+  addInterface(
+    interfaceObj: GraphQLInterfaceType | InterfaceTypeComposer<TContext>
+  ): TypeComposer<TContext> {
     if (!this.hasInterface(interfaceObj)) {
       this.setInterfaces([...this.getInterfaces(), interfaceObj]);
     }
     return this;
   }
 
-  removeInterface(interfaceObj: GraphQLInterfaceType): TypeComposer<TContext> {
+  removeInterface(
+    interfaceObj: GraphQLInterfaceType | InterfaceTypeComposer<TContext>
+  ): TypeComposer<TContext> {
     const interfaces = this.getInterfaces();
     const idx = interfaces.indexOf(interfaceObj);
     if (idx > -1) {
