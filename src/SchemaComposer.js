@@ -130,7 +130,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     return new GraphQLSchema({ ...roots, ...extraConfig, types });
   }
 
-  addSchemaMustHaveType(type: MustHaveTypes<TContext>): this {
+  addSchemaMustHaveType(type: MustHaveTypes<TContext>): SchemaComposer<TContext> {
     this._schemaMustHaveTypes.push(type);
     return this;
   }
