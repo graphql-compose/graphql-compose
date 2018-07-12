@@ -646,8 +646,8 @@ function makeSchemaDef(def, schema: SchemaComposer<any>) {
   switch (def.kind) {
     case Kind.OBJECT_TYPE_DEFINITION:
       return makeTypeDef(def, schema);
-    // case INTERFACE_TYPE_DEFINITION:
-    //   return makeInterfaceDef(def);
+    case Kind.INTERFACE_TYPE_DEFINITION:
+      return makeInterfaceDef(def, schema);
     case Kind.ENUM_TYPE_DEFINITION:
       return makeEnumDef(def);
     // case UNION_TYPE_DEFINITION:
@@ -791,6 +791,15 @@ function makeTypeDef(def: ObjectTypeDefinitionNode, schema: SchemaComposer<any>)
     description: getDescription(def),
     fields: () => makeFieldDefMap(def, schema),
     interfaces: () => makeImplementedInterfaces(def, schema),
+  });
+}
+
+function makeInterfaceDef(def: InterfaceTypeDefinitionNode, schema: SchemaComposer<any>) {
+  const typeName = def.name.value;
+  return new GraphQLInterfaceType({
+    name: typeName,
+    description: getDescription(def),
+    fields: () => makeFieldDefMap(def, schema),
   });
 }
 

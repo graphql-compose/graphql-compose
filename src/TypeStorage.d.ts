@@ -1,11 +1,18 @@
-import { GraphQLNamedType } from './graphql';
+import { GraphQLNamedType, GraphQLScalarType } from './graphql';
 import { TypeComposer } from './TypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
+import { InterfaceTypeComposer } from './InterfaceTypeComposer';
 import { Resolver } from './Resolver';
 
 type K = any;
-type V<TContext> = TypeComposer<TContext> | InputTypeComposer | EnumTypeComposer | GraphQLNamedType;
+type V<TContext> =
+    | TypeComposer<TContext>
+    | InputTypeComposer
+    | EnumTypeComposer
+    | InterfaceTypeComposer<TContext>
+    | GraphQLNamedType
+    | GraphQLScalarType;
 
 export class TypeStorage<TContext> {
   public types: Map<K, V<TContext>>;

@@ -4,15 +4,16 @@ import { isFunction } from './utils/is';
 import { TypeComposer } from './TypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
-import type { GraphQLNamedType, GraphQLScalarType } from './graphql';
+import { InterfaceTypeComposer } from './InterfaceTypeComposer';
+import type { GraphQLNamedType } from './graphql';
 
 type K = any;
 type V<TContext> =
   | TypeComposer<TContext>
   | InputTypeComposer
   | EnumTypeComposer
-  | GraphQLNamedType
-  | GraphQLScalarType;
+  | InterfaceTypeComposer<TContext>
+  | GraphQLNamedType;
 
 // TypeStorage has all methods from Map class
 export class TypeStorage<TContext> {
@@ -131,6 +132,13 @@ export class TypeStorage<TContext> {
   getETC(typeName: K): EnumTypeComposer {
     if (!this.hasInstance(typeName, EnumTypeComposer)) {
       throw new Error(`Cannot find EnumTypeComposer with name ${typeName}`);
+    }
+    return (this.get(typeName): any);
+  }
+
+  getIFTC(typeName: K): InterfaceTypeComposer<TContext> {
+    if (!this.hasInstance(typeName, InterfaceTypeComposer)) {
+      throw new Error(`Cannot find InterfaceTypeComposer with name ${typeName}`);
     }
     return (this.get(typeName): any);
   }

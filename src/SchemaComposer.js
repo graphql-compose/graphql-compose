@@ -7,15 +7,33 @@ import { TypeMapper } from './TypeMapper';
 import { TypeComposer as _TypeComposer } from './TypeComposer';
 import { InputTypeComposer as _InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer as _EnumTypeComposer } from './EnumTypeComposer';
+import { InterfaceTypeComposer as _InterfaceTypeComposer } from './InterfaceTypeComposer';
 import { Resolver as _Resolver } from './Resolver';
 import { isFunction } from './utils/is';
+import { getGraphQLType } from './utils/typeHelpers';
+import type { GraphQLNamedType, GraphQLDirective, SchemaDefinitionNode } from './graphql';
+
+type ExtraSchemaConfig = {
+  types?: ?Array<GraphQLNamedType>,
+  directives?: ?Array<GraphQLDirective>,
+  astNode?: ?SchemaDefinitionNode,
+};
+
+type MustHaveTypes<TContext> =
+  | _TypeComposer<TContext>
+  | _InputTypeComposer
+  | _EnumTypeComposer
+  | _InterfaceTypeComposer<TContext>
+  | GraphQLNamedType;
 
 export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   typeMapper: TypeMapper<TContext>;
   TypeComposer: Class<_TypeComposer<TContext>>;
   InputTypeComposer: typeof _InputTypeComposer;
   EnumTypeComposer: typeof _EnumTypeComposer;
+  InterfaceTypeComposer: Class<_InterfaceTypeComposer<TContext>>;
   Resolver: Class<_Resolver<any, TContext>>;
+  _schemaMustHaveTypes: Array<MustHaveTypes<TContext>> = [];
 
   constructor(): SchemaComposer<TContext> {
     super();
@@ -40,6 +58,11 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
       static schemaComposer = schema;
     }
     this.EnumTypeComposer = EnumTypeComposer;
+
+    class InterfaceTypeComposer extends _InterfaceTypeComposer<TContext> {
+      static schemaComposer = schema;
+    }
+    this.InterfaceTypeComposer = InterfaceTypeComposer;
 
     this.typeMapper = new TypeMapper(schema);
 
@@ -71,7 +94,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     return this.getOrCreateTC('Subscription');
   }
 
-  buildSchema(): GraphQLSchema {
+  buildSchema(extraConfig?: ExtraSchemaConfig): GraphQLSchema {
     const roots = {};
 
     if (this.has('Query')) {
@@ -99,7 +122,17 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
       );
     }
 
-    return new GraphQLSchema(roots);
+    const types = [
+      ...this._schemaMustHaveTypes.map(t => (getGraphQLType(t): any)), // additional types, eg. used in Interfaces
+      ...(extraConfig && Array.isArray(extraConfig.types) ? [...extraConfig.types] : []),
+    ];
+
+    return new GraphQLSchema({ ...roots, ...extraConfig, types });
+  }
+
+  addSchemaMustHaveType(type: MustHaveTypes<TContext>): this {
+    this._schemaMustHaveTypes.push(type);
+    return this;
   }
 
   removeEmptyTypes(typeComposer: _TypeComposer<TContext>, passedTypes: Set<string> = new Set()) {
@@ -158,6 +191,18 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     return (this.get(typeName): any);
   }
 
+  getOrCreateIFTC(
+    typeName: string,
+    onCreate?: (_InterfaceTypeComposer<TContext>) => any
+  ): _InterfaceTypeComposer<TContext> {
+    if (!this.hasInstance(typeName, _InterfaceTypeComposer)) {
+      const iftc = this.InterfaceTypeComposer.create(typeName);
+      this.set(typeName, iftc);
+      if (onCreate && isFunction(onCreate)) onCreate(iftc);
+    }
+    return (this.get(typeName): any);
+  }
+
   // disable redundant noise in console.logs
   toString(): string {
     return 'SchemaComposer';
@@ -169,5 +214,10 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   inspect() {
     return 'SchemaComposer';
+  }
+
+  clear(): void {
+    super.clear();
+    this._schemaMustHaveTypes = [];
   }
 }

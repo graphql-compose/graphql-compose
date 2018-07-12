@@ -4,8 +4,10 @@ import {
     GraphQLOutputType, GraphQLFieldResolver, GraphQLIsTypeOfFn, GraphQLResolveInfo,
     FieldDefinitionNode, GraphQLNonNull
 } from './graphql';
+import { SchemaComposer } from './SchemaComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
+import { InterfaceTypeComposer } from './InterfaceTypeComposer';
 import { TypeAsString } from './TypeMapper';
 import { Resolver, ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './Resolver';
 import { ProjectionType } from './utils/projection';
@@ -18,6 +20,8 @@ export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
     _gqcResolvers?: Map<string, Resolver<TSource, TContext>>,
     _gqcGetRecordIdFn?: GetRecordIdFn<TSource, TContext>,
     _gqcRelations?: RelationThunkMap<TSource, TContext>,
+    _gqcFields?: ComposeFieldConfigMap<TSource, TContext>,
+    _gqcInterfaces?: Array<GraphQLInterfaceType | InterfaceTypeComposer<TContext>>,
     description: string | null,
 };
 
@@ -124,6 +128,8 @@ export type RelationArgsMapper<TSource, TContext> = {
 };
 
 export class TypeComposer<TContext> {
+    public static schemaComposer: SchemaComposer<any>;
+
     public gqType: GraphQLObjectTypeExtended<any, TContext>;
     private _fields: GraphQLFieldConfigMap<any, TContext>;
 
@@ -259,15 +265,15 @@ export class TypeComposer<TContext> {
     // Interface methods
     // -----------------------------------------------
 
-    public getInterfaces(): GraphQLInterfaceType[];
+    public getInterfaces(): Array<InterfaceTypeComposer<TContext> | GraphQLInterfaceType>;
 
-    public setInterfaces(interfaces: GraphQLInterfaceType[]): this;
+    public setInterfaces(interfaces: Array<InterfaceTypeComposer<TContext> | GraphQLInterfaceType>): this;
 
-    public hasInterface(interfaceObj: GraphQLInterfaceType): boolean;
+    public hasInterface(interfaceObj: InterfaceTypeComposer<TContext> | GraphQLInterfaceType): boolean;
 
-    public addInterface(interfaceObj: GraphQLInterfaceType): this;
+    public addInterface(interfaceObj: InterfaceTypeComposer<TContext> | GraphQLInterfaceType): this;
 
-    public removeInterface(interfaceObj: GraphQLInterfaceType): this;
+    public removeInterface(interfaceObj: InterfaceTypeComposer<TContext> | GraphQLInterfaceType): this;
 
     // -----------------------------------------------
     // Misc methods

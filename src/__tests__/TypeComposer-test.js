@@ -10,7 +10,7 @@ import {
   GraphQLBoolean,
   GraphQLInterfaceType,
 } from '../graphql';
-import { TypeComposer, Resolver, schemaComposer } from '..';
+import { TypeComposer, Resolver, schemaComposer, InterfaceTypeComposer } from '..';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -311,15 +311,21 @@ describe('TypeComposer', () => {
     const iface = new GraphQLInterfaceType({
       name: 'Node',
       description: '',
-      fields: () => ({}),
+      fields: () => ({ id: { type: GraphQLInt } }),
       resolveType: () => {},
     });
     const iface2 = new GraphQLInterfaceType({
-      name: 'Node',
+      name: 'Node2',
       description: '',
-      fields: () => ({}),
+      fields: () => ({ id: { type: GraphQLInt } }),
       resolveType: () => {},
     });
+    const iftc = InterfaceTypeComposer.create(`
+      interface SimpleObject {
+        id: Int
+        name: String
+      }
+    `);
 
     it('getInterfaces()', () => {
       tc.gqType._typeConfig.interfaces = [iface];
@@ -338,15 +344,34 @@ describe('TypeComposer', () => {
       tc.addInterface(iface2);
       expect(tc.getInterfaces()).toEqual(expect.arrayContaining([iface, iface2]));
       expect(tc.hasInterface(iface2)).toBe(true);
+      tc.addInterface(iftc);
+      expect(tc.hasInterface(iftc)).toBe(true);
     });
 
     it('removeInterface()', () => {
       tc.addInterface(iface);
       tc.addInterface(iface2);
-      expect(tc.getInterfaces()).toEqual(expect.arrayContaining([iface, iface2]));
+      tc.addInterface(iftc);
+      expect(tc.getInterfaces()).toEqual(expect.arrayContaining([iface, iface2, iftc]));
       tc.removeInterface(iface);
+      tc.removeInterface(iftc);
       expect(tc.hasInterface(iface)).toBe(false);
+      expect(tc.hasInterface(iftc)).toBe(false);
       expect(tc.hasInterface(iface2)).toBe(true);
+    });
+
+    it('check proper interface definition in GraphQLType', () => {
+      tc.addInterface(iface);
+      tc.addInterface(iface2);
+      tc.addInterface(iftc);
+      const gqType = tc.getType();
+      const ifaces = gqType.getInterfaces();
+      expect(ifaces[0]).toBeInstanceOf(GraphQLInterfaceType);
+      expect(ifaces[1]).toBeInstanceOf(GraphQLInterfaceType);
+      expect(ifaces[2]).toBeInstanceOf(GraphQLInterfaceType);
+      expect(ifaces[0].name).toBe('Node');
+      expect(ifaces[1].name).toBe('Node2');
+      expect(ifaces[2].name).toBe('SimpleObject');
     });
   });
 

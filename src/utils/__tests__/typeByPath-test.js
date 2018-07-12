@@ -1,7 +1,7 @@
 /* @flow strict */
 
 import { GraphQLString, GraphQLInt, GraphQLFloat } from '../../graphql';
-import { TypeComposer, InputTypeComposer, Resolver } from '../..';
+import { TypeComposer, InputTypeComposer, Resolver, InterfaceTypeComposer } from '../..';
 
 describe('typeByPath', () => {
   const lonLatTC = TypeComposer.create('type LonLat { lon: Float, lat: Float }');
@@ -33,6 +33,20 @@ describe('typeByPath', () => {
     type: tc,
   });
   tc.setResolver('findSpots', rsv);
+  const ifc = InterfaceTypeComposer.create({
+    name: 'Place',
+    fields: {
+      title: 'String!',
+      lonLat: lonLatTC,
+      image: {
+        type: 'String',
+        args: {
+          size: 'Int',
+        },
+      },
+      points: '[LonLat]',
+    },
+  });
 
   describe('for TypeComposer', () => {
     it('should return field type', () => {
@@ -116,6 +130,34 @@ describe('typeByPath', () => {
       expect(rsv.get('@spot').getType()).toBe(rsv.get('@spot').getType());
       // scalar type
       expect(rsv.get('@spot.lat')).toBe(rsv.get('@spot.lat'));
+    });
+  });
+
+  describe('for InterfaceTypeComposer', () => {
+    it('should return field type', () => {
+      expect(ifc.get('title')).toBe(GraphQLString);
+    });
+
+    it('should return TypeCompose for complex type', () => {
+      expect(ifc.get('lonLat')).toBeInstanceOf(TypeComposer);
+      expect(ifc.get('lonLat').getTypeName()).toBe('LonLat');
+    });
+
+    it('should return sub field type', () => {
+      expect(ifc.get('lonLat.lon')).toBe(GraphQLFloat);
+      expect(ifc.get('lonLat.lat')).toBe(GraphQLFloat);
+    });
+
+    it('should return type of field arg', () => {
+      expect(ifc.get('image.@size')).toBe(GraphQLInt);
+    });
+
+    it('should return same GraphQL type instances', () => {
+      expect(ifc.get('lonLat').getType()).toBeTruthy();
+      // via TypeComposer
+      expect(ifc.get('lonLat').getType()).toBe(ifc.get('lonLat').getType());
+      // scalar type
+      expect(ifc.get('lonLat.lat')).toBe(ifc.get('lonLat.lat'));
     });
   });
 });

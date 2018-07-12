@@ -6,6 +6,7 @@ export { graphql };
 export { TypeComposer } from './TypeComposer';
 export { InputTypeComposer } from './InputTypeComposer';
 export { EnumTypeComposer } from './EnumTypeComposer';
+export { InterfaceTypeComposer } from './InterfaceTypeComposer';
 export { Resolver } from './Resolver';
 export { TypeMapper } from './TypeMapper';
 declare const GQC: SchemaComposer<any>;

@@ -4,6 +4,7 @@ import { SchemaComposer } from '..';
 import { TypeComposer } from '../TypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
+import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 
 describe('SchemaComposer', () => {
   it('should implements `add` method', () => {
@@ -121,6 +122,37 @@ describe('SchemaComposer', () => {
     });
   });
 
+  describe('getOrCreateIFTC()', () => {
+    it('should create IFTC if not exists', () => {
+      const sc = new SchemaComposer();
+      const UserIFTC = sc.getOrCreateIFTC('UserInterface');
+      expect(UserIFTC).toBeInstanceOf(InterfaceTypeComposer);
+      expect(sc.has('UserInterface')).toBeTruthy();
+      expect(sc.hasInstance('UserInterface', InterfaceTypeComposer)).toBeTruthy();
+      expect(sc.getIFTC('UserInterface')).toBe(UserIFTC);
+    });
+
+    it('should create IFTC if not exists with onCreate', () => {
+      const sc = new SchemaComposer();
+      const UserIFTC = sc.getOrCreateIFTC('UserInterface', tc => {
+        tc.setDescription('User interface');
+      });
+      expect(UserIFTC.getDescription()).toBe('User interface');
+    });
+
+    it('should return already created IFTC without onCreate', () => {
+      const sc = new SchemaComposer();
+      const UserIFTC = sc.getOrCreateIFTC('UserInterface', tc => {
+        tc.setDescription('User interface');
+      });
+      const UserIFTC2 = sc.getOrCreateIFTC('UserInterface', tc => {
+        tc.setDescription('updated description');
+      });
+      expect(UserIFTC).toBe(UserIFTC2);
+      expect(UserIFTC.getDescription()).toBe('User interface');
+    });
+  });
+
   describe('buildSchema()', () => {
     it('should throw error, if root fields not defined', () => {
       const sc = new SchemaComposer();
@@ -129,6 +161,17 @@ describe('SchemaComposer', () => {
       expect(() => {
         sc.buildSchema();
       }).toThrowError();
+    });
+
+    it('should accept additional types', () => {
+      const sc = new SchemaComposer();
+      sc.Query.addFields({ time: 'Int' });
+      const me1 = sc.TypeComposer.create('type Me1 { a: Int }').getType();
+      const me2 = sc.TypeComposer.create('type Me2 { a: Int }').getType();
+      const schema = sc.buildSchema({ types: [me1, me1, me2] });
+
+      expect(schema._typeMap.Me1).toEqual(me1);
+      expect(schema._typeMap.Me2).toEqual(me2);
     });
   });
 
@@ -186,5 +229,21 @@ describe('SchemaComposer', () => {
       expect(sc.Subscription).toBe(sc.rootSubscription());
       expect(sc.Subscription.getTypeName()).toBe('Subscription');
     });
+  });
+
+  describe('SchemaMustHaveType', () => {
+    const sc = new SchemaComposer();
+    const tc = sc.TypeComposer.create(`type Me { name: String }`);
+
+    sc.addSchemaMustHaveType(tc);
+    expect(sc._schemaMustHaveTypes).toContain(tc);
+
+    sc.clear();
+    expect(sc._schemaMustHaveTypes).not.toContain(tc);
+
+    sc.addSchemaMustHaveType(tc);
+    sc.Query.addFields({ time: 'String' });
+    const schema = sc.buildSchema();
+    expect(schema._typeMap.Me).toEqual(tc.getType());
   });
 });

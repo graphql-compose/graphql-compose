@@ -2,6 +2,7 @@ import {
     GraphQLFieldConfig, GraphQLFieldConfigArgumentMap, GraphQLInputType, GraphQLOutputType, GraphQLArgumentConfig
 } from './graphql';
 import * as graphql from './graphql';
+import { SchemaComposer } from './SchemaComposer';
 import {
     ComposeArgumentConfig, ComposeFieldConfigArgumentMap, ComposeOutputType, ComposeArgumentType
 } from './TypeComposer';
@@ -75,6 +76,8 @@ export type ResolveDebugOpts = {
 };
 
 export class Resolver<TSource, TContext> {
+    public static schemaComposer: SchemaComposer<any>;
+
     public type: ComposeOutputType<TContext>;
     public args: ComposeFieldConfigArgumentMap;
     public resolve: ResolverRpCb<TSource, TContext>;
