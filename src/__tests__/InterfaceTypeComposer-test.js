@@ -9,7 +9,7 @@ import {
   GraphQLBoolean,
   GraphQLInterfaceType,
 } from '../graphql';
-import { InterfaceTypeComposer, schemaComposer } from '..';
+import { InterfaceTypeComposer, schemaComposer, TypeComposer } from '..';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -484,6 +484,125 @@ describe('InterfaceTypeComposer', () => {
       expect(() => {
         myIFTC.getFieldTC('list');
       }).toThrow('field should be ObjectType');
+    });
+  });
+
+  describe('typeResolvers methods', () => {
+    let PersonTC;
+    let KindRedTC;
+    let KindBlueTC;
+
+    beforeEach(() => {
+      PersonTC = TypeComposer.create(`
+        type Person { age: Int, field1: String, field2: String }
+      `);
+      PersonTC.addInterface(iftc);
+      iftc.addTypeResolver(PersonTC, value => {
+        return value.hasOwnProperty('age');
+      });
+
+      KindRedTC = TypeComposer.create(`
+        type KindRed { kind: String, field1: String, field2: String, red: String }
+      `);
+      KindRedTC.addInterface(iftc);
+      iftc.addTypeResolver(KindRedTC, value => {
+        return value.kind === 'red';
+      });
+
+      KindBlueTC = TypeComposer.create(`
+        type KindBlue { kind: String, field1: String, field2: String, blue: String }
+      `);
+      KindBlueTC.addInterface(iftc);
+      iftc.addTypeResolver(KindBlueTC, value => {
+        return value.kind === 'blue';
+      });
+    });
+
+    it('hasTypeResolver()', () => {
+      expect(iftc.hasTypeResolver(PersonTC)).toBeTruthy();
+      expect(iftc.hasTypeResolver(KindRedTC)).toBeTruthy();
+      expect(iftc.hasTypeResolver(KindBlueTC)).toBeTruthy();
+      expect(iftc.hasTypeResolver(TypeComposer.create('NewOne'))).toBeFalsy();
+    });
+
+    it('getTypeResolvers()', () => {
+      const trm = iftc.getTypeResolvers();
+      expect(trm).toBeInstanceOf(Map);
+      expect(trm.size).toBe(3);
+    });
+
+    it('getTypeResolverCheckFn()', () => {
+      const checkFn: any = iftc.getTypeResolverCheckFn(PersonTC);
+      expect(checkFn({ age: 15 })).toBeTruthy();
+      expect(checkFn({ nope: 'other type' })).toBeFalsy();
+    });
+
+    it('getTypeResolverNames()', () => {
+      expect(iftc.getTypeResolverNames()).toEqual(
+        expect.arrayContaining(['Person', 'KindRed', 'KindBlue'])
+      );
+    });
+
+    it('getTypeResolverTypes()', () => {
+      expect(iftc.getTypeResolverTypes()).toEqual(
+        expect.arrayContaining([PersonTC.getType(), KindRedTC.getType(), KindBlueTC.getType()])
+      );
+    });
+
+    describe('setTypeResolvers()', () => {
+      it('async mode', async () => {
+        const map = new Map([
+          [PersonTC.getType(), async () => Promise.resolve(false)],
+          [KindRedTC, async () => Promise.resolve(true)],
+        ]);
+        iftc.setTypeResolvers(map);
+
+        const resolveType: any = iftc.gqType._typeConfig.resolveType;
+        expect(resolveType()).toBeInstanceOf(Promise);
+        expect(await resolveType()).toBe(KindRedTC.getType());
+      });
+
+      it('sync mode', () => {
+        const map = new Map([
+          [PersonTC.getType(), () => false],
+          [KindRedTC, () => false],
+          [KindBlueTC, () => true],
+        ]);
+        iftc.setTypeResolvers(map);
+
+        const resolveType: any = iftc.gqType._typeConfig.resolveType;
+        expect(resolveType()).toBe(KindBlueTC.getType());
+      });
+
+      it('throw error on wrong type', () => {
+        expect(() => {
+          const map: any = new Map([[false, () => true]]);
+          iftc.setTypeResolvers(map);
+        }).toThrowError();
+      });
+
+      it('throw error on wrong checkFn', () => {
+        expect(() => {
+          const map: any = new Map([[PersonTC, true]]);
+          iftc.setTypeResolvers(map);
+        }).toThrowError();
+      });
+    });
+
+    it('addTypeResolver()', () => {
+      const fn = () => false;
+      iftc.addTypeResolver(PersonTC, fn);
+      expect(iftc.getTypeResolverCheckFn(PersonTC)).toBe(fn);
+
+      expect(() => {
+        (iftc: any).addTypeResolver(PersonTC);
+      }).toThrowError();
+    });
+
+    it('removeTypeResolver()', () => {
+      expect(iftc.hasTypeResolver(PersonTC)).toBeTruthy();
+      iftc.removeTypeResolver(PersonTC);
+      expect(iftc.hasTypeResolver(PersonTC)).toBeFalsy();
     });
   });
 });

@@ -9,8 +9,8 @@ import {
   GraphQLNonNull,
   getNamedType,
 } from './graphql';
-import { isObject, isString } from './utils/is';
-import { resolveMaybeThunk } from './utils/misc';
+import { isObject, isString, isFunction } from './utils/is';
+import { resolveMaybeThunk, inspect } from './utils/misc';
 import { TypeComposer } from './TypeComposer';
 import type {
   GraphQLFieldConfig,
@@ -19,6 +19,7 @@ import type {
   GraphQLInputType,
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
+  GraphQLResolveInfo,
   GraphQLTypeResolver,
 } from './graphql';
 import type { TypeAsString } from './TypeMapper';
@@ -31,10 +32,25 @@ import type {
 import type { Thunk } from './utils/definitions';
 import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './utils/configAsThunk';
 import { typeByPath } from './utils/typeByPath';
+import { getGraphQLType } from './utils/typeHelpers';
 
 export type GraphQLInterfaceTypeExtended<TSource, TContext> = GraphQLInterfaceType & {
   _gqcFields?: ComposeFieldConfigMap<TSource, TContext>,
+  _gqcTypeResolvers?: InterfaceTypeResolversMap<TSource, TContext>,
 };
+
+export type InterfaceTypeResolversMap<TSource, TContext> = Map<
+  TypeComposer<TContext> | GraphQLObjectType,
+  InterfaceTypeResolverCheckFn<TSource, TContext>
+>;
+
+type MaybePromise<+T> = Promise<T> | T;
+
+export type InterfaceTypeResolverCheckFn<TSource, TContext> = (
+  value: TSource,
+  context: TContext,
+  info: GraphQLResolveInfo
+) => MaybePromise<?boolean>;
 
 export type ComposeInterfaceTypeConfig<TSource, TContext> = {
   +name: string,
@@ -51,9 +67,9 @@ export class InterfaceTypeComposer<TContext> {
   static create(
     opts: TypeAsString | ComposeInterfaceTypeConfig<any, TContext> | GraphQLInterfaceType
   ): InterfaceTypeComposer<TContext> {
-    const ftc = this.createTemp(opts);
-    this.schemaComposer.add(ftc);
-    return ftc;
+    const iftc = this.createTemp(opts);
+    this.schemaComposer.add(iftc);
+    return iftc;
   }
 
   static createTemp(
@@ -63,13 +79,13 @@ export class InterfaceTypeComposer<TContext> {
       throw new Error('Class<InterfaceTypeComposer> must be created by a SchemaComposer.');
     }
 
-    let FTC;
+    let IFTC;
 
     if (isString(opts)) {
       const typeName: string = opts;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
-        FTC = new this.schemaComposer.InterfaceTypeComposer(
+        IFTC = new this.schemaComposer.InterfaceTypeComposer(
           new GraphQLInterfaceType({
             name: typeName,
             fields: () => ({}),
@@ -83,22 +99,22 @@ export class InterfaceTypeComposer<TContext> {
               'Eg. `interface MyType { id: ID!, name: String! }`'
           );
         }
-        FTC = new this.schemaComposer.InterfaceTypeComposer(type);
+        IFTC = new this.schemaComposer.InterfaceTypeComposer(type);
       }
     } else if (opts instanceof GraphQLInterfaceType) {
-      FTC = new this.schemaComposer.InterfaceTypeComposer(opts);
+      IFTC = new this.schemaComposer.InterfaceTypeComposer(opts);
     } else if (isObject(opts)) {
       const type = new GraphQLInterfaceType({
         ...(opts: any),
       });
-      FTC = new this.schemaComposer.InterfaceTypeComposer(type);
+      IFTC = new this.schemaComposer.InterfaceTypeComposer(type);
     } else {
       throw new Error(
         'You should provide GraphQLInterfaceTypeConfig or string with enum name or SDL'
       );
     }
 
-    return FTC;
+    return IFTC;
   }
 
   constructor(gqType: GraphQLInterfaceType) {
@@ -414,6 +430,165 @@ export class InterfaceTypeComposer<TContext> {
     cloned.setDescription(this.getDescription());
 
     return cloned;
+  }
+
+  // -----------------------------------------------
+  // ResolveType methods
+  // -----------------------------------------------
+
+  hasTypeResolver(type: TypeComposer<TContext> | GraphQLObjectType): boolean {
+    const typeResolversMap = this.getTypeResolvers();
+    return typeResolversMap.has(type);
+  }
+
+  getTypeResolvers(): InterfaceTypeResolversMap<any, TContext> {
+    if (!this.gqType._gqcTypeResolvers) {
+      this.gqType._gqcTypeResolvers = new Map();
+    }
+    return this.gqType._gqcTypeResolvers;
+  }
+
+  getTypeResolverCheckFn(
+    type: TypeComposer<TContext> | GraphQLObjectType
+  ): InterfaceTypeResolverCheckFn<any, TContext> {
+    const typeResolversMap = this.getTypeResolvers();
+
+    if (!typeResolversMap.has(type)) {
+      throw new Error(
+        `Type resolve function in interface '${this.getTypeName()}' is not defined for type ${inspect(
+          type
+        )}.`
+      );
+    }
+
+    return (typeResolversMap.get(type): any);
+  }
+
+  getTypeResolverNames(): string[] {
+    const typeResolversMap = this.getTypeResolvers();
+    const names = [];
+    typeResolversMap.forEach((resolveFn, composeType) => {
+      if (composeType instanceof TypeComposer) {
+        names.push(composeType.getTypeName());
+      } else if (composeType && composeType.name) {
+        names.push(composeType.name);
+      }
+    });
+    return names;
+  }
+
+  getTypeResolverTypes(): GraphQLObjectType[] {
+    const typeResolversMap = this.getTypeResolvers();
+    const types = [];
+    typeResolversMap.forEach((resolveFn, composeType) => {
+      types.push(((getGraphQLType(composeType): any): GraphQLObjectType));
+    });
+    return types;
+  }
+
+  setTypeResolvers(
+    typeResolversMap: InterfaceTypeResolversMap<any, TContext>
+  ): InterfaceTypeComposer<TContext> {
+    this._isTypeResolversValid(typeResolversMap);
+
+    this.gqType._gqcTypeResolvers = typeResolversMap;
+
+    // extract GraphQLObjectType from TypeComposer
+    const fastEntries = [];
+    for (const [composeType, checkFn] of typeResolversMap.entries()) {
+      fastEntries.push([((getGraphQLType(composeType): any): GraphQLObjectType), checkFn]);
+    }
+
+    const isAsyncRuntime = this._isTypeResolversAsync(typeResolversMap);
+    if (isAsyncRuntime) {
+      this.gqType._typeConfig.resolveType = async (value, context, info) => {
+        for (const [gqType, checkFn] of fastEntries) {
+          // should we run checkFn simultaniously or in serial?
+          // Current decision is: dont SPIKE event loop - run in serial (it may be changed in future)
+          // eslint-disable-next-line no-await-in-loop
+          if (await checkFn(value, context, info)) return gqType;
+        }
+        return null;
+      };
+    } else {
+      this.gqType._typeConfig.resolveType = (value, context, info) => {
+        for (const [gqType, checkFn] of fastEntries) {
+          if (checkFn(value, context, info)) return gqType;
+        }
+        return null;
+      };
+    }
+    delete this.gqType.resolveType; // clear builded fields in type
+    return this;
+  }
+
+  _isTypeResolversValid(typeResolversMap: InterfaceTypeResolversMap<any, TContext>): true {
+    if (!(typeResolversMap instanceof Map)) {
+      throw new Error(
+        `For interface ${this.getTypeName()} you should provide Map object for type resolvers.`
+      );
+    }
+
+    for (const [composeType, checkFn] of typeResolversMap.entries()) {
+      // checking composeType
+      try {
+        const type = getGraphQLType(composeType);
+        if (!(type instanceof GraphQLObjectType)) throw new Error('Must be GraphQLObjectType');
+      } catch (e) {
+        throw new Error(
+          `For interface type resolver ${this.getTypeName()} you must provide GraphQLObjectType or TypeComposer, but provided ${inspect(
+            composeType
+          )}`
+        );
+      }
+
+      // checking checkFn
+      if (!isFunction(checkFn)) {
+        throw new Error(
+          `Interface ${this.getTypeName()} has invalid check function for type ${inspect(
+            composeType
+          )}`
+        );
+      }
+    }
+
+    return true;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  _isTypeResolversAsync(typeResolversMap: InterfaceTypeResolversMap<any, TContext>): boolean {
+    let res = false;
+    for (const [, checkFn] of typeResolversMap.entries()) {
+      try {
+        const r = checkFn(({}: any), ({}: any), ({}: any));
+        if (r instanceof Promise) {
+          r.catch(() => {});
+          res = true;
+        }
+      } catch (e) {
+        // noop
+      }
+    }
+    return res;
+  }
+
+  addTypeResolver(
+    type: TypeComposer<TContext> | GraphQLObjectType,
+    checkFn: InterfaceTypeResolverCheckFn<any, TContext>
+  ): InterfaceTypeComposer<TContext> {
+    const typeResolversMap = this.getTypeResolvers();
+    typeResolversMap.set(type, checkFn);
+    this.setTypeResolvers(typeResolversMap);
+    return this;
+  }
+
+  removeTypeResolver(
+    type: TypeComposer<TContext> | GraphQLObjectType
+  ): InterfaceTypeComposer<TContext> {
+    const typeResolversMap = this.getTypeResolvers();
+    typeResolversMap.delete(type);
+    this.setTypeResolvers(typeResolversMap);
+    return this;
   }
 
   // -----------------------------------------------

@@ -11,6 +11,7 @@ import {
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
   GraphQLTypeResolver,
+  GraphQLResolveInfo,
 } from './graphql';
 import { TypeAsString } from './TypeMapper';
 import { Resolver, ResolverOpts, ResolverNextRpCb, ResolverWrapCb } from './Resolver';
@@ -28,7 +29,21 @@ import {
 
 export type GraphQLInterfaceTypeExtended<TSource, TContext> = GraphQLInterfaceType & {
   _gqcFields?: ComposeFieldConfigMap<TSource, TContext>,
+  _gqcTypeResolvers?: InterfaceTypeResolversMap<TSource, TContext>,
 };
+
+export type InterfaceTypeResolversMap<TSource, TContext> = Map<
+  TypeComposer<TContext> | GraphQLObjectType,
+  InterfaceTypeResolverCheckFn<TSource, TContext>
+>;
+
+type MaybePromise<T> = Promise<T> | T;
+
+export type InterfaceTypeResolverCheckFn<TSource, TContext> = (
+  value: TSource,
+  context: TContext,
+  info: GraphQLResolveInfo
+) => MaybePromise<boolean | null | undefined>;
 
 export type ComposeInterfaceTypeConfig<TSource, TContext> = {
   name: string,
@@ -132,6 +147,35 @@ export class InterfaceTypeComposer<TContext> {
   public setDescription(description: string): InterfaceTypeComposer<TContext>;
 
   public clone(newTypeName: string): InterfaceTypeComposer<TContext>;
+
+  // -----------------------------------------------
+  // ResolveType methods
+  // -----------------------------------------------
+
+  public hasTypeResolver(type: TypeComposer<TContext> | GraphQLObjectType): boolean;
+
+  public getTypeResolvers(): InterfaceTypeResolversMap<any, TContext>;
+
+  public getTypeResolverCheckFn(
+    type: TypeComposer<TContext> | GraphQLObjectType
+  ): InterfaceTypeResolverCheckFn<any, TContext>;
+
+  public getTypeResolverNames(): string[];
+
+  public getTypeResolverTypes(): GraphQLObjectType[];
+
+  public setTypeResolvers(
+    typeResolversMap: InterfaceTypeResolversMap<any, TContext>
+  ): InterfaceTypeComposer<TContext>;
+
+  public addTypeResolver(
+    type: TypeComposer<TContext> | GraphQLObjectType,
+    checkFn: InterfaceTypeResolverCheckFn<any, TContext>
+  ): InterfaceTypeComposer<TContext>;
+
+  public removeTypeResolver(
+    type: TypeComposer<TContext> | GraphQLObjectType
+  ): InterfaceTypeComposer<TContext>;
 
   // -----------------------------------------------
   // Misc methods
