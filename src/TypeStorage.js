@@ -5,7 +5,7 @@ import { TypeComposer } from './TypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
-import type { GraphQLNamedType, GraphQLScalarType } from './graphql';
+import type { GraphQLNamedType } from './graphql';
 
 type K = any;
 type V<TContext> =
@@ -13,8 +13,7 @@ type V<TContext> =
   | InputTypeComposer
   | EnumTypeComposer
   | InterfaceTypeComposer<TContext>
-  | GraphQLNamedType
-  | GraphQLScalarType;
+  | GraphQLNamedType;
 
 // TypeStorage has all methods from Map class
 export class TypeStorage<TContext> {

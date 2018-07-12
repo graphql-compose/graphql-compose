@@ -162,6 +162,17 @@ describe('SchemaComposer', () => {
         sc.buildSchema();
       }).toThrowError();
     });
+
+    it('should accept additional types', () => {
+      const sc = new SchemaComposer();
+      sc.Query.addFields({ time: 'Int' });
+      const me1 = sc.TypeComposer.create('type Me1 { a: Int }').getType();
+      const me2 = sc.TypeComposer.create('type Me2 { a: Int }').getType();
+      const schema = sc.buildSchema({ types: [me1, me1, me2] });
+
+      expect(schema._typeMap.Me1).toEqual(me1);
+      expect(schema._typeMap.Me2).toEqual(me2);
+    });
   });
 
   describe('removeEmptyTypes()', () => {
@@ -218,5 +229,21 @@ describe('SchemaComposer', () => {
       expect(sc.Subscription).toBe(sc.rootSubscription());
       expect(sc.Subscription.getTypeName()).toBe('Subscription');
     });
+  });
+
+  describe('SchemaMustHaveType', () => {
+    const sc = new SchemaComposer();
+    const tc = sc.TypeComposer.create(`type Me { name: String }`);
+
+    sc.addSchemaMustHaveType(tc);
+    expect(sc._schemaMustHaveTypes).toContain(tc);
+
+    sc.clear();
+    expect(sc._schemaMustHaveTypes).not.toContain(tc);
+
+    sc.addSchemaMustHaveType(tc);
+    sc.Query.addFields({ time: 'String' });
+    const schema = sc.buildSchema();
+    expect(schema._typeMap.Me).toEqual(tc.getType());
   });
 });
