@@ -109,6 +109,7 @@ export type ComposeOutputType<TContext> =
   | EnumTypeComposer
   | TypeAsString
   | Resolver<any, TContext>
+  | InterfaceTypeComposer<TContext>
   | Array<ComposeOutputType<TContext>>;
 
 // Compose Args -----------------------------

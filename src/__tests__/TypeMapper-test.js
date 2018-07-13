@@ -302,6 +302,20 @@ describe('TypeMapper', () => {
         expect(fc2.description).toBe('Description');
       });
 
+      it('should accept InterfaceTypeComposer', () => {
+        const iftc = InterfaceTypeComposer.create('interface MyIFace { id: Int }');
+        iftc.setDescription('Description');
+        const fc = TypeMapper.convertOutputFieldConfig({
+          type: iftc,
+        });
+        expect(fc.type).toBe(iftc.getType());
+        expect(fc.description).toBe(undefined);
+
+        const fc2 = TypeMapper.convertOutputFieldConfig(iftc);
+        expect(fc2.type).toBe(iftc.getType());
+        expect(fc2.description).toBe('Description');
+      });
+
       it('should accept Resolver', () => {
         const resolver = new Resolver({
           name: 'find',

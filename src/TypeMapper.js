@@ -71,6 +71,7 @@ import type {
 import { TypeComposer } from './TypeComposer';
 import type { SchemaComposer } from './SchemaComposer';
 import { InputTypeComposer } from './InputTypeComposer';
+import { InterfaceTypeComposer } from './InterfaceTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
@@ -229,7 +230,11 @@ export class TypeMapper<TContext> {
       return (composeFC: any);
     } else if (composeFC instanceof Resolver) {
       return composeFC.getFieldConfig();
-    } else if (composeFC instanceof TypeComposer || composeFC instanceof EnumTypeComposer) {
+    } else if (
+      composeFC instanceof TypeComposer ||
+      composeFC instanceof EnumTypeComposer ||
+      composeFC instanceof InterfaceTypeComposer
+    ) {
       return {
         type: composeFC.getType(),
         description: composeFC.getDescription(),
@@ -285,7 +290,11 @@ export class TypeMapper<TContext> {
         }
         fieldConfig.type = (type: any);
       }
-    } else if (composeType instanceof TypeComposer || composeType instanceof EnumTypeComposer) {
+    } else if (
+      composeType instanceof TypeComposer ||
+      composeType instanceof EnumTypeComposer ||
+      composeType instanceof InterfaceTypeComposer
+    ) {
       fieldConfig.type = composeType.getType();
     } else if (composeType instanceof Resolver) {
       fieldConfig.type = composeType.getType();
