@@ -129,9 +129,10 @@ export type RelationArgsMapper<TSource, TContext> = {
 
 export class TypeComposer<TContext> {
     public static schemaComposer: SchemaComposer<any>;
+    public schemaComposer: SchemaComposer<any>;
 
-    public gqType: GraphQLObjectTypeExtended<any, TContext>;
-    private _fields: GraphQLFieldConfigMap<any, TContext>;
+    protected gqType: GraphQLObjectTypeExtended<any, TContext>;
+    protected _fields: GraphQLFieldConfigMap<any, TContext>;
 
     public constructor(gqType: GraphQLObjectType);
 

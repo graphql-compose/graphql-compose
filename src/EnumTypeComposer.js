@@ -19,6 +19,10 @@ export class EnumTypeComposer {
 
   static schemaComposer: SchemaComposer<any>;
 
+  get schemaComposer(): SchemaComposer<any> {
+    return this.constructor.schemaComposer;
+  }
+
   static create(opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType): EnumTypeComposer {
     const etc = this.createTemp(opts);
     this.schemaComposer.add(etc);
@@ -69,7 +73,7 @@ export class EnumTypeComposer {
   }
 
   constructor(gqType: GraphQLEnumType) {
-    if (!this.constructor.schemaComposer) {
+    if (!this.schemaComposer) {
       throw new Error('Class<EnumTypeComposer> can only be created by a SchemaComposer.');
     }
 
@@ -264,7 +268,7 @@ export class EnumTypeComposer {
   setTypeName(name: string): EnumTypeComposer {
     this.gqType.name = name;
     this.gqType._enumConfig.name = name;
-    this.constructor.schemaComposer.add(this);
+    this.schemaComposer.add(this);
     return this;
   }
 
@@ -290,7 +294,7 @@ export class EnumTypeComposer {
       delete newValues[fieldName].isDeprecated;
     });
 
-    const cloned = new this.constructor.schemaComposer.EnumTypeComposer(
+    const cloned = new this.schemaComposer.EnumTypeComposer(
       new GraphQLEnumType({
         name: newTypeName,
         values: newValues,

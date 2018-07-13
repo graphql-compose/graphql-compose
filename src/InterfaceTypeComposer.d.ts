@@ -54,8 +54,9 @@ export type ComposeInterfaceTypeConfig<TSource, TContext> = {
 
 export class InterfaceTypeComposer<TContext> {
   public static schemaComposer: SchemaComposer<any>;
+  public schemaComposer: SchemaComposer<any>;
 
-  public gqType: GraphQLInterfaceTypeExtended<any, TContext>;
+  protected gqType: GraphQLInterfaceTypeExtended<any, TContext>;
 
   public constructor(gqType: GraphQLInterfaceType);
 

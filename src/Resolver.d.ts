@@ -77,6 +77,7 @@ export type ResolveDebugOpts = {
 
 export class Resolver<TSource, TContext> {
     public static schemaComposer: SchemaComposer<any>;
+    public schemaComposer: SchemaComposer<any>;
 
     public type: ComposeOutputType<TContext>;
     public args: ComposeFieldConfigArgumentMap;

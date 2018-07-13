@@ -62,10 +62,16 @@ export type ComposeInterfaceTypeConfig<TSource, TContext> = {
 export class InterfaceTypeComposer<TContext> {
   gqType: GraphQLInterfaceTypeExtended<any, TContext>;
 
-  static schemaComposer: SchemaComposer<any>;
+  static schemaComposer: SchemaComposer<TContext>;
 
+  get schemaComposer(): SchemaComposer<TContext> {
+    return this.constructor.schemaComposer;
+  }
+
+  // Also supported `GraphQLInterfaceType` but in such case Flowtype force developers
+  // to explicitly write annotations in their code. But it's bad.
   static create(
-    opts: TypeAsString | ComposeInterfaceTypeConfig<any, TContext> | GraphQLInterfaceType
+    opts: TypeAsString | ComposeInterfaceTypeConfig<any, TContext>
   ): InterfaceTypeComposer<TContext> {
     const iftc = this.createTemp(opts);
     this.schemaComposer.add(iftc);
@@ -73,7 +79,7 @@ export class InterfaceTypeComposer<TContext> {
   }
 
   static createTemp(
-    opts: TypeAsString | ComposeInterfaceTypeConfig<any, TContext> | GraphQLInterfaceType
+    opts: TypeAsString | ComposeInterfaceTypeConfig<any, TContext>
   ): InterfaceTypeComposer<TContext> {
     if (!this.schemaComposer) {
       throw new Error('Class<InterfaceTypeComposer> must be created by a SchemaComposer.');
@@ -118,7 +124,7 @@ export class InterfaceTypeComposer<TContext> {
   }
 
   constructor(gqType: GraphQLInterfaceType) {
-    if (!this.constructor.schemaComposer) {
+    if (!this.schemaComposer) {
       throw new Error('Class<InterfaceTypeComposer> can only be created by a SchemaComposer.');
     }
 
@@ -166,11 +172,7 @@ export class InterfaceTypeComposer<TContext> {
     this.gqType._gqcFields = fields;
 
     this.gqType._typeConfig.fields = () => {
-      return (resolveOutputConfigMapAsThunk(
-        this.constructor.schemaComposer,
-        fields,
-        this.getTypeName()
-      ): any);
+      return (resolveOutputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName()): any);
     };
     delete this.gqType._fields; // clear builded fields in type
     return this;
@@ -255,12 +257,7 @@ export class InterfaceTypeComposer<TContext> {
       throw new Error(`Type ${this.getTypeName()} does not have field with name '${fieldName}'`);
     }
 
-    return resolveOutputConfigAsThunk(
-      this.constructor.schemaComposer,
-      fc,
-      fieldName,
-      this.getTypeName()
-    );
+    return resolveOutputConfigAsThunk(this.schemaComposer, fc, fieldName, this.getTypeName());
   }
 
   getFieldType(fieldName: string): GraphQLOutputType {
@@ -275,7 +272,7 @@ export class InterfaceTypeComposer<TContext> {
           `This field should be ObjectType, but it has type '${fieldType.constructor.name}'`
       );
     }
-    return this.constructor.schemaComposer.TypeComposer.createTemp(fieldType);
+    return this.schemaComposer.TypeComposer.createTemp(fieldType);
   }
 
   makeFieldNonNull(fieldNameOrArray: string | Array<string>): InterfaceTypeComposer<TContext> {
@@ -395,7 +392,7 @@ export class InterfaceTypeComposer<TContext> {
   setTypeName(name: string): InterfaceTypeComposer<TContext> {
     this.gqType.name = name;
     this.gqType._typeConfig.name = name;
-    this.constructor.schemaComposer.add(this);
+    this.schemaComposer.add(this);
     return this;
   }
 
@@ -420,7 +417,7 @@ export class InterfaceTypeComposer<TContext> {
       newFields[fieldName] = { ...(fc: any) };
     });
 
-    const cloned = new this.constructor.schemaComposer.InterfaceTypeComposer(
+    const cloned = new this.schemaComposer.InterfaceTypeComposer(
       new GraphQLInterfaceType({
         name: newTypeName,
         fields: newFields,

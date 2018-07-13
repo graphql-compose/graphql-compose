@@ -14,8 +14,9 @@ import { TypeAsString } from './TypeMapper';
 
 export class EnumTypeComposer {
   public static schemaComposer: SchemaComposer<any>;
+  public schemaComposer: SchemaComposer<any>;
 
-  public gqType: GraphQLEnumType;
+  protected gqType: GraphQLEnumType;
 
   public constructor(gqType: GraphQLEnumType);
 

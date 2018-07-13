@@ -37,6 +37,7 @@ export type ComposeInputObjectTypeConfig = {
 
 export class InputTypeComposer {
     public static schemaComposer: SchemaComposer<any>;
+    public schemaComposer: SchemaComposer<any>;
 
     public gqType: GraphQLInputObjectType;
 

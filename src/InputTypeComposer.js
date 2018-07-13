@@ -55,6 +55,10 @@ export class InputTypeComposer {
 
   static schemaComposer: SchemaComposer<any>;
 
+  get schemaComposer(): SchemaComposer<any> {
+    return this.constructor.schemaComposer;
+  }
+
   static create(
     opts: TypeAsString | ComposeInputObjectTypeConfig | GraphQLInputObjectType
   ): InputTypeComposer {
@@ -115,7 +119,7 @@ export class InputTypeComposer {
   }
 
   constructor(gqType: GraphQLInputObjectType) {
-    if (!this.constructor.schemaComposer) {
+    if (!this.schemaComposer) {
       throw new Error('Class<InputTypeComposer> can only be created by a SchemaComposer.');
     }
 
@@ -155,11 +159,7 @@ export class InputTypeComposer {
     this.gqType._gqcFields = fields;
 
     this.gqType._typeConfig.fields = () => {
-      return resolveInputConfigMapAsThunk(
-        this.constructor.schemaComposer,
-        fields,
-        this.getTypeName()
-      );
+      return resolveInputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName());
     };
     delete this.gqType._fields; // if schema was builded, delete defineFieldMap
     return this;
@@ -194,7 +194,7 @@ export class InputTypeComposer {
         // nested field
         let childTC;
         if (!this.hasField(name)) {
-          childTC = this.constructor.schemaComposer.InputTypeComposer.createTemp(
+          childTC = this.schemaComposer.InputTypeComposer.createTemp(
             `${this.getTypeName()}${upperFirst(name)}`
           );
           this.setField(name, childTC);
@@ -291,12 +291,7 @@ export class InputTypeComposer {
       throw new Error(`Type ${this.getTypeName()} does not have field with name '${fieldName}'`);
     }
 
-    return resolveInputConfigAsThunk(
-      this.constructor.schemaComposer,
-      fc,
-      fieldName,
-      this.getTypeName()
-    );
+    return resolveInputConfigAsThunk(this.schemaComposer, fc, fieldName, this.getTypeName());
   }
 
   getFieldType(fieldName: string): GraphQLInputType {
@@ -311,7 +306,7 @@ export class InputTypeComposer {
           `This field should be InputObjectType, but it has type '${fieldType.constructor.name}'`
       );
     }
-    return this.constructor.schemaComposer.InputTypeComposer.createTemp(fieldType);
+    return this.schemaComposer.InputTypeComposer.createTemp(fieldType);
   }
 
   makeFieldNonNull(fieldNameOrArray: string | Array<string>): InputTypeComposer {
@@ -377,7 +372,7 @@ export class InputTypeComposer {
 
   setTypeName(name: string): InputTypeComposer {
     this.gqType.name = name;
-    this.constructor.schemaComposer.add(this);
+    this.schemaComposer.add(this);
     return this;
   }
 
@@ -401,7 +396,7 @@ export class InputTypeComposer {
       newFields[fieldName] = { ...(fc: any) };
     });
 
-    return new this.constructor.schemaComposer.InputTypeComposer(
+    return new this.schemaComposer.InputTypeComposer(
       new GraphQLInputObjectType({
         name: newTypeName,
         fields: newFields,
