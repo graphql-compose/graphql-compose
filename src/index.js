@@ -28,6 +28,12 @@ export {
   TypeMapper,
 };
 
+export { TypeComposer as TypeComposerClass } from './TypeComposer';
+export { InputTypeComposer as InputTypeComposerClass } from './InputTypeComposer';
+export { EnumTypeComposer as EnumTypeComposerClass } from './EnumTypeComposer';
+export { InterfaceTypeComposer as InterfaceTypeComposerClass } from './InterfaceTypeComposer';
+export { Resolver as ResolverClass } from './Resolver';
+
 export { TypeStorage } from './TypeStorage';
 
 // Scalar types
