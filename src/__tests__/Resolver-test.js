@@ -548,7 +548,7 @@ describe('Resolver', () => {
       expect(ageType.ofType).toBe(GraphQLInt);
     });
 
-    it('should prepare resolveParams.rawQuery when `resolve` called', () => {
+    it('should prepare resolveParams.rawQuery when `resolve` called', async () => {
       let rpSnap;
       const resolve = resolver.resolve;
       resolver.resolve = rp => {
@@ -571,13 +571,14 @@ describe('Resolver', () => {
           name: 'isActive',
           type: 'Boolean!',
           description: 'Active status filter',
-          query: (query, value, resolveParams) => {
+          query: async (query, value, resolveParams) => {
+            query.checkPermissions = await Promise.resolve('accessGranted'); // eslint-disable-line no-param-reassign
             query.isActive = value; // eslint-disable-line no-param-reassign
           },
           filterTypeNameFallback: 'FilterOtherUniqueNameInput',
         });
 
-      newResolver.resolve({
+      await newResolver.resolve({
         args: { filter: { age: 15, isActive: false } },
         someKey: 16,
       });
@@ -586,6 +587,7 @@ describe('Resolver', () => {
         age: { $gt: 15 },
         isActive: false,
         someKey: 16,
+        checkPermissions: 'accessGranted',
       });
     });
 

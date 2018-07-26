@@ -448,13 +448,13 @@ export class Resolver<TSource, TContext> {
     const resolveNext = resolver.getResolve();
     const query = opts.query;
     if (query && isFunction(query)) {
-      resolver.setResolve(resolveParams => {
+      resolver.setResolve(async resolveParams => {
         const value = objectPath.get(resolveParams, ['args', 'filter', opts.name]);
         if (value !== null && value !== undefined) {
           if (!resolveParams.rawQuery) {
             resolveParams.rawQuery = {}; // eslint-disable-line
           }
-          query(resolveParams.rawQuery, value, resolveParams);
+          await query(resolveParams.rawQuery, value, resolveParams);
         }
         return resolveNext(resolveParams);
       });
