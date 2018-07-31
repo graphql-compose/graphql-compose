@@ -9,7 +9,13 @@ import type {
   GraphQLResolveInfo,
   GraphQLOutputType,
 } from '../graphql';
-import { Kind, GraphQLObjectType, GraphQLList, GraphQLNonNull } from '../graphql';
+import {
+  Kind,
+  GraphQLObjectType,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLInterfaceType,
+} from '../graphql';
 import deepmerge from './deepmerge';
 
 const { FIELD, FRAGMENT_SPREAD, INLINE_FRAGMENT } = Kind;
@@ -108,7 +114,7 @@ export function extendByFieldProjection(
     type = type.ofType;
   }
 
-  if (!(type instanceof GraphQLObjectType)) {
+  if (!(type instanceof GraphQLObjectType || type instanceof GraphQLInterfaceType)) {
     return projection;
   }
 
