@@ -5,6 +5,7 @@ import { TypeComposer } from '../TypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
+import { graphql } from '../graphql';
 
 describe('SchemaComposer', () => {
   it('should implements `add` method', () => {
@@ -173,6 +174,30 @@ describe('SchemaComposer', () => {
       expect(schema._typeMap.Me1).toEqual(me1);
       expect(schema._typeMap.Me2).toEqual(me2);
     });
+
+    it('should provide proper Schema when provided only Query', async () => {
+      const sc = new SchemaComposer();
+      sc.Query.addFields({ num: 'Int' });
+      const schema = sc.buildSchema();
+      expect(
+        await graphql({
+          schema,
+          source: `
+            query {
+              num
+            }
+          `,
+        })
+      ).toEqual({ data: { num: null } });
+    });
+
+    it('should throw error if only Mutation provided', async () => {
+      const sc = new SchemaComposer();
+      sc.Mutation.addFields({ num: 'Int' });
+      expect(() => {
+        sc.buildSchema();
+      }).toThrow('Must be initialized Query type');
+    });
   });
 
   describe('removeEmptyTypes()', () => {
@@ -194,7 +219,7 @@ describe('SchemaComposer', () => {
       sc.removeEmptyTypes(ViewerTC);
 
       expect(console.log).lastCalledWith(
-        "graphql-compose: Delete field 'Viewer.stub' with type 'Stub', cause it does not have fields.",
+        "graphql-compose: Delete field 'Viewer.stub' with type 'Stub', cause it does not have fields."
       );
       global.console.log = oldConsoleLog;
       /* eslint-enable */

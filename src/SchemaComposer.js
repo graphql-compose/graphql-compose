@@ -115,6 +115,12 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
       roots.subscription = tc.getType();
     }
 
+    if (!roots.query) {
+      throw new Error(
+        'Can not build schema. Must be initialized Query type. See https://github.com/graphql/graphql-js/issues/448'
+      );
+    }
+
     if (Object.keys(roots).length === 0) {
       throw new Error(
         'Can not build schema. Must be initialized at least one ' +
