@@ -33,6 +33,7 @@ export type ResolverFilterArgConfig<TSource, TContext> = {
     description?: string,
     query?: ResolverFilterArgFn<TSource, TContext>
     filterTypeNameFallback?: string,
+    defaultValue?: any,
 };
 
 export type ResolverSortArgFn = (resolveParams: ResolveParams<any, any>) => any;
