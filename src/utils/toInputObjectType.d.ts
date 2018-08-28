@@ -9,7 +9,7 @@ export interface ToInputObjectTypeOpts {
 }
 
 export function toInputObjectType(
-    typeComposer: TypeComposer<any>,
+    typeComposer: TypeComposer<any, any>,
     opts?: ToInputObjectTypeOpts,
     cache?: Map<GraphQLObjectType, InputTypeComposer>): InputTypeComposer;
 
