@@ -1,15 +1,23 @@
 import {
-    GraphQLArgumentConfig, GraphQLFieldConfig, GraphQLFieldConfigArgumentMap, GraphQLFieldConfigMap,
-    GraphQLInputFieldConfig, GraphQLInputFieldConfigMap, GraphQLNamedType, GraphQLType, DocumentNode
-} from './graphql';
+    DocumentNode,
+    GraphQLArgumentConfig,
+    GraphQLFieldConfig,
+    GraphQLFieldConfigArgumentMap,
+    GraphQLFieldConfigMap,
+    GraphQLInputFieldConfig,
+    GraphQLInputFieldConfigMap,
+    GraphQLNamedType,
+    GraphQLType
+} from 'graphql';
+import { ComposeInputFieldConfig, ComposeInputFieldConfigMap } from './InputTypeComposer';
 import {
-    ComposeArgumentConfig, ComposeFieldConfig, ComposeFieldConfigArgumentMap,
+    ComposeArgumentConfig,
+    ComposeFieldConfig,
+    ComposeFieldConfigArgumentMap,
     ComposeFieldConfigMap
 } from './TypeComposer';
 import { TypeDefinitionString, TypeNameString, TypeWrappedString } from './TypeMapper';
-import { ComposeInputFieldConfig, ComposeInputFieldConfigMap } from './InputTypeComposer';
 import { TypeStorage } from './TypeStorage';
-import { Thunk } from './utils/definitions';
 
 export type TypeDefinitionString = string; // eg. type Name { field: Int }
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]

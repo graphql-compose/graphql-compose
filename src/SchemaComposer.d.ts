@@ -8,7 +8,7 @@ import { InterfaceTypeComposer } from './InterfaceTypeComposer';
 import { Resolver } from './Resolver';
 
 type MustHaveTypes<TContext> =
-  | TypeComposer<TContext>
+  | TypeComposer<any, TContext>
   | InputTypeComposer
   | EnumTypeComposer
   | InterfaceTypeComposer<TContext>
@@ -28,30 +28,30 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   public InterfaceTypeComposer: typeof InterfaceTypeComposer;
   public Resolver: typeof Resolver;
 
-  public Query: TypeComposer<TContext>;
-  public Mutation: TypeComposer<TContext>;
-  public Subscription: TypeComposer<TContext>;
+  public Query: TypeComposer<any, TContext>;
+  public Mutation: TypeComposer<any, TContext>;
+  public Subscription: TypeComposer<any, TContext>;
 
   protected _schemaMustHaveTypes: Array<MustHaveTypes<TContext>>;
 
   public constructor();
 
-  public rootQuery(): TypeComposer<TContext>;
+  public rootQuery<TRootQuery>(): TypeComposer<TRootQuery, TContext>;
 
-  public rootMutation(): TypeComposer<TContext>;
+  public rootMutation<TRootMutation>(): TypeComposer<TRootMutation, TContext>;
 
-  public rootSubscription(): TypeComposer<TContext>;
+  public rootSubscription<TRootSubscription>(): TypeComposer<TRootSubscription, TContext>;
 
   public buildSchema(extraConfig?: ExtraSchemaConfig): GraphQLSchema;
 
   public addSchemaMustHaveType(type: MustHaveTypes<TContext>): this;
 
-  public removeEmptyTypes(typeComposer: TypeComposer<TContext>, passedTypes: Set<string>): void;
+  public removeEmptyTypes<TSource>(typeComposer: TypeComposer<TSource, TContext>, passedTypes: Set<string>): void;
 
-  public getOrCreateTC(
+  public getOrCreateTC<TSource>(
     typeName: string,
-    onCreate?: (tc: TypeComposer<TContext>) => any
-  ): TypeComposer<TContext>;
+    onCreate?: (tc: TypeComposer<TSource, TContext>) => any
+  ): TypeComposer<TSource, TContext>;
 
   public getOrCreateITC(
     typeName: string,

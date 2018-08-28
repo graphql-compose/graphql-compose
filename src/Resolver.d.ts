@@ -1,6 +1,6 @@
 import {
     GraphQLFieldConfig, GraphQLFieldConfigArgumentMap, GraphQLInputType, GraphQLOutputType, GraphQLArgumentConfig
-} from './graphql';
+} from 'graphql';
 import * as graphql from './graphql';
 import { SchemaComposer } from './SchemaComposer';
 import {
@@ -97,7 +97,7 @@ export class Resolver<TSource, TContext> {
 
     public getType(): GraphQLOutputType;
 
-    public getTypeComposer(): TypeComposer<TContext>;
+    public getTypeComposer(): TypeComposer<TSource, TContext>;
 
     public setType(gqType: ComposeOutputType<TContext>): this;
 
