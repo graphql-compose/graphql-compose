@@ -10,7 +10,11 @@ interface DeepOptions {
   deep2: number;
 }
 
-interface Person {
+interface GenericUID {
+  uid: string;
+}
+
+interface Person extends GenericUID{
   uid: string;
   name: string;
   nickName: string;
@@ -105,12 +109,11 @@ PersonTC.addResolver({   // <---------------- by default resolver has `source: a
 });
 
 // add resolver with a source type
-PersonTC.addResolver<Person>({ // <--- this is ok, if we want to provide really Basic/Global/Generic interface, which will be implemented in several types/models. And then to this types we will add this resolver.
+// <<<------ here I change Person on something basic GenericUID. Let assume that from GenericUID extended all other models, which will use this resolver.
+PersonTC.addResolver<GenericUID>({ // <--- this is ok, if we want to provide really Basic/Global/Generic interface, which will be implemented in several types/models. And then to these types we will add current resolver.
   resolve: ({ source, context }) => {
     // check availability
     if (source && context) {
-      source.age = 2;
-      source.name = 'XYZ';
       if (context.uid !== source.uid) {
         // do something if not the current user ...
       }
@@ -145,7 +148,7 @@ PersonTC.wrapResolverResolve<Person>('findMany', next => rp => {
 // ****************************
 PersonTC.getFieldTC('deep') // <----- no matter what type you provide here, it should not affect on rp.source below
   .getResolver('findOne')
-  .wrapResolve<DeepOptions>(next => rp => { // <----- provide type be here, if you want to check rp.source
+  .wrapResolve<DeepOptions>(next => rp => { // <----- provide type here, if you want to check rp.source
     // check source and context because they are defined as Partial<ResolveParams...
     if (rp.source && rp.context) {
       rp.source.deep1 = 'string';
