@@ -109,15 +109,15 @@ export type ComposeFieldConfigArgumentMap = {
 
 // RELATION -----------------------------
 export type RelationThunkMap<TSource, TContext> = {
-  [ fieldName: string ]: Thunk<RelationOpts<TSource, TContext>>;
+  [ fieldName: string ]: Thunk<RelationOpts<any, TSource, TContext>>;
 };
 
-export type RelationOpts<TSource, TContext> =
-  | RelationOptsWithResolver<TSource, TContext>
+export type RelationOpts<TRelationSource, TSource, TContext> =
+  | RelationOptsWithResolver<TRelationSource, TSource, TContext>
   | RelationOptsWithFieldConfig<TSource, TContext>;
 
-export type RelationOptsWithResolver<TSource, TContext> = {
-  resolver: Thunk<Resolver<TSource, TContext>>;
+export type RelationOptsWithResolver<TRelationSource, TSource, TContext> = {
+  resolver: Thunk<Resolver<TRelationSource, TContext>>;
   prepareArgs?: RelationArgsMapper<TSource, TContext>;
   projection?: ProjectionType;
   description?: string | null;
@@ -375,7 +375,7 @@ export class TypeComposer<TSource, TContext> {
 
   public addRelation<TRelationSource>(
     fieldName: string,
-    relationOpts: RelationOpts<TRelationSource, TContext>
+    relationOpts: RelationOpts<TRelationSource, TSource, TContext>
   ): this;
 
   public getRelations(): RelationThunkMap<any, TContext>;
@@ -397,8 +397,8 @@ export class TypeComposer<TSource, TContext> {
 
   public get(path: string | string[]): any;
 
-  private _relationWithResolverToFC<TSource>(
-    opts: RelationOptsWithResolver<TSource, TContext>,
+  private _relationWithResolverToFC<TRelationSource>(
+    opts: RelationOptsWithResolver<TRelationSource, TSource, TContext>,
     fieldName?: string
-  ): ComposeFieldConfigAsObject<TSource, TContext>;
+  ): ComposeFieldConfigAsObject<TRelationSource, TContext>;
 }

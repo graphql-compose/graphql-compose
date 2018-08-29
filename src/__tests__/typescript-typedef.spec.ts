@@ -177,3 +177,25 @@ PersonExtendedTC.getResolver('findOne').wrapResolve(next => rp => {
 PersonExtendedTC.getResolver<any>('findOne').wrapResolve(next => rp => {
   rp.source.new1 = 5;
 });
+
+// **************************
+// Relations
+//
+// This particular case has been a bit of a problem, that is before i did the changes
+// resolver was always conflicting with the invoking TC
+// **************************
+PersonExtendedTC.addRelation<Person>('extends', {
+  resolver: PersonTC.getResolver('findById'), // comes from other (resolve to)
+  prepareArgs: {
+    _id: source => source.extends  // type checks well now
+  },
+  projection: { extends: true }
+});
+
+PersonExtendedTC.addRelation('extends', {
+  resolver: PersonTC.getResolver('findById'), // comes from other (resolve to)
+  prepareArgs: {
+    _id: source => source.extends  // type checks well now
+  },
+  projection: { extends: true }
+});
