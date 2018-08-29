@@ -10,6 +10,7 @@
         "ordered-imports": false,
         "member-ordering": [true, { "order": "fields-first" }],
         "variable-name": false,
+        "arrow-parens": false,
         "interface-name": ["never-prefix"],
         "no-reference-import": false,
         "interface-over-type-literal": false,
