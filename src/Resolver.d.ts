@@ -70,10 +70,10 @@ export type ResolverOpts<TSource, TContext> = {
   parent?: Resolver<TSource, TContext>;
 };
 
-export type ResolverWrapCb<TSource, TContext> = (
-  newResolver: Resolver<TSource, TContext>,
-  prevResolver: Resolver<TSource, TContext>,
-) => Resolver<TSource, TContext>;
+export type ResolverWrapCb<TNewSource, TPrevSource, TContext> = (
+  newResolver: Resolver<TNewSource, TContext>,
+  prevResolver: Resolver<TPrevSource, TContext>,
+) => Resolver<TNewSource, TContext>;
 
 export type ResolverRpCb<TSource, TContext> = (
   resolveParams: Partial<ResolveParams<TSource, TContext>>,
@@ -96,7 +96,7 @@ export type ResolveDebugOpts = {
   colors?: boolean;
 };
 
-export class Resolver<TSource, TContext> {
+export class Resolver<TSource = any, TContext = any> {
   public static schemaComposer: SchemaComposer<any>;
   public schemaComposer: SchemaComposer<any>;
 
@@ -183,32 +183,17 @@ export class Resolver<TSource, TContext> {
   // Wrap methods
   // -----------------------------------------------
 
-  public wrap(
-    cb: ResolverWrapCb<TSource, TContext> | null,
-    newResolverOpts: ResolverOpts<TSource, TContext> | null,
-  ): Resolver<TSource, TContext>;
+  public wrap<TCSource = TSource>(
+    cb?: ResolverWrapCb<TCSource, TSource, TContext>,
+    newResolverOpts?: ResolverOpts<TCSource, TContext>,
+  ): Resolver<TCSource, TContext>;
 
-  public wrap<TSource>(
-    cb: ResolverWrapCb<TSource, TContext> | null,
-    newResolverOpts: ResolverOpts<TSource, TContext> | null,
-  ): Resolver<TSource, TContext>;
-
-  public wrapResolve(
-    cb: ResolverNextRpCb<TSource, TContext>,
+  public wrapResolve<TCSource = TSource>(
+    cb: ResolverNextRpCb<TCSource, TContext>,
     wrapperName?: string,
-  ): Resolver<TSource, TContext>;
-
-  public wrapResolve<TSource>(
-    cb: ResolverNextRpCb<TSource, TContext>,
-    wrapperName?: string,
-  ): Resolver<TSource, TContext>;
+  ): Resolver<TCSource, TContext>;
 
   public wrapArgs(
-    cb: ResolverWrapArgsCb,
-    wrapperName?: string,
-  ): Resolver<TSource, TContext>;
-
-  public wrapArgs<TSource>(
     cb: ResolverWrapArgsCb,
     wrapperName?: string,
   ): Resolver<TSource, TContext>;
@@ -218,17 +203,7 @@ export class Resolver<TSource, TContext> {
     newTypeName: string,
   ): Resolver<TSource, TContext>;
 
-  public wrapCloneArg<TSource>(
-    argName: string,
-    newTypeName: string,
-  ): Resolver<TSource, TContext>;
-
   public wrapType(
-    cb: ResolverWrapTypeCb,
-    wrapperName?: string,
-  ): Resolver<TSource, TContext>;
-
-  public wrapType<TSource>(
     cb: ResolverWrapTypeCb,
     wrapperName?: string,
   ): Resolver<TSource, TContext>;
@@ -251,13 +226,9 @@ export class Resolver<TSource, TContext> {
 
   public get(path: string | string[]): any;
 
-  public clone(
+  public clone<TCloneSource = TSource>(
     opts?: ResolverOpts<TSource, TContext>,
-  ): Resolver<TSource, TContext>;
-
-  public clone<TSource>(
-    opts?: ResolverOpts<TSource, TContext>,
-  ): Resolver<TSource, TContext>;
+  ): Resolver<TCloneSource, TContext>;
 
   // -----------------------------------------------
   // Debug methods

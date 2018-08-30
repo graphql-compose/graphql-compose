@@ -167,7 +167,7 @@ export type RelationArgsMapper<TSource, TContext> = {
     | GenericMap<any>;
 };
 
-export class TypeComposer<TSource, TContext> {
+export class TypeComposer<TSource = any, TContext = any> {
   public static schemaComposer: SchemaComposer<any>;
   public schemaComposer: SchemaComposer<TContext>;
 
@@ -176,14 +176,14 @@ export class TypeComposer<TSource, TContext> {
 
   public constructor(gqType: GraphQLObjectType);
 
-  public static create<TSrc, TCtx>(
+  public static create<TSrc = any, TCtx = any>(
     opts:
       | TypeAsString
       | ComposeObjectTypeConfig<TSrc, TCtx>
       | GraphQLObjectType,
   ): TypeComposer<TSrc, TCtx>;
 
-  public static createTemp<TSrc, TCtx>(
+  public static createTemp<TSrc = any, TCtx = any>(
     opts:
       | TypeAsString
       | ComposeObjectTypeConfig<TSrc, TCtx>
@@ -330,13 +330,13 @@ export class TypeComposer<TSource, TContext> {
 
   public wrapResolver<TResolverSource = any>(
     resolverName: string,
-    cbResolver: ResolverWrapCb<TResolverSource, TContext>,
+    cbResolver: ResolverWrapCb<TResolverSource, TSource, TContext>,
   ): this;
 
   public wrapResolverAs<TResolverSource = any>(
     resolverName: string,
     fromResolverName: string,
-    cbResolver: ResolverWrapCb<TResolverSource, TContext>,
+    cbResolver: ResolverWrapCb<TResolverSource, TSource, TContext>,
   ): this;
 
   public wrapResolverResolve<TResolverSource = any>(

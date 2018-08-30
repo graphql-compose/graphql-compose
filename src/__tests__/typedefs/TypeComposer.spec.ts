@@ -1,41 +1,20 @@
-import { SchemaComposer } from '../index';
-import { TypeComposer } from '../TypeComposer';
-
-// Changes a driven by the quest for better typing and a better Intelisense experience
-// hence boosting productivity
-// The following passed tsCheck
-
-interface DeepOptions {
-  deep1: string;
-  deep2: number;
-}
-
-interface GenericUID {
-  uid: string;
-}
-
-interface Person extends GenericUID {
-  uid: string;
-  name: string;
-  nickName: string;
-  age: number;
-  deep: DeepOptions;
-}
-
-interface Context {
-  req: any;
-  res: any;
-  uid: string;
-}
-
-// works for cases where u create your instance of
-const schemaComposer = new SchemaComposer<Context>();
+import { TypeComposer } from '../../TypeComposer';
 
 // Person from this schemaComposer gets the context defined for that schemaComposer
-const PersonTC2 = schemaComposer.getOrCreateTC<Person>('Person');
+import {
+  Art,
+  Context,
+  DeepOptions,
+  GenericUID,
+  Person,
+  Post,
+  schemaComposerWithContext,
+} from './mock-typedefs';
+
+// I understand the schemaComposers are different, here is just for demos
 
 // create from default schemaComposer uses the context type passed in
-// or uses `any` as type
+// TSource Person, TContext Context
 const PersonTC = TypeComposer.create<Person, Context>({
   name: 'Person',
   fields: {
@@ -45,7 +24,11 @@ const PersonTC = TypeComposer.create<Person, Context>({
   },
 });
 
-// Both PersonTC and PersonTC2 have same TSource and TContext
+// TSource Art, TContext Context
+const ArtTC = schemaComposerWithContext.getOrCreateTC<Art>('Art');
+
+// TSource any, TContext any
+const PostTC = TypeComposer.create('Post');
 
 // ****************************
 // Resolvers
@@ -72,7 +55,7 @@ interface QuerySource {
   name: number;
   age: number;
 }
-schemaComposer.Query.addFields({
+schemaComposerWithContext.Query.addFields({
   user: PersonTC.getResolver('findOne').wrapResolve<QuerySource>(next => rp => {
     if (rp.source) {
       rp.source.name = 5; // source any
@@ -129,7 +112,7 @@ PersonTC.addResolver<GenericUID>({
 });
 
 // wrapResolverResolve
-PersonTC.wrapResolverResolve<any>('findMany', next => rp => {
+PersonTC.wrapResolverResolve('findMany', next => rp => {
   rp.source.name = 5; // source any
   rp.source.age = 'string';
 
@@ -197,12 +180,6 @@ PersonTC.addFields({
 // This particular case has been a bit of a problem, that is before i did the changes
 // resolver was always conflicting with the invoking TC
 // **************************
-interface Art {
-  id: number;
-  personId: string;
-}
-const ArtTC = schemaComposer.getOrCreateTC<Art>('Art');
-
 ArtTC.addRelation('extends', {
   resolver: PersonTC.getResolver('findById'), // comes from other (resolve to)
   prepareArgs: {
