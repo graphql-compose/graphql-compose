@@ -55,3 +55,65 @@ findManyPost.wrapResolve(next => rp => {
     rp.source.title = 'A Title';
   }
 });
+
+// args intro
+interface FindManyArtArgs {
+  filter: { id: string; personId: string };
+  skip: number;
+}
+
+const findManyArt1 = new Resolver<any, any, FindManyArtArgs>({
+  resolve: rp => {
+    if (rp.args) {
+      // rp.args.skip = 'dsd';
+      rp.args.skip = 4;
+      rp.args.filter.id = 'string';
+    }
+  },
+});
+
+// all any
+const findManyPost1 = new Resolver({
+  resolve: ({ source, context, args }) => {
+    source.title = 555; // pass as source is any fails
+    source.title = 'A Title';
+
+    if (args) {
+      args.skip = 'hello';
+      args.skip = 4;
+    }
+  },
+});
+
+// inherits findManyArtArgs, can be overwritten
+findManyArt1.wrapResolve<Art, FindManyArtArgs>(next => rp => {
+  if (rp.source && rp.context && rp.args) {
+    // rp.source.id = 'string' fails
+    rp.source.id = 444;
+
+    // rp.args.skip = 'string';
+    rp.args.skip = 4;
+  }
+});
+
+findManyArt1.wrap(
+  (newResolver, prevResolver) => {
+    newResolver.cloneArg('filter', 'AuthorFilterForUsers');
+
+    newResolver
+      .getArgTC('filter')
+      .removeField(['age', 'other_sensetive_filter']);
+
+    return newResolver;
+  },
+  {
+    resolve: ({ source, context, args }) => {
+      if (source && context && args) {
+        // source.id = 'string' fails
+        source.id = 444;
+        // args.skip = 'fails';
+        args.skip = 3;
+      }
+    },
+  },
+);
