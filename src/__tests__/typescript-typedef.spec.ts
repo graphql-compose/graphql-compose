@@ -57,7 +57,7 @@ const PersonTC = TypeComposer.create<Person, Context>({
 // ****************************
 
 // TC.getResolver()
-// TODO: should be without errors! By default in resolvers source should be `any` even if provided TypeComposer.create<Person, Context>
+// should be without errors! By default in resolvers source should be `any` even if provided TypeComposer.create<Person, Context>
 PersonTC.getResolver('findOne').wrapResolve(next => rp => {
   rp.source.name = 5; // source any
   rp.source.age = 'string';
@@ -74,8 +74,11 @@ interface QuerySource {
 }
 schemaComposer.Query.addFields({
   user: PersonTC.getResolver('findOne').wrapResolve<QuerySource>(next => rp => {
-    rp.source.name = 5; // source any
-    rp.source.age = 'string'; // <----- here must be an error
+    if (rp.source) {
+      rp.source.name = 5; // source any
+      // rp.source.age = 'string'; // <----- here must be an error
+      rp.source.age = 4;
+    }
 
     return next(rp);
   }),
@@ -177,38 +180,12 @@ PersonTC.getFieldTC('deep') // <-------------- this case should not have errors
     }
   });
 
-// -------- miss understanding, corrext tests provided below
-
-// // addFields
-// interface PersonExtended extends Person {
-//   new1: string;
-//   new2: number;
-//   extends: string; // Person
-// }
-
-// // If you want to use the extended person source types then you need a variable to collect
-// const PersonExtendedTC = PersonTC.addFields<PersonExtended>({
-//   new1: 'String',
-//   new2: 'Int'
-// });
-
-// PersonExtendedTC.getResolver('findOne').wrapResolve(next => rp => {
-//   if (rp.source && rp.context) {
-//     rp.source.new1 = 'string';
-//     rp.context.uid = 'string'; // passes
-//   }
-// });
-
-// PersonExtendedTC.getResolver<any>('findOne').wrapResolve(next => rp => {
-//   rp.source.new1 = 5;
-// });
-
 // adding new field to graphql type, its fieldConfig.resolve method should have TSource type
 PersonTC.addFields({
   ageIn2030: {
     type: 'Int',
-    resolve: source => {
-      // <------------  here `source` MUST have `Person` type
+    resolve: (source, args, context) => {
+      // if you don't provide other args, typescript resolves source as any
       return source.age + 12;
     },
   },
@@ -227,7 +204,6 @@ interface Art {
 const ArtTC = schemaComposer.getOrCreateTC<Art>('Art');
 
 ArtTC.addRelation('extends', {
-  // <------------ NO NEED IN addRelation<Person> here
   resolver: PersonTC.getResolver('findById'), // comes from other (resolve to)
   prepareArgs: {
     _id: source => source.personId, // type checks well now

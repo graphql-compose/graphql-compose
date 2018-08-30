@@ -214,29 +214,29 @@ export class TypeComposer<TSource, TContext> {
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  public addFields<TNewSource>(
-    newFields: ComposeFieldConfigMap<TNewSource, TContext>,
-  ): TypeComposer<TNewSource, TContext>;
+  public addFields(
+    newFields: ComposeFieldConfigMap<TSource, TContext>,
+  ): TypeComposer<TSource, TContext>;
 
   /**
    * Add new fields or replace existed (where field name may have dots)
    */
-  public addNestedFields(newFields: ComposeFieldConfigMap<any, TContext>): this;
+  public addNestedFields(
+    newFields: ComposeFieldConfigMap<TSource, TContext>,
+  ): this;
 
   /**
    * Get fieldConfig by name
    */
-  public getField<TField>(
-    fieldName: string,
-  ): ComposeFieldConfig<TField, TContext>;
+  public getField(fieldName: string): ComposeFieldConfig<TSource, TContext>;
 
-  public removeField<TNewSource>(
+  public removeField(
     fieldNameOrArray: string | string[],
-  ): TypeComposer<TNewSource, TContext>;
+  ): TypeComposer<TSource, TContext>;
 
-  public removeOtherFields<TNewSource>(
+  public removeOtherFields(
     fieldNameOrArray: string | string[],
-  ): TypeComposer<TNewSource, TContext>;
+  ): TypeComposer<TSource, TContext>;
 
   public extendField(
     fieldName: string,
@@ -245,13 +245,11 @@ export class TypeComposer<TSource, TContext> {
 
   public reorderFields(names: string[]): this;
 
-  public getFieldConfig<TField>(
-    fieldName: string,
-  ): GraphQLFieldConfig<TField, TContext>;
+  public getFieldConfig(fieldName: string): GraphQLFieldConfig<any, TContext>;
 
   public getFieldType(fieldName: string): GraphQLOutputType;
 
-  public getFieldTC<TField>(fieldName: string): TypeComposer<TField, TContext>;
+  public getFieldTC(fieldName: string): TypeComposer<TSource, TContext>;
 
   public isFieldNonNull(fieldName: string): boolean;
 
@@ -313,13 +311,13 @@ export class TypeComposer<TSource, TContext> {
 
   public hasResolver(name: string): boolean;
 
-  public getResolver(name: string): Resolver<TSource, TContext>;
+  public getResolver(name: string): Resolver<any, TContext>;
 
   public getResolver<TResolverSource>(
     name: string,
   ): Resolver<TResolverSource, TContext>;
 
-  public setResolver(name: string, resolver: Resolver<TSource, TContext>): this;
+  public setResolver(name: string, resolver: Resolver<any, TContext>): this;
 
   public setResolver<TResolverSource>(
     name: string,
@@ -327,7 +325,7 @@ export class TypeComposer<TSource, TContext> {
   ): this;
 
   public addResolver(
-    resolver: Resolver<TSource, TContext> | ResolverOpts<TSource, TContext>,
+    resolver: Resolver<any, TContext> | ResolverOpts<any, TContext>,
   ): this;
 
   public addResolver<TResolverSource>(
@@ -340,7 +338,7 @@ export class TypeComposer<TSource, TContext> {
 
   public wrapResolver(
     resolverName: string,
-    cbResolver: ResolverWrapCb<TSource, TContext>,
+    cbResolver: ResolverWrapCb<any, TContext>,
   ): this;
 
   public wrapResolver<TResolverSource>(
@@ -351,7 +349,7 @@ export class TypeComposer<TSource, TContext> {
   public wrapResolverAs(
     resolverName: string,
     fromResolverName: string,
-    cbResolver: ResolverWrapCb<TSource, TContext>,
+    cbResolver: ResolverWrapCb<any, TContext>,
   ): this;
 
   public wrapResolverAs<TResolverSource>(
@@ -362,7 +360,7 @@ export class TypeComposer<TSource, TContext> {
 
   public wrapResolverResolve(
     resolverName: string,
-    cbNextRp: ResolverNextRpCb<TSource, TContext>,
+    cbNextRp: ResolverNextRpCb<any, TContext>,
   ): this;
 
   public wrapResolverResolve<TResolverSource>(

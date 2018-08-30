@@ -3,7 +3,7 @@ import {
   GraphQLNamedType,
   GraphQLDirective,
   SchemaDefinitionNode,
-} from './graphql';
+} from 'graphql';
 import { TypeComposer } from './TypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { TypeStorage } from './TypeStorage';
@@ -41,9 +41,15 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   public constructor();
 
+  public rootQuery(): TypeComposer<any, TContext>;
+
   public rootQuery<TRootQuery>(): TypeComposer<TRootQuery, TContext>;
 
+  public rootMutation(): TypeComposer<any, TContext>;
+
   public rootMutation<TRootMutation>(): TypeComposer<TRootMutation, TContext>;
+
+  public rootSubscription(): TypeComposer<any, TContext>;
 
   public rootSubscription<TRootSubscription>(): TypeComposer<
     TRootSubscription,
@@ -54,10 +60,15 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   public addSchemaMustHaveType(type: MustHaveTypes<TContext>): this;
 
-  public removeEmptyTypes<TSource>(
-    typeComposer: TypeComposer<TSource, TContext>,
+  public removeEmptyTypes(
+    typeComposer: TypeComposer<any, TContext>,
     passedTypes: Set<string>,
   ): void;
+
+  public getOrCreateTC(
+    typeName: string,
+    onCreate?: (tc: TypeComposer<any, TContext>) => any,
+  ): TypeComposer<any, TContext>;
 
   public getOrCreateTC<TSource>(
     typeName: string,

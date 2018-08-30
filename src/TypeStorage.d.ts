@@ -49,6 +49,8 @@ export class TypeStorage<TContext> {
     typeOrThunk: V<TContext> | (() => V<TContext>),
   ): V<TContext>;
 
+  public getTC(typeName: K): TypeComposer<any, TContext>;
+
   public getTC<TSource>(typeName: K): TypeComposer<TSource, TContext>;
 
   public getITC(typeName: K): InputTypeComposer;

@@ -1,22 +1,21 @@
 import {
+  GraphQLArgumentConfig,
   GraphQLFieldConfig,
-  GraphQLFieldConfigArgumentMap,
   GraphQLInputType,
   GraphQLOutputType,
-  GraphQLArgumentConfig,
 } from 'graphql';
 import * as graphql from './graphql';
+import { InputTypeComposer } from './InputTypeComposer';
 import { SchemaComposer } from './SchemaComposer';
 import {
   ComposeArgumentConfig,
+  ComposeArgumentType,
   ComposeFieldConfigArgumentMap,
   ComposeOutputType,
-  ComposeArgumentType,
+  TypeComposer,
 } from './TypeComposer';
-import { InputTypeComposer } from './InputTypeComposer';
-import { TypeComposer } from './TypeComposer';
-import { ProjectionType } from './utils/projection';
 import { GenericMap } from './utils/definitions';
+import { ProjectionType } from './utils/projection';
 
 export type ResolveParams<TSource, TContext> = {
   source: TSource;
@@ -189,7 +188,17 @@ export class Resolver<TSource, TContext> {
     newResolverOpts: ResolverOpts<TSource, TContext> | null,
   ): Resolver<TSource, TContext>;
 
+  public wrap<TSource>(
+    cb: ResolverWrapCb<TSource, TContext> | null,
+    newResolverOpts: ResolverOpts<TSource, TContext> | null,
+  ): Resolver<TSource, TContext>;
+
   public wrapResolve(
+    cb: ResolverNextRpCb<TSource, TContext>,
+    wrapperName?: string,
+  ): Resolver<TSource, TContext>;
+
+  public wrapResolve<TSource>(
     cb: ResolverNextRpCb<TSource, TContext>,
     wrapperName?: string,
   ): Resolver<TSource, TContext>;
@@ -199,12 +208,27 @@ export class Resolver<TSource, TContext> {
     wrapperName?: string,
   ): Resolver<TSource, TContext>;
 
+  public wrapArgs<TSource>(
+    cb: ResolverWrapArgsCb,
+    wrapperName?: string,
+  ): Resolver<TSource, TContext>;
+
   public wrapCloneArg(
     argName: string,
     newTypeName: string,
   ): Resolver<TSource, TContext>;
 
+  public wrapCloneArg<TSource>(
+    argName: string,
+    newTypeName: string,
+  ): Resolver<TSource, TContext>;
+
   public wrapType(
+    cb: ResolverWrapTypeCb,
+    wrapperName?: string,
+  ): Resolver<TSource, TContext>;
+
+  public wrapType<TSource>(
     cb: ResolverWrapTypeCb,
     wrapperName?: string,
   ): Resolver<TSource, TContext>;
@@ -228,6 +252,10 @@ export class Resolver<TSource, TContext> {
   public get(path: string | string[]): any;
 
   public clone(
+    opts?: ResolverOpts<TSource, TContext>,
+  ): Resolver<TSource, TContext>;
+
+  public clone<TSource>(
     opts?: ResolverOpts<TSource, TContext>,
   ): Resolver<TSource, TContext>;
 
