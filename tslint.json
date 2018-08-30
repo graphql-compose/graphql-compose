@@ -1,20 +1,39 @@
 {
-    "defaultSeverity": "error",
-    "extends": [
-        "tslint:recommended"
+  "defaultSeverity": "error",
+  "extends": [
+    "tslint:recommended",
+    "tslint-config-prettier"
+  ],
+  "rulesDirectory": [
+    "tslint-plugin-prettier"
+  ],
+  "jsRules": {},
+  "rules": {
+    "prettier": [
+      true,
+      {
+        "semi": true,
+        "singleQuote": true,
+        "trailingComma": "all",
+        "bracketSpacing": true,
+        "parser": "typescript"
+      }
     ],
-    "jsRules": {},
-    "rules": {
-        "quotemark": [true, "single"],
-        "trailing-comma": [false],
-        "ordered-imports": false,
-        "member-ordering": [true, { "order": "fields-first" }],
-        "variable-name": false,
-        "arrow-parens": false,
-        "interface-name": ["never-prefix"],
-        "no-reference-import": false,
-        "interface-over-type-literal": false,
-        "object-literal-sort-keys": false
-    },
-    "rulesDirectory": []
+    "trailing-comma": [
+      false
+    ],
+    "ordered-imports": false,
+    "member-ordering": [
+      true,
+      {
+        "order": "fields-first"
+      }
+    ],
+    "variable-name": false,
+    "arrow-parens": false,
+    "interface-name": false,
+    "no-reference-import": false,
+    "interface-over-type-literal": false,
+    "object-literal-sort-keys": false
+  }
 }
