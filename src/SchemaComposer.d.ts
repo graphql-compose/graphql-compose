@@ -1,4 +1,9 @@
-import { GraphQLSchema, GraphQLNamedType, GraphQLDirective, SchemaDefinitionNode } from './graphql';
+import {
+  GraphQLSchema,
+  GraphQLNamedType,
+  GraphQLDirective,
+  SchemaDefinitionNode,
+} from './graphql';
 import { TypeComposer } from './TypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { TypeStorage } from './TypeStorage';
@@ -15,9 +20,9 @@ type MustHaveTypes<TContext> =
   | GraphQLNamedType;
 
 type ExtraSchemaConfig = {
-  types?: GraphQLNamedType[] | null,
-  directives?: GraphQLDirective[] | null,
-  astNode?: SchemaDefinitionNode | null,
+  types?: GraphQLNamedType[] | null;
+  directives?: GraphQLDirective[] | null;
+  astNode?: SchemaDefinitionNode | null;
 };
 
 export class SchemaComposer<TContext> extends TypeStorage<TContext> {
@@ -40,31 +45,37 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   public rootMutation<TRootMutation>(): TypeComposer<TRootMutation, TContext>;
 
-  public rootSubscription<TRootSubscription>(): TypeComposer<TRootSubscription, TContext>;
+  public rootSubscription<TRootSubscription>(): TypeComposer<
+    TRootSubscription,
+    TContext
+  >;
 
   public buildSchema(extraConfig?: ExtraSchemaConfig): GraphQLSchema;
 
   public addSchemaMustHaveType(type: MustHaveTypes<TContext>): this;
 
-  public removeEmptyTypes<TSource>(typeComposer: TypeComposer<TSource, TContext>, passedTypes: Set<string>): void;
+  public removeEmptyTypes<TSource>(
+    typeComposer: TypeComposer<TSource, TContext>,
+    passedTypes: Set<string>,
+  ): void;
 
   public getOrCreateTC<TSource>(
     typeName: string,
-    onCreate?: (tc: TypeComposer<TSource, TContext>) => any
+    onCreate?: (tc: TypeComposer<TSource, TContext>) => any,
   ): TypeComposer<TSource, TContext>;
 
   public getOrCreateITC(
     typeName: string,
-    onCreate?: (itc: InputTypeComposer) => any
+    onCreate?: (itc: InputTypeComposer) => any,
   ): InputTypeComposer;
 
   public getOrCreateETC(
     typeName: string,
-    onCreate?: (etc: EnumTypeComposer) => any
+    onCreate?: (etc: EnumTypeComposer) => any,
   ): EnumTypeComposer;
 
   public getOrCreateIFTC(
     typeName: string,
-    onCreate?: (iftc: InterfaceTypeComposer<TContext>) => any
+    onCreate?: (iftc: InterfaceTypeComposer<TContext>) => any,
   ): InterfaceTypeComposer<TContext>;
 }

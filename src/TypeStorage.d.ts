@@ -6,12 +6,12 @@ import { TypeComposer } from './TypeComposer';
 
 type K = any;
 type V<TContext> =
-    | TypeComposer<any, TContext>
-    | InputTypeComposer
-    | EnumTypeComposer
-    | InterfaceTypeComposer<TContext>
-    | GraphQLNamedType
-    | GraphQLScalarType;
+  | TypeComposer<any, TContext>
+  | InputTypeComposer
+  | EnumTypeComposer
+  | InterfaceTypeComposer<TContext>
+  | GraphQLNamedType
+  | GraphQLScalarType;
 
 export class TypeStorage<TContext> {
   public types: Map<K, V<TContext>>;
@@ -25,7 +25,10 @@ export class TypeStorage<TContext> {
 
   public entries(): Iterator<[K, V<TContext>]>;
 
-  public forEach(callbackfn: (value: V<TContext>, index: K, map: Map<K, V<TContext>>) => any, thisArg?: any): void;
+  public forEach(
+    callbackfn: (value: V<TContext>, index: K, map: Map<K, V<TContext>>) => any,
+    thisArg?: any,
+  ): void;
 
   public get(key: K): V<TContext>;
 
@@ -41,7 +44,10 @@ export class TypeStorage<TContext> {
 
   public hasInstance(key: K, ClassObj: any): boolean;
 
-  public getOrSet(key: K, typeOrThunk: V<TContext> | (() => V<TContext>)): V<TContext>;
+  public getOrSet(
+    key: K,
+    typeOrThunk: V<TContext> | (() => V<TContext>),
+  ): V<TContext>;
 
   public getTC<TSource>(typeName: K): TypeComposer<TSource, TContext>;
 

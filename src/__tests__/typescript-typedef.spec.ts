@@ -14,7 +14,7 @@ interface GenericUID {
   uid: string;
 }
 
-interface Person extends GenericUID{
+interface Person extends GenericUID {
   uid: string;
   name: string;
   nickName: string;
@@ -41,8 +41,8 @@ const PersonTC = TypeComposer.create<Person, Context>({
   fields: {
     name: 'String',
     nickName: 'String',
-    age: 'Int'
-  }
+    age: 'Int',
+  },
 });
 
 // Both PersonTC and PersonTC2 have same TSource and TContext
@@ -57,7 +57,7 @@ const PersonTC = TypeComposer.create<Person, Context>({
 // ****************************
 
 // TC.getResolver()
-// TODO: should be without errors! By default in resolvers source should be `any` even if provided TypeComposer.create<Person, Context> 
+// TODO: should be without errors! By default in resolvers source should be `any` even if provided TypeComposer.create<Person, Context>
 PersonTC.getResolver('findOne').wrapResolve(next => rp => {
   rp.source.name = 5; // source any
   rp.source.age = 'string';
@@ -68,16 +68,18 @@ PersonTC.getResolver('findOne').wrapResolve(next => rp => {
 // BUT I see your what you want to do. So let provide source correctly to `wrapResolve` function:
 // We keep standard resolvers untyped forsource. BUT almost all wrappers created for some exact type,
 // so let make it typed! I think it's a right place.
-interface QuerySource { name: number, age: number };
+interface QuerySource {
+  name: number;
+  age: number;
+}
 schemaComposer.Query.addFields({
   user: PersonTC.getResolver('findOne').wrapResolve<QuerySource>(next => rp => {
     rp.source.name = 5; // source any
     rp.source.age = 'string'; // <----- here must be an error
-  
-    return next(rp);
-  })
-});
 
+    return next(rp);
+  }),
+});
 
 // TResolverSource is Person or you may specify
 PersonTC.getResolver('findOne').wrapResolve(next => rp => {
@@ -86,7 +88,7 @@ PersonTC.getResolver('findOne').wrapResolve(next => rp => {
 
   // source Person | undefined  as a result of Partial<ResolveParams...
   if (rp.source) {
-    rp.source.name = 2;  // <---- for backward compatibility for TS users, here should be mo errors (by default source: any)
+    rp.source.name = 2; // <---- for backward compatibility for TS users, here should be mo errors (by default source: any)
     rp.source.age = 5;
   }
 
@@ -95,22 +97,24 @@ PersonTC.getResolver('findOne').wrapResolve(next => rp => {
 
 // TC.addResolver()
 // add resolver with no type passed in
-PersonTC.addResolver({   // <---------------- by default resolver has `source: any` an it can not be defined explicitly like it was
+PersonTC.addResolver({
+  // <---------------- by default resolver has `source: any` an it can not be defined explicitly like it was
   resolve: ({ source, context }) => {
     // check availability
     if (source && context) {
       source.age = 2;
-      source.name = 2;           // <---- should not be error
+      source.name = 2; // <---- should not be error
       if (context.uid !== source.uid) {
         // do something if not the current user ...
       }
     }
-  }
+  },
 });
 
 // add resolver with a source type
 // <<<------ here I change Person on something basic GenericUID. Let assume that from GenericUID extended all other models, which will use this resolver.
-PersonTC.addResolver<GenericUID>({ // <--- this is ok, if we want to provide really Basic/Global/Generic interface, which will be implemented in several types/models. And then to these types we will add current resolver.
+PersonTC.addResolver<GenericUID>({
+  // <--- this is ok, if we want to provide really Basic/Global/Generic interface, which will be implemented in several types/models. And then to these types we will add current resolver.
   resolve: ({ source, context }) => {
     // check availability
     if (source && context) {
@@ -118,7 +122,7 @@ PersonTC.addResolver<GenericUID>({ // <--- this is ok, if we want to provide rea
         // do something if not the current user ...
       }
     }
-  }
+  },
 });
 
 // wrapResolverResolve
@@ -148,7 +152,8 @@ PersonTC.wrapResolverResolve<Person>('findMany', next => rp => {
 // ****************************
 PersonTC.getFieldTC('deep') // <----- no matter what type you provide here, it should not affect on rp.source below
   .getResolver('findOne')
-  .wrapResolve<DeepOptions>(next => rp => { // <----- provide type here, if you want to check rp.source
+  .wrapResolve<DeepOptions>(next => rp => {
+    // <----- provide type here, if you want to check rp.source
     // check source and context because they are defined as Partial<ResolveParams...
     if (rp.source && rp.context) {
       rp.source.deep1 = 'string';
@@ -171,7 +176,6 @@ PersonTC.getFieldTC('deep') // <-------------- this case should not have errors
       rp.context.uid = 'string'; // passes
     }
   });
-
 
 // -------- miss understanding, corrext tests provided below
 
@@ -203,13 +207,12 @@ PersonTC.getFieldTC('deep') // <-------------- this case should not have errors
 PersonTC.addFields({
   ageIn2030: {
     type: 'Int',
-    resolve: (source) => {  // <------------  here `source` MUST have `Person` type
+    resolve: source => {
+      // <------------  here `source` MUST have `Person` type
       return source.age + 12;
     },
   },
-})
-
-
+});
 
 // **************************
 // Relations
@@ -217,15 +220,19 @@ PersonTC.addFields({
 // This particular case has been a bit of a problem, that is before i did the changes
 // resolver was always conflicting with the invoking TC
 // **************************
-interface Art { id: number, personId: string } 
+interface Art {
+  id: number;
+  personId: string;
+}
 const ArtTC = schemaComposer.getOrCreateTC<Art>('Art');
 
-ArtTC.addRelation('extends', { // <------------ NO NEED IN addRelation<Person> here 
+ArtTC.addRelation('extends', {
+  // <------------ NO NEED IN addRelation<Person> here
   resolver: PersonTC.getResolver('findById'), // comes from other (resolve to)
   prepareArgs: {
-    _id: source => source.personId  // type checks well now
+    _id: source => source.personId, // type checks well now
   },
-  projection: { personId: true }
+  projection: { personId: true },
 });
 
 // <----------- became the same as above, so comment this case.

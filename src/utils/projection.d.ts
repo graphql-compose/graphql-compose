@@ -1,18 +1,25 @@
 import {
-    FieldNode, FragmentDefinitionNode, GraphQLResolveInfo, InlineFragmentNode, GraphQLOutputType
+  FieldNode,
+  FragmentDefinitionNode,
+  GraphQLResolveInfo,
+  InlineFragmentNode,
+  GraphQLOutputType,
 } from '../graphql';
 
 export type ProjectionType = { [fieldName: string]: any };
 export type ProjectionNode = { [fieldName: string]: any };
 
 export function getProjectionFromAST(
-    context: GraphQLResolveInfo,
-    fieldNode?: FieldNode | InlineFragmentNode | FragmentDefinitionNode): ProjectionType;
+  context: GraphQLResolveInfo,
+  fieldNode?: FieldNode | InlineFragmentNode | FragmentDefinitionNode,
+): ProjectionType;
 
 export function getFlatProjectionFromAST(
-    context: GraphQLResolveInfo,
-    fieldNodes?: FieldNode | InlineFragmentNode | FragmentDefinitionNode): { [key: string]: boolean };
+  context: GraphQLResolveInfo,
+  fieldNodes?: FieldNode | InlineFragmentNode | FragmentDefinitionNode,
+): { [key: string]: boolean };
 
 export function extendByFieldProjection(
-    returnType: GraphQLOutputType,
-    projection: ProjectionType): ProjectionType;
+  returnType: GraphQLOutputType,
+  projection: ProjectionType,
+): ProjectionType;

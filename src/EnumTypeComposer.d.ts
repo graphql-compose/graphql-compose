@@ -20,9 +20,13 @@ export class EnumTypeComposer {
 
   public constructor(gqType: GraphQLEnumType);
 
-  public static create(opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType): EnumTypeComposer;
+  public static create(
+    opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType,
+  ): EnumTypeComposer;
 
-  public static createTemp(opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType): EnumTypeComposer;
+  public static createTemp(
+    opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType,
+  ): EnumTypeComposer;
 
   // -----------------------------------------------
   // Value methods
@@ -48,9 +52,14 @@ export class EnumTypeComposer {
 
   public reorderFields(names: string[]): this;
 
-  public extendField(name: string, partialValueConfig: GraphQLEnumValueConfig): this;
+  public extendField(
+    name: string,
+    partialValueConfig: GraphQLEnumValueConfig,
+  ): this;
 
-  public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
+  public deprecateFields(
+    fields: { [fieldName: string]: string } | string[] | string,
+  ): this;
 
   // -----------------------------------------------
   // Type methods
