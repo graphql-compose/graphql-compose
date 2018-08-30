@@ -57,13 +57,13 @@ declare class TypeMapper {
     astDocument: DocumentNode,
   ): TypeStorage<GraphQLNamedType>;
 
-  public convertOutputFieldConfig<TSource, TContext>(
+  public convertOutputFieldConfig<TSource = any, TContext = any>(
     composeFC: ComposeFieldConfig<TSource, TContext>,
     fieldName?: string,
     typeName?: string,
   ): GraphQLFieldConfig<TSource, TContext>;
 
-  public convertOutputFieldConfigMap<TSource, TContext>(
+  public convertOutputFieldConfigMap<TSource = any, TContext = any>(
     composeFields:
       | ComposeFieldConfigMap<TSource, TContext>
       | GraphQLFieldConfigMap<TSource, TContext>,

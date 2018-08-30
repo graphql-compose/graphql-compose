@@ -41,17 +41,14 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   public constructor();
 
-  public rootQuery(): TypeComposer<any, TContext>;
+  public rootQuery<TRootQuery = any>(): TypeComposer<TRootQuery, TContext>;
 
-  public rootQuery<TRootQuery>(): TypeComposer<TRootQuery, TContext>;
+  public rootMutation<TRootMutation = any>(): TypeComposer<
+    TRootMutation,
+    TContext
+  >;
 
-  public rootMutation(): TypeComposer<any, TContext>;
-
-  public rootMutation<TRootMutation>(): TypeComposer<TRootMutation, TContext>;
-
-  public rootSubscription(): TypeComposer<any, TContext>;
-
-  public rootSubscription<TRootSubscription>(): TypeComposer<
+  public rootSubscription<TRootSubscription = any>(): TypeComposer<
     TRootSubscription,
     TContext
   >;
@@ -65,12 +62,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     passedTypes: Set<string>,
   ): void;
 
-  public getOrCreateTC(
-    typeName: string,
-    onCreate?: (tc: TypeComposer<any, TContext>) => any,
-  ): TypeComposer<any, TContext>;
-
-  public getOrCreateTC<TSource>(
+  public getOrCreateTC<TSource = any>(
     typeName: string,
     onCreate?: (tc: TypeComposer<TSource, TContext>) => any,
   ): TypeComposer<TSource, TContext>;

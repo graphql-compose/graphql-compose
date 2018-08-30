@@ -287,7 +287,7 @@ export class TypeComposer<TSource, TContext> {
 
   public setDescription(description: string): this;
 
-  public clone<TCloneSource>(
+  public clone<TCloneSource = any>(
     newTypeName: string,
   ): TypeComposer<TCloneSource, TContext>;
 
@@ -311,24 +311,16 @@ export class TypeComposer<TSource, TContext> {
 
   public hasResolver(name: string): boolean;
 
-  public getResolver(name: string): Resolver<any, TContext>;
-
-  public getResolver<TResolverSource>(
+  public getResolver<TResolverSource = any>(
     name: string,
   ): Resolver<TResolverSource, TContext>;
 
-  public setResolver(name: string, resolver: Resolver<any, TContext>): this;
-
-  public setResolver<TResolverSource>(
+  public setResolver<TResolverSource = any>(
     name: string,
     resolver: Resolver<TResolverSource, TContext>,
   ): this;
 
-  public addResolver(
-    resolver: Resolver<any, TContext> | ResolverOpts<any, TContext>,
-  ): this;
-
-  public addResolver<TResolverSource>(
+  public addResolver<TResolverSource = any>(
     resolver:
       | Resolver<TResolverSource, TContext>
       | ResolverOpts<TResolverSource, TContext>,
@@ -336,34 +328,18 @@ export class TypeComposer<TSource, TContext> {
 
   public removeResolver(resolverName: string): this;
 
-  public wrapResolver(
-    resolverName: string,
-    cbResolver: ResolverWrapCb<any, TContext>,
-  ): this;
-
-  public wrapResolver<TResolverSource>(
+  public wrapResolver<TResolverSource = any>(
     resolverName: string,
     cbResolver: ResolverWrapCb<TResolverSource, TContext>,
   ): this;
 
-  public wrapResolverAs(
-    resolverName: string,
-    fromResolverName: string,
-    cbResolver: ResolverWrapCb<any, TContext>,
-  ): this;
-
-  public wrapResolverAs<TResolverSource>(
+  public wrapResolverAs<TResolverSource = any>(
     resolverName: string,
     fromResolverName: string,
     cbResolver: ResolverWrapCb<TResolverSource, TContext>,
   ): this;
 
-  public wrapResolverResolve(
-    resolverName: string,
-    cbNextRp: ResolverNextRpCb<any, TContext>,
-  ): this;
-
-  public wrapResolverResolve<TResolverSource>(
+  public wrapResolverResolve<TResolverSource = any>(
     resolverName: string,
     cbNextRp: ResolverNextRpCb<TResolverSource, TContext>,
   ): this;
@@ -396,7 +372,7 @@ export class TypeComposer<TSource, TContext> {
   // Misc methods
   // -----------------------------------------------
 
-  public addRelation<TRelationSource>(
+  public addRelation<TRelationSource = any>(
     fieldName: string,
     relationOpts: RelationOpts<TRelationSource, TSource, TContext>,
   ): this;
