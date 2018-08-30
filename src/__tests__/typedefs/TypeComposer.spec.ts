@@ -196,3 +196,100 @@ ArtTC.addRelation('extends', {
 //   },
 //   projection: { extends: true }
 // });
+
+// with TArgs
+interface GeneralArgs {
+  filter: { id: string };
+  skip: number;
+  limit: number;
+}
+
+// in resolvers
+PersonTC.addResolver<GenericUID, GeneralArgs>({
+  // <--- this is ok, if we want to provide really Basic/Global/Generic interface, which will be implemented in several types/models. And then to these types we will add current resolver.
+  resolve: ({ source, context, args }) => {
+    // check availability
+    if (source && context && args) {
+      if (context.uid !== source.uid) {
+        // args.skip = 'st';
+        args.skip = 4;
+        // do something if not the current user ...
+      }
+    }
+  },
+});
+
+// wrapResolverResolve
+PersonTC.wrapResolverResolve('findMany', next => rp => {
+  rp.source.name = 5; // source any
+  rp.source.age = 'string';
+
+  if (rp.args) {
+    rp.args.skip = 'string';
+    rp.args.skip = 4;
+  }
+
+  return next(rp);
+});
+
+PersonTC.wrapResolverResolve<Person, GeneralArgs>('findMany', next => rp => {
+  // rp.source.name = 5;  // source Person
+  // rp.source.age = 'string';
+
+  // source Person | undefined  as a result of Partial<ResolveParams...
+  if (rp.source && rp.args) {
+    rp.source.name = 'string';
+    rp.source.age = 5;
+    // rp.args.skip = 'ss';
+    rp.args.skip = 4;
+  }
+
+  return next(rp);
+});
+
+// in relations
+ArtTC.addRelation('extends', {
+  resolver: PersonTC.getResolver('findById').wrapResolve(next => rp => {
+    if (rp.args) {
+      // rp.args.skip = 'hey';
+      rp.args.skip = 4;
+    }
+  }),
+  prepareArgs: {
+    _id: source => source.personId, // type checks well now
+  },
+  projection: { personId: true },
+});
+
+ArtTC.addRelation<Person, GeneralArgs>('extends', {
+  resolver: PersonTC.getResolver('findById').wrapResolve(next => rp => {
+    if (rp.args) {
+      // rp.args.skip = 'hey';
+      rp.args.skip = 4;
+    }
+  }),
+  prepareArgs: {
+    _id: source => source.personId, // type checks well now
+  },
+  projection: { personId: true },
+});
+
+ArtTC.addRelation('extends', {
+  type: 'Int',
+  resolve: (source, args, context) => {
+    source.id = 33;
+    args.skip = 'string';
+    args.skip = 33;
+    context.uid = 'string';
+  },
+});
+
+ArtTC.addRelation<Art, GeneralArgs>('extends', {
+  type: 'Int',
+  resolve: (source, args, context) => {
+    source.id = 33;
+    // args.skip = 'string';
+    args.skip = 33;
+    context.uid = 'string';
+  },
+});

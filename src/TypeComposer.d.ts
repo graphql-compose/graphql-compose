@@ -74,10 +74,10 @@ export type GraphqlFieldConfigExtended<TSource, TContext> = GraphQLFieldConfig<
   TContext
 > & { projection?: any };
 
-export type ComposeFieldConfigAsObject<TSource, TContext> = {
+export type ComposeFieldConfigAsObject<TSource, TContext, TArgs = any> = {
   type: Thunk<ComposeOutputType<TContext>> | GraphQLOutputType;
   args?: ComposeFieldConfigArgumentMap;
-  resolve?: GraphQLFieldResolver<TSource, TContext>;
+  resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>;
   subscribe?: GraphQLFieldResolver<TSource, TContext>;
   deprecationReason?: string | null;
   description?: string | null;
@@ -127,12 +127,17 @@ export type RelationThunkMap<TSource, TContext> = {
   [fieldName: string]: Thunk<RelationOpts<any, TSource, TContext>>;
 };
 
-export type RelationOpts<TRelationSource, TSource, TContext> =
-  | RelationOptsWithResolver<TRelationSource, TSource, TContext>
-  | RelationOptsWithFieldConfig<TSource, TContext>;
+export type RelationOpts<TRelationSource, TSource, TContext, TArgs = any> =
+  | RelationOptsWithResolver<TRelationSource, TSource, TContext, TArgs>
+  | RelationOptsWithFieldConfig<TSource, TContext, TArgs>;
 
-export type RelationOptsWithResolver<TRelationSource, TSource, TContext> = {
-  resolver: Thunk<Resolver<TRelationSource, TContext>>;
+export type RelationOptsWithResolver<
+  TRelationSource,
+  TSource,
+  TContext,
+  TArgs = any
+> = {
+  resolver: Thunk<Resolver<TRelationSource, TContext, TArgs>>;
   prepareArgs?: RelationArgsMapper<TSource, TContext>;
   projection?: ProjectionType;
   description?: string | null;
@@ -142,23 +147,24 @@ export type RelationOptsWithResolver<TRelationSource, TSource, TContext> = {
 
 export type RelationOptsWithFieldConfig<
   TSource,
-  TContext
-> = ComposeFieldConfigAsObject<TSource, TContext> & {
-  resolve: GraphQLFieldResolver<TSource, TContext>;
+  TContext,
+  TArgs = any
+> = ComposeFieldConfigAsObject<TSource, TContext, TArgs> & {
+  resolve: GraphQLFieldResolver<TSource, TContext, TArgs>;
 };
 
-export type ArgsType = { [argName: string]: any };
+export type ArgsType<T = any> = { [argName in keyof T]: T[argName] };
 
-export type RelationArgsMapperFn<TSource, TContext> = (
+export type RelationArgsMapperFn<TSource, TContext, TArgs = any> = (
   source: TSource,
-  args: ArgsType,
+  args: ArgsType<TArgs>,
   context: TContext,
   info: GraphQLResolveInfo,
 ) => any;
 
-export type RelationArgsMapper<TSource, TContext> = {
+export type RelationArgsMapper<TSource, TContext, TArgs = any> = {
   [argName: string]:
-    | RelationArgsMapperFn<TSource, TContext>
+    | RelationArgsMapperFn<TSource, TContext, TArgs>
     | null
     | void
     | string
@@ -311,37 +317,37 @@ export class TypeComposer<TSource = any, TContext = any> {
 
   public hasResolver(name: string): boolean;
 
-  public getResolver<TResolverSource = any>(
+  public getResolver<TResolverSource = any, TArgs = any>(
     name: string,
-  ): Resolver<TResolverSource, TContext>;
+  ): Resolver<TResolverSource, TContext, TArgs>;
 
-  public setResolver<TResolverSource = any>(
+  public setResolver<TResolverSource = any, TArgs = any>(
     name: string,
-    resolver: Resolver<TResolverSource, TContext>,
+    resolver: Resolver<TResolverSource, TContext, TArgs>,
   ): this;
 
-  public addResolver<TResolverSource = any>(
+  public addResolver<TResolverSource = any, TArgs = any>(
     resolver:
-      | Resolver<TResolverSource, TContext>
-      | ResolverOpts<TResolverSource, TContext>,
+      | Resolver<TResolverSource, TContext, TArgs>
+      | ResolverOpts<TResolverSource, TContext, TArgs>,
   ): this;
 
   public removeResolver(resolverName: string): this;
 
-  public wrapResolver<TResolverSource = any>(
+  public wrapResolver<TResolverSource = any, TArgs = any>(
     resolverName: string,
-    cbResolver: ResolverWrapCb<TResolverSource, TSource, TContext>,
+    cbResolver: ResolverWrapCb<TResolverSource, TSource, TContext, TArgs>,
   ): this;
 
-  public wrapResolverAs<TResolverSource = any>(
+  public wrapResolverAs<TResolverSource = any, TArgs = any>(
     resolverName: string,
     fromResolverName: string,
-    cbResolver: ResolverWrapCb<TResolverSource, TSource, TContext>,
+    cbResolver: ResolverWrapCb<TResolverSource, TSource, TContext, TArgs>,
   ): this;
 
-  public wrapResolverResolve<TResolverSource = any>(
+  public wrapResolverResolve<TResolverSource = any, TArgs = any>(
     resolverName: string,
-    cbNextRp: ResolverNextRpCb<TResolverSource, TContext>,
+    cbNextRp: ResolverNextRpCb<TResolverSource, TContext, TArgs>,
   ): this;
 
   // -----------------------------------------------
@@ -372,9 +378,14 @@ export class TypeComposer<TSource = any, TContext = any> {
   // Misc methods
   // -----------------------------------------------
 
-  public addRelation<TRelationSource = any>(
+  public addRelation(
     fieldName: string,
-    relationOpts: RelationOpts<TRelationSource, TSource, TContext>,
+    relationOpts: RelationOpts<any, TSource, TContext, any>,
+  ): this;
+
+  public addRelation<TRelationSource = any, TArgs = any>(
+    fieldName: string,
+    relationOpts: RelationOpts<TRelationSource, TSource, TContext, TArgs>,
   ): this;
 
   public getRelations(): RelationThunkMap<any, TContext>;
@@ -396,8 +407,8 @@ export class TypeComposer<TSource = any, TContext = any> {
 
   public get(path: string | string[]): any;
 
-  private _relationWithResolverToFC<TRelationSource>(
-    opts: RelationOptsWithResolver<TRelationSource, TSource, TContext>,
+  private _relationWithResolverToFC<TRelationSource, TArgs = any>(
+    opts: RelationOptsWithResolver<TRelationSource, TSource, TContext, TArgs>,
     fieldName?: string,
-  ): ComposeFieldConfigAsObject<TRelationSource, TContext>;
+  ): ComposeFieldConfigAsObject<TRelationSource, TContext, TArgs>;
 }
