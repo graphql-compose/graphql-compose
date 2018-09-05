@@ -3,7 +3,9 @@
 
 export function getGraphqlVersion(): number {
   const graphql: any = require('../graphql');
-  if (graphql.lexicographicSortSchema) {
+  if (graphql.getOperationRootType) {
+    return 14.0;
+  } else if (graphql.lexicographicSortSchema) {
     return 13.0;
   } else if (graphql.lexographicSortSchema) {
     // 0.13-rc.1

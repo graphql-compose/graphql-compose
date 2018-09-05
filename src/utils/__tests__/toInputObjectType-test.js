@@ -58,7 +58,7 @@ describe('toInputObjectType()', () => {
     const itc = toInputObjectType(PersonTC);
     const addrType = itc.getFieldType('address');
     expect(addrType).toBeInstanceOf(GraphQLInputObjectType);
-    expect((addrType: any)._typeConfig.name).toBe('PersonAddressInput');
+    expect((addrType: any).name).toBe('PersonAddressInput');
   });
 
   it('should reuse generated input type for recursive types', () => {

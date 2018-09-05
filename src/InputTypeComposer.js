@@ -17,6 +17,8 @@ import type {
   GraphQLInputType,
   InputValueDefinitionNode,
 } from './graphql';
+import { graphqlVersion } from './utils/graphqlVersion';
+import { defineInputFieldMap, defineInputFieldMapToConfig } from './utils/configToDefine';
 
 export type GraphQLInputObjectTypeExtended = GraphQLInputObjectType & {
   _gqcFields?: ComposeInputFieldConfigMap,
@@ -135,8 +137,13 @@ export class InputTypeComposer {
 
   getFields(): ComposeInputFieldConfigMap {
     if (!this.gqType._gqcFields) {
-      const fields: Thunk<GraphQLInputFieldConfigMap> = this.gqType._typeConfig.fields;
-      this.gqType._gqcFields = (resolveMaybeThunk(fields) || {}: any);
+      if (graphqlVersion >= 14) {
+        this.gqType._gqcFields = (defineInputFieldMapToConfig(this.gqType._fields): any);
+      } else {
+        // $FlowFixMe
+        const fields: Thunk<GraphQLInputFieldConfigMap> = this.gqType._typeConfig.fields;
+        this.gqType._gqcFields = (resolveMaybeThunk(fields) || {}: any);
+      }
     }
 
     return this.gqType._gqcFields;
@@ -158,10 +165,20 @@ export class InputTypeComposer {
   setFields(fields: ComposeInputFieldConfigMap): InputTypeComposer {
     this.gqType._gqcFields = fields;
 
-    this.gqType._typeConfig.fields = () => {
-      return resolveInputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName());
-    };
-    delete this.gqType._fields; // if schema was builded, delete defineFieldMap
+    if (graphqlVersion >= 14) {
+      this.gqType._fields = () => {
+        return defineInputFieldMap(
+          this.gqType,
+          resolveInputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName())
+        );
+      };
+    } else {
+      // $FlowFixMe
+      this.gqType._typeConfig.fields = () => {
+        return resolveInputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName());
+      };
+      delete this.gqType._fields; // if schema was builded, delete defineFieldMap
+    }
     return this;
   }
 

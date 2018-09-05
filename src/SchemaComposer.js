@@ -142,10 +142,8 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   }
 
   removeEmptyTypes(typeComposer: _TypeComposer<TContext>, passedTypes: Set<string> = new Set()) {
-    const fieldsOrThunk = typeComposer.getType()._typeConfig.fields;
-    const fields = isFunction(fieldsOrThunk) ? fieldsOrThunk() : fieldsOrThunk;
-    Object.keys(fields).forEach(fieldName => {
-      const fieldType = fields[fieldName].type;
+    typeComposer.getFieldNames().forEach(fieldName => {
+      const fieldType = typeComposer.getFieldType(fieldName);
       if (fieldType instanceof GraphQLObjectType) {
         const typeName = fieldType.name;
         if (!passedTypes.has(typeName)) {
@@ -160,7 +158,6 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
                 `with type '${tc.getTypeName()}', cause it does not have fields.`
             );
             typeComposer.removeField(fieldName);
-            delete fields[fieldName];
           }
         }
       }

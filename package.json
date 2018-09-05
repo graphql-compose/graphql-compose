@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/graphql-compose/graphql-compose",
   "peerDependencies": {
-    "graphql": ">=0.9.0 || >=0.10.0 || >=0.11.0 || >=0.13.0"
+    "graphql": ">=0.13.0 || >=14.0.0"
   },
   "devDependencies": {
     "@types/graphql": "^0.13.4",
@@ -44,7 +44,7 @@
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-prettier": "^2.6.2",
     "flow-bin": "0.75.0",
-    "graphql": "0.13.2",
+    "graphql": "14.0.0",
     "jest": "^23.5.0",
     "prettier": "^1.14.2",
     "rimraf": "^2.6.2",
@@ -87,7 +87,7 @@
     "link": "yarn link graphql && yarn link",
     "unlink": "yarn unlink graphql && yarn add graphql",
     "semantic-release": "semantic-release",
-    "test-vers": "yarn add graphql@0.9.0 && jest && yarn add graphql@0.10.0 && jest && yarn add graphql@0.11.0 && jest && yarn add graphql@0.13.0-rc.1 && jest"
+    "test-vers": "yarn add graphql@0.13.0 --dev && jest && yarn add graphql@14.0.0 --dev && jest"
   },
   "collective": {
     "type": "opencollective",

@@ -33,6 +33,8 @@ import type { Thunk } from './utils/definitions';
 import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './utils/configAsThunk';
 import { typeByPath } from './utils/typeByPath';
 import { getGraphQLType } from './utils/typeHelpers';
+import { defineFieldMap, defineFieldMapToConfig } from './utils/configToDefine';
+import { graphqlVersion } from './utils/graphqlVersion';
 
 export type GraphQLInterfaceTypeExtended<TSource, TContext> = GraphQLInterfaceType & {
   _gqcFields?: ComposeFieldConfigMap<TSource, TContext>,
@@ -112,8 +114,12 @@ export class InterfaceTypeComposer<TContext> {
     } else if (isObject(opts)) {
       const type = new GraphQLInterfaceType({
         ...(opts: any),
+        fields: () => ({}),
       });
       IFTC = new this.schemaComposer.InterfaceTypeComposer(type);
+      if (isObject(opts.fields)) {
+        IFTC.addFields(opts.fields);
+      }
     } else {
       throw new Error(
         'You should provide GraphQLInterfaceTypeConfig or string with enum name or SDL'
@@ -145,8 +151,13 @@ export class InterfaceTypeComposer<TContext> {
 
   getFields(): ComposeFieldConfigMap<any, TContext> {
     if (!this.gqType._gqcFields) {
-      const fields: Thunk<GraphQLFieldConfigMap<any, TContext>> = this.gqType._typeConfig.fields;
-      this.gqType._gqcFields = (resolveMaybeThunk(fields) || {}: any);
+      if (graphqlVersion >= 14) {
+        this.gqType._gqcFields = (defineFieldMapToConfig(this.gqType._fields): any);
+      } else {
+        // $FlowFixMe
+        const fields: Thunk<GraphQLFieldConfigMap<any, TContext>> = this.gqType._typeConfig.fields;
+        this.gqType._gqcFields = (resolveMaybeThunk(fields) || {}: any);
+      }
     }
 
     return this.gqType._gqcFields;
@@ -171,10 +182,20 @@ export class InterfaceTypeComposer<TContext> {
   setFields(fields: ComposeFieldConfigMap<any, TContext>): InterfaceTypeComposer<TContext> {
     this.gqType._gqcFields = fields;
 
-    this.gqType._typeConfig.fields = () => {
-      return (resolveOutputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName()): any);
-    };
-    delete this.gqType._fields; // clear builded fields in type
+    if (graphqlVersion >= 14) {
+      this.gqType._fields = () => {
+        return defineFieldMap(
+          this.gqType,
+          resolveOutputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName())
+        );
+      };
+    } else {
+      // $FlowFixMe
+      this.gqType._typeConfig.fields = () => {
+        return resolveOutputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName());
+      };
+      delete this.gqType._fields; // clear builded fields in type
+    }
     return this;
   }
 
@@ -391,7 +412,6 @@ export class InterfaceTypeComposer<TContext> {
 
   setTypeName(name: string): InterfaceTypeComposer<TContext> {
     this.gqType.name = name;
-    this.gqType._typeConfig.name = name;
     this.schemaComposer.add(this);
     return this;
   }
@@ -402,7 +422,6 @@ export class InterfaceTypeComposer<TContext> {
 
   setDescription(description: string): InterfaceTypeComposer<TContext> {
     this.gqType.description = description;
-    this.gqType._typeConfig.description = description;
     return this;
   }
 
@@ -496,9 +515,10 @@ export class InterfaceTypeComposer<TContext> {
       fastEntries.push([((getGraphQLType(composeType): any): GraphQLObjectType), checkFn]);
     }
 
+    let resolveType;
     const isAsyncRuntime = this._isTypeResolversAsync(typeResolversMap);
     if (isAsyncRuntime) {
-      this.gqType._typeConfig.resolveType = async (value, context, info) => {
+      resolveType = async (value, context, info) => {
         for (const [gqType, checkFn] of fastEntries) {
           // should we run checkFn simultaniously or in serial?
           // Current decision is: dont SPIKE event loop - run in serial (it may be changed in future)
@@ -508,14 +528,15 @@ export class InterfaceTypeComposer<TContext> {
         return null;
       };
     } else {
-      this.gqType._typeConfig.resolveType = (value, context, info) => {
+      resolveType = (value, context, info) => {
         for (const [gqType, checkFn] of fastEntries) {
           if (checkFn(value, context, info)) return gqType;
         }
         return null;
       };
     }
-    delete this.gqType.resolveType; // clear builded fields in type
+
+    this.gqType.resolveType = resolveType;
     return this;
   }
 

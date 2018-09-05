@@ -9,6 +9,7 @@ import {
   GraphQLBoolean,
 } from '../graphql';
 import { InputTypeComposer, schemaComposer } from '..';
+import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -91,7 +92,11 @@ describe('InputTypeComposer', () => {
         expect(itc.getFieldType('input3')).toBe(GraphQLString);
 
         // show provide unwrapped/unhoisted type for graphql
-        expect((itc.getType(): any)._typeConfig.fields().input3.type).toBe(GraphQLString);
+        if (graphqlVersion >= 14) {
+          expect((itc.getType(): any)._fields().input3.type).toBe(GraphQLString);
+        } else {
+          expect((itc.getType(): any)._typeConfig.fields().input3.type).toBe(GraphQLString);
+        }
       });
     });
 
