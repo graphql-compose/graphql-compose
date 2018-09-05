@@ -338,6 +338,22 @@ describe('InterfaceTypeComposer', () => {
       expect((myIFTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });
 
+    it('should create TC by GraphQLInterfaceTypeConfig with fields as Thunk', () => {
+      const myIFTC = InterfaceTypeComposer.create({
+        name: 'TestType',
+        fields: (): any => ({
+          f1: {
+            type: 'String',
+          },
+          f2: 'Int!',
+        }),
+      });
+      expect(myIFTC).toBeInstanceOf(InterfaceTypeComposer);
+      expect(myIFTC.getFieldType('f1')).toBe(GraphQLString);
+      expect(myIFTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      expect((myIFTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
+    });
+
     it('should create TC by GraphQLInterfaceType', () => {
       const objType = new GraphQLInterfaceType({
         name: 'TestTypeObj',

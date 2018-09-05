@@ -433,6 +433,22 @@ describe('TypeComposer', () => {
       expect((myTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });
 
+    it('should create TC by GraphQLObjectTypeConfig with fields as Thunk', () => {
+      const myTC = TypeComposer.create({
+        name: 'TestType',
+        fields: (): any => ({
+          f1: {
+            type: 'String',
+          },
+          f2: 'Int!',
+        }),
+      });
+      expect(myTC).toBeInstanceOf(TypeComposer);
+      expect(myTC.getFieldType('f1')).toBe(GraphQLString);
+      expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      expect((myTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
+    });
+
     it('should create TC by GraphQLObjectType', () => {
       const objType = new GraphQLObjectType({
         name: 'TestTypeObj',

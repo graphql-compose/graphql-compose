@@ -358,6 +358,22 @@ describe('InputTypeComposer', () => {
       expect((itc1.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });
 
+    it('should create ITC by GraphQLObjectTypeConfig with fields as Thunk', () => {
+      const itc1 = InputTypeComposer.create({
+        name: 'TestTypeInput',
+        fields: (): any => ({
+          f1: {
+            type: 'String',
+          },
+          f2: 'Int!',
+        }),
+      });
+      expect(itc1).toBeInstanceOf(InputTypeComposer);
+      expect(itc1.getFieldType('f1')).toBe(GraphQLString);
+      expect(itc1.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      expect((itc1.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
+    });
+
     it('should create ITC by GraphQLInputObjectType', () => {
       const objType = new GraphQLInputObjectType({
         name: 'TestTypeObj',

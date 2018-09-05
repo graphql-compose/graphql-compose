@@ -112,14 +112,15 @@ export class InterfaceTypeComposer<TContext> {
     } else if (opts instanceof GraphQLInterfaceType) {
       IFTC = new this.schemaComposer.InterfaceTypeComposer(opts);
     } else if (isObject(opts)) {
+      const fields = opts.fields;
       const type = new GraphQLInterfaceType({
         ...(opts: any),
-        fields: () => ({}),
+        fields: isFunction(fields)
+          ? () => resolveOutputConfigMapAsThunk(this.schemaComposer, (fields(): any), opts.name)
+          : () => ({}),
       });
       IFTC = new this.schemaComposer.InterfaceTypeComposer(type);
-      if (isObject(opts.fields)) {
-        IFTC.addFields(opts.fields);
-      }
+      if (isObject(opts.fields)) IFTC.addFields(opts.fields);
     } else {
       throw new Error(
         'You should provide GraphQLInterfaceTypeConfig or string with enum name or SDL'

@@ -4,7 +4,7 @@
 import { GraphQLInputObjectType, GraphQLNonNull, GraphQLList, getNamedType } from './graphql';
 import { resolveMaybeThunk, upperFirst } from './utils/misc';
 import { deprecate } from './utils/debug';
-import { isObject, isString } from './utils/is';
+import { isObject, isFunction, isString } from './utils/is';
 import { resolveInputConfigMapAsThunk, resolveInputConfigAsThunk } from './utils/configAsThunk';
 import { typeByPath } from './utils/typeByPath';
 import type { Thunk, ObjMap } from './utils/definitions';
@@ -101,16 +101,16 @@ export class InputTypeComposer {
     } else if (opts instanceof GraphQLInputObjectType) {
       ITC = new this.schemaComposer.InputTypeComposer(opts);
     } else if (isObject(opts)) {
+      const fields = opts.fields;
       const type = new GraphQLInputObjectType({
         name: opts.name,
         description: opts.description,
-        fields: () => ({}),
+        fields: isFunction(fields)
+          ? () => resolveInputConfigMapAsThunk(this.schemaComposer, (fields(): any), opts.name)
+          : () => ({}),
       });
       ITC = new this.schemaComposer.InputTypeComposer(type);
-
-      if (isObject(opts.fields)) {
-        ITC.addFields(opts.fields);
-      }
+      if (isObject(opts.fields)) ITC.addFields(opts.fields);
     } else {
       throw new Error(
         'You should provide InputObjectConfig or string with type name to InputTypeComposer.create(opts)'

@@ -228,15 +228,15 @@ export class TypeComposer<TContext> {
     } else if (opts instanceof GraphQLObjectType) {
       TC = new this.schemaComposer.TypeComposer(opts);
     } else if (isObject(opts)) {
+      const fields = opts.fields;
       const type = new GraphQLObjectType({
         ...(opts: any),
-        fields: () => ({}),
+        fields: isFunction(fields)
+          ? () => resolveOutputConfigMapAsThunk(this.schemaComposer, (fields(): any), opts.name)
+          : () => ({}),
       });
       TC = new this.schemaComposer.TypeComposer(type);
-
-      if (isObject(opts.fields)) {
-        TC.addFields(opts.fields);
-      }
+      if (isObject(fields)) TC.addFields(fields);
     } else {
       throw new Error(
         'You should provide GraphQLObjectTypeConfig or string with type name to TypeComposer.create(opts)'
