@@ -6,8 +6,7 @@
   "env": {
     "cjs": {
       "plugins": [
-        "@babel/plugin-proposal-class-properties",
-        "@babel/plugin-transform-runtime"
+        "@babel/plugin-proposal-class-properties"
       ],
       "presets": [
         ["@babel/preset-env", {
@@ -34,8 +33,7 @@
     },
     "esm": {
       "plugins": [
-        "@babel/plugin-proposal-class-properties",
-        "@babel/plugin-transform-runtime"
+        "@babel/plugin-proposal-class-properties"
       ],
       "presets": [
         ["@babel/preset-env", {
