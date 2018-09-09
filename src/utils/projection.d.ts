@@ -4,7 +4,7 @@ import {
   GraphQLResolveInfo,
   InlineFragmentNode,
   GraphQLOutputType,
-} from '../graphql';
+} from 'graphql';
 
 export type ProjectionNode = { [fieldName: string]: any };
 export type ProjectionType<TSource = any> = {

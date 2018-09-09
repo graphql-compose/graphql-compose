@@ -22,7 +22,7 @@ export type ResolveParams<TSource, TContext, TArgs = any> = {
   args: { [argName in keyof TArgs]: TArgs[argName] };
   context: TContext;
   info: graphql.GraphQLResolveInfo;
-  projection: Partial<ProjectionType>;
+  projection: Partial<ProjectionType<TSource>>;
   [opt: string]: any;
 };
 
@@ -219,7 +219,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = any> {
   // -----------------------------------------------
 
   public getFieldConfig(opts?: {
-    projection?: ProjectionType;
+    projection?: ProjectionType<TSource>;
   }): GraphQLFieldConfig<TSource, TContext, TArgs>;
 
   public getKind(): ResolverKinds | null;
