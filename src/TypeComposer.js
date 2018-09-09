@@ -34,11 +34,13 @@ import type { SchemaComposer } from './SchemaComposer';
 import { resolveMaybeThunk, upperFirst, inspect } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './utils/configAsThunk';
+import { defineFieldMap, defineFieldMapToConfig } from './utils/configToDefine';
 import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath } from './utils/typeByPath';
 // import { deprecate } from './utils/debug';
 import type { ProjectionType } from './utils/projection';
 import type { ObjMap, Thunk } from './utils/definitions';
+import { graphqlVersion } from './utils/graphqlVersion';
 
 export type GetRecordIdFn<TSource, TContext> = (
   source: TSource,
@@ -226,15 +228,15 @@ export class TypeComposer<TContext> {
     } else if (opts instanceof GraphQLObjectType) {
       TC = new this.schemaComposer.TypeComposer(opts);
     } else if (isObject(opts)) {
+      const fields = opts.fields;
       const type = new GraphQLObjectType({
         ...(opts: any),
-        fields: () => ({}),
+        fields: isFunction(fields)
+          ? () => resolveOutputConfigMapAsThunk(this.schemaComposer, (fields(): any), opts.name)
+          : () => ({}),
       });
       TC = new this.schemaComposer.TypeComposer(type);
-
-      if (isObject(opts.fields)) {
-        TC.addFields(opts.fields);
-      }
+      if (isObject(fields)) TC.addFields(fields);
     } else {
       throw new Error(
         'You should provide GraphQLObjectTypeConfig or string with type name to TypeComposer.create(opts)'
@@ -266,8 +268,13 @@ export class TypeComposer<TContext> {
 
   getFields(): ComposeFieldConfigMap<any, TContext> {
     if (!this.gqType._gqcFields) {
-      const fields: Thunk<GraphQLFieldConfigMap<any, TContext>> = this.gqType._typeConfig.fields;
-      this.gqType._gqcFields = (resolveMaybeThunk(fields) || {}: any);
+      if (graphqlVersion >= 14) {
+        this.gqType._gqcFields = (defineFieldMapToConfig(this.gqType._fields): any);
+      } else {
+        // $FlowFixMe
+        const fields: Thunk<GraphQLFieldConfigMap<any, TContext>> = this.gqType._typeConfig.fields;
+        this.gqType._gqcFields = (resolveMaybeThunk(fields) || {}: any);
+      }
     }
 
     return this.gqType._gqcFields;
@@ -280,10 +287,20 @@ export class TypeComposer<TContext> {
   setFields(fields: ComposeFieldConfigMap<any, TContext>): TypeComposer<TContext> {
     this.gqType._gqcFields = fields;
 
-    this.gqType._typeConfig.fields = () => {
-      return (resolveOutputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName()): any);
-    };
-    delete this.gqType._fields; // clear builded fields in type
+    if (graphqlVersion >= 14) {
+      this.gqType._fields = () => {
+        return defineFieldMap(
+          this.gqType,
+          resolveOutputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName())
+        );
+      };
+    } else {
+      // $FlowFixMe
+      this.gqType._typeConfig.fields = () => {
+        return resolveOutputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName());
+      };
+      delete this.gqType._fields; // clear builded fields in type
+    }
     return this;
   }
 
@@ -556,7 +573,6 @@ export class TypeComposer<TContext> {
 
   setTypeName(name: string): TypeComposer<TContext> {
     this.gqType.name = name;
-    this.gqType._typeConfig.name = name;
     this.schemaComposer.add(this);
     return this;
   }
@@ -567,7 +583,6 @@ export class TypeComposer<TContext> {
 
   setDescription(description: string): TypeComposer<TContext> {
     this.gqType.description = description;
-    this.gqType._typeConfig.description = description;
     return this;
   }
 
@@ -733,7 +748,13 @@ export class TypeComposer<TContext> {
 
   getInterfaces(): Array<GraphQLInterfaceType | InterfaceTypeComposer<TContext>> {
     if (!this.gqType._gqcInterfaces) {
-      const interfaces: any = this.gqType._typeConfig.interfaces;
+      let interfaces: any;
+      if (graphqlVersion >= 14) {
+        interfaces = this.gqType._interfaces;
+      } else {
+        // $FlowFixMe
+        interfaces = this.gqType._typeConfig.interfaces;
+      }
       this.gqType._gqcInterfaces = (resolveMaybeThunk(interfaces) || []: any);
     }
 
@@ -744,7 +765,7 @@ export class TypeComposer<TContext> {
     interfaces: Array<GraphQLInterfaceType | InterfaceTypeComposer<TContext>>
   ): TypeComposer<TContext> {
     this.gqType._gqcInterfaces = interfaces;
-    this.gqType._typeConfig.interfaces = () => {
+    const interfacesThunk = () => {
       return interfaces.map(iface => {
         if (iface instanceof GraphQLInterfaceType) {
           return iface;
@@ -756,7 +777,14 @@ export class TypeComposer<TContext> {
         );
       });
     };
-    delete this.gqType._interfaces; // if schema was builded, delete _interfaces
+
+    if (graphqlVersion >= 14) {
+      this.gqType._interfaces = interfacesThunk;
+    } else {
+      // $FlowFixMe
+      this.gqType._typeConfig.interfaces = interfacesThunk;
+      delete this.gqType._interfaces; // if schema was builded, delete _interfaces
+    }
     return this;
   }
 

@@ -11,6 +11,7 @@ import {
   GraphQLInterfaceType,
 } from '../graphql';
 import { TypeComposer, Resolver, schemaComposer, InterfaceTypeComposer } from '..';
+import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -111,7 +112,11 @@ describe('TypeComposer', () => {
         expect(tc.getFieldType('input3')).toBe(GraphQLString);
 
         // show provide unwrapped/unhoisted type for graphql
-        expect((tc.getType()._typeConfig: any).fields().input3.type).toBe(GraphQLString);
+        if (graphqlVersion >= 14) {
+          expect((tc.getType(): any)._fields().input3.type).toBe(GraphQLString);
+        } else {
+          expect((tc.getType(): any)._typeConfig.fields().input3.type).toBe(GraphQLString);
+        }
       });
 
       it('accept fieldConfig as function', () => {
@@ -119,7 +124,11 @@ describe('TypeComposer', () => {
           input4: () => ({ type: 'String' }),
         });
         // show provide unwrapped/unhoisted type for graphql
-        expect((tc.getType()._typeConfig: any).fields().input4.type).toBe(GraphQLString);
+        if (graphqlVersion >= 14) {
+          expect((tc.getType(): any)._fields().input4.type).toBe(GraphQLString);
+        } else {
+          expect((tc.getType(): any)._typeConfig.fields().input4.type).toBe(GraphQLString);
+        }
       });
     });
 
@@ -328,12 +337,20 @@ describe('TypeComposer', () => {
     `);
 
     it('getInterfaces()', () => {
-      tc.gqType._typeConfig.interfaces = [iface];
+      if (graphqlVersion >= 14) {
+        tc.gqType._interfaces = [iface];
+      } else {
+        (tc.gqType: any)._typeConfig.interfaces = [iface];
+      }
       expect(tc.getInterfaces()).toEqual(expect.arrayContaining([iface]));
     });
 
     it('hasInterface()', () => {
-      tc.gqType._typeConfig.interfaces = [iface];
+      if (graphqlVersion >= 14) {
+        tc.gqType._interfaces = [iface];
+      } else {
+        (tc.gqType: any)._typeConfig.interfaces = [iface];
+      }
       expect(tc.hasInterface(iface)).toBe(true);
     });
 
@@ -416,6 +433,22 @@ describe('TypeComposer', () => {
       expect((myTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });
 
+    it('should create TC by GraphQLObjectTypeConfig with fields as Thunk', () => {
+      const myTC = TypeComposer.create({
+        name: 'TestType',
+        fields: (): any => ({
+          f1: {
+            type: 'String',
+          },
+          f2: 'Int!',
+        }),
+      });
+      expect(myTC).toBeInstanceOf(TypeComposer);
+      expect(myTC.getFieldType('f1')).toBe(GraphQLString);
+      expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      expect((myTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
+    });
+
     it('should create TC by GraphQLObjectType', () => {
       const objType = new GraphQLObjectType({
         name: 'TestTypeObj',
@@ -461,10 +494,12 @@ describe('TypeComposer', () => {
       });
 
       const tc2 = tc.clone('newObject');
-      expect(tc2.getField('field3')).toEqual({
-        type: GraphQLString,
-        projection: { field1: true, field2: true },
-      });
+      expect(tc2.getField('field3')).toEqual(
+        expect.objectContaining({
+          type: GraphQLString,
+          projection: { field1: true, field2: true },
+        })
+      );
     });
   });
 

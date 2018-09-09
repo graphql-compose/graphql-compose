@@ -10,6 +10,7 @@ import {
   GraphQLInterfaceType,
 } from '../graphql';
 import { InterfaceTypeComposer, schemaComposer, TypeComposer } from '..';
+import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -110,7 +111,11 @@ describe('InterfaceTypeComposer', () => {
         expect(iftc.getFieldType('input3')).toBe(GraphQLString);
 
         // show provide unwrapped/unhoisted type for graphql
-        expect((iftc.getType()._typeConfig: any).fields().input3.type).toBe(GraphQLString);
+        if (graphqlVersion >= 14) {
+          expect((iftc.getType(): any)._fields().input3.type).toBe(GraphQLString);
+        } else {
+          expect((iftc.getType(): any)._typeConfig.fields().input3.type).toBe(GraphQLString);
+        }
       });
 
       it('accept fieldConfig as function', () => {
@@ -118,7 +123,11 @@ describe('InterfaceTypeComposer', () => {
           input4: () => ({ type: 'String' }),
         });
         // show provide unwrapped/unhoisted type for graphql
-        expect((iftc.getType()._typeConfig: any).fields().input4.type).toBe(GraphQLString);
+        if (graphqlVersion >= 14) {
+          expect((iftc.getType(): any)._fields().input4.type).toBe(GraphQLString);
+        } else {
+          expect((iftc.getType(): any)._typeConfig.fields().input4.type).toBe(GraphQLString);
+        }
       });
     });
 
@@ -329,6 +338,22 @@ describe('InterfaceTypeComposer', () => {
       expect((myIFTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });
 
+    it('should create TC by GraphQLInterfaceTypeConfig with fields as Thunk', () => {
+      const myIFTC = InterfaceTypeComposer.create({
+        name: 'TestType',
+        fields: (): any => ({
+          f1: {
+            type: 'String',
+          },
+          f2: 'Int!',
+        }),
+      });
+      expect(myIFTC).toBeInstanceOf(InterfaceTypeComposer);
+      expect(myIFTC.getFieldType('f1')).toBe(GraphQLString);
+      expect(myIFTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      expect((myIFTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
+    });
+
     it('should create TC by GraphQLInterfaceType', () => {
       const objType = new GraphQLInterfaceType({
         name: 'TestTypeObj',
@@ -363,10 +388,12 @@ describe('InterfaceTypeComposer', () => {
       });
 
       const iftc2 = iftc.clone('newObject');
-      expect(iftc2.getField('field3')).toEqual({
-        type: GraphQLString,
-        projection: { field1: true, field2: true },
-      });
+      expect(iftc2.getField('field3')).toEqual(
+        expect.objectContaining({
+          type: GraphQLString,
+          projection: { field1: true, field2: true },
+        })
+      );
     });
   });
 
@@ -557,7 +584,7 @@ describe('InterfaceTypeComposer', () => {
         ]);
         iftc.setTypeResolvers(map);
 
-        const resolveType: any = iftc.gqType._typeConfig.resolveType;
+        const resolveType: any = iftc.gqType.resolveType;
         expect(resolveType()).toBeInstanceOf(Promise);
         expect(await resolveType()).toBe(KindRedTC.getType());
       });
@@ -570,7 +597,7 @@ describe('InterfaceTypeComposer', () => {
         ]);
         iftc.setTypeResolvers(map);
 
-        const resolveType: any = iftc.gqType._typeConfig.resolveType;
+        const resolveType: any = iftc.gqType.resolveType;
         expect(resolveType()).toBe(KindBlueTC.getType());
       });
 

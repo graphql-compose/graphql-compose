@@ -9,6 +9,7 @@ import {
   GraphQLBoolean,
 } from '../graphql';
 import { InputTypeComposer, schemaComposer } from '..';
+import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -91,7 +92,11 @@ describe('InputTypeComposer', () => {
         expect(itc.getFieldType('input3')).toBe(GraphQLString);
 
         // show provide unwrapped/unhoisted type for graphql
-        expect((itc.getType(): any)._typeConfig.fields().input3.type).toBe(GraphQLString);
+        if (graphqlVersion >= 14) {
+          expect((itc.getType(): any)._fields().input3.type).toBe(GraphQLString);
+        } else {
+          expect((itc.getType(): any)._typeConfig.fields().input3.type).toBe(GraphQLString);
+        }
       });
     });
 
@@ -346,6 +351,22 @@ describe('InputTypeComposer', () => {
           },
           f2: 'Int!',
         },
+      });
+      expect(itc1).toBeInstanceOf(InputTypeComposer);
+      expect(itc1.getFieldType('f1')).toBe(GraphQLString);
+      expect(itc1.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+      expect((itc1.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
+    });
+
+    it('should create ITC by GraphQLObjectTypeConfig with fields as Thunk', () => {
+      const itc1 = InputTypeComposer.create({
+        name: 'TestTypeInput',
+        fields: (): any => ({
+          f1: {
+            type: 'String',
+          },
+          f2: 'Int!',
+        }),
       });
       expect(itc1).toBeInstanceOf(InputTypeComposer);
       expect(itc1.getFieldType('f1')).toBe(GraphQLString);

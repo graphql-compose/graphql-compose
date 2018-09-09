@@ -4,7 +4,7 @@
 import { GraphQLInputObjectType, GraphQLNonNull, GraphQLList, getNamedType } from './graphql';
 import { resolveMaybeThunk, upperFirst } from './utils/misc';
 import { deprecate } from './utils/debug';
-import { isObject, isString } from './utils/is';
+import { isObject, isFunction, isString } from './utils/is';
 import { resolveInputConfigMapAsThunk, resolveInputConfigAsThunk } from './utils/configAsThunk';
 import { typeByPath } from './utils/typeByPath';
 import type { Thunk, ObjMap } from './utils/definitions';
@@ -17,6 +17,8 @@ import type {
   GraphQLInputType,
   InputValueDefinitionNode,
 } from './graphql';
+import { graphqlVersion } from './utils/graphqlVersion';
+import { defineInputFieldMap, defineInputFieldMapToConfig } from './utils/configToDefine';
 
 export type GraphQLInputObjectTypeExtended = GraphQLInputObjectType & {
   _gqcFields?: ComposeInputFieldConfigMap,
@@ -99,16 +101,16 @@ export class InputTypeComposer {
     } else if (opts instanceof GraphQLInputObjectType) {
       ITC = new this.schemaComposer.InputTypeComposer(opts);
     } else if (isObject(opts)) {
+      const fields = opts.fields;
       const type = new GraphQLInputObjectType({
         name: opts.name,
         description: opts.description,
-        fields: () => ({}),
+        fields: isFunction(fields)
+          ? () => resolveInputConfigMapAsThunk(this.schemaComposer, (fields(): any), opts.name)
+          : () => ({}),
       });
       ITC = new this.schemaComposer.InputTypeComposer(type);
-
-      if (isObject(opts.fields)) {
-        ITC.addFields(opts.fields);
-      }
+      if (isObject(opts.fields)) ITC.addFields(opts.fields);
     } else {
       throw new Error(
         'You should provide InputObjectConfig or string with type name to InputTypeComposer.create(opts)'
@@ -135,8 +137,13 @@ export class InputTypeComposer {
 
   getFields(): ComposeInputFieldConfigMap {
     if (!this.gqType._gqcFields) {
-      const fields: Thunk<GraphQLInputFieldConfigMap> = this.gqType._typeConfig.fields;
-      this.gqType._gqcFields = (resolveMaybeThunk(fields) || {}: any);
+      if (graphqlVersion >= 14) {
+        this.gqType._gqcFields = (defineInputFieldMapToConfig(this.gqType._fields): any);
+      } else {
+        // $FlowFixMe
+        const fields: Thunk<GraphQLInputFieldConfigMap> = this.gqType._typeConfig.fields;
+        this.gqType._gqcFields = (resolveMaybeThunk(fields) || {}: any);
+      }
     }
 
     return this.gqType._gqcFields;
@@ -158,10 +165,20 @@ export class InputTypeComposer {
   setFields(fields: ComposeInputFieldConfigMap): InputTypeComposer {
     this.gqType._gqcFields = fields;
 
-    this.gqType._typeConfig.fields = () => {
-      return resolveInputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName());
-    };
-    delete this.gqType._fields; // if schema was builded, delete defineFieldMap
+    if (graphqlVersion >= 14) {
+      this.gqType._fields = () => {
+        return defineInputFieldMap(
+          this.gqType,
+          resolveInputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName())
+        );
+      };
+    } else {
+      // $FlowFixMe
+      this.gqType._typeConfig.fields = () => {
+        return resolveInputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName());
+      };
+      delete this.gqType._fields; // if schema was builded, delete defineFieldMap
+    }
     return this;
   }
 

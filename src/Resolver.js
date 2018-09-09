@@ -505,7 +505,6 @@ export class Resolver<TSource, TContext> {
 
     // extend sortETC with new sorting value
     sortETC.setField(opts.name, {
-      name: opts.name,
       description: opts.description,
       deprecationReason: opts.deprecationReason,
       value: isFunction(opts.value) ? opts.name : opts.value,

@@ -1,27 +1,26 @@
 {
   "plugins": [
-    "transform-object-rest-spread",
-    "transform-flow-strip-types",
+    "@babel/plugin-proposal-object-rest-spread",
+    "@babel/plugin-transform-flow-strip-types"
   ],
   "env": {
     "cjs": {
       "plugins": [
-        "transform-class-properties",
-        ["transform-runtime", { "polyfill": false }]
+        "@babel/plugin-proposal-class-properties"
       ],
       "presets": [
-        ["env", {
+        ["@babel/preset-env", {
           "targets": {
-            "node": 4
-          },
+            "node": 6
+          }
         }]
-      ],
+      ]
     },
     "mjs": {
-      "plugins": ["transform-class-properties"],
+      "plugins": ["@babel/plugin-proposal-class-properties"],
       "presets": [
         [
-          "env",
+          "@babel/preset-env",
           {
             "targets": {
               "node": "8.0.0"
@@ -34,11 +33,10 @@
     },
     "esm": {
       "plugins": [
-        "transform-class-properties",
-        ["transform-runtime", { "polyfill": false }]
+        "@babel/plugin-proposal-class-properties"
       ],
       "presets": [
-        ["env", {
+        ["@babel/preset-env", {
           "targets": {
             "node": 6
           },
@@ -49,13 +47,13 @@
     },
     "test": {
       "plugins": [
-        "transform-class-properties",
+        "@babel/plugin-proposal-class-properties"
       ],
       "presets": [
-        ["env", {
+        ["@babel/preset-env", {
           "targets": {
             "node": "current"
-          },
+          }
         }]
       ]
     }

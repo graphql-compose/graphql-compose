@@ -1,15 +1,15 @@
 /* @flow strict */
 /* eslint-disable no-use-before-define */
 
-import invariant from 'graphql/jsutils/invariant';
+import keyMap from 'graphql/jsutils/keyMap';
 import { GraphQLEnumType, GraphQLList, GraphQLNonNull } from './graphql';
 import { isObject, isString } from './utils/is';
 import type {
   GraphQLEnumValueConfig,
   GraphQLEnumTypeConfig,
   GraphQLEnumValueConfigMap,
-  GraphQLEnumValue,
 } from './graphql';
+import { defineEnumValues, defineEnumValuesToConfig } from './utils/configToDefine';
 import { graphqlVersion } from './utils/graphqlVersion';
 import type { TypeAsString } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
@@ -95,7 +95,7 @@ export class EnumTypeComposer {
   _fixEnumBelowV13() {
     if (graphqlVersion < 13) {
       if (!this.gqType._values) {
-        // Support for graphql@0.11 and below
+        // $FlowFixMe Support for graphql@0.11 and below
         this.gqType._values = defineEnumValues(this.gqType, this.gqType._enumConfig.values);
       }
       this.gqType._values = this.gqType._values.filter(o => o.name !== '_OldGraphqlStubValue_');
@@ -103,8 +103,12 @@ export class EnumTypeComposer {
   }
 
   getFields(): GraphQLEnumValueConfigMap {
-    this._fixEnumBelowV13();
-    return (this.gqType._getNameLookup(): any);
+    if (graphqlVersion >= 14) {
+      return defineEnumValuesToConfig(this.gqType._values);
+    } else {
+      this._fixEnumBelowV13();
+      return (this.gqType: any)._getNameLookup();
+    }
   }
 
   getField(name: string): GraphQLEnumValueConfig {
@@ -128,20 +132,29 @@ export class EnumTypeComposer {
    * WARNING: this method rewrite an internal GraphQL instance properties.
    */
   setFields(values: GraphQLEnumValueConfigMap): EnumTypeComposer {
-    // cleanup isDepricated
-    Object.keys(values).forEach(key => {
+    if (graphqlVersion >= 14) {
+      this.gqType._values = defineEnumValues(this.gqType, values);
+      this.gqType._valueLookup = new Map(
+        this.gqType._values.map(enumValue => [enumValue.value, enumValue])
+      );
+      this.gqType._nameLookup = keyMap(this.gqType._values, value => value.name);
+    } else {
+      // cleanup isDepricated
+      Object.keys(values).forEach(key => {
+        // $FlowFixMe
+        delete values[key].isDeprecated; // eslint-disable-line
+      });
+
       // $FlowFixMe
-      delete values[key].isDeprecated; // eslint-disable-line
-    });
+      this.gqType._enumConfig.values = values;
 
-    this.gqType._enumConfig.values = values;
+      // clear builded fields in type
+      delete this.gqType._values;
+      delete this.gqType._valueLookup;
+      delete this.gqType._nameLookup;
 
-    // clear builded fields in type
-    delete this.gqType._values;
-    delete this.gqType._valueLookup;
-    delete this.gqType._nameLookup;
-
-    this._fixEnumBelowV13();
+      this._fixEnumBelowV13();
+    }
 
     return this;
   }
@@ -267,7 +280,6 @@ export class EnumTypeComposer {
 
   setTypeName(name: string): EnumTypeComposer {
     this.gqType.name = name;
-    this.gqType._enumConfig.name = name;
     this.schemaComposer.add(this);
     return this;
   }
@@ -278,7 +290,6 @@ export class EnumTypeComposer {
 
   setDescription(description: string): EnumTypeComposer {
     this.gqType.description = description;
-    this.gqType._enumConfig.description = description;
     return this;
   }
 
@@ -305,38 +316,4 @@ export class EnumTypeComposer {
 
     return cloned;
   }
-}
-
-function isPlainObj(obj) {
-  return obj && typeof obj === 'object' && !Array.isArray(obj);
-}
-
-function defineEnumValues(
-  type: GraphQLEnumType,
-  valueMap: GraphQLEnumValueConfigMap /* <T> */
-): Array<GraphQLEnumValue /* <T> */> {
-  invariant(
-    isPlainObj(valueMap),
-    `${type.name} values must be an object with value names as keys.`
-  );
-  return Object.keys(valueMap).map(valueName => {
-    const value = valueMap[valueName];
-    invariant(
-      isPlainObj(value),
-      `${type.name}.${valueName} must refer to an object with a "value" key ` +
-        `representing an internal value but got: ${String(value)}.`
-    );
-    invariant(
-      !value.hasOwnProperty('isDeprecated'),
-      `${type.name}.${valueName} should provide "deprecationReason" instead of "isDeprecated".`
-    );
-    return {
-      name: valueName,
-      description: value.description,
-      isDeprecated: Boolean(value.deprecationReason),
-      deprecationReason: value.deprecationReason,
-      astNode: value.astNode,
-      value: value.hasOwnProperty('value') ? value.value : valueName,
-    };
-  });
 }
