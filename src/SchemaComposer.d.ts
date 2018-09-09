@@ -1,4 +1,9 @@
-import { GraphQLSchema, GraphQLNamedType, GraphQLDirective, SchemaDefinitionNode } from './graphql';
+import {
+  GraphQLSchema,
+  GraphQLNamedType,
+  GraphQLDirective,
+  SchemaDefinitionNode,
+} from 'graphql';
 import { TypeComposer } from './TypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { TypeStorage } from './TypeStorage';
@@ -8,16 +13,16 @@ import { InterfaceTypeComposer } from './InterfaceTypeComposer';
 import { Resolver } from './Resolver';
 
 type MustHaveTypes<TContext> =
-  | TypeComposer<TContext>
+  | TypeComposer<any, TContext>
   | InputTypeComposer
   | EnumTypeComposer
   | InterfaceTypeComposer<TContext>
   | GraphQLNamedType;
 
 type ExtraSchemaConfig = {
-  types?: GraphQLNamedType[] | null,
-  directives?: GraphQLDirective[] | null,
-  astNode?: SchemaDefinitionNode | null,
+  types?: GraphQLNamedType[] | null;
+  directives?: GraphQLDirective[] | null;
+  astNode?: SchemaDefinitionNode | null;
 };
 
 export class SchemaComposer<TContext> extends TypeStorage<TContext> {
@@ -28,43 +33,52 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   public InterfaceTypeComposer: typeof InterfaceTypeComposer;
   public Resolver: typeof Resolver;
 
-  public Query: TypeComposer<TContext>;
-  public Mutation: TypeComposer<TContext>;
-  public Subscription: TypeComposer<TContext>;
+  public Query: TypeComposer<any, TContext>;
+  public Mutation: TypeComposer<any, TContext>;
+  public Subscription: TypeComposer<any, TContext>;
 
   protected _schemaMustHaveTypes: Array<MustHaveTypes<TContext>>;
 
   public constructor();
 
-  public rootQuery(): TypeComposer<TContext>;
+  public rootQuery<TRootQuery = any>(): TypeComposer<TRootQuery, TContext>;
 
-  public rootMutation(): TypeComposer<TContext>;
+  public rootMutation<TRootMutation = any>(): TypeComposer<
+    TRootMutation,
+    TContext
+  >;
 
-  public rootSubscription(): TypeComposer<TContext>;
+  public rootSubscription<TRootSubscription = any>(): TypeComposer<
+    TRootSubscription,
+    TContext
+  >;
 
   public buildSchema(extraConfig?: ExtraSchemaConfig): GraphQLSchema;
 
   public addSchemaMustHaveType(type: MustHaveTypes<TContext>): this;
 
-  public removeEmptyTypes(typeComposer: TypeComposer<TContext>, passedTypes: Set<string>): void;
+  public removeEmptyTypes(
+    typeComposer: TypeComposer<any, TContext>,
+    passedTypes: Set<string>,
+  ): void;
 
-  public getOrCreateTC(
+  public getOrCreateTC<TSource = any>(
     typeName: string,
-    onCreate?: (tc: TypeComposer<TContext>) => any
-  ): TypeComposer<TContext>;
+    onCreate?: (tc: TypeComposer<TSource, TContext>) => any,
+  ): TypeComposer<TSource, TContext>;
 
   public getOrCreateITC(
     typeName: string,
-    onCreate?: (itc: InputTypeComposer) => any
+    onCreate?: (itc: InputTypeComposer) => any,
   ): InputTypeComposer;
 
   public getOrCreateETC(
     typeName: string,
-    onCreate?: (etc: EnumTypeComposer) => any
+    onCreate?: (etc: EnumTypeComposer) => any,
   ): EnumTypeComposer;
 
   public getOrCreateIFTC(
     typeName: string,
-    onCreate?: (iftc: InterfaceTypeComposer<TContext>) => any
+    onCreate?: (iftc: InterfaceTypeComposer<TContext>) => any,
   ): InterfaceTypeComposer<TContext>;
 }

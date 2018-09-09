@@ -14,19 +14,34 @@ declare const schemaComposer: SchemaComposer<any>;
 export { SchemaComposer, schemaComposer, GQC };
 
 export { TypeComposer as TypeComposerClass } from './TypeComposer';
-export { InputTypeComposer as InputTypeComposerClass } from './InputTypeComposer';
+export {
+  InputTypeComposer as InputTypeComposerClass,
+} from './InputTypeComposer';
 export { EnumTypeComposer as EnumTypeComposerClass } from './EnumTypeComposer';
-export { InterfaceTypeComposer as InterfaceTypeComposerClass } from './InterfaceTypeComposer';
+export {
+  InterfaceTypeComposer as InterfaceTypeComposerClass,
+} from './InterfaceTypeComposer';
 export { Resolver as ResolverClass } from './Resolver';
 
 export { TypeStorage } from './TypeStorage';
 
 // Scalar types
-export { GraphQLDate, GraphQLBuffer, GraphQLGeneric, GraphQLJSON } from './type';
+export {
+  GraphQLDate,
+  GraphQLBuffer,
+  GraphQLGeneric,
+  GraphQLJSON,
+} from './type';
 
 // Utils
-export { getProjectionFromAST, getFlatProjectionFromAST } from './utils/projection';
-export { toInputObjectType, ConvertInputObjectFieldOpts } from './utils/toInputObjectType';
+export {
+  getProjectionFromAST,
+  getFlatProjectionFromAST,
+} from './utils/projection';
+export {
+  toInputObjectType,
+  ConvertInputObjectFieldOpts,
+} from './utils/toInputObjectType';
 export * from './utils/misc';
 export * from './utils/is';
 export * from './utils/graphqlVersion';
@@ -79,9 +94,10 @@ export {
   ResolveDebugOpts,
 } from './Resolver';
 
-export {
-  ProjectionType,
-  ProjectionNode,
-} from './utils/projection';
+export { ProjectionType, ProjectionNode } from './utils/projection';
 
-export { TypeDefinitionString, TypeWrappedString, TypeNameString } from './TypeMapper';
+export {
+  TypeDefinitionString,
+  TypeWrappedString,
+  TypeNameString,
+} from './TypeMapper';
