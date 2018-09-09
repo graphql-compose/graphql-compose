@@ -138,8 +138,8 @@ export type RelationOptsWithResolver<
   TArgs = any
 > = {
   resolver: Thunk<Resolver<TRelationSource, TContext, TArgs>>;
-  prepareArgs?: RelationArgsMapper<TSource, TContext>;
-  projection?: ProjectionType;
+  prepareArgs?: RelationArgsMapper<TSource, TContext, TArgs>;
+  projection?: Partial<ProjectionType<TSource>>;
   description?: string | null;
   deprecationReason?: string | null;
   catchErrors?: boolean;

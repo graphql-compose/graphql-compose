@@ -6,8 +6,10 @@ import {
   GraphQLOutputType,
 } from '../graphql';
 
-export type ProjectionType = { [fieldName: string]: any };
 export type ProjectionNode = { [fieldName: string]: any };
+export type ProjectionType<TSource = any> = {
+  [fieldName in keyof TSource]: any
+};
 
 export function getProjectionFromAST(
   context: GraphQLResolveInfo,
