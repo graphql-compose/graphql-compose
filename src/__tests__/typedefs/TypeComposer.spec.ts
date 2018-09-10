@@ -166,7 +166,21 @@ PersonTC.getFieldTC('deep') // <-------------- this case should not have errors
 // adding new field to graphql type, its fieldConfig.resolve method should have TSource type
 PersonTC.addFields({
   ageIn2030: {
-    type: 'Int',
+    // test Thunk
+    type: () =>
+      TypeComposer.create({
+        name: 'deepAge',
+        fields: {
+          age: {
+            type: 'Int',
+            // test composeFieldConfig<TSource = Person ...
+            resolve: (source, args, context) => {
+              source.name = 'string';
+              // source.name = 55; <-- errors
+            },
+          },
+        },
+      }),
     resolve: (source, args, context) => {
       // if you don't provide other args, typescript resolves source as any
       return source.age + 12;

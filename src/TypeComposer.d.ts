@@ -63,10 +63,11 @@ export type ComposeFieldConfigMap<TSource, TContext> = ObjMap<
 
 export type ComposeFieldConfig<TSource, TContext> =
   | ComposeFieldConfigAsObject<TSource, TContext>
-  | ComposeOutputType<TContext>
-  | (() =>
+  | ComposeOutputType<TSource, TContext>
+  | Thunk<
       | ComposeFieldConfigAsObject<TSource, TContext>
-      | ComposeOutputType<TContext>);
+      | ComposeOutputType<TSource, TContext>
+    >;
 
 // extended GraphQLFieldConfig
 export type GraphqlFieldConfigExtended<TSource, TContext> = GraphQLFieldConfig<
@@ -75,7 +76,7 @@ export type GraphqlFieldConfigExtended<TSource, TContext> = GraphQLFieldConfig<
 > & { projection?: any };
 
 export type ComposeFieldConfigAsObject<TSource, TContext, TArgs = any> = {
-  type: Thunk<ComposeOutputType<TContext>> | GraphQLOutputType;
+  type: Thunk<ComposeOutputType<TSource, TContext>> | GraphQLOutputType;
   args?: ComposeFieldConfigArgumentMap;
   resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>;
   subscribe?: GraphQLFieldResolver<TSource, TContext>;
@@ -86,18 +87,18 @@ export type ComposeFieldConfigAsObject<TSource, TContext, TArgs = any> = {
 } & { $call?: void };
 
 // extended GraphQLOutputType
-export type ComposeOutputType<TContext> =
+export type ComposeOutputType<TSource, TContext> =
   | GraphQLOutputType
-  | TypeComposer<any, TContext>
+  | TypeComposer<TSource, TContext>
   | EnumTypeComposer
   | TypeAsString
-  | Resolver<any, TContext>
+  | Resolver<TSource, TContext>
   | Array<
       | GraphQLOutputType
-      | TypeComposer<any, TContext>
+      | TypeComposer<TSource, TContext>
       | EnumTypeComposer
       | TypeAsString
-      | Resolver<any, TContext>
+      | Resolver<TSource, TContext>
     >;
 
 // Compose Args -----------------------------
