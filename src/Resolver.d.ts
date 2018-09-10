@@ -60,7 +60,7 @@ export type ResolverSortArgConfig<TSource, TContext> = {
 };
 
 export type ResolverOpts<TSource, TContext, TArgs = any> = {
-  type?: ComposeOutputType<TContext>;
+  type?: ComposeOutputType<TSource, TContext>;
   resolve?: ResolverRpCb<TSource, TContext, TArgs>;
   args?: ComposeFieldConfigArgumentMap;
   name?: string;
@@ -94,7 +94,7 @@ export type ResolverWrapArgsCb = (
 
 export type ResolverWrapTypeCb = (
   prevType: graphql.GraphQLOutputType,
-) => ComposeOutputType<any>;
+) => ComposeOutputType<any, any>;
 
 export type ResolveDebugOpts = {
   showHidden?: boolean;
@@ -106,7 +106,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = any> {
   public static schemaComposer: SchemaComposer<any>;
   public schemaComposer: SchemaComposer<TContext>;
 
-  public type: ComposeOutputType<TContext>;
+  public type: ComposeOutputType<TSource, TContext>;
   public args: ComposeFieldConfigArgumentMap;
   public resolve: ResolverRpCb<TSource, TContext, TArgs>;
   public name: string;
@@ -125,7 +125,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = any> {
 
   public getTypeComposer(): TypeComposer<TSource, TContext>;
 
-  public setType(gqType: ComposeOutputType<TContext>): this;
+  public setType(gqType: ComposeOutputType<TSource, TContext>): this;
 
   // -----------------------------------------------
   // Args methods
