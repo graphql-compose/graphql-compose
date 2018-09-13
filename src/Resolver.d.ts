@@ -62,7 +62,7 @@ export type ResolverSortArgConfig<TSource, TContext> = {
 export type ResolverOpts<TSource, TContext, TArgs = any> = {
   type?: ComposeOutputType<TSource, TContext>;
   resolve?: ResolverRpCb<TSource, TContext, TArgs>;
-  args?: ComposeFieldConfigArgumentMap;
+  args?: ComposeFieldConfigArgumentMap<TArgs>;
   name?: string;
   displayName?: string;
   kind?: ResolverKinds;
@@ -107,7 +107,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = any> {
   public schemaComposer: SchemaComposer<TContext>;
 
   public type: ComposeOutputType<TSource, TContext>;
-  public args: ComposeFieldConfigArgumentMap;
+  public args: ComposeFieldConfigArgumentMap<TArgs>;
   public resolve: ResolverRpCb<TSource, TContext, TArgs>;
   public name: string;
   public displayName: string | null;
@@ -141,7 +141,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = any> {
 
   public getArgTC(argName: string): InputTypeComposer;
 
-  public getArgs(): ComposeFieldConfigArgumentMap;
+  public getArgs(): ComposeFieldConfigArgumentMap<TArgs>;
 
   public getArgNames(): string[];
 
