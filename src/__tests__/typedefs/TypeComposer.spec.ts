@@ -168,7 +168,10 @@ PersonTC.addFields({
   ageIn2030: {
     // test Thunk
     type: () =>
-      TypeComposer.create({
+      // An error pops up here, this is as TypeScript cannot infer TSource and TContext
+      // So you need to explicitly set it up.
+      // The error actually shows up at the resolve field of ageIn2030
+      TypeComposer.create<Person, Context>({
         name: 'deepAge',
         fields: {
           age: {
@@ -217,6 +220,76 @@ interface GeneralArgs {
   skip: number;
   limit: number;
 }
+
+interface Field1 {
+  arg1: string;
+  arg2: number;
+}
+
+interface FieldsArgsMap {
+  field1: Field1;
+  field2: {
+    arg3: boolean;
+    arg4: any;
+  };
+}
+
+PersonTC.setField('field1', {
+  type: 'Int',
+  resolve: (source, args) => {
+    args.arg1 = 'string';
+    args.arg1 = 3;
+  },
+});
+
+PersonTC.setField<Field1>('field1', {
+  type: 'Int',
+  resolve: (source, args) => {
+    args.arg1 = 'string';
+    // args.arg1 = 3
+  },
+});
+
+PersonTC.addFields({
+  field1: {
+    type: 'Int',
+    resolve: (source, args) => {
+      args.arg1 = 'string';
+      args.arg1 = 44;
+    },
+  },
+  field2: {
+    type: 'String',
+    resolve: (source, args) => {
+      args.arg3 = true;
+      args.arg3 = 'string';
+      args.arg4 = true;
+      args.arg4 = 'string';
+    },
+  },
+});
+
+// if you do not specify all fields, then you will have errors indicating you add.
+PersonTC.addFields<FieldsArgsMap>({
+  field1: {
+    type: 'Int',
+    resolve: (source, args) => {
+      args.arg1 = 'string';
+      // args.arg1 = 44;  errors
+    },
+  },
+  field2: {
+    type: TypeComposer.create({
+      name: 'Hee',
+    }),
+    resolve: (source, args) => {
+      args.arg3 = true;
+      // args.arg3 = 'string';
+      args.arg4 = true;
+      args.arg4 = 'string';
+    },
+  },
+});
 
 // in resolvers
 PersonTC.addResolver<GenericUID, GeneralArgs>({

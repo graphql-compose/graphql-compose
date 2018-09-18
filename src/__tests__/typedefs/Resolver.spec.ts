@@ -1,7 +1,15 @@
+import { GraphQLInt, GraphQLString } from 'graphql';
 import { Resolver } from '../../Resolver';
-import { Art, Context, Post } from './mock-typedefs';
+import { Args, Art, Context, Post } from './mock-typedefs';
 
-const findManyPost = new Resolver<Post, Context>({
+const findManyPost = new Resolver<Post, Context, Args>({
+  args: {
+    filter: { type: GraphQLString },
+    limit: { type: GraphQLInt },
+    skip: { type: GraphQLInt },
+    sort: { type: GraphQLString },
+    // unknown: {type: GraphQLInt}, errors
+  },
   resolve: rp => {
     if (rp.source && rp.context) {
       // rp.source.timestamp = 'fails';
@@ -74,6 +82,9 @@ const findManyArt1 = new Resolver<any, any, FindManyArtArgs>({
 
 // all any
 const findManyPost1 = new Resolver({
+  args: {
+    skip: { type: GraphQLInt },
+  },
   resolve: ({ source, context, args }) => {
     source.title = 555; // pass as source is any fails
     source.title = 'A Title';
