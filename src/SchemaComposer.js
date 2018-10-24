@@ -19,6 +19,7 @@ import {
   type GraphQLNamedType,
   type GraphQLDirective,
   type SchemaDefinitionNode,
+  type GraphQLResolveInfo,
 } from './graphql';
 
 type ExtraSchemaConfig = {
@@ -33,6 +34,17 @@ type MustHaveTypes<TContext> =
   | _EnumTypeComposer
   | _InterfaceTypeComposer<TContext>
   | GraphQLNamedType;
+
+type AddResolveMethods<TContext> = {
+  [typeName: string]: {
+    [fieldName: string]: (
+      source: any,
+      args: {},
+      context: TContext,
+      info: GraphQLResolveInfo
+    ) => any,
+  },
+};
 
 export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   typeMapper: TypeMapper<TContext>;
@@ -266,5 +278,26 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
       return this.InterfaceTypeComposer.create((this.get(typeName): any));
     }
     return super.getIFTC(typeName);
+  }
+
+  addTypeDefs(typeDefs: string): void {
+    const types = this.typeMapper.parseTypesFromString(typeDefs);
+    types.forEach(type => {
+      this.add((type: any));
+    });
+  }
+
+  addResolveMethods(typesFieldsResolve: AddResolveMethods<TContext>): void {
+    const typeNames = Object.keys(typesFieldsResolve);
+    typeNames.forEach(typeName => {
+      const tc = this.getTC(typeName);
+      const fieldsResolve = typesFieldsResolve[typeName];
+      const fieldNames = Object.keys(fieldsResolve);
+      fieldNames.forEach(fieldName => {
+        tc.extendField(fieldName, {
+          resolve: fieldsResolve[fieldName],
+        });
+      });
+    });
   }
 }

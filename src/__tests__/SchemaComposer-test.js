@@ -414,4 +414,83 @@ describe('SchemaComposer', () => {
       );
     });
   });
+
+  describe('addTypeDefs', () => {
+    it('should parse types from SDL', () => {
+      const sc = new SchemaComposer();
+      sc.addTypeDefs(`
+        type Author {
+          name: String
+          some(arg: Int): String
+        }
+        input AuthorInput {
+          name: String
+        }
+        enum Sort {
+          ASC 
+          DESC
+        }
+        interface PersonI {
+          name: String
+        }
+      `);
+
+      expect(sc.get('Author')).toBeInstanceOf(GraphQLObjectType);
+      expect(sc.get('AuthorInput')).toBeInstanceOf(GraphQLInputObjectType);
+      expect(sc.get('Sort')).toBeInstanceOf(GraphQLEnumType);
+      expect(sc.get('PersonI')).toBeInstanceOf(GraphQLInterfaceType);
+    });
+
+    it('should replace existed types', () => {
+      // This behavior maybe changed in future.
+      // Need to gather more use cases and problems.
+      const sc = new SchemaComposer();
+      sc.addTypeDefs(`
+        type Author {
+          name: String
+          some(arg: Int): String
+        }
+      `);
+      expect(sc.getTC('Author').hasFieldArg('some', 'arg')).toBeTruthy();
+
+      sc.addTypeDefs(`
+        type Author {
+          name: String
+        }
+      `);
+      expect(sc.getTC('Author').hasFieldArg('some', 'arg')).toBeFalsy();
+    });
+  });
+
+  describe('addResolveMethods', () => {
+    it('should add resolve methods to fields in graphql-tools way', async () => {
+      const sc = new SchemaComposer();
+      sc.addTypeDefs(`
+        type Post {
+          id: Int!
+          title: String
+          votes: Int
+        }
+
+        type Query {
+          posts: [Post]
+        }
+      `);
+
+      sc.addResolveMethods({
+        Query: {
+          posts: () => [{ id: 1, title: 'Post title' }],
+        },
+        Post: {
+          votes: () => 10,
+        },
+      });
+
+      const schema = sc.buildSchema();
+
+      expect(await graphql(schema, '{ posts { id title votes } }')).toEqual({
+        data: { posts: [{ id: 1, title: 'Post title', votes: 10 }] },
+      });
+    });
+  });
 });

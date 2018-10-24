@@ -3,6 +3,7 @@ import {
   GraphQLNamedType,
   GraphQLDirective,
   SchemaDefinitionNode,
+  GraphQLResolveInfo,
 } from 'graphql';
 import { TypeComposer } from './TypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
@@ -23,6 +24,17 @@ type ExtraSchemaConfig = {
   types?: GraphQLNamedType[] | null;
   directives?: GraphQLDirective[] | null;
   astNode?: SchemaDefinitionNode | null;
+};
+
+type AddResolveMethods<TContext> = {
+  [typeName: string]: {
+    [fieldName: string]: (
+      source: any,
+      args: {},
+      context: TContext,
+      info: GraphQLResolveInfo,
+    ) => any;
+  };
 };
 
 export class SchemaComposer<TContext> extends TypeStorage<TContext> {
@@ -81,4 +93,10 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     typeName: string,
     onCreate?: (iftc: InterfaceTypeComposer<TContext>) => any,
   ): InterfaceTypeComposer<TContext>;
+
+  public addTypeDefs(typeDefs: string): void;
+
+  public addResolveMethods(
+    typesFieldsResolve: AddResolveMethods<TContext>,
+  ): void;
 }
