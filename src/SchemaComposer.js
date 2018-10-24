@@ -39,7 +39,7 @@ type AddResolveMethods<TContext> = {
   [typeName: string]: {
     [fieldName: string]: (
       source: any,
-      args: {},
+      args: Object,
       context: TContext,
       info: GraphQLResolveInfo
     ) => any,
