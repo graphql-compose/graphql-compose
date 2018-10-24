@@ -59,8 +59,8 @@ export function toInputObjectType(
       outputTypeName: typeComposer.getTypeName(),
     };
     const fc = typeComposer.getFieldConfig(fieldName);
-    if (!isAbstractType(fc.type)) {
       const inputType = convertInputObjectField(fc.type, fieldOpts, cache, schemaComposer);
+    if (inputType) {
       inputFields[fieldName] = {
         type: inputType,
         description: fc.description,
@@ -91,6 +91,10 @@ export function convertInputObjectField(
   while (fieldType instanceof GraphQLList || fieldType instanceof GraphQLNonNull) {
     wrappers.unshift(fieldType.constructor);
     fieldType = fieldType.ofType;
+  }
+
+  if (fieldType instanceof GraphQLUnionType) {
+    return null;
   }
 
   if (!isInputType(fieldType)) {
