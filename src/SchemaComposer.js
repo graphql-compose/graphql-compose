@@ -176,42 +176,50 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     typeName: string,
     onCreate?: (_TypeComposer<TContext>) => any
   ): _TypeComposer<TContext> {
-    if (!this.hasInstance(typeName, _TypeComposer)) {
+    try {
+      return this.getTC(typeName);
+    } catch (e) {
       const tc = this.TypeComposer.create(typeName);
       this.set(typeName, tc);
       if (onCreate && isFunction(onCreate)) onCreate(tc);
+      return tc;
     }
-    return (this.get(typeName): any);
   }
 
   getOrCreateITC(typeName: string, onCreate?: _InputTypeComposer => any): _InputTypeComposer {
-    if (!this.hasInstance(typeName, _InputTypeComposer)) {
+    try {
+      return this.getITC(typeName);
+    } catch (e) {
       const itc = this.InputTypeComposer.create(typeName);
       this.set(typeName, itc);
       if (onCreate && isFunction(onCreate)) onCreate(itc);
+      return itc;
     }
-    return (this.get(typeName): any);
   }
 
   getOrCreateETC(typeName: string, onCreate?: _EnumTypeComposer => any): _EnumTypeComposer {
-    if (!this.hasInstance(typeName, _EnumTypeComposer)) {
+    try {
+      return this.getETC(typeName);
+    } catch (e) {
       const etc = this.EnumTypeComposer.create(typeName);
       this.set(typeName, etc);
       if (onCreate && isFunction(onCreate)) onCreate(etc);
+      return etc;
     }
-    return (this.get(typeName): any);
   }
 
   getOrCreateIFTC(
     typeName: string,
     onCreate?: (_InterfaceTypeComposer<TContext>) => any
   ): _InterfaceTypeComposer<TContext> {
-    if (!this.hasInstance(typeName, _InterfaceTypeComposer)) {
+    try {
+      return this.getIFTC(typeName);
+    } catch (e) {
       const iftc = this.InterfaceTypeComposer.create(typeName);
       this.set(typeName, iftc);
       if (onCreate && isFunction(onCreate)) onCreate(iftc);
+      return iftc;
     }
-    return (this.get(typeName): any);
   }
 
   // disable redundant noise in console.logs

@@ -234,7 +234,7 @@ describe('TypeComposer', () => {
       it('hasFieldArg()', () => {
         expect(tc.hasFieldArg('field1', 'arg1')).toBeTruthy();
         expect(tc.hasFieldArg('field1', 'arg222')).toBeFalsy();
-        expect(() => tc.hasFieldArg('unexistedField', 'arg1')).toThrow();
+        expect(tc.hasFieldArg('unexistedField', 'arg1')).toBeFalsy();
       });
 
       it('getFieldArg()', () => {
@@ -242,7 +242,7 @@ describe('TypeComposer', () => {
         expect(() => tc.getFieldArg('field1', 'arg222')).toThrow(
           /Cannot get arg.*Argument does not exist/
         );
-        expect(() => tc.hasFieldArg('unexistedField', 'arg1')).toThrow();
+        expect(tc.hasFieldArg('unexistedField', 'arg1')).toBeFalsy();
       });
     });
 
