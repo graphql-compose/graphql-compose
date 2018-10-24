@@ -1,7 +1,6 @@
 /* @flow strict */
 /* eslint-disable class-methods-use-this */
 
-import { GraphQLObjectType, GraphQLSchema } from './graphql';
 import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
 import { TypeComposer as _TypeComposer } from './TypeComposer';
@@ -11,7 +10,16 @@ import { InterfaceTypeComposer as _InterfaceTypeComposer } from './InterfaceType
 import { Resolver as _Resolver } from './Resolver';
 import { isFunction } from './utils/is';
 import { getGraphQLType } from './utils/typeHelpers';
-import type { GraphQLNamedType, GraphQLDirective, SchemaDefinitionNode } from './graphql';
+import {
+  GraphQLSchema,
+  GraphQLObjectType,
+  GraphQLInputObjectType,
+  GraphQLInterfaceType,
+  GraphQLEnumType,
+  type GraphQLNamedType,
+  type GraphQLDirective,
+  type SchemaDefinitionNode,
+} from './graphql';
 
 type ExtraSchemaConfig = {
   types?: ?Array<GraphQLNamedType>,
@@ -222,5 +230,33 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   clear(): void {
     super.clear();
     this._schemaMustHaveTypes = [];
+  }
+
+  getTC(typeName: any): _TypeComposer<TContext> {
+    if (this.hasInstance(typeName, GraphQLObjectType)) {
+      return this.TypeComposer.create((this.get(typeName): any));
+    }
+    return super.getTC(typeName);
+  }
+
+  getITC(typeName: any): _InputTypeComposer {
+    if (this.hasInstance(typeName, GraphQLInputObjectType)) {
+      return this.InputTypeComposer.create((this.get(typeName): any));
+    }
+    return super.getITC(typeName);
+  }
+
+  getETC(typeName: any): _EnumTypeComposer {
+    if (this.hasInstance(typeName, GraphQLEnumType)) {
+      return this.EnumTypeComposer.create((this.get(typeName): any));
+    }
+    return super.getETC(typeName);
+  }
+
+  getIFTC(typeName: any): _InterfaceTypeComposer<TContext> {
+    if (this.hasInstance(typeName, GraphQLInterfaceType)) {
+      return this.InterfaceTypeComposer.create((this.get(typeName): any));
+    }
+    return super.getIFTC(typeName);
   }
 }

@@ -5,7 +5,14 @@ import { TypeComposer } from '../TypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
-import { graphql } from '../graphql';
+import {
+  graphql,
+  GraphQLString,
+  GraphQLObjectType,
+  GraphQLInputObjectType,
+  GraphQLInterfaceType,
+  GraphQLEnumType,
+} from '../graphql';
 
 describe('SchemaComposer', () => {
   it('should implements `add` method', () => {
@@ -270,5 +277,141 @@ describe('SchemaComposer', () => {
     sc.Query.addFields({ time: 'String' });
     const schema = sc.buildSchema();
     expect(schema._typeMap.Me).toEqual(tc.getType());
+  });
+
+  describe('getTC', () => {
+    it('should return TypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.TypeComposer.create(`
+          type Author {
+            name: String
+          }
+        `);
+      expect(sc.getTC('Author')).toBeInstanceOf(TypeComposer);
+    });
+
+    it('should return GraphQLObjectType as TypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.add(
+        new GraphQLObjectType({
+          name: 'Author',
+          fields: { name: { type: GraphQLString } },
+        })
+      );
+      expect(sc.getTC('Author')).toBeInstanceOf(TypeComposer);
+    });
+
+    it('should throw error for incorrect type', () => {
+      const sc = new SchemaComposer();
+      sc.InputTypeComposer.create(`
+        input Author {
+          name: String
+        }
+      `);
+      expect(() => sc.getTC('Author')).toThrowError('Cannot find TypeComposer with name Author');
+    });
+  });
+
+  describe('getITC', () => {
+    it('should return InputTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.InputTypeComposer.create(`
+          input Author {
+            name: String
+          }
+        `);
+      expect(sc.getITC('Author')).toBeInstanceOf(InputTypeComposer);
+    });
+
+    it('should return GraphQLInputObjectType as InputTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.add(
+        new GraphQLInputObjectType({
+          name: 'Author',
+          fields: { name: { type: GraphQLString } },
+        })
+      );
+      expect(sc.getITC('Author')).toBeInstanceOf(InputTypeComposer);
+    });
+
+    it('should throw error for incorrect type', () => {
+      const sc = new SchemaComposer();
+      sc.TypeComposer.create(`
+        type Author {
+          name: String
+        }
+      `);
+      expect(() => sc.getITC('Author')).toThrowError(
+        'Cannot find InputTypeComposer with name Author'
+      );
+    });
+  });
+
+  describe('getETC', () => {
+    it('should return EnumTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.EnumTypeComposer.create(`
+          enum Sort {
+            ASC DESC
+          }
+        `);
+      expect(sc.getETC('Sort')).toBeInstanceOf(EnumTypeComposer);
+    });
+
+    it('should return GraphQLEnumType as EnumTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.add(
+        new GraphQLEnumType({
+          name: 'Sort',
+          values: { ASC: { value: 'ASC' } },
+        })
+      );
+      expect(sc.getETC('Sort')).toBeInstanceOf(EnumTypeComposer);
+    });
+
+    it('should throw error for incorrect type', () => {
+      const sc = new SchemaComposer();
+      sc.TypeComposer.create(`
+        type Sort {
+          name: String
+        }
+      `);
+      expect(() => sc.getETC('Sort')).toThrowError('Cannot find EnumTypeComposer with name Sort');
+    });
+  });
+
+  describe('getIFTC', () => {
+    it('should return InterfaceTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.InterfaceTypeComposer.create(`
+          interface IFace {
+            name: String
+          }
+        `);
+      expect(sc.getIFTC('IFace')).toBeInstanceOf(InterfaceTypeComposer);
+    });
+
+    it('should return GraphQLInterfaceType as InterfaceTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.add(
+        new GraphQLInterfaceType({
+          name: 'IFace',
+          fields: { name: { type: GraphQLString } },
+        })
+      );
+      expect(sc.getIFTC('IFace')).toBeInstanceOf(InterfaceTypeComposer);
+    });
+
+    it('should throw error for incorrect type', () => {
+      const sc = new SchemaComposer();
+      sc.TypeComposer.create(`
+        type IFace {
+          name: String
+        }
+      `);
+      expect(() => sc.getIFTC('IFace')).toThrowError(
+        'Cannot find InterfaceTypeComposer with name IFace'
+      );
+    });
   });
 });
