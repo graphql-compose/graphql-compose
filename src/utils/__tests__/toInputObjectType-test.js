@@ -7,7 +7,7 @@ import {
   GraphQLList,
   GraphQLInt,
 } from '../../graphql';
-import { TypeComposer, InputTypeComposer } from '../..';
+import { TypeComposer, InputTypeComposer, InterfaceTypeComposer } from '../..';
 import { toInputObjectType } from '../toInputObjectType';
 
 describe('toInputObjectType()', () => {
@@ -72,5 +72,18 @@ describe('toInputObjectType()', () => {
     const itc = toInputObjectType(PersonTC);
     expect(itc.getFieldType('friends')).toBeInstanceOf(GraphQLList);
     expect((itc.getFieldType('friends'): any).ofType).toBe(itc.getType());
+  });
+
+  it('should convert InterfaceTypeComposer to InputTypeComposer', () => {
+    const iftc = InterfaceTypeComposer.create(`
+      interface IFace {
+        name: String
+        age: Int
+      } 
+    `);
+    const itc = toInputObjectType(iftc);
+    expect(itc.getFieldType('name')).toBe(GraphQLString);
+    expect(itc.getFieldType('age')).toBe(GraphQLInt);
+    expect(itc.getTypeName()).toBe('IFaceInput');
   });
 });

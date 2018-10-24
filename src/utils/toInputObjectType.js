@@ -6,16 +6,17 @@ import {
   GraphQLInputObjectType,
   GraphQLObjectType,
   isInputType,
-  isAbstractType,
+  GraphQLUnionType,
   GraphQLList,
   GraphQLNonNull,
 } from '../graphql';
-import type { TypeComposer } from '../TypeComposer';
+import { TypeComposer } from '../TypeComposer';
+import type { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import type { InputTypeComposer } from '../InputTypeComposer';
 import type { SchemaComposer } from '../SchemaComposer';
 import GenericType from '../type/generic';
 import { upperFirst } from './misc';
-import type { GraphQLType, GraphQLInputType } from '../graphql';
+import type { GraphQLType, GraphQLInputType, GraphQLNamedType } from '../graphql';
 
 export type toInputObjectTypeOpts = {
   prefix?: string,
@@ -23,11 +24,11 @@ export type toInputObjectTypeOpts = {
 };
 
 export function toInputObjectType(
-  typeComposer: TypeComposer<any>,
+  typeComposer: TypeComposer<any> | InterfaceTypeComposer<any>,
   opts: toInputObjectTypeOpts = {},
-  cache: Map<GraphQLObjectType, InputTypeComposer> = new Map()
+  cache: Map<GraphQLNamedType, InputTypeComposer> = new Map()
 ): InputTypeComposer {
-  if (typeComposer.hasInputTypeComposer()) {
+  if (typeComposer instanceof TypeComposer && typeComposer.hasInputTypeComposer()) {
     return typeComposer.getInputTypeComposer();
   }
 
@@ -59,7 +60,7 @@ export function toInputObjectType(
       outputTypeName: typeComposer.getTypeName(),
     };
     const fc = typeComposer.getFieldConfig(fieldName);
-      const inputType = convertInputObjectField(fc.type, fieldOpts, cache, schemaComposer);
+    const inputType = convertInputObjectField(fc.type, fieldOpts, cache, schemaComposer);
     if (inputType) {
       inputFields[fieldName] = {
         type: inputType,
@@ -82,9 +83,9 @@ export type ConvertInputObjectFieldOpts = {
 export function convertInputObjectField(
   field: GraphQLType,
   opts: ConvertInputObjectFieldOpts,
-  cache: Map<GraphQLObjectType, InputTypeComposer>,
+  cache: Map<GraphQLNamedType, InputTypeComposer>,
   schemaComposer: SchemaComposer<any>
-): GraphQLInputType {
+): ?GraphQLInputType {
   let fieldType = field;
 
   const wrappers = [];
