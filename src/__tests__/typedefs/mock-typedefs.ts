@@ -39,5 +39,12 @@ export interface Context {
   uid: string;
 }
 
+export interface Args {
+  filter: any;
+  sort: string;
+  limit: number;
+  skip: number;
+}
+
 // works for cases where u create your instance of
 export const schemaComposerWithContext = new SchemaComposer<Context>();
