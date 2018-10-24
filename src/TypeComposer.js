@@ -530,8 +530,12 @@ export class TypeComposer<TContext> {
   }
 
   hasFieldArg(fieldName: string, argName: string): boolean {
-    const fieldArgs = this.getFieldArgs(fieldName);
-    return !!fieldArgs[argName];
+    try {
+      const fieldArgs = this.getFieldArgs(fieldName);
+      return !!fieldArgs[argName];
+    } catch (e) {
+      return false;
+    }
   }
 
   getFieldArg(fieldName: string, argName: string): GraphQLArgumentConfig {
