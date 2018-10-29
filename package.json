@@ -83,7 +83,7 @@
     "build-flow": "find ./src -name '*.js' -not -path '*/__*' | while read filepath; do cp $filepath `echo ./${COPY_TO_FOLDER:-lib}$filepath | sed 's/.\\/src\\//\\//g'`.flow; done",
     "build-ts": "find ./src -name '*.d.ts' -not -path '*/__*' | while read filepath; do cp $filepath `echo ./${COPY_TO_FOLDER:-lib}$filepath | sed 's/.\\/src\\//\\//g'`; done",
     "watch": "jest --watch",
-    "coverage": "jest --coverage",
+    "coverage": "jest --coverage --maxWorkers 4",
     "lint": "npm run eslint && npm run tslint",
     "eslint": "eslint --ext .js ./src",
     "tslint": "tslint -p . \"src/**/*.d.ts\"",
