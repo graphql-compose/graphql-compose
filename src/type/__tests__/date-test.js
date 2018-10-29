@@ -14,6 +14,12 @@ describe('GraphQLDate', () => {
       );
     });
 
+    it('pass number', () => {
+      expect(GraphQLDate.serialize(new Date(Date.UTC(2018, 10, 1)).getTime())).toBe(
+        '2018-11-01T00:00:00.000Z'
+      );
+    });
+
     it('pass "2016-02-02T00:13:22.000Z"', () => {
       expect(GraphQLDate.serialize('2016-02-02T00:13:22.000Z')).toBe('2016-02-02T00:13:22.000Z');
     });
@@ -45,5 +51,15 @@ describe('GraphQLDate', () => {
       expect(date).toBeInstanceOf(Date);
       expect(date.toJSON()).toEqual(ast.value);
     });
+  });
+
+  it('parse a ast literal of integer kind', async () => {
+    const ast = {
+      kind: Kind.INT,
+      value: '1541030400000',
+    };
+    const date: any = GraphQLDate.parseLiteral(ast);
+    expect(date).toBeInstanceOf(Date);
+    expect(date.toJSON()).toBe('2018-11-01T00:00:00.000Z');
   });
 });

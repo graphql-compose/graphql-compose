@@ -17,6 +17,10 @@ export default new GraphQLScalarType({
       return value;
     }
 
+    if (typeof value === 'number' && isFinite(value)) {
+      return new Date(value).toJSON();
+    }
+
     if (!(value instanceof Date)) {
       throw new TypeError('Field error: value is not an instance of Date');
     }
@@ -37,9 +41,13 @@ export default new GraphQLScalarType({
     return date;
   },
   parseLiteral(ast) {
+    if (ast.kind === Kind.INT) {
+      return new Date(parseInt(ast.value, 10));
+    }
+
     if (ast.kind !== Kind.STRING) {
       throw new GraphQLError(
-        `Query error: Can only parse strings to buffers but got a: ${ast.kind}`,
+        `Query error: Can only parse strings or integers to buffers but got a: ${ast.kind}`,
         [ast]
       );
     }
