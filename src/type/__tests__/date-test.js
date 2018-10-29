@@ -52,4 +52,14 @@ describe('GraphQLDate', () => {
       expect(date.toJSON()).toEqual(ast.value);
     });
   });
+
+  it('parse a ast literal of integer kind', async () => {
+    const ast = {
+      kind: Kind.INT,
+      value: '1541030400000',
+    };
+    const date: any = GraphQLDate.parseLiteral(ast);
+    expect(date).toBeInstanceOf(Date);
+    expect(date.toJSON()).toBe('2018-11-01T00:00:00.000Z');
+  });
 });
