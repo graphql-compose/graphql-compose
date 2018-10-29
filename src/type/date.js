@@ -17,6 +17,10 @@ export default new GraphQLScalarType({
       return value;
     }
 
+    if (typeof value === 'number' && isFinite(value)) {
+      return new Date(value).toJSON();
+    }
+
     if (!(value instanceof Date)) {
       throw new TypeError('Field error: value is not an instance of Date');
     }

@@ -14,6 +14,12 @@ describe('GraphQLDate', () => {
       );
     });
 
+    it('pass number', () => {
+      expect(GraphQLDate.serialize(new Date(Date.UTC(2018, 10, 1)).getTime())).toBe(
+        '2018-11-01T00:00:00.000Z'
+      );
+    });
+
     it('pass "2016-02-02T00:13:22.000Z"', () => {
       expect(GraphQLDate.serialize('2016-02-02T00:13:22.000Z')).toBe('2016-02-02T00:13:22.000Z');
     });
