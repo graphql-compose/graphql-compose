@@ -79,11 +79,36 @@ describe('toInputObjectType()', () => {
       interface IFace {
         name: String
         age: Int
-      } 
+      }
     `);
     const itc = toInputObjectType(iftc);
     expect(itc.getFieldType('name')).toBe(GraphQLString);
     expect(itc.getFieldType('age')).toBe(GraphQLInt);
     expect(itc.getTypeName()).toBe('IFaceInput');
+  });
+
+  it('should convert field with InterfaceType to InputType', () => {
+    InterfaceTypeComposer.create(`
+      interface IFace {
+        name: String
+        age: Int
+      }
+    `);
+    const tc = TypeComposer.create(`
+      type Example implements IFace {
+        name: String
+        age: Int
+        neighbor: IFace
+      }
+    `);
+    const itc = toInputObjectType(tc);
+    expect(itc.getFieldType('name')).toBe(GraphQLString);
+    expect(itc.getFieldType('age')).toBe(GraphQLInt);
+    const ifaceField = itc.getFieldTC('neighbor');
+    expect(ifaceField.getType()).toBeInstanceOf(GraphQLInputObjectType);
+    expect(ifaceField.getTypeName()).toBe('ExampleIFaceInput');
+    expect(ifaceField.getFieldType('name')).toBe(GraphQLString);
+    expect(ifaceField.getFieldType('age')).toBe(GraphQLInt);
+    expect(itc.getTypeName()).toBe('ExampleInput');
   });
 });
