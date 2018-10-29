@@ -5,6 +5,7 @@ import util from 'util';
 import {
   GraphQLInputObjectType,
   GraphQLObjectType,
+  GraphQLInterfaceType,
   isInputType,
   GraphQLUnionType,
   GraphQLList,
@@ -99,19 +100,22 @@ export function convertInputObjectField(
   }
 
   if (!isInputType(fieldType)) {
-    if (fieldType instanceof GraphQLObjectType) {
+    if (fieldType instanceof GraphQLObjectType || fieldType instanceof GraphQLInterfaceType) {
       const typeOpts = {
         prefix: `${opts.prefix || ''}${upperFirst(opts.outputTypeName || '')}`,
         postfix: opts.postfix || 'Input',
       };
-      const tc = new schemaComposer.TypeComposer(fieldType);
+      const tc =
+        fieldType instanceof GraphQLObjectType
+          ? new schemaComposer.TypeComposer(fieldType)
+          : new schemaComposer.InterfaceTypeComposer(fieldType);
       fieldType = toInputObjectType(tc, typeOpts, cache).getType();
     } else {
       // eslint-disable-next-line
       console.error(
         `graphql-compose: can not convert field '${opts.outputTypeName || ''}.${opts.fieldName ||
           ''}' to InputType` +
-          '\nIt should be GraphQLObjectType, but got \n' +
+          '\nIt should be GraphQLObjectType or GraphQLInterfaceType, but got \n' +
           util.inspect(fieldType, { depth: 2, colors: true })
       );
       fieldType = GenericType;
