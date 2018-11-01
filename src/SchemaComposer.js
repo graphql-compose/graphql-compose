@@ -280,11 +280,12 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     return super.getIFTC(typeName);
   }
 
-  addTypeDefs(typeDefs: string): void {
+  addTypeDefs(typeDefs: string): TypeStorage<GraphQLNamedType> {
     const types = this.typeMapper.parseTypesFromString(typeDefs);
     types.forEach(type => {
       this.add((type: any));
     });
+    return types;
   }
 
   addResolveMethods(typesFieldsResolve: AddResolveMethods<TContext>): void {
