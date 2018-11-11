@@ -94,7 +94,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     onCreate?: (iftc: InterfaceTypeComposer<TContext>) => any,
   ): InterfaceTypeComposer<TContext>;
 
-  public addTypeDefs(typeDefs: string): void;
+  public addTypeDefs(typeDefs: string): TypeStorage<GraphQLNamedType>;
 
   public addResolveMethods(
     typesFieldsResolve: AddResolveMethods<TContext>,
