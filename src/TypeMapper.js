@@ -77,7 +77,7 @@ import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
 import type { Thunk } from './utils/definitions';
 import { isFunction, isObject } from './utils/is';
-import DefaultDerective from './directive/default';
+import DefaultDirective from './directive/default';
 
 export type TypeDefinitionString = string; // eg type Name { field: Int }
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]
@@ -673,7 +673,7 @@ function makeSchemaDef(def, schema: SchemaComposer<any>) {
 function getInputDefaultValue(value: InputValueDefinitionNode, type: GraphQLInputType): mixed {
   // check getDirectiveValues become avaliable from 0.10.2
   if (Array.isArray(value.directives) && getDirectiveValues) {
-    const vars = getDirectiveValues(DefaultDerective, value);
+    const vars = getDirectiveValues(DefaultDirective, value);
     if (vars && vars.hasOwnProperty('value')) return vars.value;
   }
   return valueFromAST(value.defaultValue, type);
@@ -711,6 +711,7 @@ function makeFieldDefMap(
       description: getDescription(field),
       args: makeInputValues(field.arguments, schema),
       deprecationReason: getDeprecationReason(field.directives),
+      astNode: field,
     })
   );
 }
@@ -729,6 +730,7 @@ function makeEnumDef(def: EnumTypeDefinitionNode) {
             deprecationReason: getDeprecationReason(enumValue.directives),
           })
         ),
+    astNode: def,
   });
 
   return enumType;
@@ -739,6 +741,7 @@ function makeInputObjectDef(def: InputObjectTypeDefinitionNode, schema: SchemaCo
     name: def.name.value,
     description: getDescription(def),
     fields: () => makeInputValues(def.fields, schema),
+    astNode: def,
   });
 }
 
@@ -800,6 +803,7 @@ function makeTypeDef(def: ObjectTypeDefinitionNode, schema: SchemaComposer<any>)
     description: getDescription(def),
     fields: () => makeFieldDefMap(def, schema),
     interfaces: () => makeImplementedInterfaces(def, schema),
+    astNode: def,
   });
 }
 
@@ -809,6 +813,7 @@ function makeInterfaceDef(def: InterfaceTypeDefinitionNode, schema: SchemaCompos
     name: typeName,
     description: getDescription(def),
     fields: () => makeFieldDefMap(def, schema),
+    astNode: def,
   });
 }
 
