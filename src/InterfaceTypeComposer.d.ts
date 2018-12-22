@@ -2,6 +2,7 @@ import {
   GraphQLArgumentConfig,
   GraphQLFieldConfig,
   GraphQLFieldConfigArgumentMap,
+  GraphQLInputObjectType,
   GraphQLInputType,
   GraphQLInterfaceType,
   GraphQLList,
@@ -11,6 +12,7 @@ import {
   GraphQLResolveInfo,
   GraphQLTypeResolver,
 } from 'graphql';
+import { InputTypeComposer } from './InputTypeComposer';
 import { SchemaComposer } from './SchemaComposer';
 import {
   ComposeFieldConfig,
@@ -152,6 +154,18 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public setDescription(description: string): this;
 
   public clone(newTypeName: string): this;
+
+  // -----------------------------------------------
+  // InputType methods
+  // -----------------------------------------------
+
+  public getInputType(): GraphQLInputObjectType;
+
+  public hasInputTypeComposer(): boolean;
+
+  public getInputTypeComposer(): InputTypeComposer;
+
+  public getITC(): InputTypeComposer;
 
   // -----------------------------------------------
   // ResolveType methods
