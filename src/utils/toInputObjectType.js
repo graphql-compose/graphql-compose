@@ -29,7 +29,7 @@ export function toInputObjectType(
   opts: toInputObjectTypeOpts = {},
   cache: Map<GraphQLNamedType, InputTypeComposer> = new Map()
 ): InputTypeComposer {
-  if (typeComposer instanceof TypeComposer && typeComposer.hasInputTypeComposer()) {
+  if (typeComposer.hasInputTypeComposer()) {
     return typeComposer.getInputTypeComposer();
   }
 
