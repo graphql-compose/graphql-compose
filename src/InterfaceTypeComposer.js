@@ -22,6 +22,7 @@ import type {
   GraphQLResolveInfo,
   GraphQLTypeResolver,
 } from './graphql';
+import type { InputTypeComposer } from './InputTypeComposer';
 import type { TypeAsString } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
 import type {
@@ -31,6 +32,7 @@ import type {
 } from './TypeComposer';
 import type { Thunk } from './utils/definitions';
 import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './utils/configAsThunk';
+import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath } from './utils/typeByPath';
 import { getGraphQLType } from './utils/typeHelpers';
 import { defineFieldMap, defineFieldMapToConfig } from './utils/configToDefine';
@@ -447,6 +449,31 @@ export class InterfaceTypeComposer<TContext> {
     cloned.setDescription(this.getDescription());
 
     return cloned;
+  }
+
+  // -----------------------------------------------
+  // InputType methods
+  // -----------------------------------------------
+
+  getInputType(): GraphQLInputObjectType {
+    return this.getInputTypeComposer().getType();
+  }
+
+  hasInputTypeComposer(): boolean {
+    return !!this.gqType._gqcInputTypeComposer;
+  }
+
+  getInputTypeComposer(): InputTypeComposer {
+    if (!this.gqType._gqcInputTypeComposer) {
+      this.gqType._gqcInputTypeComposer = toInputObjectType(this);
+    }
+
+    return this.gqType._gqcInputTypeComposer;
+  }
+
+  // Alias for getInputTypeComposer()
+  getITC(): InputTypeComposer {
+    return this.getInputTypeComposer();
   }
 
   // -----------------------------------------------
