@@ -41,6 +41,7 @@ import { graphqlVersion } from './utils/graphqlVersion';
 
 export type GraphQLInterfaceTypeExtended<TSource, TContext> = GraphQLInterfaceType & {
   _gqcFields?: ComposeFieldConfigMap<TSource, TContext>,
+  _gqcInputTypeComposer?: InputTypeComposer,
   _gqcTypeResolvers?: InterfaceTypeResolversMap<TSource, TContext>,
 };
 

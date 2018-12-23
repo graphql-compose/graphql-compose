@@ -27,6 +27,7 @@ export type GraphQLInterfaceTypeExtended<
   TContext
 > = GraphQLInterfaceType & {
   _gqcFields?: ComposeFieldConfigMap<TSource, TContext>;
+  _gqcInputTypeComposer?: InputTypeComposer;
   _gqcTypeResolvers?: InterfaceTypeResolversMap<TSource, TContext>;
 };
 
