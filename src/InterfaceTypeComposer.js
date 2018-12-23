@@ -16,6 +16,7 @@ import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
   GraphQLOutputType,
+  GraphQLInputObjectType,
   GraphQLInputType,
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
