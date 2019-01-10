@@ -1,12 +1,11 @@
 /* @flow strict */
-/* eslint-disable no-restricted-globals */
 
 import { GraphQLScalarType, GraphQLError, Kind } from '../graphql';
 
 export default new GraphQLScalarType({
   name: 'Date',
   serialize(value) {
-    // Valid string values:
+    // Valid string values from server side:
     // 2016-02-02
     // 2016-02-02T00:13:22Z
     // 2016-02-02T00:13:22.000Z
@@ -17,7 +16,7 @@ export default new GraphQLScalarType({
       return value;
     }
 
-    if (typeof value === 'number' && isFinite(value)) {
+    if (typeof value === 'number' && Number.isFinite(value)) {
       return new Date(value).toJSON();
     }
 
@@ -25,16 +24,17 @@ export default new GraphQLScalarType({
       throw new TypeError('Field error: value is not an instance of Date');
     }
 
-    if (isNaN(value.getTime())) {
+    if (Number.isNaN(value.getTime())) {
       throw new TypeError('Field error: value is an invalid Date');
     }
 
+    // will be serialized to '2019-01-10T08:55:04.913Z'
     return value.toJSON();
   },
   parseValue(value) {
     const date = new Date((value: any));
 
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       throw new TypeError('Field error: value is an invalid Date');
     }
 
@@ -47,13 +47,13 @@ export default new GraphQLScalarType({
 
     if (ast.kind !== Kind.STRING) {
       throw new GraphQLError(
-        `Query error: Can only parse strings or integers to buffers but got a: ${ast.kind}`,
+        `Query error: Can only parse string or integer to Date but got a: ${ast.kind}`,
         [ast]
       );
     }
 
     const result = new Date(ast.value);
-    if (isNaN(result.getTime())) {
+    if (Number.isNaN(result.getTime())) {
       throw new GraphQLError('Query error: Invalid date', [ast]);
     }
 
