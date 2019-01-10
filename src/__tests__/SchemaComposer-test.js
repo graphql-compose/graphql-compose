@@ -441,6 +441,35 @@ describe('SchemaComposer', () => {
       expect(sc.get('PersonI')).toBeInstanceOf(GraphQLInterfaceType);
     });
 
+    it('should parse cross referenced types from SDL', () => {
+      const sc = new SchemaComposer();
+      sc.addTypeDefs(`
+        type Author {
+          posts: [Post]
+        }
+        type Post {
+          author: Author
+        }
+      `);
+
+      expect(sc.get('Author')).toBeInstanceOf(GraphQLObjectType);
+      expect(sc.get('Post')).toBeInstanceOf(GraphQLObjectType);
+
+      // Post type should be the same instance
+      const Post = sc.get('Post');
+      const PostInAuthor = sc.TypeComposer.createTemp((sc.get('Author'): any))
+        .getFieldTC('posts')
+        .getType();
+      expect(Post).toBe(PostInAuthor);
+
+      // Author type should be the same instance
+      const Author = sc.get('Author');
+      const AuthorInPost = sc.TypeComposer.createTemp((sc.get('Post'): any))
+        .getFieldTC('author')
+        .getType();
+      expect(Author).toBe(AuthorInPost);
+    });
+
     it('should replace existed types', () => {
       // This behavior maybe changed in future.
       // Need to gather more use cases and problems.
