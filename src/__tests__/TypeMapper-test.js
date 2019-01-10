@@ -13,6 +13,7 @@ import {
   GraphQLEnumType,
   GraphQLScalarType,
   GraphQLInterfaceType,
+  GraphQLUnionType,
 } from '../graphql';
 import {
   schemaComposer,
@@ -843,6 +844,20 @@ describe('TypeMapper', () => {
     it('parseTypesFromString() should strictly accept `scalar` definition', () => {
       const ts = TypeMapper.parseTypesFromString(`scalar MyScalar`);
       expect(ts.get('MyScalar')).toBeInstanceOf(GraphQLScalarType);
+    });
+
+    it('parseTypesFromString() should accept `union` definition', () => {
+      const ts = TypeMapper.parseTypesFromString(`
+        union TypeAB = TypeA | TypeB
+        type TypeA { f1: Int }
+        type TypeB { f2: Int } 
+      `);
+
+      const TypeAB: GraphQLUnionType = (ts.get('TypeAB'): any);
+      expect(TypeAB).toBeInstanceOf(GraphQLUnionType);
+
+      const types = TypeAB.getTypes();
+      expect(types).toHaveLength(2);
     });
   });
 
