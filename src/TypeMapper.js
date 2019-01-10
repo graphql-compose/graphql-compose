@@ -12,6 +12,7 @@ import type {
   DocumentNode,
   ObjectTypeDefinitionNode,
   InterfaceTypeDefinitionNode,
+  SchemaDefinitionNode,
   TypeNode,
   NamedTypeNode,
   DirectiveNode,
@@ -208,7 +209,9 @@ export class TypeMapper<TContext> {
     for (let i = 0; i < astDocument.definitions.length; i++) {
       const def = astDocument.definitions[i];
       const type = makeSchemaDef(def, this.schemaComposer);
-      typeStorage.set(type.name, type);
+      if (type) {
+        typeStorage.set(type.name, type);
+      }
     }
     return typeStorage;
   }
@@ -620,7 +623,8 @@ function parseTypes(
   const types = [];
   for (let i = 0; i < astDocument.definitions.length; i++) {
     const def = astDocument.definitions[i];
-    types[i] = makeSchemaDef(def, schema);
+    const type = makeSchemaDef(def, schema);
+    if (type) types[i] = type;
   }
   return types;
 }
@@ -663,6 +667,9 @@ function makeSchemaDef(def, schema: SchemaComposer<any>) {
     //   return makeUnionDef(def);
     // case SCALAR_TYPE_DEFINITION:
     //   return makeScalarDef(def);
+    case Kind.SCHEMA_DEFINITION:
+      checkSchemaDef(def);
+      return null;
     case Kind.INPUT_OBJECT_TYPE_DEFINITION:
       return makeInputObjectDef(def, schema);
     default:
@@ -742,6 +749,28 @@ function makeInputObjectDef(def: InputObjectTypeDefinitionNode, schema: SchemaCo
     description: getDescription(def),
     fields: () => makeInputValues(def.fields, schema),
     astNode: def,
+  });
+}
+
+function checkSchemaDef(def: SchemaDefinitionNode) {
+  const validNames = {
+    query: 'Query',
+    mutation: 'Mutation',
+    subscription: 'Subscription',
+  };
+
+  def.operationTypes.forEach(d => {
+    if (d.operation) {
+      const validTypeName = validNames[d.operation];
+      const actualTypeName = d.type.name.value;
+      if (actualTypeName !== validTypeName) {
+        throw new Error(
+          `Incorrect type name '${actualTypeName}' for '${
+            d.operation
+          }'. The valid definition is "schema { ${d.operation}: ${validTypeName} }"`
+        );
+      }
+    }
   });
 }
 

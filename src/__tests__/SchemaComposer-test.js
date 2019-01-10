@@ -466,6 +466,10 @@ describe('SchemaComposer', () => {
     it('should add resolve methods to fields in graphql-tools way', async () => {
       const sc = new SchemaComposer();
       sc.addTypeDefs(`
+        schema {
+          query: Query
+        }
+        
         type Post {
           id: Int!
           title: String
