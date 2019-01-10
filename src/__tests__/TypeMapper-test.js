@@ -817,7 +817,7 @@ describe('TypeMapper', () => {
       expect(ts.get('Record')).toBeInstanceOf(GraphQLInputObjectType);
     });
 
-    it('parseTypesFromString() should strictly accept schema definition', () => {
+    it('parseTypesFromString() should strictly accept `schema` definition', () => {
       const ts = TypeMapper.parseTypesFromString(`
         schema {
           query: Query
@@ -838,6 +838,11 @@ describe('TypeMapper', () => {
       expect(() => {
         TypeMapper.parseTypesFromString(`schema { subscription: ErrName }`);
       }).toThrow("Incorrect type name 'ErrName' for 'subscription'");
+    });
+
+    it('parseTypesFromString() should strictly accept `scalar` definition', () => {
+      const ts = TypeMapper.parseTypesFromString(`scalar MyScalar`);
+      expect(ts.get('MyScalar')).toBeInstanceOf(GraphQLScalarType);
     });
   });
 

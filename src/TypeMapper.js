@@ -10,6 +10,7 @@ import find from 'graphql/jsutils/find';
 import { getArgumentValues, getDirectiveValues } from 'graphql/execution/values';
 import type {
   DocumentNode,
+  ScalarTypeDefinitionNode,
   ObjectTypeDefinitionNode,
   InterfaceTypeDefinitionNode,
   SchemaDefinitionNode,
@@ -665,8 +666,8 @@ function makeSchemaDef(def, schema: SchemaComposer<any>) {
       return makeEnumDef(def);
     // case UNION_TYPE_DEFINITION:
     //   return makeUnionDef(def);
-    // case SCALAR_TYPE_DEFINITION:
-    //   return makeScalarDef(def);
+    case Kind.SCALAR_TYPE_DEFINITION:
+      return makeScalarDef(def);
     case Kind.SCHEMA_DEFINITION:
       checkSchemaDef(def);
       return null;
@@ -749,6 +750,17 @@ function makeInputObjectDef(def: InputObjectTypeDefinitionNode, schema: SchemaCo
     description: getDescription(def),
     fields: () => makeInputValues(def.fields, schema),
     astNode: def,
+  });
+}
+
+function makeScalarDef(def: ScalarTypeDefinitionNode) {
+  def.description;
+  return new GraphQLScalarType({
+    name: def.name.value,
+    description: def.description && def.description.value,
+    serialize: v => v,
+    parseValue: v => v,
+    parseLiteral: ast => (ast: any).value,
   });
 }
 
