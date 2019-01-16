@@ -6,7 +6,7 @@ import { Kind } from 'graphql/language';
 import { getDescription } from 'graphql/utilities/buildASTSchema';
 import keyValMap from 'graphql/jsutils/keyValMap';
 import invariant from 'graphql/jsutils/invariant';
-import find from 'graphql/jsutils/find';
+import find from 'graphql/polyfills/find';
 import { getArgumentValues, getDirectiveValues } from 'graphql/execution/values';
 import type {
   DocumentNode,
