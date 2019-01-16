@@ -798,7 +798,7 @@ describe('Resolver', () => {
           displayName: 'User.find()',
           resolve: () => {},
         });
-        await r1.debugExecTime().resolve();
+        await r1.debugExecTime().resolve((undefined: any));
 
         expect(console.time.mock.calls[0]).toEqual(['Execution time for User.find()']);
         expect(console.timeEnd.mock.calls[0]).toEqual(['Execution time for User.find()']);
@@ -865,7 +865,7 @@ describe('Resolver', () => {
           displayName: 'User.find()',
           resolve: async () => ({ a: 123 }),
         });
-        await r1.debugPayload().resolve();
+        await r1.debugPayload().resolve((undefined: any));
 
         expect(console.log.mock.calls[0]).toEqual(['Resolved Payload for User.find():']);
         expect(console.dir.mock.calls[0]).toEqual([{ a: 123 }, { colors: true, depth: 5 }]);
@@ -877,7 +877,7 @@ describe('Resolver', () => {
           displayName: 'User.find()',
           resolve: async () => ({ a: 123, b: 345, c: [0, 1, 2, 3] }),
         });
-        await r1.debugPayload(['b', 'c.3']).resolve();
+        await r1.debugPayload(['b', 'c.3']).resolve((undefined: any));
 
         expect(console.log.mock.calls[0]).toEqual(['Resolved Payload for User.find():']);
         expect(console.dir.mock.calls[0]).toEqual([
@@ -897,7 +897,7 @@ describe('Resolver', () => {
         });
         await r1
           .debugPayload()
-          .resolve()
+          .resolve((undefined: any))
           .catch(e => {});
 
         expect(console.log.mock.calls[0]).toEqual(['Rejected Payload for User.find():']);

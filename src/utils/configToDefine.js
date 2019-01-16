@@ -36,7 +36,7 @@ function inspect(value: mixed): string {
     case 'object':
       if (value) {
         if (typeof value.inspect === 'function') {
-          return value.inspect();
+          return (value: any).inspect();
         } else if (Array.isArray(value)) {
           return `[${value.map(inspect).join(', ')}]`;
         }

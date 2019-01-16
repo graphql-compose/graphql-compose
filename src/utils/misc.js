@@ -6,14 +6,13 @@ import type { Thunk } from './definitions';
 
 export function resolveMaybeThunk<+T>(thingOrThunk: Thunk<T>): T {
   // eslint-disable-line
-  return typeof thingOrThunk === 'function' ? thingOrThunk() : thingOrThunk;
+  return typeof thingOrThunk === 'function' ? (thingOrThunk: any)() : thingOrThunk;
 }
 
 export function camelCase(str: string): string {
   return str
-    .replace(
-      /(?:^\w|[A-Z]|\b\w)/g,
-      (letter, index) => (index === 0 ? letter.toLowerCase() : letter.toUpperCase())
+    .replace(/(?:^\w|[A-Z]|\b\w)/g, (letter, index) =>
+      index === 0 ? letter.toLowerCase() : letter.toUpperCase()
     )
     .replace(/\s+/g, '');
 }
@@ -72,15 +71,15 @@ export function only(obj: Object, keys: string | string[]) {
 export function inspect(value: mixed): string {
   return value && typeof value === 'object'
     ? typeof value.inspect === 'function'
-      ? value.inspect()
+      ? (value: any).inspect()
       : Array.isArray(value)
-        ? `[${value.map(inspect).join(', ')}]`
-        : `{${Object.keys(value)
-            .map(k => `${k}: ${inspect((value: any)[k])}`)
-            .join(', ')}}`
+      ? `[${value.map(inspect).join(', ')}]`
+      : `{${Object.keys(value)
+          .map(k => `${k}: ${inspect((value: any)[k])}`)
+          .join(', ')}}`
     : typeof value === 'string'
-      ? `"${value}"`
-      : typeof value === 'function'
-        ? `[function ${value.name}]`
-        : String(value);
+    ? `"${value}"`
+    : typeof value === 'function'
+    ? `[function ${value.name}]`
+    : String(value);
 }

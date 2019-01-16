@@ -551,7 +551,7 @@ describe('TypeComposer', () => {
         name: 'myResolver3',
       };
       tc.addResolver(resolverOpts);
-      expect(tc.getResolver('myResolver3').resolve()).toEqual({});
+      expect(tc.getResolver('myResolver3').resolve((undefined: any))).toEqual({});
     });
 
     it('removeResolver() should work', () => {
@@ -612,7 +612,7 @@ describe('TypeComposer', () => {
       });
       expect(await tc.getResolver('update').resolve({})).toBe('456');
       expect(tc.getResolver('update')).not.toBe(prevResolver);
-      expect(prevResolver.resolve()).toBe('123');
+      expect(prevResolver.resolve((undefined: any))).toBe('123');
     });
 
     it('wrapResolverAs() should wrap resolver via callback with new name', async () => {

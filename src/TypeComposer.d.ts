@@ -164,7 +164,7 @@ export type RelationOptsWithFieldConfig<
 export type ArgsType<T = any> = { [argName in keyof T]: T[argName] };
 
 export type RelationArgsMapperFn<TSource, TContext, TArgs = any> = (
-  source: TSource,
+  source: any,
   args: ArgsType<TArgs>,
   context: TContext,
   info: GraphQLResolveInfo,

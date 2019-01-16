@@ -6,7 +6,6 @@ import { Kind } from 'graphql/language';
 import { getDescription } from 'graphql/utilities/buildASTSchema';
 import keyValMap from 'graphql/jsutils/keyValMap';
 import invariant from 'graphql/jsutils/invariant';
-import find from 'graphql/jsutils/find';
 import { getArgumentValues, getDirectiveValues } from 'graphql/execution/values';
 import type {
   DocumentNode,
@@ -22,6 +21,7 @@ import type {
   EnumTypeDefinitionNode,
   InputObjectTypeDefinitionNode,
 } from 'graphql/language/ast';
+import find from './utils/polyfills/find';
 import {
   GraphQLInt,
   GraphQLFloat,

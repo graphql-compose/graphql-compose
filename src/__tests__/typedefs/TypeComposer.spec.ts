@@ -200,7 +200,7 @@ PersonTC.addFields({
 ArtTC.addRelation('extends', {
   resolver: PersonTC.getResolver('findById'), // comes from other (resolve to)
   prepareArgs: {
-    _id: source => source.personId, // type checks well now
+    _id: (source: any) => source.personId, // type checks well now
   },
   projection: { personId: true },
 });
@@ -343,7 +343,7 @@ ArtTC.addRelation('extends', {
     }
   }),
   prepareArgs: {
-    _id: source => source.personId, // type checks well now
+    _id: (source: any) => source.personId, // type checks well now
   },
   projection: { personId: true },
 });
@@ -356,7 +356,7 @@ ArtTC.addRelation<Person, GeneralArgs>('extends', {
     }
   }),
   prepareArgs: {
-    _id: source => source.personId, // type checks well now
+    _id: (source: any) => source.personId, // type checks well now
   },
   projection: { personId: true },
 });

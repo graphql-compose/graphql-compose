@@ -532,8 +532,8 @@ export class Resolver<TSource, TContext> {
   // -----------------------------------------------
 
   /*
-  * This method should be overriden via constructor
-  */
+   * This method should be overriden via constructor
+   */
   /* eslint-disable */
   resolve(
     resolveParams: ResolveParams<TSource, TContext> | $Shape<ResolveParams<TSource, TContext>>
