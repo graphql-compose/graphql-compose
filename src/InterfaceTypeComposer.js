@@ -127,7 +127,7 @@ export class InterfaceTypeComposer<TContext> {
       if (isObject(opts.fields)) IFTC.addFields(opts.fields);
     } else {
       throw new Error(
-        'You should provide GraphQLInterfaceTypeConfig or string with enum name or SDL'
+        'You should provide GraphQLInterfaceTypeConfig or string with interface name or SDL definition'
       );
     }
 

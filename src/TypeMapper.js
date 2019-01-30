@@ -21,6 +21,7 @@ import type {
   EnumTypeDefinitionNode,
   InputObjectTypeDefinitionNode,
 } from 'graphql/language/ast';
+import { inspect } from './utils/misc';
 import find from './utils/polyfills/find';
 import {
   GraphQLInt,
@@ -75,6 +76,7 @@ import { TypeComposer } from './TypeComposer';
 import type { SchemaComposer } from './SchemaComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
+import { UnionTypeComposer } from './UnionTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
@@ -86,6 +88,11 @@ export type TypeDefinitionString = string; // eg type Name { field: Int }
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]
 export type TypeNameString = string; // eg. Int, Float
 export type TypeAsString = TypeDefinitionString | TypeWrappedString | TypeNameString;
+export type ComposeObjectType =
+  | TypeComposer<any>
+  | GraphQLObjectType
+  | TypeDefinitionString
+  | TypeAsString;
 
 export function isOutputType(type: any): boolean {
   return (
@@ -217,6 +224,33 @@ export class TypeMapper<TContext> {
     return typeStorage;
   }
 
+  convertOutputType(composeType: ComposeObjectType): GraphQLObjectType {
+    if (this.schemaComposer.hasInstance(composeType, TypeComposer)) {
+      return this.schemaComposer.getTC(composeType).getType();
+    } else if (typeof composeType === 'string') {
+      const type =
+        RegexpOutputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
+          ? this.createType(composeType)
+          : this.getWrapped(composeType);
+
+      if (!type) {
+        throw new Error(`Cannot convert to OutputType the following string: '${composeType}'`);
+      }
+
+      if (!(type instanceof GraphQLObjectType)) {
+        throw new Error(`Cannot convert to OutputType the following object: '${inspect(type)}'`);
+      }
+
+      return type;
+    } else if (composeType instanceof GraphQLObjectType) {
+      return composeType;
+    } else if (composeType instanceof TypeComposer) {
+      return composeType.getType();
+    }
+
+    throw new Error(`Cannot convert to OutputType the following object: '${inspect(composeType)}'`);
+  }
+
   convertOutputFieldConfig(
     composeFC: ComposeFieldConfig<any, TContext>,
     fieldName?: string = '',
@@ -237,7 +271,8 @@ export class TypeMapper<TContext> {
     } else if (
       composeFC instanceof TypeComposer ||
       composeFC instanceof EnumTypeComposer ||
-      composeFC instanceof InterfaceTypeComposer
+      composeFC instanceof InterfaceTypeComposer ||
+      composeFC instanceof UnionTypeComposer
     ) {
       return {
         type: composeFC.getType(),
@@ -275,7 +310,7 @@ export class TypeMapper<TContext> {
     if (typeof composeType === 'string') {
       if (RegexpInputTypeDefinition.test(composeType)) {
         throw new Error(
-          `${typeName}.${fieldName} should be OutputType, but got input type definition '${composeType}'`
+          `${typeName}.${fieldName} should be OutputType, but got following type definition '${composeType}'`
         );
       }
 
@@ -297,7 +332,8 @@ export class TypeMapper<TContext> {
     } else if (
       composeType instanceof TypeComposer ||
       composeType instanceof EnumTypeComposer ||
-      composeType instanceof InterfaceTypeComposer
+      composeType instanceof InterfaceTypeComposer ||
+      composeType instanceof UnionTypeComposer
     ) {
       fieldConfig.type = composeType.getType();
     } else if (composeType instanceof Resolver) {

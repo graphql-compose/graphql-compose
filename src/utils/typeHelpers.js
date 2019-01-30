@@ -1,5 +1,5 @@
 /* @flow */
-import { isType, type GraphQLType } from '../graphql';
+import { isType, parse, type GraphQLType } from '../graphql';
 import { isFunction } from './is';
 import { inspect } from './misc';
 
@@ -16,4 +16,36 @@ export function getGraphQLType(anyType: mixed): GraphQLType {
   }
 
   return type;
+}
+
+export function getComposeTypeName(type: mixed): string {
+  if (typeof type === 'string') {
+    if (/^[_a-zA-Z][_a-zA-Z0-9]*$/.test(type)) {
+      // single type name
+      return type;
+    } else {
+      // parse type name from `type Name { f: Int }`
+      const docNode = parse(type);
+      if (
+        docNode.definitions[0] &&
+        docNode.definitions[0].name &&
+        typeof docNode.definitions[0].name.value === 'string'
+      ) {
+        return docNode.definitions[0].name.value;
+      }
+    }
+
+    throw new Error(`Cannot get type name from string: ${inspect(type)}`);
+  } else {
+    try {
+      const gqlType = getGraphQLType(type);
+      if (typeof gqlType.name === 'string') {
+        return gqlType.name;
+      }
+    } catch (e) {
+      throw new Error(`Cannot get type name from ${inspect(type)}`);
+    }
+  }
+
+  throw new Error(`Cannot get type name from ${inspect(type)}`);
 }

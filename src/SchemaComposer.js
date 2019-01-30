@@ -7,6 +7,7 @@ import { TypeComposer as _TypeComposer } from './TypeComposer';
 import { InputTypeComposer as _InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer as _EnumTypeComposer } from './EnumTypeComposer';
 import { InterfaceTypeComposer as _InterfaceTypeComposer } from './InterfaceTypeComposer';
+import { UnionTypeComposer as _UnionTypeComposer } from './UnionTypeComposer';
 import { Resolver as _Resolver } from './Resolver';
 import { isFunction } from './utils/is';
 import { getGraphQLType } from './utils/typeHelpers';
@@ -15,6 +16,7 @@ import {
   GraphQLObjectType,
   GraphQLInputObjectType,
   GraphQLInterfaceType,
+  GraphQLUnionType,
   GraphQLEnumType,
   type GraphQLNamedType,
   type GraphQLDirective,
@@ -33,6 +35,7 @@ type MustHaveTypes<TContext> =
   | _InputTypeComposer
   | _EnumTypeComposer
   | _InterfaceTypeComposer<TContext>
+  | _UnionTypeComposer<TContext>
   | GraphQLNamedType;
 
 type AddResolveMethods<TContext> = {
@@ -52,6 +55,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   InputTypeComposer: typeof _InputTypeComposer;
   EnumTypeComposer: typeof _EnumTypeComposer;
   InterfaceTypeComposer: Class<_InterfaceTypeComposer<TContext>>;
+  UnionTypeComposer: Class<_UnionTypeComposer<TContext>>;
   Resolver: Class<_Resolver<any, TContext>>;
   _schemaMustHaveTypes: Array<MustHaveTypes<TContext>> = [];
 
@@ -83,6 +87,11 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
       static schemaComposer = schema;
     }
     this.InterfaceTypeComposer = InterfaceTypeComposer;
+
+    class UnionTypeComposer extends _UnionTypeComposer<TContext> {
+      static schemaComposer = schema;
+    }
+    this.UnionTypeComposer = UnionTypeComposer;
 
     this.typeMapper = new TypeMapper(schema);
 
@@ -234,6 +243,20 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     }
   }
 
+  getOrCreateUTC(
+    typeName: string,
+    onCreate?: (_UnionTypeComposer<TContext>) => any
+  ): _UnionTypeComposer<TContext> {
+    try {
+      return this.getUTC(typeName);
+    } catch (e) {
+      const iftc = this.UnionTypeComposer.create(typeName);
+      this.set(typeName, iftc);
+      if (onCreate && isFunction(onCreate)) onCreate(iftc);
+      return iftc;
+    }
+  }
+
   // disable redundant noise in console.logs
   toString(): string {
     return 'SchemaComposer';
@@ -278,6 +301,13 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
       return this.InterfaceTypeComposer.create((this.get(typeName): any));
     }
     return super.getIFTC(typeName);
+  }
+
+  getUTC(typeName: any): _UnionTypeComposer<TContext> {
+    if (this.hasInstance(typeName, GraphQLUnionType)) {
+      return this.UnionTypeComposer.create((this.get(typeName): any));
+    }
+    return super.getUTC(typeName);
   }
 
   addTypeDefs(typeDefs: string): TypeStorage<GraphQLNamedType> {

@@ -18,6 +18,7 @@ import {
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
+import { UnionTypeComposer } from './UnionTypeComposer';
 import {
   Resolver,
   ResolverNextRpCb,
@@ -97,6 +98,8 @@ export type ComposeOutputType<TSource, TContext, TArgs = any> =
   | EnumTypeComposer
   | TypeAsString
   | Resolver<TSource, TContext, TArgs>
+  | InterfaceTypeComposer<TContext>
+  | UnionTypeComposer<TContext>
   | Array<
       | GraphQLOutputType
       | TypeComposer<TSource, TContext>

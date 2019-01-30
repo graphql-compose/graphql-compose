@@ -3,7 +3,9 @@
     "target": "es5",
     "module": "commonjs",
     "strict": true,
-    "lib": ["es2017", "esnext.asynciterable"]
+    "lib": ["es2017", "esnext.asynciterable"],
+    "noImplicitAny": false,
+    "noEmit": true
   },
   "include": ["src/**/*.d.ts", "src/**/*.spec.ts"],
   "exclude": [

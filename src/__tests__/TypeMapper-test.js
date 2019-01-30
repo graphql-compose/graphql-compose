@@ -272,7 +272,7 @@ describe('TypeMapper', () => {
             a: String,
           }`
           );
-        }).toThrowError(/should be OutputType, but got input type definition/);
+        }).toThrowError(/should be OutputType, but got following type definition/);
       });
 
       it('should accept TypeComposer', () => {
