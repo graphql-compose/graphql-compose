@@ -5,6 +5,7 @@ import { TypeComposer } from './TypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
+import { UnionTypeComposer } from './UnionTypeComposer';
 import type { GraphQLNamedType } from './graphql';
 
 type K = any;
@@ -13,6 +14,7 @@ type V<TContext> =
   | InputTypeComposer
   | EnumTypeComposer
   | InterfaceTypeComposer<TContext>
+  | UnionTypeComposer<TContext>
   | GraphQLNamedType;
 
 // TypeStorage has all methods from Map class
@@ -139,6 +141,13 @@ export class TypeStorage<TContext> {
   getIFTC(typeName: K): InterfaceTypeComposer<TContext> {
     if (!this.hasInstance(typeName, InterfaceTypeComposer)) {
       throw new Error(`Cannot find InterfaceTypeComposer with name ${typeName}`);
+    }
+    return (this.get(typeName): any);
+  }
+
+  getUTC(typeName: K): UnionTypeComposer<TContext> {
+    if (!this.hasInstance(typeName, UnionTypeComposer)) {
+      throw new Error(`Cannot find UnionTypeComposer with name ${typeName}`);
     }
     return (this.get(typeName): any);
   }

@@ -11,6 +11,7 @@ import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
+import { UnionTypeComposer } from './UnionTypeComposer';
 import { Resolver } from './Resolver';
 
 type MustHaveTypes<TContext> =
@@ -18,6 +19,7 @@ type MustHaveTypes<TContext> =
   | InputTypeComposer
   | EnumTypeComposer
   | InterfaceTypeComposer<TContext>
+  | UnionTypeComposer<TContext>
   | GraphQLNamedType;
 
 type ExtraSchemaConfig = {
@@ -43,6 +45,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   public InputTypeComposer: typeof InputTypeComposer;
   public EnumTypeComposer: typeof EnumTypeComposer;
   public InterfaceTypeComposer: typeof InterfaceTypeComposer;
+  public UnionTypeComposer: typeof UnionTypeComposer;
   public Resolver: typeof Resolver;
 
   public Query: TypeComposer<any, TContext>;
@@ -93,6 +96,11 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     typeName: string,
     onCreate?: (iftc: InterfaceTypeComposer<TContext>) => any,
   ): InterfaceTypeComposer<TContext>;
+
+  public getOrCreateUTC(
+    typeName: string,
+    onCreate?: (utc: UnionTypeComposer<TContext>) => any,
+  ): UnionTypeComposer<TContext>;
 
   public addTypeDefs(typeDefs: string): TypeStorage<GraphQLNamedType>;
 

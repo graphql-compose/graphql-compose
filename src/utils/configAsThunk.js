@@ -10,6 +10,7 @@ import type {
   GraphQLFieldConfigMap,
   GraphQLInputFieldConfig,
   GraphQLInputFieldConfigMap,
+  GraphQLObjectType,
 } from '../graphql';
 import type { ComposeInputFieldConfig, ComposeInputFieldConfigMap } from '../InputTypeComposer';
 import type {
@@ -18,6 +19,8 @@ import type {
   ComposeArgumentConfig,
   ComposeFieldConfigArgumentMap,
 } from '../TypeComposer';
+import type { ComposeObjectType } from '../TypeMapper';
+import type { Thunk } from './definitions';
 
 export function resolveOutputConfigAsThunk<TSource, TContext>(
   schema: SchemaComposer<TContext>,
@@ -131,4 +134,17 @@ export function resolveArgConfigMapAsThunk(
     });
   }
   return args;
+}
+
+export function resolveTypeArrayAsThunk(
+  schema: SchemaComposer<any>,
+  types: Thunk<Array<ComposeObjectType>>,
+  typeName?: string
+): Array<GraphQLObjectType> {
+  try {
+    const t = isFunction(types) ? types() : types;
+    return t.map((type: ComposeObjectType) => schema.typeMapper.convertOutputType(type));
+  } catch (e) {
+    throw new Error(`Cannot resolve types for ${typeName || ''}`);
+  }
 }

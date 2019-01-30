@@ -8,12 +8,14 @@ import {
   GraphQLInputFieldConfigMap,
   GraphQLNamedType,
   GraphQLType,
+  GraphQLObjectType,
 } from 'graphql';
 import {
   ComposeInputFieldConfig,
   ComposeInputFieldConfigMap,
 } from './InputTypeComposer';
 import {
+  TypeComposer,
   ComposeArgumentConfig,
   ComposeFieldConfig,
   ComposeFieldConfigArgumentMap,
@@ -33,6 +35,11 @@ export type TypeAsString =
   | TypeDefinitionString
   | TypeWrappedString
   | TypeNameString;
+export type ComposeObjectType =
+  | TypeComposer<any>
+  | GraphQLObjectType
+  | TypeDefinitionString
+  | TypeAsString;
 
 declare class TypeMapper {
   public basicScalars: Map<string, GraphQLNamedType>;
@@ -56,6 +63,8 @@ declare class TypeMapper {
   public parseTypesFromAst(
     astDocument: DocumentNode,
   ): TypeStorage<GraphQLNamedType>;
+
+  public convertOutputType(composeType: ComposeObjectType): GraphQLObjectType;
 
   public convertOutputFieldConfig<TSource = any, TContext = any>(
     composeFC: ComposeFieldConfig<TSource, TContext>,

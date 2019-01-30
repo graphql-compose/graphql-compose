@@ -7,6 +7,7 @@ export { TypeComposer } from './TypeComposer';
 export { InputTypeComposer } from './InputTypeComposer';
 export { EnumTypeComposer } from './EnumTypeComposer';
 export { InterfaceTypeComposer } from './InterfaceTypeComposer';
+export { UnionTypeComposer } from './UnionTypeComposer';
 export { Resolver } from './Resolver';
 export { TypeMapper } from './TypeMapper';
 declare const GQC: SchemaComposer<any>;
@@ -21,6 +22,9 @@ export { EnumTypeComposer as EnumTypeComposerClass } from './EnumTypeComposer';
 export {
   InterfaceTypeComposer as InterfaceTypeComposerClass,
 } from './InterfaceTypeComposer';
+export {
+  UnionTypeComposer as UnionTypeComposerClass,
+} from './UnionTypeComposer';
 export { Resolver as ResolverClass } from './Resolver';
 
 export { TypeStorage } from './TypeStorage';

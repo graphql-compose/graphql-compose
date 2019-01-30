@@ -11,6 +11,7 @@ const TypeComposer = schemaComposer.TypeComposer;
 const InputTypeComposer = schemaComposer.InputTypeComposer;
 const EnumTypeComposer = schemaComposer.EnumTypeComposer;
 const InterfaceTypeComposer = schemaComposer.InterfaceTypeComposer;
+const UnionTypeComposer = schemaComposer.UnionTypeComposer;
 const Resolver = schemaComposer.Resolver;
 const TypeMapper = schemaComposer.typeMapper;
 export {
@@ -24,6 +25,7 @@ export {
   InputTypeComposer,
   EnumTypeComposer,
   InterfaceTypeComposer,
+  UnionTypeComposer,
   Resolver,
   TypeMapper,
 };
@@ -32,6 +34,7 @@ export { TypeComposer as TypeComposerClass } from './TypeComposer';
 export { InputTypeComposer as InputTypeComposerClass } from './InputTypeComposer';
 export { EnumTypeComposer as EnumTypeComposerClass } from './EnumTypeComposer';
 export { InterfaceTypeComposer as InterfaceTypeComposerClass } from './InterfaceTypeComposer';
+export { UnionTypeComposer as UnionTypeComposerClass } from './UnionTypeComposer';
 export { Resolver as ResolverClass } from './Resolver';
 
 export { TypeStorage } from './TypeStorage';

@@ -24,6 +24,7 @@ import type { InputTypeComposer } from './InputTypeComposer';
 import type { EnumTypeComposer } from './EnumTypeComposer';
 import type { TypeAsString } from './TypeMapper';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
+import type { UnionTypeComposer } from './UnionTypeComposer';
 import {
   Resolver,
   type ResolverOpts,
@@ -112,6 +113,7 @@ export type ComposeOutputType<TContext> =
   | TypeAsString
   | Resolver<any, TContext>
   | InterfaceTypeComposer<TContext>
+  | UnionTypeComposer<TContext>
   | Array<ComposeOutputType<TContext>>;
 
 // Compose Args -----------------------------

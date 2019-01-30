@@ -6,6 +6,7 @@ import {
   resolveOutputConfigMapAsThunk,
   resolveInputConfigMapAsThunk,
   resolveArgConfigMapAsThunk,
+  resolveTypeArrayAsThunk,
 } from '../configAsThunk';
 
 describe('configAsThunk', () => {
@@ -339,6 +340,25 @@ describe('configAsThunk', () => {
 
       expect(unwrapped.f4.type).toBe(GraphQLString);
       expect(unwrapped.f4.description).toBe('Field4');
+    });
+  });
+
+  describe('resolveTypeArrayAsThunk()', () => {
+    it('should understand GraphQL & ComposeTypes', () => {
+      const types = [
+        new GraphQLObjectType({
+          name: 'SubtypeAsGQL',
+          fields: () => ({ a: { type: GraphQLString } }),
+        }),
+        TypeComposer.create('type SubtypeAsTC { a: String }'),
+        'type SubtypeAsSDL { name: Int }',
+      ];
+
+      const res = resolveTypeArrayAsThunk(schemaComposer, types);
+
+      expect(res[0].name).toBe('SubtypeAsGQL');
+      expect(res[1].name).toBe('SubtypeAsTC');
+      expect(res[2].name).toBe('SubtypeAsSDL');
     });
   });
 });

@@ -3,9 +3,11 @@
 
 import { GraphQLObjectType, GraphQLInputObjectType, getNamedType } from '../graphql';
 import type { GraphQLInputType, GraphQLOutputType } from '../graphql';
+import { deprecate } from './debug';
 import { TypeComposer } from '../TypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
+import { UnionTypeComposer } from '../UnionTypeComposer';
 import { Resolver } from '../Resolver';
 import type { SchemaComposer } from '../SchemaComposer';
 
@@ -15,7 +17,12 @@ import type { SchemaComposer } from '../SchemaComposer';
  * #resolver
  */
 export function typeByPath(
-  src: TypeComposer<any> | InputTypeComposer | Resolver<any, any> | InterfaceTypeComposer<any>,
+  src:
+    | TypeComposer<any>
+    | InputTypeComposer
+    | Resolver<any, any>
+    | InterfaceTypeComposer<any>
+    | UnionTypeComposer<any>,
   path: string | Array<string>
 ) {
   const parts = Array.isArray(path) ? path : String(path).split('.');
@@ -31,7 +38,7 @@ export function typeByPath(
   } else if (src instanceof Resolver) {
     return typeByPathRSV(src, parts);
   } else if (src instanceof InterfaceTypeComposer) {
-    return typeByPathFTC(src, parts);
+    return typeByPathIFTC(src, parts);
   }
 
   return src;
@@ -90,7 +97,13 @@ function typeByPathRSV(rsv: Resolver<any, any>, parts: Array<string>) {
   return processType(rsv.getType(), parts, rsv.constructor.schemaComposer);
 }
 
+/** @deprecated 6.0.0 */
 export function typeByPathFTC(tc: InterfaceTypeComposer<any>, parts: Array<string>) {
+  deprecate('Use `typeByPathIFTC()` method instead');
+  return typeByPathIFTC(tc, parts);
+}
+
+export function typeByPathIFTC(tc: InterfaceTypeComposer<any>, parts: Array<string>) {
   if (!tc) return undefined;
   if (parts.length === 0) return tc;
 
