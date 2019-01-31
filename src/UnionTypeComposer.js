@@ -304,6 +304,7 @@ export class UnionTypeComposer<TContext> {
     const fastEntries = [];
     for (const [composeType, checkFn] of typeResolversMap.entries()) {
       fastEntries.push([((getGraphQLType(composeType): any): GraphQLObjectType), checkFn]);
+      this.addType(composeType);
     }
 
     let resolveType;
@@ -334,7 +335,7 @@ export class UnionTypeComposer<TContext> {
   _isTypeResolversValid(typeResolversMap: UnionTypeResolversMap<any, TContext>): true {
     if (!(typeResolversMap instanceof Map)) {
       throw new Error(
-        `For interface ${this.getTypeName()} you should provide Map object for type resolvers.`
+        `For union ${this.getTypeName()} you should provide Map object for type resolvers.`
       );
     }
 
@@ -345,7 +346,7 @@ export class UnionTypeComposer<TContext> {
         if (!(type instanceof GraphQLObjectType)) throw new Error('Must be GraphQLObjectType');
       } catch (e) {
         throw new Error(
-          `For interface type resolver ${this.getTypeName()} you must provide GraphQLObjectType or TypeComposer, but provided ${inspect(
+          `For union type resolver ${this.getTypeName()} you must provide GraphQLObjectType or TypeComposer, but provided ${inspect(
             composeType
           )}`
         );
@@ -354,9 +355,7 @@ export class UnionTypeComposer<TContext> {
       // checking checkFn
       if (!isFunction(checkFn)) {
         throw new Error(
-          `Interface ${this.getTypeName()} has invalid check function for type ${inspect(
-            composeType
-          )}`
+          `Union ${this.getTypeName()} has invalid check function for type ${inspect(composeType)}`
         );
       }
     }
