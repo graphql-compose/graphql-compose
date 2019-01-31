@@ -692,7 +692,7 @@ function typeDefNamed(
   if (typeStorage && typeStorage.has(typeName)) {
     return (typeStorage.get(typeName): any);
   }
-  throw new Error(`Cannot find type with name '${typeName}' in TypeMapper.`);
+  throw new Error(`Cannot find type with name '${typeName}' in SchemaComposer.`);
 }
 
 function makeSchemaDef(def, schema: SchemaComposer<any>, typeStorage: ?TypeStorage<any>) {
