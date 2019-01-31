@@ -16,7 +16,7 @@ import { getGraphQLType, getComposeTypeName } from './utils/typeHelpers';
 // import { graphqlVersion } from './utils/graphqlVersion';
 
 export type GraphQLUnionTypeExtended<TSource, TContext> = GraphQLUnionType & {
-  _gqcTypeMap: Map<string, ComposeObjectType>,
+  _gqcTypeMap?: Map<string, ComposeObjectType>,
   _gqcTypeResolvers?: UnionTypeResolversMap<TSource, TContext>,
 };
 
@@ -120,19 +120,6 @@ export class UnionTypeComposer<TContext> {
       throw new Error('UnionTypeComposer accept only GraphQLUnionType in constructor');
     }
     this.gqType = (gqType: any);
-
-    this.gqType._types = () => {
-      return resolveTypeArrayAsThunk(this.schemaComposer, this.getTypes(), this.getTypeName());
-    };
-
-    if (!this.gqType._gqcTypeMap) {
-      const types = this.gqType.getTypes();
-      const m = new Map();
-      types.forEach(type => {
-        m.set(type.name, type);
-      });
-      this.gqType._gqcTypeMap = m;
-    }
   }
 
   // -----------------------------------------------
@@ -144,40 +131,62 @@ export class UnionTypeComposer<TContext> {
     return this.getTypeNames().includes(nameAsString);
   }
 
+  _getTypeMap() {
+    if (!this.gqType._gqcTypeMap) {
+      const types = this.gqType.getTypes();
+      const m = new Map();
+      types.forEach(type => {
+        m.set(type.name, type);
+      });
+      this.gqType._gqcTypeMap = m;
+
+      this.gqType._types = () => {
+        return resolveTypeArrayAsThunk(this.schemaComposer, this.getTypes(), this.getTypeName());
+      };
+    }
+
+    return this.gqType._gqcTypeMap;
+  }
+
   getTypes(): ComposeTypesArray {
-    return Array.from(this.gqType._gqcTypeMap.values());
+    return Array.from(this._getTypeMap().values());
   }
 
   getTypeNames(): Array<string> {
-    return Array.from(this.gqType._gqcTypeMap.keys());
+    return Array.from(this._getTypeMap().keys());
+  }
+
+  clearTypes() {
+    this._getTypeMap().clear();
+    return this;
   }
 
   setTypes(types: ComposeTypesArray): UnionTypeComposer<TContext> {
-    this.gqType._gqcTypeMap.clear();
+    this.clearTypes();
     types.forEach(type => {
-      this.gqType._gqcTypeMap.set(getComposeTypeName(type), type);
+      this._getTypeMap().set(getComposeTypeName(type), type);
     });
     return this;
   }
 
   addType(type: ComposeObjectType): UnionTypeComposer<TContext> {
-    this.gqType._gqcTypeMap.set(getComposeTypeName(type), type);
+    this._getTypeMap().set(getComposeTypeName(type), type);
     return this;
   }
 
   removeType(nameOrArray: string | Array<string>): UnionTypeComposer<TContext> {
     const typeNames = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
     typeNames.forEach(typeName => {
-      this.gqType._gqcTypeMap.delete(typeName);
+      this._getTypeMap().delete(typeName);
     });
     return this;
   }
 
   removeOtherTypes(nameOrArray: string | Array<string>): UnionTypeComposer<TContext> {
     const keepTypeNames = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
-    this.gqType._gqcTypeMap.forEach((v, i) => {
+    this._getTypeMap().forEach((v, i) => {
       if (keepTypeNames.indexOf(i) === -1) {
-        this.gqType._gqcTypeMap.delete(i);
+        this._getTypeMap().delete(i);
       }
     });
     return this;
