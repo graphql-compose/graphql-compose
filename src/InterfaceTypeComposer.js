@@ -65,6 +65,10 @@ export type ComposeInterfaceTypeConfig<TSource, TContext> = {
   +description?: ?string,
 };
 
+export type InterfaceTypeComposerDefinition<TContext> =
+  | TypeAsString
+  | ComposeInterfaceTypeConfig<any, TContext>;
+
 export class InterfaceTypeComposer<TContext> {
   gqType: GraphQLInterfaceTypeExtended<any, TContext>;
 
@@ -77,15 +81,15 @@ export class InterfaceTypeComposer<TContext> {
   // Also supported `GraphQLInterfaceType` but in such case Flowtype force developers
   // to explicitly write annotations in their code. But it's bad.
   static create(
-    opts: TypeAsString | ComposeInterfaceTypeConfig<any, TContext>
+    typeDef: InterfaceTypeComposerDefinition<TContext>
   ): InterfaceTypeComposer<TContext> {
-    const iftc = this.createTemp(opts);
+    const iftc = this.createTemp(typeDef);
     this.schemaComposer.add(iftc);
     return iftc;
   }
 
   static createTemp(
-    opts: TypeAsString | ComposeInterfaceTypeConfig<any, TContext>
+    typeDef: InterfaceTypeComposerDefinition<TContext>
   ): InterfaceTypeComposer<TContext> {
     if (!this.schemaComposer) {
       throw new Error('Class<InterfaceTypeComposer> must be created by a SchemaComposer.');
@@ -93,8 +97,8 @@ export class InterfaceTypeComposer<TContext> {
 
     let IFTC;
 
-    if (isString(opts)) {
-      const typeName: string = opts;
+    if (isString(typeDef)) {
+      const typeName: string = typeDef;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
         IFTC = new this.schemaComposer.InterfaceTypeComposer(
@@ -113,18 +117,18 @@ export class InterfaceTypeComposer<TContext> {
         }
         IFTC = new this.schemaComposer.InterfaceTypeComposer(type);
       }
-    } else if (opts instanceof GraphQLInterfaceType) {
-      IFTC = new this.schemaComposer.InterfaceTypeComposer(opts);
-    } else if (isObject(opts)) {
-      const fields = opts.fields;
+    } else if (typeDef instanceof GraphQLInterfaceType) {
+      IFTC = new this.schemaComposer.InterfaceTypeComposer(typeDef);
+    } else if (isObject(typeDef)) {
+      const fields = typeDef.fields;
       const type = new GraphQLInterfaceType({
-        ...(opts: any),
+        ...(typeDef: any),
         fields: isFunction(fields)
-          ? () => resolveOutputConfigMapAsThunk(this.schemaComposer, (fields(): any), opts.name)
+          ? () => resolveOutputConfigMapAsThunk(this.schemaComposer, (fields(): any), typeDef.name)
           : () => ({}),
       });
       IFTC = new this.schemaComposer.InterfaceTypeComposer(type);
-      if (isObject(opts.fields)) IFTC.addFields(opts.fields);
+      if (isObject(typeDef.fields)) IFTC.addFields(typeDef.fields);
     } else {
       throw new Error(
         'You should provide GraphQLInterfaceTypeConfig or string with interface name or SDL definition'

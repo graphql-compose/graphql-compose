@@ -14,6 +14,8 @@ import { graphqlVersion } from './utils/graphqlVersion';
 import type { TypeAsString } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
 
+export type EnumTypeComposerDefinition = TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType;
+
 export class EnumTypeComposer {
   gqType: GraphQLEnumType;
 
@@ -23,23 +25,21 @@ export class EnumTypeComposer {
     return this.constructor.schemaComposer;
   }
 
-  static create(opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType): EnumTypeComposer {
-    const etc = this.createTemp(opts);
+  static create(typeDef: EnumTypeComposerDefinition): EnumTypeComposer {
+    const etc = this.createTemp(typeDef);
     this.schemaComposer.add(etc);
     return etc;
   }
 
-  static createTemp(
-    opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType
-  ): EnumTypeComposer {
+  static createTemp(typeDef: EnumTypeComposerDefinition): EnumTypeComposer {
     if (!this.schemaComposer) {
       throw new Error('Class<EnumTypeComposer> must be created by a SchemaComposer.');
     }
 
     let ETC;
 
-    if (isString(opts)) {
-      const typeName: string = opts;
+    if (isString(typeDef)) {
+      const typeName: string = typeDef;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
         ETC = new this.schemaComposer.EnumTypeComposer(
@@ -58,11 +58,11 @@ export class EnumTypeComposer {
         }
         ETC = new this.schemaComposer.EnumTypeComposer(type);
       }
-    } else if (opts instanceof GraphQLEnumType) {
-      ETC = new this.schemaComposer.EnumTypeComposer(opts);
-    } else if (isObject(opts)) {
+    } else if (typeDef instanceof GraphQLEnumType) {
+      ETC = new this.schemaComposer.EnumTypeComposer(typeDef);
+    } else if (isObject(typeDef)) {
       const type = new GraphQLEnumType({
-        ...(opts: any),
+        ...(typeDef: any),
       });
       ETC = new this.schemaComposer.EnumTypeComposer(type);
     } else {

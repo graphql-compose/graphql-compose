@@ -179,6 +179,11 @@ export type RelationArgsMapper<TSource, TContext> = {
     | Array<any>,
 };
 
+export type TypeComposerDefinition<TContext> =
+  | TypeAsString
+  | ComposeObjectTypeConfig<any, TContext>
+  | GraphQLObjectType;
+
 export class TypeComposer<TContext> {
   gqType: GraphQLObjectTypeExtended<any, TContext>;
   static schemaComposer: SchemaComposer<TContext>;
@@ -187,10 +192,8 @@ export class TypeComposer<TContext> {
     return this.constructor.schemaComposer;
   }
 
-  static create(
-    opts: TypeAsString | ComposeObjectTypeConfig<any, TContext> | GraphQLObjectType
-  ): TypeComposer<TContext> {
-    const tc = this.createTemp(opts);
+  static create(typeDef: TypeComposerDefinition<TContext>): TypeComposer<TContext> {
+    const tc = this.createTemp(typeDef);
     const typeName = tc.getTypeName();
     if (typeName !== 'Query' && typeName !== 'Mutation' && typeName !== 'Subscription') {
       this.schemaComposer.add(tc);
@@ -198,17 +201,15 @@ export class TypeComposer<TContext> {
     return tc;
   }
 
-  static createTemp(
-    opts: TypeAsString | ComposeObjectTypeConfig<any, TContext> | GraphQLObjectType
-  ): TypeComposer<TContext> {
+  static createTemp(typeDef: TypeComposerDefinition<TContext>): TypeComposer<TContext> {
     if (!this.schemaComposer) {
       throw new Error('Class<TypeComposer> must be created by a SchemaComposer.');
     }
 
     let TC;
 
-    if (isString(opts)) {
-      const typeName: string = opts;
+    if (isString(typeDef)) {
+      const typeName: string = typeDef;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
         TC = new this.schemaComposer.TypeComposer(
@@ -227,14 +228,14 @@ export class TypeComposer<TContext> {
         }
         TC = new this.schemaComposer.TypeComposer(type);
       }
-    } else if (opts instanceof GraphQLObjectType) {
-      TC = new this.schemaComposer.TypeComposer(opts);
-    } else if (isObject(opts)) {
-      const fields = opts.fields;
+    } else if (typeDef instanceof GraphQLObjectType) {
+      TC = new this.schemaComposer.TypeComposer(typeDef);
+    } else if (isObject(typeDef)) {
+      const fields = typeDef.fields;
       const type = new GraphQLObjectType({
-        ...(opts: any),
+        ...(typeDef: any),
         fields: isFunction(fields)
-          ? () => resolveOutputConfigMapAsThunk(this.schemaComposer, (fields(): any), opts.name)
+          ? () => resolveOutputConfigMapAsThunk(this.schemaComposer, (fields(): any), typeDef.name)
           : () => ({}),
       });
       TC = new this.schemaComposer.TypeComposer(type);

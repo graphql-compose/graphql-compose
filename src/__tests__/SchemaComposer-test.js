@@ -5,6 +5,7 @@ import { TypeComposer } from '../TypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
+import { UnionTypeComposer } from '../UnionTypeComposer';
 import {
   graphql,
   GraphQLString,
@@ -524,6 +525,51 @@ describe('SchemaComposer', () => {
       expect(await graphql(schema, '{ posts { id title votes } }')).toEqual({
         data: { posts: [{ id: 1, title: 'Post title', votes: 10 }] },
       });
+    });
+  });
+
+  describe('createTC helper methods', () => {
+    it('createObjectTC()', () => {
+      const sc = new SchemaComposer();
+      const tc = sc.createObjectTC(`type A { f: Int }`);
+      expect(tc).toBeInstanceOf(TypeComposer);
+      expect(tc.hasField('f')).toBeTruthy();
+
+      const tc2 = sc.createTC(`type B { f: Int }`);
+      expect(tc2).toBeInstanceOf(TypeComposer);
+      expect(tc2.hasField('f')).toBeTruthy();
+    });
+
+    it('createInputTC()', () => {
+      const sc = new SchemaComposer();
+      const tc = sc.createInputTC(`input A { f: Int }`);
+      expect(tc).toBeInstanceOf(InputTypeComposer);
+      expect(tc.hasField('f')).toBeTruthy();
+    });
+
+    it('createEnumTC()', () => {
+      const sc = new SchemaComposer();
+      const tc = sc.createEnumTC(`enum A { AAA BBB }`);
+      expect(tc).toBeInstanceOf(EnumTypeComposer);
+      expect(tc.hasField('AAA')).toBeTruthy();
+    });
+
+    it('createInterfaceTC()', () => {
+      const sc = new SchemaComposer();
+      const tc = sc.createInterfaceTC(`interface A { f: Int }`);
+      expect(tc).toBeInstanceOf(InterfaceTypeComposer);
+      expect(tc.hasField('f')).toBeTruthy();
+    });
+
+    it('createUnionTC()', () => {
+      const sc = new SchemaComposer();
+      sc.addTypeDefs(`
+        type AA { a: Int }
+        type BB { b: Int }
+      `);
+      const tc = sc.createUnionTC(`union A = AA | BB`);
+      expect(tc).toBeInstanceOf(UnionTypeComposer);
+      expect(tc.hasType('AA')).toBeTruthy();
     });
   });
 });

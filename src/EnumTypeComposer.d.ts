@@ -12,6 +12,11 @@ import {
 import { SchemaComposer } from './SchemaComposer';
 import { TypeAsString } from './TypeMapper';
 
+export type EnumTypeComposerDefinition =
+  | TypeAsString
+  | GraphQLEnumTypeConfig
+  | GraphQLEnumType;
+
 export class EnumTypeComposer {
   public static schemaComposer: SchemaComposer<any>;
   public schemaComposer: SchemaComposer<any>;
@@ -20,12 +25,10 @@ export class EnumTypeComposer {
 
   public constructor(gqType: GraphQLEnumType);
 
-  public static create(
-    opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType,
-  ): EnumTypeComposer;
+  public static create(typeDef: EnumTypeComposerDefinition): EnumTypeComposer;
 
   public static createTemp(
-    opts: TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType,
+    typeDef: EnumTypeComposerDefinition,
   ): EnumTypeComposer;
 
   // -----------------------------------------------

@@ -42,6 +42,10 @@ export type ComposeUnionTypeConfig<TSource, TContext> = {
   +description?: ?string,
 };
 
+export type UnionTypeComposerDefinition<TContext> =
+  | TypeAsString
+  | ComposeUnionTypeConfig<any, TContext>;
+
 export class UnionTypeComposer<TContext> {
   gqType: GraphQLUnionTypeExtended<any, TContext>;
 
@@ -53,25 +57,21 @@ export class UnionTypeComposer<TContext> {
 
   // Also supported `GraphQLUnionType` but in such case Flowtype force developers
   // to explicitly write annotations in their code. But it's bad.
-  static create(
-    opts: TypeAsString | ComposeUnionTypeConfig<any, TContext>
-  ): UnionTypeComposer<TContext> {
-    const utc = this.createTemp(opts);
+  static create(typeDef: UnionTypeComposerDefinition<TContext>): UnionTypeComposer<TContext> {
+    const utc = this.createTemp(typeDef);
     this.schemaComposer.add(utc);
     return utc;
   }
 
-  static createTemp(
-    opts: TypeAsString | ComposeUnionTypeConfig<any, TContext>
-  ): UnionTypeComposer<TContext> {
+  static createTemp(typeDef: UnionTypeComposerDefinition<TContext>): UnionTypeComposer<TContext> {
     if (!this.schemaComposer) {
       throw new Error('Class<UnionTypeComposer> must be created by a SchemaComposer.');
     }
 
     let UTC;
 
-    if (isString(opts)) {
-      const typeName: string = opts;
+    if (isString(typeDef)) {
+      const typeName: string = typeDef;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
         UTC = new this.schemaComposer.UnionTypeComposer(
@@ -90,14 +90,14 @@ export class UnionTypeComposer<TContext> {
         }
         UTC = new this.schemaComposer.UnionTypeComposer(type);
       }
-    } else if (opts instanceof GraphQLUnionType) {
-      UTC = new this.schemaComposer.UnionTypeComposer(opts);
-    } else if (isObject(opts)) {
-      const types = opts.types;
+    } else if (typeDef instanceof GraphQLUnionType) {
+      UTC = new this.schemaComposer.UnionTypeComposer(typeDef);
+    } else if (isObject(typeDef)) {
+      const types = typeDef.types;
       const type = new GraphQLUnionType({
-        ...(opts: any),
+        ...(typeDef: any),
         types: isFunction(types)
-          ? () => resolveTypeArrayAsThunk(this.schemaComposer, (types(): any), opts.name)
+          ? () => resolveTypeArrayAsThunk(this.schemaComposer, (types(): any), typeDef.name)
           : () => [],
       });
       UTC = new this.schemaComposer.UnionTypeComposer(type);

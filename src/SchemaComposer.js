@@ -3,11 +3,23 @@
 
 import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
-import { TypeComposer as _TypeComposer } from './TypeComposer';
-import { InputTypeComposer as _InputTypeComposer } from './InputTypeComposer';
-import { EnumTypeComposer as _EnumTypeComposer } from './EnumTypeComposer';
-import { InterfaceTypeComposer as _InterfaceTypeComposer } from './InterfaceTypeComposer';
-import { UnionTypeComposer as _UnionTypeComposer } from './UnionTypeComposer';
+import { TypeComposer as _TypeComposer, type TypeComposerDefinition } from './TypeComposer';
+import {
+  InputTypeComposer as _InputTypeComposer,
+  type InputTypeComposerDefinition,
+} from './InputTypeComposer';
+import {
+  EnumTypeComposer as _EnumTypeComposer,
+  type EnumTypeComposerDefinition,
+} from './EnumTypeComposer';
+import {
+  InterfaceTypeComposer as _InterfaceTypeComposer,
+  type InterfaceTypeComposerDefinition,
+} from './InterfaceTypeComposer';
+import {
+  UnionTypeComposer as _UnionTypeComposer,
+  type UnionTypeComposerDefinition,
+} from './UnionTypeComposer';
 import { Resolver as _Resolver } from './Resolver';
 import { isFunction } from './utils/is';
 import { getGraphQLType } from './utils/typeHelpers';
@@ -330,5 +342,32 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
         });
       });
     });
+  }
+
+  // alias for createObjectTC
+  createTC(typeDef: TypeComposerDefinition<TContext>): _TypeComposer<TContext> {
+    return this.createObjectTC(typeDef);
+  }
+
+  createObjectTC(typeDef: TypeComposerDefinition<TContext>): _TypeComposer<TContext> {
+    return this.TypeComposer.create(typeDef);
+  }
+
+  createInputTC(typeDef: InputTypeComposerDefinition): _InputTypeComposer {
+    return this.InputTypeComposer.create(typeDef);
+  }
+
+  createEnumTC(typeDef: EnumTypeComposerDefinition): _EnumTypeComposer {
+    return this.EnumTypeComposer.create(typeDef);
+  }
+
+  createInterfaceTC(
+    typeDef: InterfaceTypeComposerDefinition<TContext>
+  ): _InterfaceTypeComposer<TContext> {
+    return this.InterfaceTypeComposer.create(typeDef);
+  }
+
+  createUnionTC(typeDef: UnionTypeComposerDefinition<TContext>): _UnionTypeComposer<TContext> {
+    return this.UnionTypeComposer.create(typeDef);
   }
 }
