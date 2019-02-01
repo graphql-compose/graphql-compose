@@ -42,6 +42,11 @@ export type ComposeInputObjectTypeConfig = {
   description?: string | null;
 };
 
+export type InputTypeComposerDefinition =
+  | TypeAsString
+  | ComposeInputObjectTypeConfig
+  | GraphQLInputObjectType;
+
 export class InputTypeComposer {
   public static schemaComposer: SchemaComposer<any>;
   public schemaComposer: SchemaComposer<any>;
@@ -50,12 +55,10 @@ export class InputTypeComposer {
 
   public constructor(gqType: GraphQLInputObjectType);
 
-  public static create(
-    opts: TypeAsString | ComposeInputObjectTypeConfig | GraphQLInputObjectType,
-  ): InputTypeComposer;
+  public static create(typeDef: InputTypeComposerDefinition): InputTypeComposer;
 
   public static createTemp(
-    opts: TypeAsString | ComposeInputObjectTypeConfig | GraphQLInputObjectType,
+    typeDef: InputTypeComposerDefinition,
   ): InputTypeComposer;
 
   // -----------------------------------------------

@@ -5,13 +5,25 @@ import {
   SchemaDefinitionNode,
   GraphQLResolveInfo,
 } from 'graphql';
-import { TypeComposer } from './TypeComposer';
-import { InputTypeComposer } from './InputTypeComposer';
+import { TypeComposer, TypeComposerDefinition } from './TypeComposer';
+import {
+  InputTypeComposer,
+  InputTypeComposerDefinition,
+} from './InputTypeComposer';
+import {
+  EnumTypeComposer,
+  EnumTypeComposerDefinition,
+} from './EnumTypeComposer';
+import {
+  InterfaceTypeComposer,
+  InterfaceTypeComposerDefinition,
+} from './InterfaceTypeComposer';
+import {
+  UnionTypeComposer,
+  UnionTypeComposerDefinition,
+} from './UnionTypeComposer';
 import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
-import { EnumTypeComposer } from './EnumTypeComposer';
-import { InterfaceTypeComposer } from './InterfaceTypeComposer';
-import { UnionTypeComposer } from './UnionTypeComposer';
 import { Resolver } from './Resolver';
 
 type MustHaveTypes<TContext> =
@@ -107,4 +119,25 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   public addResolveMethods(
     typesFieldsResolve: AddResolveMethods<TContext>,
   ): void;
+
+  // alias for createObjectTC
+  public createTC(
+    typeDef: TypeComposerDefinition<TContext>,
+  ): TypeComposer<TContext>;
+
+  public createObjectTC(
+    typeDef: TypeComposerDefinition<TContext>,
+  ): TypeComposer<TContext>;
+
+  public createInputTC(typeDef: InputTypeComposerDefinition): InputTypeComposer;
+
+  public createEnumTC(typeDef: EnumTypeComposerDefinition): EnumTypeComposer;
+
+  public createInterfaceTC(
+    typeDef: InterfaceTypeComposerDefinition<TContext>,
+  ): InterfaceTypeComposer<TContext>;
+
+  public createUnionTC(
+    typeDef: UnionTypeComposerDefinition<TContext>,
+  ): UnionTypeComposer<TContext>;
 }

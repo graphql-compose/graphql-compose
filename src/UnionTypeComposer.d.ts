@@ -49,6 +49,10 @@ export type ComposeUnionTypeConfig<TSource, TContext> = {
   description?: string | null;
 };
 
+export type UnionTypeComposerDefinition<TContext> =
+  | TypeAsString
+  | ComposeUnionTypeConfig<any, TContext>;
+
 export class UnionTypeComposer<TSource = any, TContext = any> {
   public static schemaComposer: SchemaComposer<any>;
   public schemaComposer: SchemaComposer<TSource>;
@@ -58,11 +62,11 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   public constructor(gqType: GraphQLUnionType);
 
   public static create<TSrc = any, TCtx = any>(
-    opts: TypeAsString | ComposeUnionTypeConfig<TSrc, TCtx> | GraphQLUnionType,
+    typeDef: UnionTypeComposerDefinition<TCtx>,
   ): UnionTypeComposer<TSrc, TCtx>;
 
   public static createTemp<TSrc = any, TCtx = any>(
-    opts: TypeAsString | ComposeUnionTypeConfig<TSrc, TCtx> | GraphQLUnionType,
+    typeDef: UnionTypeComposerDefinition<TCtx>,
   ): UnionTypeComposer<TSrc, TCtx>;
 
   // -----------------------------------------------

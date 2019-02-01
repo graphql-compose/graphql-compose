@@ -52,6 +52,11 @@ export type ComposeInputObjectTypeConfig = {
   description?: ?string,
 };
 
+export type InputTypeComposerDefinition =
+  | TypeAsString
+  | ComposeInputObjectTypeConfig
+  | GraphQLInputObjectType;
+
 export class InputTypeComposer {
   gqType: GraphQLInputObjectTypeExtended;
 
@@ -61,25 +66,21 @@ export class InputTypeComposer {
     return this.constructor.schemaComposer;
   }
 
-  static create(
-    opts: TypeAsString | ComposeInputObjectTypeConfig | GraphQLInputObjectType
-  ): InputTypeComposer {
-    const itc = this.createTemp(opts);
+  static create(typeDef: InputTypeComposerDefinition): InputTypeComposer {
+    const itc = this.createTemp(typeDef);
     this.schemaComposer.add(itc);
     return itc;
   }
 
-  static createTemp(
-    opts: TypeAsString | ComposeInputObjectTypeConfig | GraphQLInputObjectType
-  ): InputTypeComposer {
+  static createTemp(typeDef: InputTypeComposerDefinition): InputTypeComposer {
     if (!this.schemaComposer) {
       throw new Error('Class<InputTypeComposer> must be created by a SchemaComposer.');
     }
 
     let ITC;
 
-    if (isString(opts)) {
-      const typeName: string = opts;
+    if (isString(typeDef)) {
+      const typeName: string = typeDef;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
         ITC = new this.schemaComposer.InputTypeComposer(
@@ -98,19 +99,19 @@ export class InputTypeComposer {
         }
         ITC = new this.schemaComposer.InputTypeComposer(type);
       }
-    } else if (opts instanceof GraphQLInputObjectType) {
-      ITC = new this.schemaComposer.InputTypeComposer(opts);
-    } else if (isObject(opts)) {
-      const fields = opts.fields;
+    } else if (typeDef instanceof GraphQLInputObjectType) {
+      ITC = new this.schemaComposer.InputTypeComposer(typeDef);
+    } else if (isObject(typeDef)) {
+      const fields = typeDef.fields;
       const type = new GraphQLInputObjectType({
-        name: opts.name,
-        description: opts.description,
+        name: typeDef.name,
+        description: typeDef.description,
         fields: isFunction(fields)
-          ? () => resolveInputConfigMapAsThunk(this.schemaComposer, (fields(): any), opts.name)
+          ? () => resolveInputConfigMapAsThunk(this.schemaComposer, (fields(): any), typeDef.name)
           : () => ({}),
       });
       ITC = new this.schemaComposer.InputTypeComposer(type);
-      if (isObject(opts.fields)) ITC.addFields(opts.fields);
+      if (isObject(typeDef.fields)) ITC.addFields(typeDef.fields);
     } else {
       throw new Error(
         'You should provide InputObjectConfig or string with type name to InputTypeComposer.create(opts)'

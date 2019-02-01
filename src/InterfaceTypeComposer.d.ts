@@ -51,6 +51,10 @@ export type ComposeInterfaceTypeConfig<TSource, TContext> = {
   description?: string | null;
 };
 
+export type InterfaceTypeComposerDefinition<TContext> =
+  | TypeAsString
+  | ComposeInterfaceTypeConfig<any, TContext>;
+
 export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public static schemaComposer: SchemaComposer<any>;
   public schemaComposer: SchemaComposer<TSource>;
@@ -60,17 +64,11 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public constructor(gqType: GraphQLInterfaceType);
 
   public static create<TSrc = any, TCtx = any>(
-    opts:
-      | TypeAsString
-      | ComposeInterfaceTypeConfig<TSrc, TCtx>
-      | GraphQLInterfaceType,
+    typeDef: InterfaceTypeComposerDefinition<TCtx>,
   ): InterfaceTypeComposer<TSrc, TCtx>;
 
   public static createTemp<TSrc = any, TCtx = any>(
-    opts:
-      | TypeAsString
-      | ComposeInterfaceTypeConfig<TSrc, TCtx>
-      | GraphQLInterfaceType,
+    typeDef: InterfaceTypeComposerDefinition<TCtx>,
   ): InterfaceTypeComposer<TSrc, TCtx>;
 
   // -----------------------------------------------
