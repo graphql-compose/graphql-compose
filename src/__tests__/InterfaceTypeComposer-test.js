@@ -8,6 +8,7 @@ import {
   GraphQLFloat,
   GraphQLBoolean,
   GraphQLInterfaceType,
+  graphql,
 } from '../graphql';
 import { InterfaceTypeComposer, schemaComposer, TypeComposer } from '..';
 import { graphqlVersion } from '../utils/graphqlVersion';
@@ -630,6 +631,58 @@ describe('InterfaceTypeComposer', () => {
       expect(iftc.hasTypeResolver(PersonTC)).toBeTruthy();
       iftc.removeTypeResolver(PersonTC);
       expect(iftc.hasTypeResolver(PersonTC)).toBeFalsy();
+    });
+
+    describe('check native resolveType methods', () => {
+      it('check methods setResolveType() getResolveType()', () => {
+        const iftc1 = schemaComposer.createInterfaceTC(`interface F { f: Int }`);
+        const resolveType = () => 'A';
+        expect(iftc1.getResolveType()).toBeUndefined();
+        iftc1.setResolveType(resolveType);
+        expect(iftc1.getResolveType()).toBe(resolveType);
+      });
+
+      it('integration test', async () => {
+        const iftc1 = schemaComposer.createInterfaceTC(`interface F { f: Int }`);
+        const aTC = schemaComposer.createTC('type A implements F { a: Int, f: Int }');
+        const bTC = schemaComposer.createTC('type B implements F { b: Int, f: Int }');
+        const resolveType = value => {
+          if (value) {
+            if (value.a) return 'A';
+            else if (value.b) return 'B';
+          }
+          return null;
+        };
+
+        iftc1.setResolveType(resolveType);
+        schemaComposer.addSchemaMustHaveType(aTC);
+        schemaComposer.addSchemaMustHaveType(bTC);
+        schemaComposer.Query.addFields({
+          check: {
+            type: '[F]',
+            resolve: () => [{ f: 'A', a: 1 }, { f: 'B', b: 2 }, { f: 'C', c: 3 }],
+          },
+        });
+        const res = await graphql(
+          schemaComposer.buildSchema(),
+          `
+            query {
+              check {
+                __typename
+                ... on A {
+                  a
+                }
+                ... on B {
+                  b
+                }
+              }
+            }
+          `
+        );
+        expect(res.data).toEqual({
+          check: [{ __typename: 'A', a: 1 }, { __typename: 'B', b: 2 }, null],
+        });
+      });
     });
   });
 });
