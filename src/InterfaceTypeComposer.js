@@ -486,6 +486,15 @@ export class InterfaceTypeComposer<TContext> {
   // ResolveType methods
   // -----------------------------------------------
 
+  getResolveType(): ?GraphQLTypeResolver<any, TContext> {
+    return (this.gqType.resolveType: any);
+  }
+
+  setResolveType(fn: ?GraphQLTypeResolver<any, TContext>): InterfaceTypeComposer<TContext> {
+    this.gqType.resolveType = fn;
+    return this;
+  }
+
   hasTypeResolver(type: TypeComposer<TContext> | GraphQLObjectType): boolean {
     const typeResolversMap = this.getTypeResolvers();
     return typeResolversMap.has(type);
@@ -570,7 +579,7 @@ export class InterfaceTypeComposer<TContext> {
       };
     }
 
-    this.gqType.resolveType = resolveType;
+    this.setResolveType(resolveType);
     return this;
   }
 
