@@ -111,6 +111,12 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   // ResolveType methods
   // -----------------------------------------------
 
+  public getResolveType(): GraphQLTypeResolver<any, TContext> | null | void;
+
+  public setResolveType(
+    fn: GraphQLTypeResolver<any, TContext> | null | void,
+  ): this;
+
   public hasTypeResolver(
     type: TypeComposer<any, TContext> | GraphQLObjectType,
   ): boolean;

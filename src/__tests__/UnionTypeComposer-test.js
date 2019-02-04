@@ -395,5 +395,57 @@ describe('UnionTypeComposer', () => {
       utc.removeTypeResolver(PersonTC);
       expect(utc.hasTypeResolver(PersonTC)).toBeFalsy();
     });
+
+    describe('check native resolveType methods', () => {
+      it('check methods setResolveType() getResolveType()', () => {
+        const utc1 = schemaComposer.createUnionTC(`union U = A | B`);
+        const resolveType = () => 'A';
+        expect(utc1.getResolveType()).toBeUndefined();
+        utc1.setResolveType(resolveType);
+        expect(utc1.getResolveType()).toBe(resolveType);
+      });
+
+      it('integration test', async () => {
+        const aTC = schemaComposer.createTC('type A { a: Int }');
+        const bTC = schemaComposer.createTC('type B { b: Int }');
+        const utc1 = schemaComposer.createUnionTC(`union U = A | B`);
+        const resolveType = value => {
+          if (value) {
+            if (value.a) return 'A';
+            else if (value.b) return 'B';
+          }
+          return null;
+        };
+
+        utc1.setResolveType(resolveType);
+        schemaComposer.addSchemaMustHaveType(aTC);
+        schemaComposer.addSchemaMustHaveType(bTC);
+        schemaComposer.Query.addFields({
+          check: {
+            type: '[U]',
+            resolve: () => [{ a: 1 }, { b: 2 }, { c: 3 }],
+          },
+        });
+        const res = await graphql(
+          schemaComposer.buildSchema(),
+          `
+            query {
+              check {
+                __typename
+                ... on A {
+                  a
+                }
+                ... on B {
+                  b
+                }
+              }
+            }
+          `
+        );
+        expect(res.data).toEqual({
+          check: [{ __typename: 'A', a: 1 }, { __typename: 'B', b: 2 }, null],
+        });
+      });
+    });
   });
 });
