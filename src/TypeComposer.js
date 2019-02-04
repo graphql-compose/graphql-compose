@@ -659,6 +659,11 @@ export class TypeComposer<TContext> {
     return this.getInputTypeComposer();
   }
 
+  removeInputTypeComposer(): TypeComposer<TContext> {
+    this.gqType._gqcInputTypeComposer = undefined;
+    return this;
+  }
+
   // -----------------------------------------------
   // Resolver methods
   // -----------------------------------------------

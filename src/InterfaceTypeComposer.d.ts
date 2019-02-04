@@ -166,6 +166,8 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public getITC(): InputTypeComposer;
 
+  public removeInputTypeComposer(): this;
+
   // -----------------------------------------------
   // ResolveType methods
   // -----------------------------------------------

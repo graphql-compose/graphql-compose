@@ -9,9 +9,16 @@ import {
   GraphQLFloat,
   GraphQLBoolean,
   GraphQLInterfaceType,
+  GraphQLInputObjectType,
   graphql,
 } from '../graphql';
-import { TypeComposer, Resolver, schemaComposer, InterfaceTypeComposer } from '..';
+import {
+  TypeComposer,
+  InputTypeComposer,
+  Resolver,
+  schemaComposer,
+  InterfaceTypeComposer,
+} from '..';
 import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
@@ -938,6 +945,40 @@ describe('TypeComposer', () => {
       expect(res.data).toEqual({
         check: [{ __typename: 'A', a: 1 }, { __typename: 'B', b: 2 }, null],
       });
+    });
+  });
+
+  describe('InputType convert methods', () => {
+    it('getInputType()', () => {
+      const input = tc.getInputType();
+      expect(input).toBeInstanceOf(GraphQLInputObjectType);
+      // must return the same instance!
+      expect(input).toBe(tc.getInputType());
+    });
+
+    it('hasInputTypeComposer()', () => {
+      expect(tc.hasInputTypeComposer()).toBeFalsy();
+      const input = tc.getInputType();
+      expect(input).toBeInstanceOf(GraphQLInputObjectType);
+      expect(tc.hasInputTypeComposer()).toBeTruthy();
+    });
+
+    it('getInputTypeComposer()', () => {
+      const itc = tc.getInputTypeComposer();
+      expect(itc).toBeInstanceOf(InputTypeComposer);
+      // must return the same instance!
+      expect(itc).toBe(tc.getInputTypeComposer());
+    });
+
+    it('getITC()', () => {
+      expect(tc.getITC()).toBe(tc.getInputTypeComposer());
+    });
+
+    it('removeInputTypeComposer()', () => {
+      const itc1 = tc.getInputTypeComposer();
+      tc.removeInputTypeComposer();
+      const itc2 = tc.getInputTypeComposer();
+      expect(itc1).not.toBe(itc2);
     });
   });
 });
