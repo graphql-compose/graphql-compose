@@ -353,6 +353,8 @@ export class TypeComposer<TSource = any, TContext = any> {
 
   public getITC(): InputTypeComposer;
 
+  public removeInputTypeComposer(): this;
+
   // -----------------------------------------------
   // Resolver methods
   // -----------------------------------------------
