@@ -625,6 +625,15 @@ export class TypeComposer<TContext> {
     return cloned;
   }
 
+  getIsTypeOf(): ?GraphQLIsTypeOfFn<any, TContext> {
+    return this.gqType.isTypeOf;
+  }
+
+  setIsTypeOf(fn: ?GraphQLIsTypeOfFn<any, any>): TypeComposer<TContext> {
+    this.gqType.isTypeOf = fn;
+    return this;
+  }
+
   // -----------------------------------------------
   // InputType methods
   // -----------------------------------------------

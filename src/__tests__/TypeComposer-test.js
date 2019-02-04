@@ -9,6 +9,7 @@ import {
   GraphQLFloat,
   GraphQLBoolean,
   GraphQLInterfaceType,
+  graphql,
 } from '../graphql';
 import { TypeComposer, Resolver, schemaComposer, InterfaceTypeComposer } from '..';
 import { graphqlVersion } from '../utils/graphqlVersion';
@@ -890,6 +891,53 @@ describe('TypeComposer', () => {
       expect(() => {
         myTC.getFieldTC('list');
       }).toThrow('field should be ObjectType');
+    });
+  });
+
+  describe('check isTypeOf methods', () => {
+    it('check methods setIstypeOf() getIstypeOf()', () => {
+      const tc1 = schemaComposer.createTC('type A { f: Int }');
+      expect(tc1.getIsTypeOf()).toBeUndefined();
+      const isTypeOf = () => true;
+      tc1.setIsTypeOf(isTypeOf);
+      expect(tc1.getIsTypeOf()).toBe(isTypeOf);
+    });
+
+    it('integration test', async () => {
+      const tc1 = schemaComposer.createTC('type A { a: Int }');
+      tc1.setIsTypeOf(source => {
+        return source && source.kind === 'A';
+      });
+      const tc2 = schemaComposer.createTC('type B { b: Int }');
+      tc2.setIsTypeOf(source => {
+        return source && source.kind === 'B';
+      });
+      schemaComposer.createUnionTC('union MyUnion = A | B');
+      schemaComposer.Query.addFields({
+        check: {
+          type: '[MyUnion]',
+          resolve: () => [{ kind: 'A', a: 1 }, { kind: 'B', b: 2 }, { kind: 'C', c: 3 }],
+        },
+      });
+      const res = await graphql(
+        schemaComposer.buildSchema(),
+        `
+          query {
+            check {
+              __typename
+              ... on A {
+                a
+              }
+              ... on B {
+                b
+              }
+            }
+          }
+        `
+      );
+      expect(res.data).toEqual({
+        check: [{ __typename: 'A', a: 1 }, { __typename: 'B', b: 2 }, null],
+      });
     });
   });
 });

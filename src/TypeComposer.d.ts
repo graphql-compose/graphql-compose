@@ -337,6 +337,10 @@ export class TypeComposer<TSource = any, TContext = any> {
     newTypeName: string,
   ): TypeComposer<TCloneSource, TContext>;
 
+  public getIsTypeOf(): GraphQLIsTypeOfFn<any, TContext> | null | void;
+
+  public setIsTypeOf(fn: GraphQLIsTypeOfFn<any, any> | null | void): this;
+
   // -----------------------------------------------
   // InputType methods
   // -----------------------------------------------
