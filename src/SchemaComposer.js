@@ -22,6 +22,7 @@ import {
 } from './UnionTypeComposer';
 import { Resolver as _Resolver } from './Resolver';
 import { isFunction } from './utils/is';
+import { inspect } from './utils/misc';
 import { getGraphQLType } from './utils/typeHelpers';
 import {
   GraphQLSchema,
@@ -30,8 +31,8 @@ import {
   GraphQLInterfaceType,
   GraphQLUnionType,
   GraphQLEnumType,
+  GraphQLDirective,
   type GraphQLNamedType,
-  type GraphQLDirective,
   type SchemaDefinitionNode,
   type GraphQLResolveInfo,
 } from './graphql';
@@ -70,6 +71,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   UnionTypeComposer: Class<_UnionTypeComposer<TContext>>;
   Resolver: Class<_Resolver<any, TContext>>;
   _schemaMustHaveTypes: Array<MustHaveTypes<TContext>> = [];
+  _directives: Array<GraphQLDirective> = [];
 
   constructor(): SchemaComposer<TContext> {
     super();
@@ -174,7 +176,12 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
       ...(extraConfig && Array.isArray(extraConfig.types) ? [...extraConfig.types] : []),
     ];
 
-    return new GraphQLSchema({ ...roots, ...extraConfig, types });
+    const directives = [
+      ...this._directives,
+      ...(extraConfig && Array.isArray(extraConfig.directives) ? [...extraConfig.directives] : []),
+    ];
+
+    return new GraphQLSchema({ ...roots, ...extraConfig, types, directives });
   }
 
   addSchemaMustHaveType(type: MustHaveTypes<TContext>): SchemaComposer<TContext> {
@@ -285,6 +292,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   clear(): void {
     super.clear();
     this._schemaMustHaveTypes = [];
+    this._directives = [];
   }
 
   getTC(typeName: any): _TypeComposer<TContext> {
@@ -369,5 +377,41 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   createUnionTC(typeDef: UnionTypeComposerDefinition<TContext>): _UnionTypeComposer<TContext> {
     return this.UnionTypeComposer.create(typeDef);
+  }
+
+  addDirective(directive: GraphQLDirective): SchemaComposer<TContext> {
+    if (!(directive instanceof GraphQLDirective)) {
+      throw new Error(
+        `You should provide GraphQLDirective to schemaComposer.addDirective(), but recieved ${inspect(
+          directive
+        )}`
+      );
+    }
+    if (!this.hasDirective(directive)) {
+      this._directives.push(directive);
+    }
+    return this;
+  }
+
+  removeDirective(directive: GraphQLDirective): SchemaComposer<TContext> {
+    this._directives = this._directives.filter(o => o !== directive);
+    return this;
+  }
+
+  getDirectives(): Array<GraphQLDirective> {
+    return this._directives;
+  }
+
+  hasDirective(directive: string | GraphQLDirective): boolean {
+    if (!directive) return false;
+
+    if (typeof directive === 'string') {
+      const name = directive.startsWith('@') ? directive.slice(1) : directive;
+      return !!this._directives.find(o => o.name === name);
+    } else if (directive instanceof GraphQLDirective) {
+      return !!this._directives.find(o => o === directive);
+    }
+
+    return false;
   }
 }

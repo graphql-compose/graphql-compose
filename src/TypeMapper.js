@@ -14,6 +14,7 @@ import type {
   InterfaceTypeDefinitionNode,
   UnionTypeDefinitionNode,
   SchemaDefinitionNode,
+  DirectiveDefinitionNode,
   TypeNode,
   NamedTypeNode,
   DirectiveNode,
@@ -661,7 +662,9 @@ function parseTypes(
   for (let i = 0; i < astDocument.definitions.length; i++) {
     const def = astDocument.definitions[i];
     const type = makeSchemaDef(def, schema);
-    if (type) types[i] = type;
+    if (type) {
+      types[i] = type;
+    }
   }
   return types;
 }
@@ -714,8 +717,11 @@ function makeSchemaDef(def, schema: SchemaComposer<any>, typeStorage: ?TypeStora
     case Kind.SCHEMA_DEFINITION:
       checkSchemaDef(def);
       return null;
-    case Kind.DIRECTIVE_DEFINITION:
+    case Kind.DIRECTIVE_DEFINITION: {
+      const directive = makeDirectiveDef(def, schema, typeStorage);
+      if (directive) schema.addDirective(directive);
       return null;
+    }
     case Kind.INPUT_OBJECT_TYPE_DEFINITION:
       return makeInputObjectDef(def, schema, typeStorage);
     default:
@@ -804,8 +810,23 @@ function makeInputObjectDef(
   });
 }
 
+function makeDirectiveDef(
+  def: DirectiveDefinitionNode,
+  schema: SchemaComposer<any>,
+  typeStorage: ?TypeStorage<any>
+): GraphQLDirective {
+  const locations = def.locations.map(({ value }) => (value: any));
+
+  return new GraphQLDirective({
+    name: def.name.value,
+    description: getDescription(def),
+    locations,
+    args: makeInputValues(def.arguments, schema, typeStorage),
+    astNode: def,
+  });
+}
+
 function makeScalarDef(def: ScalarTypeDefinitionNode) {
-  def.description;
   return new GraphQLScalarType({
     name: def.name.value,
     description: getDescription(def),

@@ -65,6 +65,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   public Subscription: TypeComposer<any, TContext>;
 
   protected _schemaMustHaveTypes: Array<MustHaveTypes<TContext>>;
+  protected _directives: GraphQLDirective[];
 
   public constructor();
 
@@ -140,4 +141,12 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   public createUnionTC(
     typeDef: UnionTypeComposerDefinition<TContext>,
   ): UnionTypeComposer<TContext>;
+
+  public addDirective(directive: GraphQLDirective): this;
+
+  public removeDirective(directive: GraphQLDirective): this;
+
+  public getDirectives(): GraphQLDirective[];
+
+  public hasDirective(directive: string | GraphQLDirective): boolean;
 }

@@ -13,6 +13,8 @@ import {
   GraphQLInputObjectType,
   GraphQLInterfaceType,
   GraphQLEnumType,
+  GraphQLDirective,
+  DirectiveLocation,
 } from '../graphql';
 
 describe('SchemaComposer', () => {
@@ -570,6 +572,80 @@ describe('SchemaComposer', () => {
       const tc = sc.createUnionTC(`union A = AA | BB`);
       expect(tc).toBeInstanceOf(UnionTypeComposer);
       expect(tc.hasType('AA')).toBeTruthy();
+    });
+  });
+
+  describe('works with directives', () => {
+    const d1 = new GraphQLDirective({
+      name: 'myDirective1',
+      locations: [DirectiveLocation.INPUT_FIELD_DEFINITION],
+      args: {
+        value: {
+          type: GraphQLString,
+        },
+      },
+    });
+
+    const d2 = new GraphQLDirective({
+      name: 'myDirective2',
+      locations: [DirectiveLocation.INPUT_FIELD_DEFINITION],
+      args: {
+        value: {
+          type: GraphQLString,
+        },
+      },
+    });
+
+    it('addDirective()', () => {
+      const sc = new SchemaComposer();
+      sc.addDirective(d1);
+      expect(sc.getDirectives()).toHaveLength(1);
+      sc.addDirective(d1);
+      expect(sc.getDirectives()).toHaveLength(1);
+      sc.addDirective(d2);
+      expect(sc.getDirectives()).toHaveLength(2);
+    });
+
+    it('removeDirective()', () => {
+      const sc = new SchemaComposer();
+      sc.addDirective(d1);
+      sc.addDirective(d2);
+      expect(sc.getDirectives()).toHaveLength(2);
+      sc.removeDirective(d1);
+      expect(sc.getDirectives()).toHaveLength(1);
+      sc.removeDirective(d1);
+      expect(sc.getDirectives()).toHaveLength(1);
+      sc.removeDirective(d2);
+      expect(sc.getDirectives()).toHaveLength(0);
+    });
+
+    it('addTypeDefs() should add directives', () => {
+      const sc = new SchemaComposer();
+      expect(sc.getDirectives()).toHaveLength(0);
+      sc.addTypeDefs(`
+        directive @customDirective(level: Int!) on FIELD
+      `);
+      expect(sc.getDirectives()).toHaveLength(1);
+      expect(sc.getDirectives()[0]).toBeInstanceOf(GraphQLDirective);
+    });
+
+    it('clear() should clear directives', () => {
+      const sc = new SchemaComposer();
+      sc.addDirective(d1);
+      expect(sc.getDirectives()).toHaveLength(1);
+      sc.clear();
+      expect(sc.getDirectives()).toHaveLength(0);
+    });
+
+    it('hasDirective()', () => {
+      const sc = new SchemaComposer();
+      sc.addDirective(d1);
+      expect(sc.hasDirective(d1)).toBeTruthy();
+      expect(sc.hasDirective('@myDirective1')).toBeTruthy();
+      expect(sc.hasDirective('myDirective1')).toBeTruthy();
+
+      expect(sc.hasDirective(d2)).toBeFalsy();
+      expect(sc.hasDirective('myDirective2')).toBeFalsy();
     });
   });
 });
