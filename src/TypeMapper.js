@@ -714,6 +714,8 @@ function makeSchemaDef(def, schema: SchemaComposer<any>, typeStorage: ?TypeStora
     case Kind.SCHEMA_DEFINITION:
       checkSchemaDef(def);
       return null;
+    case Kind.DIRECTIVE_DEFINITION:
+      return null;
     case Kind.INPUT_OBJECT_TYPE_DEFINITION:
       return makeInputObjectDef(def, schema, typeStorage);
     default:
