@@ -32,6 +32,9 @@ import {
   GraphQLUnionType,
   GraphQLEnumType,
   GraphQLDirective,
+  GraphQLSkipDirective,
+  GraphQLIncludeDirective,
+  GraphQLDeprecatedDirective,
   type GraphQLNamedType,
   type SchemaDefinitionNode,
   type GraphQLResolveInfo,
@@ -62,6 +65,12 @@ type AddResolveMethods<TContext> = {
   },
 };
 
+const BUILT_IN_DIRECTIVES = [
+  GraphQLSkipDirective,
+  GraphQLIncludeDirective,
+  GraphQLDeprecatedDirective,
+];
+
 export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   typeMapper: TypeMapper<TContext>;
   TypeComposer: Class<_TypeComposer<TContext>>;
@@ -71,7 +80,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   UnionTypeComposer: Class<_UnionTypeComposer<TContext>>;
   Resolver: Class<_Resolver<any, TContext>>;
   _schemaMustHaveTypes: Array<MustHaveTypes<TContext>> = [];
-  _directives: Array<GraphQLDirective> = [];
+  _directives: Array<GraphQLDirective> = BUILT_IN_DIRECTIVES;
 
   constructor(): SchemaComposer<TContext> {
     super();
@@ -292,7 +301,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   clear(): void {
     super.clear();
     this._schemaMustHaveTypes = [];
-    this._directives = [];
+    this._directives = BUILT_IN_DIRECTIVES;
   }
 
   getTC(typeName: any): _TypeComposer<TContext> {

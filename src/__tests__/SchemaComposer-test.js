@@ -15,6 +15,9 @@ import {
   GraphQLEnumType,
   GraphQLDirective,
   DirectiveLocation,
+  GraphQLSkipDirective,
+  GraphQLIncludeDirective,
+  GraphQLDeprecatedDirective,
 } from '../graphql';
 
 describe('SchemaComposer', () => {
@@ -596,8 +599,23 @@ describe('SchemaComposer', () => {
       },
     });
 
+    function removeDefaultDirectives(sc) {
+      sc.removeDirective(GraphQLSkipDirective);
+      sc.removeDirective(GraphQLIncludeDirective);
+      sc.removeDirective(GraphQLDeprecatedDirective);
+    }
+
+    it('has default directives', () => {
+      const sc = new SchemaComposer();
+      expect(sc.hasDirective('@skip')).toBe(true);
+      expect(sc.hasDirective('@include')).toBe(true);
+      expect(sc.hasDirective('@deprecated')).toBe(true);
+      expect(sc.getDirectives()).toHaveLength(3);
+    });
+
     it('addDirective()', () => {
       const sc = new SchemaComposer();
+      removeDefaultDirectives(sc);
       sc.addDirective(d1);
       expect(sc.getDirectives()).toHaveLength(1);
       sc.addDirective(d1);
@@ -608,6 +626,7 @@ describe('SchemaComposer', () => {
 
     it('removeDirective()', () => {
       const sc = new SchemaComposer();
+      removeDefaultDirectives(sc);
       sc.addDirective(d1);
       sc.addDirective(d2);
       expect(sc.getDirectives()).toHaveLength(2);
@@ -621,6 +640,7 @@ describe('SchemaComposer', () => {
 
     it('addTypeDefs() should add directives', () => {
       const sc = new SchemaComposer();
+      removeDefaultDirectives(sc);
       expect(sc.getDirectives()).toHaveLength(0);
       sc.addTypeDefs(`
         directive @customDirective(level: Int!) on FIELD
@@ -629,16 +649,21 @@ describe('SchemaComposer', () => {
       expect(sc.getDirectives()[0]).toBeInstanceOf(GraphQLDirective);
     });
 
-    it('clear() should clear directives', () => {
+    it('clear() should clear directives and restore defaults', () => {
       const sc = new SchemaComposer();
+      removeDefaultDirectives(sc);
       sc.addDirective(d1);
       expect(sc.getDirectives()).toHaveLength(1);
       sc.clear();
-      expect(sc.getDirectives()).toHaveLength(0);
+      expect(sc.hasDirective('@skip')).toBe(true);
+      expect(sc.hasDirective('@include')).toBe(true);
+      expect(sc.hasDirective('@deprecated')).toBe(true);
+      expect(sc.getDirectives()).toHaveLength(3);
     });
 
     it('hasDirective()', () => {
       const sc = new SchemaComposer();
+      removeDefaultDirectives(sc);
       sc.addDirective(d1);
       expect(sc.hasDirective(d1)).toBeTruthy();
       expect(sc.hasDirective('@myDirective1')).toBeTruthy();
