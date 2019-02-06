@@ -30,6 +30,7 @@ import {
   type ResolverOpts,
   type ResolverNextRpCb,
   type ResolverWrapCb,
+  type ResolverMiddleware,
 } from './Resolver';
 import type { SchemaComposer } from './SchemaComposer';
 import { resolveMaybeThunk, upperFirst, inspect } from './utils/misc';
@@ -682,12 +683,21 @@ export class TypeComposer<TContext> {
     return this.gqType._gqcResolvers.has(name);
   }
 
-  getResolver(name: string): Resolver<any, TContext> {
+  getResolver(
+    name: string,
+    middlewares?: Array<ResolverMiddleware<any, TContext>>
+  ): Resolver<any, TContext> {
     if (!this.hasResolver(name)) {
       throw new Error(`Type ${this.getTypeName()} does not have resolver with name '${name}'`);
     }
     const resolverMap: any = this.gqType._gqcResolvers;
-    return resolverMap.get(name);
+    const resolver = resolverMap.get(name);
+
+    if (Array.isArray(middlewares)) {
+      return resolver.withMiddlewares(middlewares);
+    }
+
+    return resolver;
   }
 
   setResolver(name: string, resolver: Resolver<any, TContext>): TypeComposer<TContext> {

@@ -24,6 +24,7 @@ import {
   ResolverNextRpCb,
   ResolverOpts,
   ResolverWrapCb,
+  ResolverMiddleware,
 } from './Resolver';
 import { SchemaComposer } from './SchemaComposer';
 import { TypeAsString } from './TypeMapper';
@@ -365,6 +366,7 @@ export class TypeComposer<TSource = any, TContext = any> {
 
   public getResolver<TResolverSource = any, TArgs = any>(
     name: string,
+    middlewares?: Array<ResolverMiddleware<TResolverSource, TContext, TArgs>>,
   ): Resolver<TResolverSource, TContext, TArgs>;
 
   public setResolver<TResolverSource = any, TArgs = any>(

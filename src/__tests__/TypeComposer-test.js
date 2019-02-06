@@ -645,6 +645,32 @@ describe('TypeComposer', () => {
       expect(tc.getResolver('update').getArgNames()).toEqual(['a', 'b']);
       expect(tc.getResolver('updateExt').getArgNames()).toEqual(['a', 'b', 'c']);
     });
+
+    it('getResolver() with middlewares', async () => {
+      const log = [];
+      const mw1 = async (resolve, source, args, context, info) => {
+        log.push('m1.before');
+        const res = await resolve(source, args, context, info);
+        log.push('m1.after');
+        return res;
+      };
+      const mw2 = async (resolve, source, args, context, info) => {
+        log.push('m2.before');
+        const res = await resolve(source, args, context, info);
+        log.push('m2.after');
+        return res;
+      };
+
+      tc.addResolver({
+        name: 'update',
+        resolve: () => {
+          log.push('call update');
+          return '123';
+        },
+      });
+      expect(await tc.getResolver('update', [mw1, mw2]).resolve({})).toBe('123');
+      expect(log).toEqual(['m1.before', 'm2.before', 'call update', 'm2.after', 'm1.after']);
+    });
   });
 
   describe('addRelation()', () => {
