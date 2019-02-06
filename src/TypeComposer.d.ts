@@ -350,6 +350,8 @@ export class TypeComposer<TSource = any, TContext = any> {
 
   public hasInputTypeComposer(): boolean;
 
+  public setInputTypeComposer(itc: InputTypeComposer): this;
+
   public getInputTypeComposer(): InputTypeComposer;
 
   public getITC(): InputTypeComposer;

@@ -989,6 +989,13 @@ describe('TypeComposer', () => {
       expect(tc.hasInputTypeComposer()).toBeTruthy();
     });
 
+    it('setInputTypeComposer()', () => {
+      const itc1 = InputTypeComposer.createTemp(`Input`);
+      tc.setInputTypeComposer(itc1);
+      const itc2 = tc.getInputTypeComposer();
+      expect(itc1).toBe(itc2);
+    });
+
     it('getInputTypeComposer()', () => {
       const itc = tc.getInputTypeComposer();
       expect(itc).toBeInstanceOf(InputTypeComposer);

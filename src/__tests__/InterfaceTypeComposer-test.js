@@ -702,6 +702,13 @@ describe('InterfaceTypeComposer', () => {
       expect(iftc.hasInputTypeComposer()).toBeTruthy();
     });
 
+    it('setInputTypeComposer()', () => {
+      const itc1 = InputTypeComposer.createTemp(`Input`);
+      iftc.setInputTypeComposer(itc1);
+      const itc2 = iftc.getInputTypeComposer();
+      expect(itc1).toBe(itc2);
+    });
+
     it('getInputTypeComposer()', () => {
       const itc = iftc.getInputTypeComposer();
       expect(itc).toBeInstanceOf(InputTypeComposer);
