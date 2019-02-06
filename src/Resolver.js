@@ -36,7 +36,7 @@ import {
   resolveOutputConfigAsThunk,
   resolveArgConfigAsThunk,
 } from './utils/configAsThunk';
-import { only, clearName } from './utils/misc';
+import { only, clearName, inspect } from './utils/misc';
 import { isFunction, isString } from './utils/is';
 import filterByDotPaths from './utils/filterByDotPaths';
 import { getProjectionFromAST } from './utils/projection';
@@ -126,6 +126,14 @@ export type ResolveDebugOpts = {
   depth?: number,
   colors?: boolean,
 };
+
+export type ResolverMiddleware<TSource, TContext> = (
+  resolve: (source: TSource, args: Object, context: TContext, info: GraphQLResolveInfo) => any,
+  source: TSource,
+  args: Object,
+  context: TContext,
+  info: GraphQLResolveInfo
+) => any;
 
 export class Resolver<TSource, TContext> {
   static schemaComposer: SchemaComposer<TContext>;
@@ -554,6 +562,46 @@ export class Resolver<TSource, TContext> {
   // -----------------------------------------------
   // Wrap methods
   // -----------------------------------------------
+
+  withMiddlewares(
+    middlewares: Array<ResolverMiddleware<TSource, TContext>>
+  ): Resolver<TSource, TContext> {
+    if (!Array.isArray(middlewares)) {
+      throw new Error(
+        `You should provide array of middlewares '(resolve, source, args, context, info) => any', but provided ${inspect(
+          middlewares
+        )}.`
+      );
+    }
+
+    let resolver = this;
+    middlewares.reverse().forEach(mw => {
+      let name;
+      if (mw.name) {
+        name = mw.name;
+      } else if (mw.constructor && mw.constructor.name) {
+        name = mw.constructor.name;
+      } else {
+        name = 'middleware';
+      }
+      const newResolver = this.clone({ name, parent: resolver });
+      const resolve = resolver.getResolve();
+      newResolver.setResolve(rp =>
+        mw(
+          (source, args, context, info) => {
+            return resolve({ ...rp, source, args, context, info });
+          },
+          rp.source,
+          rp.args,
+          rp.context,
+          rp.info
+        )
+      );
+      resolver = newResolver;
+    });
+
+    return resolver;
+  }
 
   wrap(
     cb: ?ResolverWrapCb<TSource, TContext>,

@@ -1025,4 +1025,39 @@ describe('Resolver', () => {
       expect(() => r.getTypeComposer()).toThrow();
     });
   });
+
+  describe('withMiddlewares()', () => {
+    let r;
+    const log = [];
+    beforeEach(() => {
+      r = new Resolver({
+        name: 'find',
+        type: 'String',
+        displayName: 'User.find()',
+        resolve: () => {
+          log.push('call User.find()');
+          return 'users result';
+        },
+      });
+    });
+
+    it('should apply middlewares', async () => {
+      const mw1 = async (resolve, source, args, context, info) => {
+        log.push('m1.before');
+        const res = await resolve(source, args, context, info);
+        log.push('m1.after');
+        return res;
+      };
+      const mw2 = async (resolve, source, args, context, info) => {
+        log.push('m2.before');
+        const res = await resolve(source, args, context, info);
+        log.push('m2.after');
+        return res;
+      };
+
+      const res = await r.withMiddlewares([mw1, mw2]).resolve({});
+      expect(res).toBe('users result');
+      expect(log).toEqual(['m1.before', 'm2.before', 'call User.find()', 'm2.after', 'm1.after']);
+    });
+  });
 });

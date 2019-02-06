@@ -3,6 +3,7 @@ import {
   GraphQLFieldConfig,
   GraphQLInputType,
   GraphQLOutputType,
+  GraphQLResolveInfo,
 } from 'graphql';
 import * as graphql from './graphql';
 import { InputTypeComposer } from './InputTypeComposer';
@@ -102,6 +103,19 @@ export type ResolveDebugOpts = {
   colors?: boolean;
 };
 
+export type ResolverMiddleware<TSource, TContext, TArgs> = (
+  resolve: (
+    source: TSource,
+    args: TArgs,
+    context: TContext,
+    info: GraphQLResolveInfo,
+  ) => any,
+  source: TSource,
+  args: TArgs,
+  context: TContext,
+  info: GraphQLResolveInfo,
+) => any;
+
 export class Resolver<TSource = any, TContext = any, TArgs = any> {
   public static schemaComposer: SchemaComposer<any>;
   public schemaComposer: SchemaComposer<TContext>;
@@ -188,6 +202,10 @@ export class Resolver<TSource = any, TContext = any, TArgs = any> {
   // -----------------------------------------------
   // Wrap methods
   // -----------------------------------------------
+
+  public withMiddlewares(
+    middlewares: Array<ResolverMiddleware<TSource, TContext, TArgs>>,
+  ): Resolver<TSource, TContext, TArgs>;
 
   public wrap<TCSource = TSource, TCArgs = TArgs>(
     cb?: ResolverWrapCb<TCSource, TSource, TContext, TCArgs, TArgs>,
