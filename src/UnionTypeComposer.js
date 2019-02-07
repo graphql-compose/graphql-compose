@@ -11,7 +11,6 @@ import type { TypeAsString, ComposeObjectType } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
 import type { Thunk } from './utils/definitions';
 import { resolveTypeArrayAsThunk } from './utils/configAsThunk';
-// import { typeByPath } from './utils/typeByPath';
 import { getGraphQLType, getComposeTypeName } from './utils/typeHelpers';
 import { graphqlVersion } from './utils/graphqlVersion';
 
@@ -126,7 +125,7 @@ export class UnionTypeComposer<TContext> {
   // Union Types methods
   // -----------------------------------------------
 
-  hasType(name: mixed): boolean {
+  hasType(name: string | GraphQLObjectType | TypeComposer<TContext>): boolean {
     const nameAsString = getComposeTypeName(name);
     return this.getTypeNames().includes(nameAsString);
   }

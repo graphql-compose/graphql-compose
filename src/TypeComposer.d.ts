@@ -413,7 +413,7 @@ export class TypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public hasInterface(
-    interfaceObj: InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType,
+    iface: string | InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType,
   ): boolean;
 
   public addInterface(

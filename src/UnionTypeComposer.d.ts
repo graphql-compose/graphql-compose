@@ -73,7 +73,9 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   // Union Types methods
   // -----------------------------------------------
 
-  public hasType(name: string): boolean;
+  public hasType(
+    name: string | GraphQLObjectType | TypeComposer<TContext>,
+  ): boolean;
 
   public getTypes(): ComposeTypesArray;
 

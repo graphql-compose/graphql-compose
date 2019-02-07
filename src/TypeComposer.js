@@ -39,6 +39,7 @@ import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './uti
 import { defineFieldMap, defineFieldMapToConfig } from './utils/configToDefine';
 import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath } from './utils/typeByPath';
+import { getComposeTypeName } from './utils/typeHelpers';
 // import { deprecate } from './utils/debug';
 import type { ProjectionType } from './utils/projection';
 import type { ObjMap, Thunk } from './utils/definitions';
@@ -819,8 +820,10 @@ export class TypeComposer<TContext> {
     return this;
   }
 
-  hasInterface(interfaceObj: GraphQLInterfaceType | InterfaceTypeComposer<TContext>): boolean {
-    return this.getInterfaces().indexOf(interfaceObj) > -1;
+  hasInterface(iface: string | GraphQLInterfaceType | InterfaceTypeComposer<TContext>): boolean {
+    const nameAsString = getComposeTypeName(iface);
+    const ifaces = this.getInterfaces();
+    return !!ifaces.find(i => getComposeTypeName(i) === nameAsString);
   }
 
   addInterface(
