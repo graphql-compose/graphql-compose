@@ -14,6 +14,7 @@ import {
   GraphQLObjectType,
   GraphQLOutputType,
   GraphQLResolveInfo,
+  InputValueDefinitionNode,
 } from 'graphql';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
@@ -123,6 +124,7 @@ export type ComposeArgumentConfigAsObject = {
   type: Thunk<ComposeArgumentType> | GraphQLInputType;
   defaultValue?: any;
   description?: string | null;
+  astNode?: InputValueDefinitionNode | null;
 } & { $call?: void };
 
 export type ComposeArgumentConfig =

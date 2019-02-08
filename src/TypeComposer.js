@@ -19,6 +19,8 @@ import type {
   GraphQLIsTypeOfFn,
   GraphQLResolveInfo,
   GraphQLFieldResolver,
+  FieldDefinitionNode,
+  InputValueDefinitionNode,
 } from './graphql';
 import type { InputTypeComposer } from './InputTypeComposer';
 import type { EnumTypeComposer } from './EnumTypeComposer';
@@ -93,7 +95,7 @@ export type ComposeFieldConfigAsObject<TSource, TContext> = {
   +subscribe?: GraphQLFieldResolver<TSource, TContext>,
   +deprecationReason?: ?string,
   +description?: ?string,
-  // +astNode?: any,
+  +astNode?: FieldDefinitionNode | null,
   +[key: string]: any,
 };
 
@@ -129,7 +131,7 @@ export type ComposeArgumentConfigAsObject = {
   +type: Thunk<ComposeArgumentType> | GraphQLInputType,
   +defaultValue?: mixed,
   +description?: ?string,
-  // +astNode?: any,
+  +astNode?: InputValueDefinitionNode | null,
   +[key: string]: any,
 };
 export type ComposePartialArgumentConfigAsObject = {
