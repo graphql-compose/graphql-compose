@@ -365,9 +365,16 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   addResolveMethods(typesFieldsResolve: AddResolveMethods<TContext>): void {
     const typeNames = Object.keys(typesFieldsResolve);
     typeNames.forEach(typeName => {
-      if (typesFieldsResolve[typeName] instanceof GraphQLScalarType) {
-        this.add(typesFieldsResolve[typeName]);
-        return;
+      if (this.get(typeName) instanceof GraphQLScalarType) {
+        const maybeScalar: any = typesFieldsResolve[typeName];
+        if (maybeScalar instanceof GraphQLScalarType) {
+          this.add(maybeScalar);
+          return;
+        }
+        if (typeof maybeScalar.name === 'string' && typeof maybeScalar.serialize === 'function') {
+          this.add(new GraphQLScalarType(maybeScalar));
+          return;
+        }
       }
       const tc = this.getTC(typeName);
       const fieldsResolve = typesFieldsResolve[typeName];

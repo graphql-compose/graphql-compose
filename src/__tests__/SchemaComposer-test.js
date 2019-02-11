@@ -570,6 +570,24 @@ describe('SchemaComposer', () => {
           },
         }),
       });
+      expect(sc.get('Date')).toBeInstanceOf(GraphQLScalarType);
+    });
+
+    it('should add scalar types as configs', () => {
+      const sc = new SchemaComposer();
+      sc.addTypeDefs(`
+        scalar Date
+      `);
+
+      sc.addResolveMethods({
+        Date: ({
+          name: 'Date',
+          serialize(value: any) {
+            return new Date(value).toISOString().slice(0, 10);
+          },
+        }: any),
+      });
+      expect(sc.get('Date')).toBeInstanceOf(GraphQLScalarType);
     });
   });
 
