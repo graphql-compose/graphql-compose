@@ -695,6 +695,15 @@ function typeDefNamed(
   if (typeStorage && typeStorage.has(typeName)) {
     return (typeStorage.get(typeName): any);
   }
+  if (typeName === 'Query') {
+    return schema.Query.getType();
+  }
+  if (typeName === 'Mutation') {
+    return schema.Mutation.getType();
+  }
+  if (typeName === 'Subscription') {
+    return schema.Subscription.getType();
+  }
   throw new Error(`Cannot find type with name '${typeName}' in SchemaComposer.`);
 }
 

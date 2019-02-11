@@ -341,9 +341,23 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   addTypeDefs(typeDefs: string): TypeStorage<GraphQLNamedType> {
     const types = this.typeMapper.parseTypesFromString(typeDefs);
-    types.forEach(type => {
-      this.add((type: any));
+    types.forEach((type: any) => {
+      const name = type.name;
+      if (name !== 'Query' && name !== 'Mutation' && name !== 'Subscription') {
+        this.add((type: any));
+      }
     });
+    if (types.has('Query')) {
+      this.Query.addFields(this.TypeComposer.create((types.get('Query'): any)).getFields());
+    }
+    if (types.has('Mutation')) {
+      this.Mutation.addFields(this.TypeComposer.create((types.get('Mutation'): any)).getFields());
+    }
+    if (types.has('Subscription')) {
+      this.Subscription.addFields(
+        this.TypeComposer.create((types.get('Subscription'): any)).getFields()
+      );
+    }
     return types;
   }
 

@@ -495,6 +495,29 @@ describe('SchemaComposer', () => {
       `);
       expect(sc.getTC('Author').hasFieldArg('some', 'arg')).toBeFalsy();
     });
+
+    it('should merge Root types', () => {
+      const sc = new SchemaComposer();
+      sc.Query.addFields({ field1: 'Int' });
+      sc.Mutation.addFields({ field2: 'Int' });
+      sc.Subscription.addFields({ field3: 'Int' });
+
+      sc.addTypeDefs(`
+        type Query {
+          field4: Int
+        }
+        type Mutation {
+          field5: Int
+        }
+        type Subscription {
+          field6: Int
+        }
+      `);
+
+      expect(sc.Query.getFieldNames()).toEqual(['field1', 'field4']);
+      expect(sc.Mutation.getFieldNames()).toEqual(['field2', 'field5']);
+      expect(sc.Subscription.getFieldNames()).toEqual(['field3', 'field6']);
+    });
   });
 
   describe('addResolveMethods', () => {
