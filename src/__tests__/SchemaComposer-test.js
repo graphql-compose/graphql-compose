@@ -18,6 +18,7 @@ import {
   GraphQLSkipDirective,
   GraphQLIncludeDirective,
   GraphQLDeprecatedDirective,
+  GraphQLScalarType,
 } from '../graphql';
 
 describe('SchemaComposer', () => {
@@ -552,6 +553,22 @@ describe('SchemaComposer', () => {
 
       expect(await graphql(schema, '{ posts { id title votes } }')).toEqual({
         data: { posts: [{ id: 1, title: 'Post title', votes: 10 }] },
+      });
+    });
+
+    it('should add scalar types', () => {
+      const sc = new SchemaComposer();
+      sc.addTypeDefs(`
+        scalar Date
+      `);
+
+      sc.addResolveMethods({
+        Date: new GraphQLScalarType({
+          name: 'Date',
+          serialize(value: any) {
+            return new Date(value).toISOString().slice(0, 10);
+          },
+        }),
       });
     });
   });

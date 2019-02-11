@@ -35,6 +35,7 @@ import {
   GraphQLSkipDirective,
   GraphQLIncludeDirective,
   GraphQLDeprecatedDirective,
+  GraphQLScalarType,
   type GraphQLNamedType,
   type SchemaDefinitionNode,
   type GraphQLResolveInfo,
@@ -364,6 +365,10 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   addResolveMethods(typesFieldsResolve: AddResolveMethods<TContext>): void {
     const typeNames = Object.keys(typesFieldsResolve);
     typeNames.forEach(typeName => {
+      if (typesFieldsResolve[typeName] instanceof GraphQLScalarType) {
+        this.add(typesFieldsResolve[typeName]);
+        return;
+      }
       const tc = this.getTC(typeName);
       const fieldsResolve = typesFieldsResolve[typeName];
       const fieldNames = Object.keys(fieldsResolve);
