@@ -147,10 +147,13 @@ export class TypeMapper<TContext> {
     if (!this.schemaComposer.has(name)) {
       if (name === 'JSON' || name === 'Json') {
         this.schemaComposer.set(name, GraphQLJSON);
+        return GraphQLJSON;
       } else if (name === 'Date') {
         this.schemaComposer.set(name, GraphQLDate);
+        return GraphQLDate;
       } else if (name === 'Buffer') {
         this.schemaComposer.set(name, GraphQLBuffer);
+        return GraphQLBuffer;
       } else {
         return null;
       }

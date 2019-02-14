@@ -571,6 +571,7 @@ describe('SchemaComposer', () => {
         }),
       });
       expect(sc.get('Date')).toBeInstanceOf(GraphQLScalarType);
+      expect(Array.from(sc.types.keys())).toEqual(['Date']);
     });
 
     it('should add scalar types as configs', () => {
@@ -588,6 +589,7 @@ describe('SchemaComposer', () => {
         }: any),
       });
       expect(sc.get('Date')).toBeInstanceOf(GraphQLScalarType);
+      expect(Array.from(sc.types.keys())).toEqual(['Date']);
     });
   });
 

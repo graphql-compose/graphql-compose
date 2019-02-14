@@ -368,11 +368,11 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
       if (this.get(typeName) instanceof GraphQLScalarType) {
         const maybeScalar: any = typesFieldsResolve[typeName];
         if (maybeScalar instanceof GraphQLScalarType) {
-          this.add(maybeScalar);
+          this.set(typeName, maybeScalar);
           return;
         }
         if (typeof maybeScalar.name === 'string' && typeof maybeScalar.serialize === 'function') {
-          this.add(new GraphQLScalarType(maybeScalar));
+          this.set(typeName, new GraphQLScalarType(maybeScalar));
           return;
         }
       }
