@@ -650,6 +650,11 @@ export class TypeComposer<TContext> {
     return !!this.gqType._gqcInputTypeComposer;
   }
 
+  setInputTypeComposer(itc: InputTypeComposer): TypeComposer<TContext> {
+    this.gqType._gqcInputTypeComposer = itc;
+    return this;
+  }
+
   getInputTypeComposer(): InputTypeComposer {
     if (!this.gqType._gqcInputTypeComposer) {
       this.gqType._gqcInputTypeComposer = toInputObjectType(this);

@@ -7,13 +7,14 @@ import {
   GraphQLList,
   GraphQLInt,
 } from '../../graphql';
-import { TypeComposer, InputTypeComposer, InterfaceTypeComposer } from '../..';
+import { TypeComposer, InputTypeComposer, InterfaceTypeComposer, schemaComposer } from '../..';
 import { toInputObjectType } from '../toInputObjectType';
 
 describe('toInputObjectType()', () => {
   let PersonTC: TypeComposer;
 
   beforeEach(() => {
+    schemaComposer.clear();
     PersonTC = TypeComposer.create({
       name: 'Person',
       fields: {
