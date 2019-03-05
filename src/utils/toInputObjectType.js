@@ -16,7 +16,6 @@ import type { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import type { InputTypeComposer } from '../InputTypeComposer';
 import type { SchemaComposer } from '../SchemaComposer';
 import GenericType from '../type/generic';
-import { upperFirst } from './misc';
 import type { GraphQLType, GraphQLInputType } from '../graphql';
 
 export type toInputObjectTypeOpts = {
@@ -95,7 +94,7 @@ export function convertInputObjectField(
   if (!isInputType(fieldType)) {
     if (fieldType instanceof GraphQLObjectType || fieldType instanceof GraphQLInterfaceType) {
       const typeOpts = {
-        prefix: `${opts.prefix || ''}${upperFirst(opts.outputTypeName || '')}`,
+        prefix: opts.prefix || '',
         postfix: opts.postfix || 'Input',
       };
       const tc =

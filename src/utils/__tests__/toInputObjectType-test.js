@@ -59,7 +59,7 @@ describe('toInputObjectType()', () => {
     const itc = toInputObjectType(PersonTC);
     const addrType = itc.getFieldType('address');
     expect(addrType).toBeInstanceOf(GraphQLInputObjectType);
-    expect((addrType: any).name).toBe('PersonAddressInput');
+    expect((addrType: any).name).toBe('AddressInput');
   });
 
   it('should reuse generated input type for recursive types', () => {
@@ -107,7 +107,7 @@ describe('toInputObjectType()', () => {
     expect(itc.getFieldType('age')).toBe(GraphQLInt);
     const ifaceField = itc.getFieldTC('neighbor');
     expect(ifaceField.getType()).toBeInstanceOf(GraphQLInputObjectType);
-    expect(ifaceField.getTypeName()).toBe('ExampleIFaceInput');
+    expect(ifaceField.getTypeName()).toBe('IFaceInput');
     expect(ifaceField.getFieldType('name')).toBe(GraphQLString);
     expect(ifaceField.getFieldType('age')).toBe(GraphQLInt);
     expect(itc.getTypeName()).toBe('ExampleInput');
