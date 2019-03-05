@@ -416,6 +416,43 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
       return super.add((typeOrSDL: any));
     }
   }
+
+  addAsComposer(typeOrSDL: mixed): string {
+    let type;
+    if (typeof typeOrSDL === 'string') {
+      type = this.typeMapper.createType(typeOrSDL);
+    } else {
+      type = typeOrSDL;
+    }
+
+    if (
+      type instanceof _TypeComposer ||
+      type instanceof _InputTypeComposer ||
+      type instanceof _ScalarTypeComposer ||
+      type instanceof _EnumTypeComposer ||
+      type instanceof _InterfaceTypeComposer ||
+      type instanceof _UnionTypeComposer
+    ) {
+      const name = type.getTypeName();
+      this.set(name, type);
+      return name;
+    } else if (type instanceof GraphQLObjectType) {
+      return this.TypeComposer.create(type).getTypeName();
+    } else if (type instanceof GraphQLInputObjectType) {
+      return this.InputTypeComposer.create(type).getTypeName();
+    } else if (type instanceof GraphQLScalarType) {
+      return this.ScalarTypeComposer.create(type).getTypeName();
+    } else if (type instanceof GraphQLEnumType) {
+      return this.EnumTypeComposer.create(type).getTypeName();
+    } else if (type instanceof GraphQLInterfaceType) {
+      return this.InterfaceTypeComposer.create(type).getTypeName();
+    } else if (type instanceof GraphQLUnionType) {
+      return this.UnionTypeComposer.create(type).getTypeName();
+    }
+
+    throw new Error(`Cannot add as Composer type following value: ${inspect(type)}.`);
+  }
+
   addTypeDefs(typeDefs: string): TypeStorage<GraphQLNamedType> {
     const types = this.typeMapper.parseTypesFromString(typeDefs);
     types.forEach((type: any) => {

@@ -14,6 +14,7 @@ import {
   GraphQLInputObjectType,
   GraphQLInterfaceType,
   GraphQLEnumType,
+  GraphQLUnionType,
   GraphQLDirective,
   DirectiveLocation,
   GraphQLSkipDirective,
@@ -643,6 +644,106 @@ describe('SchemaComposer', () => {
       expect(sc.get('Object')).toBeInstanceOf(UnionTypeComposer);
     });
   });
+
+  describe('addAsComposer()', () => {
+    it('should add TypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.addAsComposer(`type Object1 { name: String }`);
+      sc.addAsComposer(sc.TypeComposer.createTemp(`type Object2 { name: String }`));
+      sc.addAsComposer(
+        new GraphQLObjectType({
+          name: 'Object3',
+          fields: () => ({}),
+        })
+      );
+
+      expect(sc.get('Object1')).toBeInstanceOf(TypeComposer);
+      expect(sc.get('Object2')).toBeInstanceOf(TypeComposer);
+      expect(sc.get('Object3')).toBeInstanceOf(TypeComposer);
+    });
+
+    it('should return InputTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.addAsComposer(`input Object1 { name: String }`);
+      sc.addAsComposer(sc.InputTypeComposer.createTemp(`input Object2 { name: String }`));
+      sc.addAsComposer(
+        new GraphQLInputObjectType({
+          name: 'Object3',
+          fields: () => ({}),
+        })
+      );
+
+      expect(sc.get('Object1')).toBeInstanceOf(InputTypeComposer);
+      expect(sc.get('Object2')).toBeInstanceOf(InputTypeComposer);
+      expect(sc.get('Object3')).toBeInstanceOf(InputTypeComposer);
+    });
+
+    it('should return ScalarTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.addAsComposer(`scalar Object1`);
+      sc.addAsComposer(sc.ScalarTypeComposer.createTemp(`scalar Object2`));
+      sc.addAsComposer(
+        new GraphQLScalarType({
+          name: 'Object3',
+          serialize: () => ({}),
+        })
+      );
+
+      expect(sc.get('Object1')).toBeInstanceOf(ScalarTypeComposer);
+      expect(sc.get('Object2')).toBeInstanceOf(ScalarTypeComposer);
+      expect(sc.get('Object3')).toBeInstanceOf(ScalarTypeComposer);
+    });
+
+    it('should return EnumTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.addAsComposer(`enum Object1 { A B }`);
+      sc.addAsComposer(sc.EnumTypeComposer.createTemp(`enum Object2 { A B }`));
+      sc.addAsComposer(
+        new GraphQLEnumType({
+          name: 'Object3',
+          values: {},
+        })
+      );
+
+      expect(sc.get('Object1')).toBeInstanceOf(EnumTypeComposer);
+      expect(sc.get('Object2')).toBeInstanceOf(EnumTypeComposer);
+      expect(sc.get('Object3')).toBeInstanceOf(EnumTypeComposer);
+    });
+
+    it('should return InterfaceTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.addAsComposer(`interface Object1 { a: Int }`);
+      sc.addAsComposer(sc.InterfaceTypeComposer.createTemp(`interface Object2 { a: Int }`));
+      sc.addAsComposer(
+        new GraphQLInterfaceType({
+          name: 'Object3',
+          fields: () => ({}),
+        })
+      );
+
+      expect(sc.get('Object1')).toBeInstanceOf(InterfaceTypeComposer);
+      expect(sc.get('Object2')).toBeInstanceOf(InterfaceTypeComposer);
+      expect(sc.get('Object3')).toBeInstanceOf(InterfaceTypeComposer);
+    });
+
+    it('should return UnionTypeComposer', () => {
+      const sc = new SchemaComposer();
+      const a = sc.createObjectTC(`type A { f: Int }`);
+      sc.addAsComposer(`union Object1 = A`);
+      sc.addAsComposer(sc.UnionTypeComposer.createTemp(`union Object2 = A`));
+      sc.addAsComposer(
+        new GraphQLUnionType({
+          name: 'Object3',
+          types: [a.getType()],
+        })
+      );
+
+      expect(sc.get('Object1')).toBeInstanceOf(UnionTypeComposer);
+      expect(sc.get('Object2')).toBeInstanceOf(UnionTypeComposer);
+      expect(sc.get('Object3')).toBeInstanceOf(UnionTypeComposer);
+    });
+  });
+
   describe('addTypeDefs', () => {
     it('should parse types from SDL', () => {
       const sc = new SchemaComposer();
