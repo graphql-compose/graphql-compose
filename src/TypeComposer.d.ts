@@ -16,6 +16,7 @@ import {
   GraphQLResolveInfo,
   InputValueDefinitionNode,
 } from 'graphql';
+import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
@@ -98,6 +99,7 @@ export type ComposeOutputType<TSource, TContext, TArgs = any> =
   | GraphQLOutputType
   | TypeComposer<TSource, TContext>
   | EnumTypeComposer
+  | ScalarTypeComposer
   | TypeAsString
   | Resolver<TSource, TContext, TArgs>
   | InterfaceTypeComposer<TContext>
@@ -106,8 +108,10 @@ export type ComposeOutputType<TSource, TContext, TArgs = any> =
       | GraphQLOutputType
       | TypeComposer<TSource, TContext>
       | EnumTypeComposer
+      | ScalarTypeComposer
       | TypeAsString
       | Resolver<TSource, TContext, TArgs>
+      | UnionTypeComposer<TContext>
     >;
 
 // Compose Args -----------------------------
@@ -116,8 +120,13 @@ export type ComposeArgumentType =
   | TypeAsString
   | InputTypeComposer
   | EnumTypeComposer
+  | ScalarTypeComposer
   | Array<
-      GraphQLInputType | TypeAsString | InputTypeComposer | EnumTypeComposer
+      | GraphQLInputType
+      | TypeAsString
+      | InputTypeComposer
+      | EnumTypeComposer
+      | ScalarTypeComposer
     >;
 
 export type ComposeArgumentConfigAsObject = {

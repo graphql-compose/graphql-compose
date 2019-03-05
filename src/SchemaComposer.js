@@ -9,6 +9,10 @@ import {
   type InputTypeComposerDefinition,
 } from './InputTypeComposer';
 import {
+  ScalarTypeComposer as _ScalarTypeComposer,
+  type ScalarTypeComposerDefinition,
+} from './ScalarTypeComposer';
+import {
   EnumTypeComposer as _EnumTypeComposer,
   type EnumTypeComposerDefinition,
 } from './EnumTypeComposer';
@@ -53,6 +57,7 @@ type MustHaveTypes<TContext> =
   | _EnumTypeComposer
   | _InterfaceTypeComposer<TContext>
   | _UnionTypeComposer<TContext>
+  | _ScalarTypeComposer
   | GraphQLNamedType;
 
 type AddResolveMethods<TContext> = {
@@ -79,6 +84,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   EnumTypeComposer: typeof _EnumTypeComposer;
   InterfaceTypeComposer: Class<_InterfaceTypeComposer<TContext>>;
   UnionTypeComposer: Class<_UnionTypeComposer<TContext>>;
+  ScalarTypeComposer: typeof _ScalarTypeComposer;
   Resolver: Class<_Resolver<any, TContext>>;
   _schemaMustHaveTypes: Array<MustHaveTypes<TContext>> = [];
   _directives: Array<GraphQLDirective> = BUILT_IN_DIRECTIVES;
@@ -116,6 +122,11 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
       static schemaComposer = schema;
     }
     this.UnionTypeComposer = UnionTypeComposer;
+
+    class ScalarTypeComposer extends _ScalarTypeComposer {
+      static schemaComposer = schema;
+    }
+    this.ScalarTypeComposer = ScalarTypeComposer;
 
     this.typeMapper = new TypeMapper(schema);
 
@@ -286,6 +297,17 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     }
   }
 
+  getOrCreateSTC(typeName: string, onCreate?: _ScalarTypeComposer => any): _ScalarTypeComposer {
+    try {
+      return this.getSTC(typeName);
+    } catch (e) {
+      const stc = this.ScalarTypeComposer.create(typeName);
+      this.set(typeName, stc);
+      if (onCreate && isFunction(onCreate)) onCreate(stc);
+      return stc;
+    }
+  }
+
   // disable redundant noise in console.logs
   toString(): string {
     return 'SchemaComposer';
@@ -338,6 +360,13 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
       return this.UnionTypeComposer.create((this.get(typeName): any));
     }
     return super.getUTC(typeName);
+  }
+
+  getSTC(typeName: any): _ScalarTypeComposer {
+    if (this.hasInstance(typeName, GraphQLScalarType)) {
+      return this.ScalarTypeComposer.create((this.get(typeName): any));
+    }
+    return super.getSTC(typeName);
   }
 
   addTypeDefs(typeDefs: string): TypeStorage<GraphQLNamedType> {
@@ -412,6 +441,10 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   createUnionTC(typeDef: UnionTypeComposerDefinition<TContext>): _UnionTypeComposer<TContext> {
     return this.UnionTypeComposer.create(typeDef);
+  }
+
+  createScalarTC(typeDef: ScalarTypeComposerDefinition): _ScalarTypeComposer {
+    return this.ScalarTypeComposer.create(typeDef);
   }
 
   addDirective(directive: GraphQLDirective): SchemaComposer<TContext> {

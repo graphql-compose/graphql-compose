@@ -3,6 +3,7 @@
 import { SchemaComposer } from '..';
 import { TypeComposer } from '../TypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
+import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { UnionTypeComposer } from '../UnionTypeComposer';
@@ -103,6 +104,37 @@ describe('SchemaComposer', () => {
       });
       expect(UserITC).toBe(UserITC2);
       expect(UserITC.getDescription()).toBe('User input');
+    });
+  });
+
+  describe('getOrCreateSTC()', () => {
+    it('should create STC if not exists', () => {
+      const sc = new SchemaComposer();
+      const UIntSTC = sc.getOrCreateSTC('UInt');
+      expect(UIntSTC).toBeInstanceOf(ScalarTypeComposer);
+      expect(sc.has('UInt')).toBeTruthy();
+      expect(sc.hasInstance('UInt', ScalarTypeComposer)).toBeTruthy();
+      expect(sc.getSTC('UInt')).toBe(UIntSTC);
+    });
+
+    it('should create UTC if not exists with onCreate', () => {
+      const sc = new SchemaComposer();
+      const UIntTC = sc.getOrCreateSTC('Uint', tc => {
+        tc.setDescription('Unsigned int');
+      });
+      expect(UIntTC.getDescription()).toBe('Unsigned int');
+    });
+
+    it('should return already created STC without onCreate', () => {
+      const sc = new SchemaComposer();
+      const UIntTC = sc.getOrCreateSTC('UInt', tc => {
+        tc.setDescription('Positive int');
+      });
+      const UIntTC2 = sc.getOrCreateSTC('UInt', tc => {
+        tc.setDescription('updated description');
+      });
+      expect(UIntTC).toBe(UIntTC2);
+      expect(UIntTC.getDescription()).toBe('Positive int');
     });
   });
 
@@ -354,6 +386,35 @@ describe('SchemaComposer', () => {
     });
   });
 
+  describe('getSTC', () => {
+    it('should return ScalarTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.ScalarTypeComposer.create(`scalar UInt`);
+      expect(sc.getSTC('UInt')).toBeInstanceOf(ScalarTypeComposer);
+    });
+
+    it('should return GraphQLScalarType as ScalarTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.add(
+        new GraphQLScalarType({
+          name: 'SomeInt',
+          serialize: () => {},
+        })
+      );
+      expect(sc.getSTC('SomeInt')).toBeInstanceOf(ScalarTypeComposer);
+    });
+
+    it('should throw error for incorrect type', () => {
+      const sc = new SchemaComposer();
+      sc.TypeComposer.create(`
+        type Sort {
+          name: String
+        }
+      `);
+      expect(() => sc.getSTC('Sort')).toThrowError('Cannot find ScalarTypeComposer with name Sort');
+    });
+  });
+
   describe('getETC', () => {
     it('should return EnumTypeComposer', () => {
       const sc = new SchemaComposer();
@@ -433,6 +494,7 @@ describe('SchemaComposer', () => {
         input AuthorInput {
           name: String
         }
+        scalar MyInt
         enum Sort {
           ASC 
           DESC
@@ -444,6 +506,7 @@ describe('SchemaComposer', () => {
 
       expect(sc.get('Author')).toBeInstanceOf(GraphQLObjectType);
       expect(sc.get('AuthorInput')).toBeInstanceOf(GraphQLInputObjectType);
+      expect(sc.get('MyInt')).toBeInstanceOf(GraphQLScalarType);
       expect(sc.get('Sort')).toBeInstanceOf(GraphQLEnumType);
       expect(sc.get('PersonI')).toBeInstanceOf(GraphQLInterfaceType);
     });
@@ -610,6 +673,13 @@ describe('SchemaComposer', () => {
       const tc = sc.createInputTC(`input A { f: Int }`);
       expect(tc).toBeInstanceOf(InputTypeComposer);
       expect(tc.hasField('f')).toBeTruthy();
+    });
+
+    it('createScalarTC()', () => {
+      const sc = new SchemaComposer();
+      const tc = sc.createScalarTC(`scalar ABC`);
+      expect(tc).toBeInstanceOf(ScalarTypeComposer);
+      expect(tc.getTypeName()).toBe('ABC');
     });
 
     it('createEnumTC()', () => {

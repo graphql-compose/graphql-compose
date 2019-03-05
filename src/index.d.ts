@@ -5,6 +5,7 @@ export { graphql };
 
 export { TypeComposer } from './TypeComposer';
 export { InputTypeComposer } from './InputTypeComposer';
+export { ScalarTypeComposer } from './ScalarTypeComposer';
 export { EnumTypeComposer } from './EnumTypeComposer';
 export { InterfaceTypeComposer } from './InterfaceTypeComposer';
 export { UnionTypeComposer } from './UnionTypeComposer';
@@ -19,6 +20,9 @@ export {
   InputTypeComposer as InputTypeComposerClass,
 } from './InputTypeComposer';
 export { EnumTypeComposer as EnumTypeComposerClass } from './EnumTypeComposer';
+export {
+  ScalarTypeComposer as ScalarTypeComposerClass,
+} from './ScalarTypeComposer';
 export {
   InterfaceTypeComposer as InterfaceTypeComposerClass,
 } from './InterfaceTypeComposer';

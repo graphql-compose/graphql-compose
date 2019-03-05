@@ -19,6 +19,7 @@ import {
   schemaComposer,
   TypeComposer,
   InputTypeComposer,
+  ScalarTypeComposer,
   EnumTypeComposer,
   InterfaceTypeComposer,
   Resolver,
@@ -255,6 +256,12 @@ describe('TypeMapper', () => {
         expect(tc.getFieldType('b')).toBe(GraphQLInt);
       });
 
+      it('should create field with Scalar type from GraphQL Schema Language', () => {
+        const fc: any = TypeMapper.convertOutputFieldConfig('scalar MyScalar');
+        expect(fc.type).toBeInstanceOf(GraphQLScalarType);
+        expect(fc.type.name).toBe('MyScalar');
+      });
+
       it('should create field with Enum type from GraphQL Schema Language', () => {
         const fc: any = TypeMapper.convertOutputFieldConfig('enum MyEnum { AND OR }');
         expect(fc.type).toBeInstanceOf(GraphQLEnumType);
@@ -286,6 +293,20 @@ describe('TypeMapper', () => {
 
         const fc2 = TypeMapper.convertOutputFieldConfig(tc);
         expect(fc2.type).toBe(tc.getType());
+        expect(fc2.description).toBe('Description');
+      });
+
+      it('should accept ScalarTypeComposer', () => {
+        const stc = ScalarTypeComposer.create('scalar UInt');
+        stc.setDescription('Description');
+        const fc = TypeMapper.convertOutputFieldConfig({
+          type: stc,
+        });
+        expect(fc.type).toBe(stc.getType());
+        expect(fc.description).toBe(undefined);
+
+        const fc2 = TypeMapper.convertOutputFieldConfig(stc);
+        expect(fc2.type).toBe(stc.getType());
         expect(fc2.description).toBe('Description');
       });
 
@@ -497,6 +518,12 @@ describe('TypeMapper', () => {
       expect(itc.getFieldType('b')).toBe(GraphQLInt);
     });
 
+    it('should create field with Scalar type from GraphQL Schema Language', () => {
+      const fc: any = TypeMapper.convertInputFieldConfig('scalar MyInput');
+      expect(fc.type).toBeInstanceOf(GraphQLScalarType);
+      expect(fc.type.name).toBe('MyInput');
+    });
+
     it('should create field with Enum type from GraphQL Schema Language', () => {
       const fc: any = TypeMapper.convertInputFieldConfig('enum MyInputEnum { AND OR }');
       expect(fc.type).toBeInstanceOf(GraphQLEnumType);
@@ -528,6 +555,20 @@ describe('TypeMapper', () => {
 
       const ic2 = TypeMapper.convertInputFieldConfig(itc);
       expect(ic2.type).toBe(itc.getType());
+      expect(ic2.description).toBe('Description');
+    });
+
+    it('should accept ScalarTypeComposer', () => {
+      const stc = ScalarTypeComposer.create('scalar MySca');
+      stc.setDescription('Description');
+      const ic = TypeMapper.convertInputFieldConfig({
+        type: stc,
+      });
+      expect(ic.type).toBe(stc.getType());
+      expect(ic.description).toBe(undefined);
+
+      const ic2 = TypeMapper.convertInputFieldConfig(stc);
+      expect(ic2.type).toBe(stc.getType());
       expect(ic2.description).toBe('Description');
     });
 
@@ -684,6 +725,12 @@ describe('TypeMapper', () => {
       expect(itc.getFieldType('b')).toBe(GraphQLInt);
     });
 
+    it('should create arg config with Scalar type from GraphQL Schema Language', () => {
+      const fc: any = TypeMapper.convertArgConfig('scalar Abc');
+      expect(fc.type).toBeInstanceOf(GraphQLScalarType);
+      expect(fc.type.name).toBe('Abc');
+    });
+
     it('should create arg config with Enum type from GraphQL Schema Language', () => {
       const fc: any = TypeMapper.convertArgConfig('enum MyArgEnum { AND OR }');
       expect(fc.type).toBeInstanceOf(GraphQLEnumType);
@@ -715,6 +762,20 @@ describe('TypeMapper', () => {
 
       const ac2 = TypeMapper.convertArgConfig(itc);
       expect(ac2.type).toBe(itc.getType());
+      expect(ac2.description).toBe('Description');
+    });
+
+    it('should accept ScalarTypeComposer', () => {
+      const stc = ScalarTypeComposer.create('scalar Aaa');
+      stc.setDescription('Description');
+      const ac = TypeMapper.convertArgConfig({
+        type: stc,
+      });
+      expect(ac.type).toBe(stc.getType());
+      expect(ac.description).toBe(undefined);
+
+      const ac2 = TypeMapper.convertArgConfig(stc);
+      expect(ac2.type).toBe(stc.getType());
       expect(ac2.description).toBe('Description');
     });
 

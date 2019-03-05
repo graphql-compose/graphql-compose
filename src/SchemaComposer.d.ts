@@ -11,6 +11,10 @@ import {
   InputTypeComposerDefinition,
 } from './InputTypeComposer';
 import {
+  ScalarTypeComposer,
+  ScalarTypeComposerDefinition,
+} from './ScalarTypeComposer';
+import {
   EnumTypeComposer,
   EnumTypeComposerDefinition,
 } from './EnumTypeComposer';
@@ -32,6 +36,7 @@ type MustHaveTypes<TContext> =
   | EnumTypeComposer
   | InterfaceTypeComposer<TContext>
   | UnionTypeComposer<TContext>
+  | ScalarTypeComposer
   | GraphQLNamedType;
 
 type ExtraSchemaConfig = {
@@ -58,6 +63,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   public EnumTypeComposer: typeof EnumTypeComposer;
   public InterfaceTypeComposer: typeof InterfaceTypeComposer;
   public UnionTypeComposer: typeof UnionTypeComposer;
+  public ScalarTypeComposer: typeof ScalarTypeComposer;
   public Resolver: typeof Resolver;
 
   public Query: TypeComposer<any, TContext>;
@@ -115,6 +121,11 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     onCreate?: (utc: UnionTypeComposer<TContext>) => any,
   ): UnionTypeComposer<TContext>;
 
+  public getOrCreateSTC(
+    typeName: string,
+    onCreate?: (stc: ScalarTypeComposer) => any,
+  ): ScalarTypeComposer;
+
   public addTypeDefs(typeDefs: string): TypeStorage<GraphQLNamedType>;
 
   public addResolveMethods(
@@ -141,6 +152,10 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   public createUnionTC(
     typeDef: UnionTypeComposerDefinition<TContext>,
   ): UnionTypeComposer<TContext>;
+
+  public createScalarTC(
+    typeDef: ScalarTypeComposerDefinition,
+  ): ScalarTypeComposer;
 
   public addDirective(directive: GraphQLDirective): this;
 

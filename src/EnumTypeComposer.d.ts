@@ -2,7 +2,6 @@
 /* eslint-disable no-use-before-define */
 
 import { GraphQLEnumType, GraphQLList, GraphQLNonNull } from './graphql';
-import { isObject, isString } from './utils/is';
 import { TypeMapper } from './TypeMapper';
 import {
   GraphQLEnumValueConfig,

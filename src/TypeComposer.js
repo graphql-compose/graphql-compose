@@ -23,6 +23,7 @@ import type {
   InputValueDefinitionNode,
 } from './graphql';
 import type { InputTypeComposer } from './InputTypeComposer';
+import type { ScalarTypeComposer } from './ScalarTypeComposer';
 import type { EnumTypeComposer } from './EnumTypeComposer';
 import type { TypeAsString } from './TypeMapper';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
@@ -118,6 +119,7 @@ export type ComposeOutputType<TContext> =
   | Resolver<any, TContext>
   | InterfaceTypeComposer<TContext>
   | UnionTypeComposer<TContext>
+  | ScalarTypeComposer
   | Array<ComposeOutputType<TContext>>;
 
 // Compose Args -----------------------------
@@ -126,6 +128,7 @@ export type ComposeArgumentType =
   | TypeAsString
   | InputTypeComposer
   | EnumTypeComposer
+  | ScalarTypeComposer
   | Array<ComposeArgumentType>;
 export type ComposeArgumentConfigAsObject = {
   +type: Thunk<ComposeArgumentType> | GraphQLInputType,
