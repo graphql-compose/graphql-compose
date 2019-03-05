@@ -11,7 +11,6 @@ export interface ToInputObjectTypeOpts {
 export function toInputObjectType(
   typeComposer: TypeComposer<any, any>,
   opts?: ToInputObjectTypeOpts,
-  cache?: Map<GraphQLObjectType, InputTypeComposer>,
 ): InputTypeComposer;
 
 export interface ConvertInputObjectFieldOpts {
@@ -24,6 +23,5 @@ export interface ConvertInputObjectFieldOpts {
 export function convertInputObjectField(
   field: GraphQLType,
   opts: ConvertInputObjectFieldOpts,
-  cache: Map<GraphQLObjectType, InputTypeComposer>,
   schemaComposer: SchemaComposer<any>,
 ): GraphQLInputType;

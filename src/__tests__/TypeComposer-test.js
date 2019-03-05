@@ -362,6 +362,23 @@ describe('TypeComposer', () => {
       expect(tc.hasInterface(iface)).toBe(true);
     });
 
+    it('hasInterface() should work by name or ITC', () => {
+      const MyIface = new GraphQLInterfaceType({
+        name: 'MyIface',
+        description: '',
+        fields: () => ({ id: { type: GraphQLInt } }),
+        resolveType: () => {},
+      });
+      tc.addInterface(MyIface);
+      expect(tc.hasInterface('MyIface123')).toBeFalsy();
+      expect(tc.hasInterface('MyIface')).toBeTruthy();
+      expect(tc.hasInterface(MyIface)).toBeTruthy();
+      expect(tc.hasInterface(InterfaceTypeComposer.create(MyIface))).toBeTruthy();
+
+      tc.addInterface(InterfaceTypeComposer.create('MyIface123'));
+      expect(tc.hasInterface('MyIface123')).toBeTruthy();
+    });
+
     it('addInterface()', () => {
       tc.addInterface(iface);
       expect(tc.getInterfaces()).toEqual(expect.arrayContaining([iface]));
@@ -831,9 +848,9 @@ describe('TypeComposer', () => {
 
     expect(tc.addRelation('user', ({}: any))).toBe(tc);
 
-    expect(tc.setInterfaces(([1, 2]: any))).toBe(tc);
-    expect(tc.addInterface((1: any))).toBe(tc);
-    expect(tc.removeInterface((2: any))).toBe(tc);
+    expect(tc.setInterfaces((['A', 'B']: any))).toBe(tc);
+    expect(tc.addInterface(('A': any))).toBe(tc);
+    expect(tc.removeInterface(('A': any))).toBe(tc);
 
     expect(tc.setResolver('myResolver', new Resolver({ name: 'myResolver' }))).toBe(tc);
     expect(tc.addResolver(new Resolver({ name: 'myResolver' }))).toBe(tc);
@@ -987,6 +1004,13 @@ describe('TypeComposer', () => {
       const input = tc.getInputType();
       expect(input).toBeInstanceOf(GraphQLInputObjectType);
       expect(tc.hasInputTypeComposer()).toBeTruthy();
+    });
+
+    it('setInputTypeComposer()', () => {
+      const itc1 = InputTypeComposer.createTemp(`Input`);
+      tc.setInputTypeComposer(itc1);
+      const itc2 = tc.getInputTypeComposer();
+      expect(itc1).toBe(itc2);
     });
 
     it('getInputTypeComposer()', () => {

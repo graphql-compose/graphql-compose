@@ -8,6 +8,7 @@ import { isObject, isFunction, isString } from './utils/is';
 import { resolveInputConfigMapAsThunk, resolveInputConfigAsThunk } from './utils/configAsThunk';
 import { typeByPath } from './utils/typeByPath';
 import type { Thunk, ObjMap } from './utils/definitions';
+import type { ScalarTypeComposer } from './ScalarTypeComposer';
 import type { EnumTypeComposer } from './EnumTypeComposer';
 import type { TypeAsString } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
@@ -42,6 +43,7 @@ export type ComposeInputFieldConfigAsObject = {
 export type ComposeInputType =
   | InputTypeComposer
   | EnumTypeComposer
+  | ScalarTypeComposer
   | GraphQLInputType
   | TypeAsString
   | Array<ComposeInputType>;

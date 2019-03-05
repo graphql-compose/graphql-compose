@@ -11,9 +11,8 @@ import type { TypeAsString, ComposeObjectType } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
 import type { Thunk } from './utils/definitions';
 import { resolveTypeArrayAsThunk } from './utils/configAsThunk';
-// import { typeByPath } from './utils/typeByPath';
 import { getGraphQLType, getComposeTypeName } from './utils/typeHelpers';
-// import { graphqlVersion } from './utils/graphqlVersion';
+import { graphqlVersion } from './utils/graphqlVersion';
 
 export type GraphQLUnionTypeExtended<TSource, TContext> = GraphQLUnionType & {
   _gqcTypeMap?: Map<string, ComposeObjectType>,
@@ -126,7 +125,7 @@ export class UnionTypeComposer<TContext> {
   // Union Types methods
   // -----------------------------------------------
 
-  hasType(name: mixed): boolean {
+  hasType(name: string | GraphQLObjectType | TypeComposer<TContext>): boolean {
     const nameAsString = getComposeTypeName(name);
     return this.getTypeNames().includes(nameAsString);
   }
@@ -140,9 +139,16 @@ export class UnionTypeComposer<TContext> {
       });
       this.gqType._gqcTypeMap = m;
 
-      this.gqType._types = () => {
-        return resolveTypeArrayAsThunk(this.schemaComposer, this.getTypes(), this.getTypeName());
-      };
+      if (graphqlVersion >= 14) {
+        this.gqType._types = () => {
+          return resolveTypeArrayAsThunk(this.schemaComposer, this.getTypes(), this.getTypeName());
+        };
+      } else {
+        (this.gqType: any)._types = null;
+        (this.gqType: any)._typeConfig.types = () => {
+          return resolveTypeArrayAsThunk(this.schemaComposer, this.getTypes(), this.getTypeName());
+        };
+      }
     }
 
     return this.gqType._gqcTypeMap;

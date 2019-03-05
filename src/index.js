@@ -9,6 +9,7 @@ const schemaComposer: SchemaComposer<any> = new SchemaComposer();
 const GQC = schemaComposer;
 const TypeComposer = schemaComposer.TypeComposer;
 const InputTypeComposer = schemaComposer.InputTypeComposer;
+const ScalarTypeComposer = schemaComposer.ScalarTypeComposer;
 const EnumTypeComposer = schemaComposer.EnumTypeComposer;
 const InterfaceTypeComposer = schemaComposer.InterfaceTypeComposer;
 const UnionTypeComposer = schemaComposer.UnionTypeComposer;
@@ -24,6 +25,7 @@ export {
   TypeComposer,
   InputTypeComposer,
   EnumTypeComposer,
+  ScalarTypeComposer,
   InterfaceTypeComposer,
   UnionTypeComposer,
   Resolver,
@@ -33,6 +35,7 @@ export {
 export { TypeComposer as TypeComposerClass } from './TypeComposer';
 export { InputTypeComposer as InputTypeComposerClass } from './InputTypeComposer';
 export { EnumTypeComposer as EnumTypeComposerClass } from './EnumTypeComposer';
+export { ScalarTypeComposer as ScalarTypeComposerClass } from './ScalarTypeComposer';
 export { InterfaceTypeComposer as InterfaceTypeComposerClass } from './InterfaceTypeComposer';
 export { UnionTypeComposer as UnionTypeComposerClass } from './UnionTypeComposer';
 export { Resolver as ResolverClass } from './Resolver';

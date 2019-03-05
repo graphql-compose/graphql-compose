@@ -9,6 +9,10 @@ import {
   type InputTypeComposerDefinition,
 } from './InputTypeComposer';
 import {
+  ScalarTypeComposer as _ScalarTypeComposer,
+  type ScalarTypeComposerDefinition,
+} from './ScalarTypeComposer';
+import {
   EnumTypeComposer as _EnumTypeComposer,
   type EnumTypeComposerDefinition,
 } from './EnumTypeComposer';
@@ -35,6 +39,7 @@ import {
   GraphQLSkipDirective,
   GraphQLIncludeDirective,
   GraphQLDeprecatedDirective,
+  GraphQLScalarType,
   type GraphQLNamedType,
   type SchemaDefinitionNode,
   type GraphQLResolveInfo,
@@ -52,6 +57,7 @@ type MustHaveTypes<TContext> =
   | _EnumTypeComposer
   | _InterfaceTypeComposer<TContext>
   | _UnionTypeComposer<TContext>
+  | _ScalarTypeComposer
   | GraphQLNamedType;
 
 type AddResolveMethods<TContext> = {
@@ -78,6 +84,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   EnumTypeComposer: typeof _EnumTypeComposer;
   InterfaceTypeComposer: Class<_InterfaceTypeComposer<TContext>>;
   UnionTypeComposer: Class<_UnionTypeComposer<TContext>>;
+  ScalarTypeComposer: typeof _ScalarTypeComposer;
   Resolver: Class<_Resolver<any, TContext>>;
   _schemaMustHaveTypes: Array<MustHaveTypes<TContext>> = [];
   _directives: Array<GraphQLDirective> = BUILT_IN_DIRECTIVES;
@@ -115,6 +122,11 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
       static schemaComposer = schema;
     }
     this.UnionTypeComposer = UnionTypeComposer;
+
+    class ScalarTypeComposer extends _ScalarTypeComposer {
+      static schemaComposer = schema;
+    }
+    this.ScalarTypeComposer = ScalarTypeComposer;
 
     this.typeMapper = new TypeMapper(schema);
 
@@ -285,6 +297,17 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     }
   }
 
+  getOrCreateSTC(typeName: string, onCreate?: _ScalarTypeComposer => any): _ScalarTypeComposer {
+    try {
+      return this.getSTC(typeName);
+    } catch (e) {
+      const stc = this.ScalarTypeComposer.create(typeName);
+      this.set(typeName, stc);
+      if (onCreate && isFunction(onCreate)) onCreate(stc);
+      return stc;
+    }
+  }
+
   // disable redundant noise in console.logs
   toString(): string {
     return 'SchemaComposer';
@@ -339,17 +362,133 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     return super.getUTC(typeName);
   }
 
+  getSTC(typeName: any): _ScalarTypeComposer {
+    if (this.hasInstance(typeName, GraphQLScalarType)) {
+      return this.ScalarTypeComposer.create((this.get(typeName): any));
+    }
+    return super.getSTC(typeName);
+  }
+
+  getAnyTC(
+    typeName: any
+  ):
+    | _TypeComposer<TContext>
+    | _InputTypeComposer
+    | _EnumTypeComposer
+    | _InterfaceTypeComposer<TContext>
+    | _UnionTypeComposer<TContext>
+    | _ScalarTypeComposer {
+    const type = this.get(typeName);
+    if (
+      type instanceof _TypeComposer ||
+      type instanceof _InputTypeComposer ||
+      type instanceof _ScalarTypeComposer ||
+      type instanceof _EnumTypeComposer ||
+      type instanceof _InterfaceTypeComposer ||
+      type instanceof _UnionTypeComposer
+    ) {
+      return type;
+    } else if (type instanceof GraphQLObjectType) {
+      return this.TypeComposer.create(type);
+    } else if (type instanceof GraphQLInputObjectType) {
+      return this.InputTypeComposer.create(type);
+    } else if (type instanceof GraphQLScalarType) {
+      return this.ScalarTypeComposer.create(type);
+    } else if (type instanceof GraphQLEnumType) {
+      return this.EnumTypeComposer.create(type);
+    } else if (type instanceof GraphQLInterfaceType) {
+      return this.InterfaceTypeComposer.create(type);
+    } else if (type instanceof GraphQLUnionType) {
+      return this.UnionTypeComposer.create(type);
+    }
+
+    throw new Error(
+      `Type with name ${inspect(
+        typeName
+      )} cannot be obtained as any Composer helper. Put something strange?`
+    );
+  }
+
+  add(typeOrSDL: mixed): ?string {
+    if (typeof typeOrSDL === 'string') {
+      return this.addAsComposer(typeOrSDL);
+    } else {
+      return super.add((typeOrSDL: any));
+    }
+  }
+
+  addAsComposer(typeOrSDL: mixed): string {
+    let type;
+    if (typeof typeOrSDL === 'string') {
+      type = this.typeMapper.createType(typeOrSDL);
+    } else {
+      type = typeOrSDL;
+    }
+
+    if (
+      type instanceof _TypeComposer ||
+      type instanceof _InputTypeComposer ||
+      type instanceof _ScalarTypeComposer ||
+      type instanceof _EnumTypeComposer ||
+      type instanceof _InterfaceTypeComposer ||
+      type instanceof _UnionTypeComposer
+    ) {
+      const name = type.getTypeName();
+      this.set(name, type);
+      return name;
+    } else if (type instanceof GraphQLObjectType) {
+      return this.TypeComposer.create(type).getTypeName();
+    } else if (type instanceof GraphQLInputObjectType) {
+      return this.InputTypeComposer.create(type).getTypeName();
+    } else if (type instanceof GraphQLScalarType) {
+      return this.ScalarTypeComposer.create(type).getTypeName();
+    } else if (type instanceof GraphQLEnumType) {
+      return this.EnumTypeComposer.create(type).getTypeName();
+    } else if (type instanceof GraphQLInterfaceType) {
+      return this.InterfaceTypeComposer.create(type).getTypeName();
+    } else if (type instanceof GraphQLUnionType) {
+      return this.UnionTypeComposer.create(type).getTypeName();
+    }
+
+    throw new Error(`Cannot add as Composer type following value: ${inspect(type)}.`);
+  }
+
   addTypeDefs(typeDefs: string): TypeStorage<GraphQLNamedType> {
     const types = this.typeMapper.parseTypesFromString(typeDefs);
-    types.forEach(type => {
-      this.add((type: any));
+    types.forEach((type: any) => {
+      const name = type.name;
+      if (name !== 'Query' && name !== 'Mutation' && name !== 'Subscription') {
+        this.add((type: any));
+      }
     });
+    if (types.has('Query')) {
+      this.Query.addFields(this.TypeComposer.create((types.get('Query'): any)).getFields());
+    }
+    if (types.has('Mutation')) {
+      this.Mutation.addFields(this.TypeComposer.create((types.get('Mutation'): any)).getFields());
+    }
+    if (types.has('Subscription')) {
+      this.Subscription.addFields(
+        this.TypeComposer.create((types.get('Subscription'): any)).getFields()
+      );
+    }
     return types;
   }
 
   addResolveMethods(typesFieldsResolve: AddResolveMethods<TContext>): void {
     const typeNames = Object.keys(typesFieldsResolve);
     typeNames.forEach(typeName => {
+      if (this.get(typeName) instanceof GraphQLScalarType) {
+        const maybeScalar: any = typesFieldsResolve[typeName];
+        if (maybeScalar instanceof GraphQLScalarType) {
+          this.set(typeName, maybeScalar);
+          return;
+        }
+        if (typeof maybeScalar.name === 'string' && typeof maybeScalar.serialize === 'function') {
+          this.set(typeName, new GraphQLScalarType(maybeScalar));
+          return;
+        }
+      }
       const tc = this.getTC(typeName);
       const fieldsResolve = typesFieldsResolve[typeName];
       const fieldNames = Object.keys(fieldsResolve);
@@ -386,6 +525,10 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   createUnionTC(typeDef: UnionTypeComposerDefinition<TContext>): _UnionTypeComposer<TContext> {
     return this.UnionTypeComposer.create(typeDef);
+  }
+
+  createScalarTC(typeDef: ScalarTypeComposerDefinition): _ScalarTypeComposer {
+    return this.ScalarTypeComposer.create(typeDef);
   }
 
   addDirective(directive: GraphQLDirective): SchemaComposer<TContext> {

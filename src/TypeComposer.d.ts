@@ -14,7 +14,9 @@ import {
   GraphQLObjectType,
   GraphQLOutputType,
   GraphQLResolveInfo,
+  InputValueDefinitionNode,
 } from 'graphql';
+import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
@@ -97,6 +99,7 @@ export type ComposeOutputType<TSource, TContext, TArgs = any> =
   | GraphQLOutputType
   | TypeComposer<TSource, TContext>
   | EnumTypeComposer
+  | ScalarTypeComposer
   | TypeAsString
   | Resolver<TSource, TContext, TArgs>
   | InterfaceTypeComposer<TContext>
@@ -105,8 +108,10 @@ export type ComposeOutputType<TSource, TContext, TArgs = any> =
       | GraphQLOutputType
       | TypeComposer<TSource, TContext>
       | EnumTypeComposer
+      | ScalarTypeComposer
       | TypeAsString
       | Resolver<TSource, TContext, TArgs>
+      | UnionTypeComposer<TContext>
     >;
 
 // Compose Args -----------------------------
@@ -115,14 +120,20 @@ export type ComposeArgumentType =
   | TypeAsString
   | InputTypeComposer
   | EnumTypeComposer
+  | ScalarTypeComposer
   | Array<
-      GraphQLInputType | TypeAsString | InputTypeComposer | EnumTypeComposer
+      | GraphQLInputType
+      | TypeAsString
+      | InputTypeComposer
+      | EnumTypeComposer
+      | ScalarTypeComposer
     >;
 
 export type ComposeArgumentConfigAsObject = {
   type: Thunk<ComposeArgumentType> | GraphQLInputType;
   defaultValue?: any;
   description?: string | null;
+  astNode?: InputValueDefinitionNode | null;
 } & { $call?: void };
 
 export type ComposeArgumentConfig =
@@ -350,6 +361,8 @@ export class TypeComposer<TSource = any, TContext = any> {
 
   public hasInputTypeComposer(): boolean;
 
+  public setInputTypeComposer(itc: InputTypeComposer): this;
+
   public getInputTypeComposer(): InputTypeComposer;
 
   public getITC(): InputTypeComposer;
@@ -413,7 +426,7 @@ export class TypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public hasInterface(
-    interfaceObj: InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType,
+    iface: string | InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType,
   ): boolean;
 
   public addInterface(

@@ -76,9 +76,10 @@ import type {
 import { TypeComposer } from './TypeComposer';
 import type { SchemaComposer } from './SchemaComposer';
 import { InputTypeComposer } from './InputTypeComposer';
+import { ScalarTypeComposer } from './ScalarTypeComposer';
+import { EnumTypeComposer } from './EnumTypeComposer';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
-import { EnumTypeComposer } from './EnumTypeComposer';
 import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
 import type { Thunk } from './utils/definitions';
@@ -120,6 +121,7 @@ export function isInputType(type: any): boolean {
 const RegexpOutputTypeDefinition = /type\s[^{]+\{[^}]+\}/im;
 const RegexpInputTypeDefinition = /input\s[^{]+\{[^}]+\}/im;
 const RegexpEnumTypeDefinition = /enum\s[^{]+\{[^}]+\}/im;
+const RegexpScalarTypeDefinition = /scalar\s/im;
 
 export class TypeMapper<TContext> {
   schemaComposer: SchemaComposer<TContext>;
@@ -147,10 +149,13 @@ export class TypeMapper<TContext> {
     if (!this.schemaComposer.has(name)) {
       if (name === 'JSON' || name === 'Json') {
         this.schemaComposer.set(name, GraphQLJSON);
+        return GraphQLJSON;
       } else if (name === 'Date') {
         this.schemaComposer.set(name, GraphQLDate);
+        return GraphQLDate;
       } else if (name === 'Buffer') {
         this.schemaComposer.set(name, GraphQLBuffer);
+        return GraphQLBuffer;
       } else {
         return null;
       }
@@ -172,8 +177,8 @@ export class TypeMapper<TContext> {
   }
 
   getWrapped(str: TypeWrappedString | TypeNameString): ?GraphQLType {
-    const inputTypeAST: TypeNode = parseType(str);
-    return typeFromAST(inputTypeAST, this.schemaComposer);
+    const typeAST: TypeNode = parseType(str);
+    return typeFromAST(typeAST, this.schemaComposer);
   }
 
   createType(str: TypeDefinitionString): ?GraphQLNamedType {
@@ -229,10 +234,9 @@ export class TypeMapper<TContext> {
     if (this.schemaComposer.hasInstance(composeType, TypeComposer)) {
       return this.schemaComposer.getTC(composeType).getType();
     } else if (typeof composeType === 'string') {
-      const type =
-        RegexpOutputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
-          ? this.createType(composeType)
-          : this.getWrapped(composeType);
+      const type = RegexpOutputTypeDefinition.test(composeType)
+        ? this.createType(composeType)
+        : this.getWrapped(composeType);
 
       if (!type) {
         throw new Error(`Cannot convert to OutputType the following string: '${composeType}'`);
@@ -273,7 +277,8 @@ export class TypeMapper<TContext> {
       composeFC instanceof TypeComposer ||
       composeFC instanceof EnumTypeComposer ||
       composeFC instanceof InterfaceTypeComposer ||
-      composeFC instanceof UnionTypeComposer
+      composeFC instanceof UnionTypeComposer ||
+      composeFC instanceof ScalarTypeComposer
     ) {
       return {
         type: composeFC.getType(),
@@ -319,7 +324,9 @@ export class TypeMapper<TContext> {
         fieldConfig.type = this.schemaComposer.getTC(composeType).getType();
       } else {
         const type =
-          RegexpOutputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
+          RegexpOutputTypeDefinition.test(composeType) ||
+          RegexpEnumTypeDefinition.test(composeType) ||
+          RegexpScalarTypeDefinition.test(composeType)
             ? this.createType(composeType)
             : this.getWrapped(composeType);
 
@@ -334,7 +341,8 @@ export class TypeMapper<TContext> {
       composeType instanceof TypeComposer ||
       composeType instanceof EnumTypeComposer ||
       composeType instanceof InterfaceTypeComposer ||
-      composeType instanceof UnionTypeComposer
+      composeType instanceof UnionTypeComposer ||
+      composeType instanceof ScalarTypeComposer
     ) {
       fieldConfig.type = composeType.getType();
     } else if (composeType instanceof Resolver) {
@@ -410,7 +418,11 @@ export class TypeMapper<TContext> {
 
     if (composeAC instanceof GraphQLList || composeAC instanceof GraphQLNonNull) {
       return { type: composeAC };
-    } else if (composeAC instanceof InputTypeComposer || composeAC instanceof EnumTypeComposer) {
+    } else if (
+      composeAC instanceof InputTypeComposer ||
+      composeAC instanceof EnumTypeComposer ||
+      composeAC instanceof ScalarTypeComposer
+    ) {
       return {
         type: composeAC.getType(),
         description: composeAC.getDescription(),
@@ -456,7 +468,9 @@ export class TypeMapper<TContext> {
         argConfig.type = this.schemaComposer.getITC(composeType).getType();
       } else {
         const type =
-          RegexpInputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
+          RegexpInputTypeDefinition.test(composeType) ||
+          RegexpEnumTypeDefinition.test(composeType) ||
+          RegexpScalarTypeDefinition.test(composeType)
             ? this.createType(composeType)
             : this.getWrapped(composeType);
 
@@ -470,7 +484,8 @@ export class TypeMapper<TContext> {
       }
     } else if (
       composeType instanceof InputTypeComposer ||
-      composeType instanceof EnumTypeComposer
+      composeType instanceof EnumTypeComposer ||
+      composeType instanceof ScalarTypeComposer
     ) {
       argConfig.type = composeType.getType();
     } else {
@@ -541,7 +556,11 @@ export class TypeMapper<TContext> {
 
     if (composeIFC instanceof GraphQLList || composeIFC instanceof GraphQLNonNull) {
       return { type: composeIFC };
-    } else if (composeIFC instanceof InputTypeComposer || composeIFC instanceof EnumTypeComposer) {
+    } else if (
+      composeIFC instanceof InputTypeComposer ||
+      composeIFC instanceof EnumTypeComposer ||
+      composeIFC instanceof ScalarTypeComposer
+    ) {
       return {
         type: composeIFC.getType(),
         description: composeIFC.getDescription(),
@@ -587,7 +606,9 @@ export class TypeMapper<TContext> {
         fieldConfig.type = this.schemaComposer.getITC(composeType).getType();
       } else {
         const type =
-          RegexpInputTypeDefinition.test(composeType) || RegexpEnumTypeDefinition.test(composeType)
+          RegexpInputTypeDefinition.test(composeType) ||
+          RegexpEnumTypeDefinition.test(composeType) ||
+          RegexpScalarTypeDefinition.test(composeType)
             ? this.createType(composeType)
             : this.getWrapped(composeType);
 
@@ -601,7 +622,8 @@ export class TypeMapper<TContext> {
       }
     } else if (
       composeType instanceof InputTypeComposer ||
-      composeType instanceof EnumTypeComposer
+      composeType instanceof EnumTypeComposer ||
+      composeType instanceof ScalarTypeComposer
     ) {
       fieldConfig.type = composeType.getType();
     } else {
@@ -694,6 +716,15 @@ function typeDefNamed(
   }
   if (typeStorage && typeStorage.has(typeName)) {
     return (typeStorage.get(typeName): any);
+  }
+  if (typeName === 'Query') {
+    return schema.Query.getType();
+  }
+  if (typeName === 'Mutation') {
+    return schema.Mutation.getType();
+  }
+  if (typeName === 'Subscription') {
+    return schema.Subscription.getType();
   }
   throw new Error(`Cannot find type with name '${typeName}' in SchemaComposer.`);
 }

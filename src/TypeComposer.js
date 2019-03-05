@@ -19,8 +19,11 @@ import type {
   GraphQLIsTypeOfFn,
   GraphQLResolveInfo,
   GraphQLFieldResolver,
+  FieldDefinitionNode,
+  InputValueDefinitionNode,
 } from './graphql';
 import type { InputTypeComposer } from './InputTypeComposer';
+import type { ScalarTypeComposer } from './ScalarTypeComposer';
 import type { EnumTypeComposer } from './EnumTypeComposer';
 import type { TypeAsString } from './TypeMapper';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
@@ -39,6 +42,7 @@ import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './uti
 import { defineFieldMap, defineFieldMapToConfig } from './utils/configToDefine';
 import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath } from './utils/typeByPath';
+import { getComposeTypeName } from './utils/typeHelpers';
 // import { deprecate } from './utils/debug';
 import type { ProjectionType } from './utils/projection';
 import type { ObjMap, Thunk } from './utils/definitions';
@@ -92,7 +96,7 @@ export type ComposeFieldConfigAsObject<TSource, TContext> = {
   +subscribe?: GraphQLFieldResolver<TSource, TContext>,
   +deprecationReason?: ?string,
   +description?: ?string,
-  // +astNode?: any,
+  +astNode?: FieldDefinitionNode | null,
   +[key: string]: any,
 };
 
@@ -115,6 +119,7 @@ export type ComposeOutputType<TContext> =
   | Resolver<any, TContext>
   | InterfaceTypeComposer<TContext>
   | UnionTypeComposer<TContext>
+  | ScalarTypeComposer
   | Array<ComposeOutputType<TContext>>;
 
 // Compose Args -----------------------------
@@ -123,12 +128,13 @@ export type ComposeArgumentType =
   | TypeAsString
   | InputTypeComposer
   | EnumTypeComposer
+  | ScalarTypeComposer
   | Array<ComposeArgumentType>;
 export type ComposeArgumentConfigAsObject = {
   +type: Thunk<ComposeArgumentType> | GraphQLInputType,
   +defaultValue?: mixed,
   +description?: ?string,
-  // +astNode?: any,
+  +astNode?: InputValueDefinitionNode | null,
   +[key: string]: any,
 };
 export type ComposePartialArgumentConfigAsObject = {
@@ -647,6 +653,11 @@ export class TypeComposer<TContext> {
     return !!this.gqType._gqcInputTypeComposer;
   }
 
+  setInputTypeComposer(itc: InputTypeComposer): TypeComposer<TContext> {
+    this.gqType._gqcInputTypeComposer = itc;
+    return this;
+  }
+
   getInputTypeComposer(): InputTypeComposer {
     if (!this.gqType._gqcInputTypeComposer) {
       this.gqType._gqcInputTypeComposer = toInputObjectType(this);
@@ -819,8 +830,10 @@ export class TypeComposer<TContext> {
     return this;
   }
 
-  hasInterface(interfaceObj: GraphQLInterfaceType | InterfaceTypeComposer<TContext>): boolean {
-    return this.getInterfaces().indexOf(interfaceObj) > -1;
+  hasInterface(iface: string | GraphQLInterfaceType | InterfaceTypeComposer<TContext>): boolean {
+    const nameAsString = getComposeTypeName(iface);
+    const ifaces = this.getInterfaces();
+    return !!ifaces.find(i => getComposeTypeName(i) === nameAsString);
   }
 
   addInterface(

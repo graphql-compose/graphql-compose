@@ -11,6 +11,7 @@ import { Thunk, ObjMap } from './utils/definitions';
 import { TypeAsString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
+import { ScalarTypeComposer } from './ScalarTypeComposer';
 
 export type ComposeInputFieldConfigMap = ObjMap<ComposeInputFieldConfig>;
 
@@ -30,10 +31,15 @@ export type ComposeInputFieldConfigAsObject = {
 export type ComposeInputType =
   | InputTypeComposer
   | EnumTypeComposer
+  | ScalarTypeComposer
   | GraphQLInputType
   | TypeAsString
   | Array<
-      InputTypeComposer | EnumTypeComposer | GraphQLInputType | TypeAsString
+      | InputTypeComposer
+      | EnumTypeComposer
+      | ScalarTypeComposer
+      | GraphQLInputType
+      | TypeAsString
     >;
 
 export type ComposeInputObjectTypeConfig = {

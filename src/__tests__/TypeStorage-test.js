@@ -2,7 +2,14 @@
 
 import { TypeStorage } from '../TypeStorage';
 import { GraphQLString, GraphQLObjectType } from '../graphql';
-import { TypeComposer, InputTypeComposer, EnumTypeComposer, InterfaceTypeComposer } from '..';
+import {
+  TypeComposer,
+  InputTypeComposer,
+  ScalarTypeComposer,
+  EnumTypeComposer,
+  InterfaceTypeComposer,
+  UnionTypeComposer,
+} from '..';
 
 let typeStorage;
 beforeEach(() => {
@@ -63,6 +70,14 @@ describe('typeStorage', () => {
       expect(typeStorage.getITC('UserInput')).toBe(itc);
     });
 
+    it('should add ScalarTypeComposer', () => {
+      const stc = ScalarTypeComposer.createTemp('UserScalar');
+      const typeName = typeStorage.add(stc);
+      expect(typeName).toBe('UserScalar');
+      expect(typeStorage.get('UserScalar')).toBe(stc);
+      expect(typeStorage.getSTC('UserScalar')).toBe(stc);
+    });
+
     it('should add EnumTypeComposer', () => {
       const etc = EnumTypeComposer.createTemp('UserEnum');
       const typeName = typeStorage.add(etc);
@@ -87,6 +102,14 @@ describe('typeStorage', () => {
       expect(typeName).toBe('UserInterface');
       expect(typeStorage.get('UserInterface')).toBe(iftc);
       expect(typeStorage.getIFTC('UserInterface')).toBe(iftc);
+    });
+
+    it('should add UnionTypeComposer', () => {
+      const utc = UnionTypeComposer.createTemp('UserUnion');
+      const typeName = typeStorage.add(utc);
+      expect(typeName).toBe('UserUnion');
+      expect(typeStorage.get('UserUnion')).toBe(utc);
+      expect(typeStorage.getUTC('UserUnion')).toBe(utc);
     });
   });
 });

@@ -3,6 +3,7 @@
 import { isFunction } from './utils/is';
 import { TypeComposer } from './TypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
+import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
@@ -15,6 +16,7 @@ type V<TContext> =
   | EnumTypeComposer
   | InterfaceTypeComposer<TContext>
   | UnionTypeComposer<TContext>
+  | ScalarTypeComposer
   | GraphQLNamedType;
 
 // TypeStorage has all methods from Map class
@@ -54,7 +56,7 @@ export class TypeStorage<TContext> {
   get(typeName: K): V<TContext> {
     const v = this.types.get(typeName);
     if (!v) {
-      throw new Error(`Type with name ${JSON.stringify(typeName)} does not exists in TypeStorage`);
+      throw new Error(`Type with name ${JSON.stringify(typeName)} does not exists`);
     }
     return v;
   }
@@ -148,6 +150,13 @@ export class TypeStorage<TContext> {
   getUTC(typeName: K): UnionTypeComposer<TContext> {
     if (!this.hasInstance(typeName, UnionTypeComposer)) {
       throw new Error(`Cannot find UnionTypeComposer with name ${typeName}`);
+    }
+    return (this.get(typeName): any);
+  }
+
+  getSTC(typeName: K): ScalarTypeComposer {
+    if (!this.hasInstance(typeName, ScalarTypeComposer)) {
+      throw new Error(`Cannot find ScalarTypeComposer with name ${typeName}`);
     }
     return (this.get(typeName): any);
   }
