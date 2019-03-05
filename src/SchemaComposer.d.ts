@@ -126,6 +126,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     onCreate?: (stc: ScalarTypeComposer) => any,
   ): ScalarTypeComposer;
 
+  public add(typeOrSDL: any): string | null;
   public addTypeDefs(typeDefs: string): TypeStorage<GraphQLNamedType>;
 
   public addResolveMethods(

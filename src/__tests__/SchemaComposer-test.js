@@ -483,6 +483,85 @@ describe('SchemaComposer', () => {
     });
   });
 
+  describe('add()', () => {
+    it('should add TypeComposer', () => {
+      const sc = new SchemaComposer();
+      const tc = sc.TypeComposer.createTemp('User');
+      const typeName = sc.add(tc);
+      expect(typeName).toBe('User');
+      expect(sc.get('User')).toBe(tc);
+      expect(sc.getTC('User')).toBe(tc);
+      sc.add(`type Object { a: Int }`);
+      expect(sc.get('Object')).toBeInstanceOf(TypeComposer);
+    });
+
+    it('should add InputTypeComposer', () => {
+      const sc = new SchemaComposer();
+      const itc = sc.InputTypeComposer.createTemp('UserInput');
+      const typeName = sc.add(itc);
+      expect(typeName).toBe('UserInput');
+      expect(sc.get('UserInput')).toBe(itc);
+      expect(sc.getITC('UserInput')).toBe(itc);
+      sc.add(`input Object { a: Int }`);
+      expect(sc.get('Object')).toBeInstanceOf(InputTypeComposer);
+    });
+
+    it('should add ScalarTypeComposer', () => {
+      const sc = new SchemaComposer();
+      const stc = sc.ScalarTypeComposer.createTemp('UserScalar');
+      const typeName = sc.add(stc);
+      expect(typeName).toBe('UserScalar');
+      expect(sc.get('UserScalar')).toBe(stc);
+      expect(sc.getSTC('UserScalar')).toBe(stc);
+      sc.add(`scalar Object`);
+      expect(sc.get('Object')).toBeInstanceOf(ScalarTypeComposer);
+    });
+
+    it('should add EnumTypeComposer', () => {
+      const sc = new SchemaComposer();
+      const etc = sc.EnumTypeComposer.createTemp('UserEnum');
+      const typeName = sc.add(etc);
+      expect(typeName).toBe('UserEnum');
+      expect(sc.get('UserEnum')).toBe(etc);
+      expect(sc.getETC('UserEnum')).toBe(etc);
+      sc.add(`enum Object { A }`);
+      expect(sc.get('Object')).toBeInstanceOf(EnumTypeComposer);
+    });
+
+    it('should add GraphQLObjectType', () => {
+      const sc = new SchemaComposer();
+      const t = new GraphQLObjectType({
+        name: 'NativeType',
+        fields: (() => {}: any),
+      });
+      const typeName = sc.add(t);
+      expect(typeName).toBe('NativeType');
+      expect(sc.get('NativeType')).toBe(t);
+    });
+
+    it('should add InterfaceTypeComposer', () => {
+      const sc = new SchemaComposer();
+      const iftc = sc.InterfaceTypeComposer.createTemp('UserInterface');
+      const typeName = sc.add(iftc);
+      expect(typeName).toBe('UserInterface');
+      expect(sc.get('UserInterface')).toBe(iftc);
+      expect(sc.getIFTC('UserInterface')).toBe(iftc);
+      sc.add(`interface Object { a: Int }`);
+      expect(sc.get('Object')).toBeInstanceOf(InterfaceTypeComposer);
+    });
+
+    it('should add UnionTypeComposer', () => {
+      const sc = new SchemaComposer();
+      const utc = sc.UnionTypeComposer.createTemp('UserUnion');
+      const typeName = sc.add(utc);
+      expect(typeName).toBe('UserUnion');
+      expect(sc.get('UserUnion')).toBe(utc);
+      expect(sc.getUTC('UserUnion')).toBe(utc);
+      sc.add(`type A { f: Int }`);
+      sc.add(`union Object = A`);
+      expect(sc.get('Object')).toBeInstanceOf(UnionTypeComposer);
+    });
+  });
   describe('addTypeDefs', () => {
     it('should parse types from SDL', () => {
       const sc = new SchemaComposer();

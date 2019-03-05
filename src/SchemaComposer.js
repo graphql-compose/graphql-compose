@@ -369,6 +369,13 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     return super.getSTC(typeName);
   }
 
+  add(typeOrSDL: mixed): ?string {
+    if (typeof typeOrSDL === 'string') {
+      return this.addAsComposer(typeOrSDL);
+    } else {
+      return super.add((typeOrSDL: any));
+    }
+  }
   addTypeDefs(typeDefs: string): TypeStorage<GraphQLNamedType> {
     const types = this.typeMapper.parseTypesFromString(typeDefs);
     types.forEach((type: any) => {
