@@ -483,6 +483,87 @@ describe('SchemaComposer', () => {
     });
   });
 
+  describe('getAnyTC()', () => {
+    it('should return TypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.TypeComposer.create(`type Object1 { name: String }`);
+      expect(sc.getAnyTC('Object1')).toBeInstanceOf(TypeComposer);
+      sc.add(
+        new GraphQLObjectType({
+          name: 'Object2',
+          fields: () => ({}),
+        })
+      );
+      expect(sc.getAnyTC('Object2')).toBeInstanceOf(TypeComposer);
+    });
+
+    it('should return InputTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.InputTypeComposer.create(`input Input1 { name: String }`);
+      expect(sc.getAnyTC('Input1')).toBeInstanceOf(InputTypeComposer);
+      sc.add(
+        new GraphQLInputObjectType({
+          name: 'Input2',
+          fields: () => ({}),
+        })
+      );
+      expect(sc.getAnyTC('Input2')).toBeInstanceOf(InputTypeComposer);
+    });
+
+    it('should return ScalarTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.ScalarTypeComposer.create(`scalar Scalar1`);
+      expect(sc.getAnyTC('Scalar1')).toBeInstanceOf(ScalarTypeComposer);
+      sc.add(
+        new GraphQLScalarType({
+          name: 'Scalar2',
+          serialize: () => {},
+        })
+      );
+      expect(sc.getAnyTC('Scalar2')).toBeInstanceOf(ScalarTypeComposer);
+    });
+
+    it('should return EnumTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.EnumTypeComposer.create(`enum Enum1 { A B }`);
+      expect(sc.getAnyTC('Enum1')).toBeInstanceOf(EnumTypeComposer);
+      sc.add(
+        new GraphQLEnumType({
+          name: 'Enum2',
+          values: {},
+        })
+      );
+      expect(sc.getAnyTC('Enum2')).toBeInstanceOf(EnumTypeComposer);
+    });
+
+    it('should return InterfaceTypeComposer', () => {
+      const sc = new SchemaComposer();
+      sc.InterfaceTypeComposer.create(`interface Iface1 { f1: Int }`);
+      expect(sc.getAnyTC('Iface1')).toBeInstanceOf(InterfaceTypeComposer);
+      sc.add(
+        new GraphQLInterfaceType({
+          name: 'Iface2',
+          fields: () => ({}),
+        })
+      );
+      expect(sc.getAnyTC('Iface2')).toBeInstanceOf(InterfaceTypeComposer);
+    });
+
+    it('should return UnionTypeComposer', () => {
+      const sc = new SchemaComposer();
+      const a = sc.createObjectTC(`type A { f: Int }`);
+      sc.UnionTypeComposer.create(`union Union1 = A`);
+      expect(sc.getAnyTC('Union1')).toBeInstanceOf(UnionTypeComposer);
+      sc.add(
+        new GraphQLUnionType({
+          name: 'Union2',
+          types: [a.getType()],
+        })
+      );
+      expect(sc.getAnyTC('Union2')).toBeInstanceOf(UnionTypeComposer);
+    });
+  });
+
   describe('add()', () => {
     it('should add TypeComposer', () => {
       const sc = new SchemaComposer();

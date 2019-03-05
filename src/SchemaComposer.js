@@ -369,6 +369,46 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     return super.getSTC(typeName);
   }
 
+  getAnyTC(
+    typeName: any
+  ):
+    | _TypeComposer<TContext>
+    | _InputTypeComposer
+    | _EnumTypeComposer
+    | _InterfaceTypeComposer<TContext>
+    | _UnionTypeComposer<TContext>
+    | _ScalarTypeComposer {
+    const type = this.get(typeName);
+    if (
+      type instanceof _TypeComposer ||
+      type instanceof _InputTypeComposer ||
+      type instanceof _ScalarTypeComposer ||
+      type instanceof _EnumTypeComposer ||
+      type instanceof _InterfaceTypeComposer ||
+      type instanceof _UnionTypeComposer
+    ) {
+      return type;
+    } else if (type instanceof GraphQLObjectType) {
+      return this.TypeComposer.create(type);
+    } else if (type instanceof GraphQLInputObjectType) {
+      return this.InputTypeComposer.create(type);
+    } else if (type instanceof GraphQLScalarType) {
+      return this.ScalarTypeComposer.create(type);
+    } else if (type instanceof GraphQLEnumType) {
+      return this.EnumTypeComposer.create(type);
+    } else if (type instanceof GraphQLInterfaceType) {
+      return this.InterfaceTypeComposer.create(type);
+    } else if (type instanceof GraphQLUnionType) {
+      return this.UnionTypeComposer.create(type);
+    }
+
+    throw new Error(
+      `Type with name ${inspect(
+        typeName
+      )} cannot be obtained as any Composer helper. Put something strange?`
+    );
+  }
+
   add(typeOrSDL: mixed): ?string {
     if (typeof typeOrSDL === 'string') {
       return this.addAsComposer(typeOrSDL);
