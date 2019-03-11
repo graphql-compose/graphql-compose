@@ -13,11 +13,20 @@ import { defineEnumValues, defineEnumValuesToConfig } from './utils/configToDefi
 import { graphqlVersion } from './utils/graphqlVersion';
 import type { TypeAsString } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
+import type { Extensions } from './TypeComposer';
 
-export type EnumTypeComposerDefinition = TypeAsString | GraphQLEnumTypeConfig | GraphQLEnumType;
+export type EnumTypeComposerDefinition = TypeAsString | ComposeEnumTypeConfig | GraphQLEnumType;
+
+export type ComposeEnumTypeConfig = GraphQLEnumTypeConfig & {
+  +extensions?: Extensions,
+};
+
+export type GraphQLEnumTypeExtended = GraphQLEnumType & {
+  _gqcExtensions?: Extensions,
+};
 
 export class EnumTypeComposer {
-  gqType: GraphQLEnumType;
+  gqType: GraphQLEnumTypeExtended;
 
   static schemaComposer: SchemaComposer<any>;
 
@@ -65,6 +74,7 @@ export class EnumTypeComposer {
         ...(typeDef: any),
       });
       ETC = new this.schemaComposer.EnumTypeComposer(type);
+      ETC.gqType._gqcExtensions = typeDef.extensions || {};
     } else {
       throw new Error('You should provide GraphQLEnumTypeConfig or string with enum name or SDL');
     }
@@ -255,6 +265,61 @@ export class EnumTypeComposer {
       });
     }
 
+    return this;
+  }
+
+  // -----------------------------------------------
+  // Extensions methods
+  // -----------------------------------------------
+
+  getExtensions(): Extensions {
+    if (!this.gqType._gqcExtensions) {
+      return {};
+    } else {
+      return this.gqType._gqcExtensions;
+    }
+  }
+
+  setExtensions(extensions: Extensions): EnumTypeComposer {
+    this.gqType._gqcExtensions = extensions;
+    return this;
+  }
+
+  extendExtensions(extensions: Extensions): EnumTypeComposer {
+    const current = this.getExtensions();
+    this.setExtensions({
+      ...current,
+      ...extensions,
+    });
+    return this;
+  }
+
+  clearExtensions(): EnumTypeComposer {
+    this.setExtensions({});
+    return this;
+  }
+
+  getExtension(extensionName: string): ?any {
+    const extensions = this.getExtensions();
+    return extensions[extensionName];
+  }
+
+  hasExtension(extensionName: string): boolean {
+    const extensions = this.getExtensions();
+    return extensionName in extensions;
+  }
+
+  setExtension(extensionName: string, value: any): EnumTypeComposer {
+    this.extendExtensions({
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeExtension(extensionName: string): EnumTypeComposer {
+    const extensions = { ...this.getExtensions() };
+    delete extensions[extensionName];
+    this.setExtensions(extensions);
     return this;
   }
 

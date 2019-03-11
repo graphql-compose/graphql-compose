@@ -1,17 +1,24 @@
 /* @flow strict */
 /* eslint-disable no-use-before-define */
 
-import { GraphQLInputObjectType, GraphQLNonNull, GraphQLList, getNamedType } from './graphql';
+import {
+  GraphQLInputObjectType,
+  GraphQLNonNull,
+  GraphQLList,
+  getNamedType,
+  isInputType,
+} from './graphql';
 import { resolveMaybeThunk, upperFirst } from './utils/misc';
 import { deprecate } from './utils/debug';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveInputConfigMapAsThunk, resolveInputConfigAsThunk } from './utils/configAsThunk';
 import { typeByPath } from './utils/typeByPath';
 import type { Thunk, ObjMap } from './utils/definitions';
-import type { ScalarTypeComposer } from './ScalarTypeComposer';
-import type { EnumTypeComposer } from './EnumTypeComposer';
+import { ScalarTypeComposer } from './ScalarTypeComposer';
+import { EnumTypeComposer } from './EnumTypeComposer';
 import type { TypeAsString } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
+import type { Extensions } from './TypeComposer';
 import type {
   GraphQLInputFieldConfig,
   GraphQLInputFieldConfigMap,
@@ -23,6 +30,7 @@ import { defineInputFieldMap, defineInputFieldMapToConfig } from './utils/config
 
 export type GraphQLInputObjectTypeExtended = GraphQLInputObjectType & {
   _gqcFields?: ComposeInputFieldConfigMap,
+  _gqcExtensions?: Extensions,
 };
 
 export type ComposeInputFieldConfigMap = ObjMap<ComposeInputFieldConfig>;
@@ -38,6 +46,7 @@ export type ComposeInputFieldConfigAsObject = {
   description?: ?string,
   astNode?: ?InputValueDefinitionNode,
   [key: string]: any,
+  extensions?: Extensions,
 };
 
 export type ComposeInputType =
@@ -48,10 +57,21 @@ export type ComposeInputType =
   | TypeAsString
   | Array<ComposeInputType>;
 
+export function isComposeInputType(type: mixed): boolean %checks {
+  return (
+    isInputType(type) ||
+    (Array.isArray(type) && isComposeInputType(type[0])) ||
+    type instanceof InputTypeComposer ||
+    type instanceof EnumTypeComposer ||
+    type instanceof ScalarTypeComposer
+  );
+}
+
 export type ComposeInputObjectTypeConfig = {
   name: string,
   fields: Thunk<ComposeInputFieldConfigMap>,
   description?: ?string,
+  extensions?: Extensions,
 };
 
 export type InputTypeComposerDefinition =
@@ -114,6 +134,7 @@ export class InputTypeComposer {
       });
       ITC = new this.schemaComposer.InputTypeComposer(type);
       if (isObject(typeDef.fields)) ITC.addFields(typeDef.fields);
+      ITC.gqType._gqcExtensions = typeDef.extensions || {};
     } else {
       throw new Error(
         'You should provide InputObjectConfig or string with type name to InputTypeComposer.create(opts)'
@@ -422,6 +443,124 @@ export class InputTypeComposer {
         fields: newFields,
       })
     );
+  }
+
+  // -----------------------------------------------
+  // Extensions methods
+  // -----------------------------------------------
+
+  getExtensions(): Extensions {
+    if (!this.gqType._gqcExtensions) {
+      return {};
+    } else {
+      return this.gqType._gqcExtensions;
+    }
+  }
+
+  setExtensions(extensions: Extensions): InputTypeComposer {
+    this.gqType._gqcExtensions = extensions;
+    return this;
+  }
+
+  extendExtensions(extensions: Extensions): InputTypeComposer {
+    const current = this.getExtensions();
+    this.setExtensions({
+      ...current,
+      ...extensions,
+    });
+    return this;
+  }
+
+  clearExtensions(): InputTypeComposer {
+    this.setExtensions({});
+    return this;
+  }
+
+  getExtension(extensionName: string): ?any {
+    const extensions = this.getExtensions();
+    return extensions[extensionName];
+  }
+
+  hasExtension(extensionName: string): boolean {
+    const extensions = this.getExtensions();
+    return extensionName in extensions;
+  }
+
+  setExtension(extensionName: string, value: any): InputTypeComposer {
+    this.extendExtensions({
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeExtension(extensionName: string): InputTypeComposer {
+    const extensions = { ...this.getExtensions() };
+    delete extensions[extensionName];
+    this.setExtensions(extensions);
+    return this;
+  }
+
+  getFieldExtensions(fieldName: string): Extensions {
+    const field = this.getField(fieldName);
+    if (
+      isObject(field) &&
+      !isFunction(field) &&
+      !Array.isArray(field) &&
+      !isComposeInputType(field) &&
+      // Flow is misbehaving so I have to add this
+      // it should be handled by the above isComposeInputType, but somehow is not
+      !(field instanceof GraphQLList) &&
+      !(field instanceof GraphQLNonNull)
+    ) {
+      return (field: ComposeInputObjectTypeConfig).extensions || {};
+    } else {
+      return {};
+    }
+  }
+
+  setFieldExtensions(fieldName: string, extensions: Extensions): InputTypeComposer {
+    this.extendField(fieldName, {
+      extensions,
+    });
+    return this;
+  }
+
+  extendFieldExtensions(fieldName: string, extensions: Extensions): InputTypeComposer {
+    const current = this.getFieldExtensions(fieldName);
+    this.setFieldExtensions(fieldName, {
+      ...current,
+      ...extensions,
+    });
+    return this;
+  }
+
+  clearFieldExtensions(fieldName: string): InputTypeComposer {
+    this.setFieldExtensions(fieldName, {});
+    return this;
+  }
+
+  getFieldExtension(fieldName: string, extensionName: string): ?any {
+    const extensions = this.getFieldExtensions(fieldName);
+    return extensions[extensionName];
+  }
+
+  hasFieldExtension(fieldName: string, extensionName: string): boolean {
+    const extensions = this.getFieldExtensions(fieldName);
+    return extensionName in extensions;
+  }
+
+  setFieldExtension(fieldName: string, extensionName: string, value: any): InputTypeComposer {
+    this.extendFieldExtensions(fieldName, {
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeFieldExtension(fieldName: string, extensionName: string): InputTypeComposer {
+    const extensions = { ...this.getFieldExtensions(fieldName) };
+    delete extensions[extensionName];
+    this.setFieldExtensions(fieldName, extensions);
+    return this;
   }
 
   // -----------------------------------------------

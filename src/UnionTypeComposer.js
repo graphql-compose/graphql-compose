@@ -10,6 +10,7 @@ import type { GraphQLResolveInfo, GraphQLTypeResolver } from './graphql';
 import type { TypeAsString, ComposeObjectType } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
 import type { Thunk } from './utils/definitions';
+import type { Extensions } from './TypeComposer';
 import { resolveTypeArrayAsThunk } from './utils/configAsThunk';
 import { getGraphQLType, getComposeTypeName } from './utils/typeHelpers';
 import { graphqlVersion } from './utils/graphqlVersion';
@@ -17,6 +18,7 @@ import { graphqlVersion } from './utils/graphqlVersion';
 export type GraphQLUnionTypeExtended<TSource, TContext> = GraphQLUnionType & {
   _gqcTypeMap?: Map<string, ComposeObjectType>,
   _gqcTypeResolvers?: UnionTypeResolversMap<TSource, TContext>,
+  _gqcExtensions?: Extensions,
 };
 
 export type ComposeTypesArray = Array<ComposeObjectType>;
@@ -39,6 +41,7 @@ export type ComposeUnionTypeConfig<TSource, TContext> = {
   +types?: Thunk<ComposeTypesArray>,
   +resolveType?: ?GraphQLTypeResolver<TSource, TContext>,
   +description?: ?string,
+  +extensions?: Extensions,
 };
 
 export type UnionTypeComposerDefinition<TContext> =
@@ -100,7 +103,8 @@ export class UnionTypeComposer<TContext> {
           : () => [],
       });
       UTC = new this.schemaComposer.UnionTypeComposer(type);
-      if (Array.isArray(types)) UTC.addTypes(types);
+      if (Array.isArray(types)) UTC.setTypes(types);
+      UTC.gqType._gqcExtensions = typeDef.extensions || {};
     } else {
       throw new Error(
         'You should provide GraphQLUnionTypeConfig or string with union name or SDL definition'
@@ -411,6 +415,61 @@ export class UnionTypeComposer<TContext> {
     const typeResolversMap = this.getTypeResolvers();
     typeResolversMap.delete(type);
     this.setTypeResolvers(typeResolversMap);
+    return this;
+  }
+
+  // -----------------------------------------------
+  // Extensions methods
+  // -----------------------------------------------
+
+  getExtensions(): Extensions {
+    if (!this.gqType._gqcExtensions) {
+      return {};
+    } else {
+      return this.gqType._gqcExtensions;
+    }
+  }
+
+  setExtensions(extensions: Extensions): UnionTypeComposer<TContext> {
+    this.gqType._gqcExtensions = extensions;
+    return this;
+  }
+
+  extendExtensions(extensions: Extensions): UnionTypeComposer<TContext> {
+    const current = this.getExtensions();
+    this.setExtensions({
+      ...current,
+      ...extensions,
+    });
+    return this;
+  }
+
+  clearExtensions(): UnionTypeComposer<TContext> {
+    this.setExtensions({});
+    return this;
+  }
+
+  getExtension(extensionName: string): ?any {
+    const extensions = this.getExtensions();
+    return extensions[extensionName];
+  }
+
+  hasExtension(extensionName: string): boolean {
+    const extensions = this.getExtensions();
+    return extensionName in extensions;
+  }
+
+  setExtension(extensionName: string, value: any): UnionTypeComposer<TContext> {
+    this.extendExtensions({
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeExtension(extensionName: string): UnionTypeComposer<TContext> {
+    const extensions = { ...this.getExtensions() };
+    delete extensions[extensionName];
+    this.setExtensions(extensions);
     return this;
   }
 

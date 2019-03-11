@@ -11,7 +11,7 @@ import {
 } from './graphql';
 import { isObject, isString, isFunction } from './utils/is';
 import { resolveMaybeThunk, inspect } from './utils/misc';
-import { TypeComposer } from './TypeComposer';
+import { TypeComposer, isComposeOutputType } from './TypeComposer';
 import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
@@ -30,6 +30,8 @@ import type {
   ComposeFieldConfigMap,
   ComposeFieldConfig,
   ComposePartialFieldConfigAsObject,
+  Extensions,
+  ComposeObjectTypeConfig,
 } from './TypeComposer';
 import type { Thunk } from './utils/definitions';
 import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './utils/configAsThunk';
@@ -43,6 +45,7 @@ export type GraphQLInterfaceTypeExtended<TSource, TContext> = GraphQLInterfaceTy
   _gqcFields?: ComposeFieldConfigMap<TSource, TContext>,
   _gqcInputTypeComposer?: InputTypeComposer,
   _gqcTypeResolvers?: InterfaceTypeResolversMap<TSource, TContext>,
+  _gqcExtensions?: Extensions,
 };
 
 export type InterfaceTypeResolversMap<TSource, TContext> = Map<
@@ -63,6 +66,7 @@ export type ComposeInterfaceTypeConfig<TSource, TContext> = {
   +fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>,
   +resolveType?: ?GraphQLTypeResolver<TSource, TContext>,
   +description?: ?string,
+  +extensions?: Extensions,
 };
 
 export type InterfaceTypeComposerDefinition<TContext> =
@@ -129,6 +133,7 @@ export class InterfaceTypeComposer<TContext> {
       });
       IFTC = new this.schemaComposer.InterfaceTypeComposer(type);
       if (isObject(typeDef.fields)) IFTC.addFields(typeDef.fields);
+      IFTC.gqType._gqcExtensions = typeDef.extensions || {};
     } else {
       throw new Error(
         'You should provide GraphQLInterfaceTypeConfig or string with interface name or SDL definition'
@@ -659,6 +664,127 @@ export class InterfaceTypeComposer<TContext> {
     const typeResolversMap = this.getTypeResolvers();
     typeResolversMap.delete(type);
     this.setTypeResolvers(typeResolversMap);
+    return this;
+  }
+
+  // -----------------------------------------------
+  // Extensions methods
+  // -----------------------------------------------
+
+  getExtensions(): Extensions {
+    if (!this.gqType._gqcExtensions) {
+      return {};
+    } else {
+      return this.gqType._gqcExtensions;
+    }
+  }
+
+  setExtensions(extensions: Extensions): InterfaceTypeComposer<TContext> {
+    this.gqType._gqcExtensions = extensions;
+    return this;
+  }
+
+  extendExtensions(extensions: Extensions): InterfaceTypeComposer<TContext> {
+    const current = this.getExtensions();
+    this.setExtensions({
+      ...current,
+      ...extensions,
+    });
+    return this;
+  }
+
+  clearExtensions(): InterfaceTypeComposer<TContext> {
+    this.setExtensions({});
+    return this;
+  }
+
+  getExtension(extensionName: string): ?any {
+    const extensions = this.getExtensions();
+    return extensions[extensionName];
+  }
+
+  hasExtension(extensionName: string): boolean {
+    const extensions = this.getExtensions();
+    return extensionName in extensions;
+  }
+
+  setExtension(extensionName: string, value: any): InterfaceTypeComposer<TContext> {
+    this.extendExtensions({
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeExtension(extensionName: string): InterfaceTypeComposer<TContext> {
+    const extensions = { ...this.getExtensions() };
+    delete extensions[extensionName];
+    this.setExtensions(extensions);
+    return this;
+  }
+
+  getFieldExtensions(fieldName: string): Extensions {
+    const field = this.getField(fieldName);
+    if (
+      isObject(field) &&
+      !isFunction(field) &&
+      !Array.isArray(field) &&
+      !isComposeOutputType(field)
+    ) {
+      return (field: ComposeObjectTypeConfig<any, any>).extensions || {};
+    } else {
+      return {};
+    }
+  }
+
+  setFieldExtensions(fieldName: string, extensions: Extensions): InterfaceTypeComposer<TContext> {
+    this.extendField(fieldName, {
+      extensions,
+    });
+    return this;
+  }
+
+  extendFieldExtensions(
+    fieldName: string,
+    extensions: Extensions
+  ): InterfaceTypeComposer<TContext> {
+    const current = this.getFieldExtensions(fieldName);
+    this.setFieldExtensions(fieldName, {
+      ...current,
+      ...extensions,
+    });
+    return this;
+  }
+
+  clearFieldExtensions(fieldName: string): InterfaceTypeComposer<TContext> {
+    this.setFieldExtensions(fieldName, {});
+    return this;
+  }
+
+  getFieldExtension(fieldName: string, extensionName: string): ?any {
+    const extensions = this.getFieldExtensions(fieldName);
+    return extensions[extensionName];
+  }
+
+  hasFieldExtension(fieldName: string, extensionName: string): boolean {
+    const extensions = this.getFieldExtensions(fieldName);
+    return extensionName in extensions;
+  }
+
+  setFieldExtension(
+    fieldName: string,
+    extensionName: string,
+    value: any
+  ): InterfaceTypeComposer<TContext> {
+    this.extendFieldExtensions(fieldName, {
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeFieldExtension(fieldName: string, extensionName: string): InterfaceTypeComposer<TContext> {
+    const extensions = { ...this.getFieldExtensions(fieldName) };
+    delete extensions[extensionName];
+    this.setFieldExtensions(fieldName, extensions);
     return this;
   }
 
