@@ -13,17 +13,26 @@ import {
 import { TypeMapper } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import { TypeAsString } from './TypeMapper';
+import { Extensions } from './utils/definitions';
+
+export type ComposeScalarTypeConfig = GraphQLScalarTypeConfig<any, any> & {
+  extensions?: Extensions;
+};
 
 export type ScalarTypeComposerDefinition =
   | TypeAsString
-  | GraphQLScalarTypeConfig<any, any>
+  | ComposeScalarTypeConfig
   | GraphQLScalarType;
+
+export type GraphQLScalarTypeExtended = GraphQLScalarType & {
+  _gqcExtensions?: Extensions;
+};
 
 export class ScalarTypeComposer {
   public static schemaComposer: SchemaComposer<any>;
   public schemaComposer: SchemaComposer<any>;
 
-  protected gqType: GraphQLScalarType;
+  protected gqType: GraphQLScalarTypeExtended;
 
   public constructor(gqType: GraphQLScalarType);
 
@@ -70,4 +79,24 @@ export class ScalarTypeComposer {
   public setDescription(description: string): this;
 
   public clone(newTypeName: string): ScalarTypeComposer;
+
+  // -----------------------------------------------
+  // Extensions methods
+  // -----------------------------------------------
+
+  public getExtensions(): Extensions;
+
+  public setExtensions(extensions: Extensions): this;
+
+  public extendExtensions(extensions: Extensions): this;
+
+  public clearExtensions(): this;
+
+  public getExtension(extensionName: string): any;
+
+  public hasExtension(extensionName: string): boolean;
+
+  public setExtension(extensionName: string, value: any): this;
+
+  public removeExtension(extensionName: string): this;
 }

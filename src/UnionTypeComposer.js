@@ -9,8 +9,7 @@ import { TypeComposer } from './TypeComposer';
 import type { GraphQLResolveInfo, GraphQLTypeResolver } from './graphql';
 import type { TypeAsString, ComposeObjectType } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
-import type { Thunk } from './utils/definitions';
-import type { Extensions } from './TypeComposer';
+import type { Thunk, Extensions, MaybePromise } from './utils/definitions';
 import { resolveTypeArrayAsThunk } from './utils/configAsThunk';
 import { getGraphQLType, getComposeTypeName } from './utils/typeHelpers';
 import { graphqlVersion } from './utils/graphqlVersion';
@@ -27,8 +26,6 @@ export type UnionTypeResolversMap<TSource, TContext> = Map<
   ComposeObjectType,
   UnionTypeResolverCheckFn<TSource, TContext>
 >;
-
-type MaybePromise<+T> = Promise<T> | T;
 
 export type UnionTypeResolverCheckFn<TSource, TContext> = (
   value: TSource,

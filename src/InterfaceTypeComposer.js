@@ -30,10 +30,9 @@ import type {
   ComposeFieldConfigMap,
   ComposeFieldConfig,
   ComposePartialFieldConfigAsObject,
-  Extensions,
   ComposeObjectTypeConfig,
 } from './TypeComposer';
-import type { Thunk } from './utils/definitions';
+import type { Thunk, Extensions, MaybePromise } from './utils/definitions';
 import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './utils/configAsThunk';
 import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath } from './utils/typeByPath';
@@ -52,8 +51,6 @@ export type InterfaceTypeResolversMap<TSource, TContext> = Map<
   TypeComposer<TContext> | GraphQLObjectType,
   InterfaceTypeResolverCheckFn<TSource, TContext>
 >;
-
-type MaybePromise<+T> = Promise<T> | T;
 
 export type InterfaceTypeResolverCheckFn<TSource, TContext> = (
   value: TSource,

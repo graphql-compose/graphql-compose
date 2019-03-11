@@ -20,11 +20,12 @@ import {
   TypeComposer,
 } from './TypeComposer';
 import { TypeAsString, ComposeObjectType } from './TypeMapper';
-import { Thunk } from './utils/definitions';
+import { Thunk, Extensions, MaybePromise } from './utils/definitions';
 
 export type GraphQLUnionTypeExtended<TSource, TContext> = GraphQLUnionType & {
   _gqcTypeMap: Map<string, ComposeObjectType>;
   _gqcTypeResolvers?: UnionTypeResolversMap<TSource, TContext>;
+  _gqcExtensions?: Extensions;
 };
 
 export type ComposeTypesArray = ComposeObjectType[];
@@ -33,8 +34,6 @@ export type UnionTypeResolversMap<TSource, TContext> = Map<
   ComposeObjectType,
   UnionTypeResolverCheckFn<TSource, TContext>
 >;
-
-type MaybePromise<T> = Promise<T> | T;
 
 export type UnionTypeResolverCheckFn<TSource, TContext> = (
   value: TSource,
@@ -47,6 +46,7 @@ export type ComposeUnionTypeConfig<TSource, TContext> = {
   types?: Thunk<ComposeTypesArray>;
   resolveType?: GraphQLTypeResolver<TSource, TContext> | null;
   description?: string | null;
+  extensions?: Extensions;
 };
 
 export type UnionTypeComposerDefinition<TContext> =
@@ -145,6 +145,26 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   public removeTypeResolver(
     type: TypeComposer<any, TContext> | GraphQLObjectType,
   ): this;
+
+  // -----------------------------------------------
+  // Extensions methods
+  // -----------------------------------------------
+
+  public getExtensions(): Extensions;
+
+  public setExtensions(extensions: Extensions): this;
+
+  public extendExtensions(extensions: Extensions): this;
+
+  public clearExtensions(): this;
+
+  public getExtension(extensionName: string): any;
+
+  public hasExtension(extensionName: string): boolean;
+
+  public setExtension(extensionName: string, value: any): this;
+
+  public removeExtension(extensionName: string): this;
 
   // -----------------------------------------------
   // Misc methods

@@ -15,7 +15,6 @@ import {
   ComposeOutputType,
   TypeComposer,
 } from './TypeComposer';
-import { GenericMap } from './utils/definitions';
 import { ProjectionType } from './utils/projection';
 
 export type ResolveParams<TSource, TContext, TArgs = any> = {
@@ -50,12 +49,12 @@ export type ResolverSortArgConfig<TSource, TContext> = {
   name: string;
   sortTypeNameFallback?: string;
   value:
+    | { [key: string]: any }
     | ResolverSortArgFn
     | string
     | number
     | boolean
-    | any[]
-    | GenericMap<any>;
+    | any[];
   deprecationReason?: string | null;
   description?: string | null;
 };

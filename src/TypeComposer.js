@@ -46,7 +46,7 @@ import { typeByPath } from './utils/typeByPath';
 import { getComposeTypeName } from './utils/typeHelpers';
 // import { deprecate } from './utils/debug';
 import type { ProjectionType } from './utils/projection';
-import type { ObjMap, Thunk } from './utils/definitions';
+import type { ObjMap, Thunk, Extensions } from './utils/definitions';
 import { graphqlVersion } from './utils/graphqlVersion';
 
 export type GetRecordIdFn<TSource, TContext> = (
@@ -54,8 +54,6 @@ export type GetRecordIdFn<TSource, TContext> = (
   args?: ?mixed,
   context?: TContext
 ) => string;
-
-export type Extensions = { [key: string]: any };
 
 export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
   _gqcInputTypeComposer?: InputTypeComposer,
@@ -75,7 +73,7 @@ export type ComposeObjectTypeConfig<TSource, TContext> = {
   +isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>,
   +description?: ?string,
   +isIntrospection?: boolean,
-  +extensions?: { [key: string]: any },
+  +extensions?: Extensions,
 };
 
 // extended GraphQLFieldConfigMap
@@ -213,7 +211,6 @@ export type TypeComposerDefinition<TContext> =
 
 export class TypeComposer<TContext> {
   gqType: GraphQLObjectTypeExtended<any, TContext>;
-  extensions: Extensions;
 
   static schemaComposer: SchemaComposer<TContext>;
 

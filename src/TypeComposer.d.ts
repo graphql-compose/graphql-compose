@@ -30,7 +30,7 @@ import {
 } from './Resolver';
 import { SchemaComposer } from './SchemaComposer';
 import { TypeAsString } from './TypeMapper';
-import { GenericMap, ObjMap, Thunk } from './utils/definitions';
+import { ObjMap, Thunk, Extensions } from './utils/definitions';
 import { ProjectionType } from './utils/projection';
 
 export type GetRecordIdFn<TSource, TContext> = (
@@ -48,6 +48,7 @@ export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
   _gqcInterfaces?: Array<
     GraphQLInterfaceType | InterfaceTypeComposer<TContext>
   >;
+  _gqcExtensions?: Extensions;
   description: string | null;
 };
 
@@ -58,6 +59,7 @@ export type ComposeObjectTypeConfig<TSource, TContext> = {
   isTypeOf?: GraphQLIsTypeOfFn<TSource, TContext> | null;
   description?: string | null;
   isIntrospection?: boolean;
+  extensions?: Extensions;
 };
 
 // extended GraphQLFieldConfigMap
@@ -91,6 +93,7 @@ export type ComposeFieldConfigAsObject<TSource, TContext, TArgs = any> = {
   deprecationReason?: string | null;
   description?: string | null;
   astNode?: FieldDefinitionNode | null;
+  extensions?: Extensions;
   [key: string]: any;
 } & { $call?: void };
 
@@ -189,13 +192,13 @@ export type RelationArgsMapperFn<TSource, TContext, TArgs = any> = (
 
 export type RelationArgsMapper<TSource, TContext, TArgs = any> = {
   [argName: string]:
+    | { [key: string]: any }
     | RelationArgsMapperFn<TSource, TContext, TArgs>
     | null
     | void
     | string
     | number
-    | any[]
-    | GenericMap<any>;
+    | any[];
 };
 
 export type TypeComposerDefinition<TContext> =
@@ -438,6 +441,46 @@ export class TypeComposer<TSource = any, TContext = any> {
   public removeInterface(
     interfaceObj: InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType,
   ): this;
+
+  // -----------------------------------------------
+  // Extensions methods
+  // -----------------------------------------------
+
+  public getExtensions(): Extensions;
+
+  public setExtensions(extensions: Extensions): this;
+
+  public extendExtensions(extensions: Extensions): this;
+
+  public clearExtensions(): this;
+
+  public getExtension(extensionName: string): any;
+
+  public hasExtension(extensionName: string): boolean;
+
+  public setExtension(extensionName: string, value: any): this;
+
+  public removeExtension(extensionName: string): this;
+
+  public getFieldExtensions(fieldName: string): Extensions;
+
+  public setFieldExtensions(fieldName: string, extensions: Extensions): this;
+
+  public extendFieldExtensions(fieldName: string, extensions: Extensions): this;
+
+  public clearFieldExtensions(fieldName: string): this;
+
+  public getFieldExtension(fieldName: string, extensionName: string): any;
+
+  public hasFieldExtension(fieldName: string, extensionName: string): boolean;
+
+  public setFieldExtension(
+    fieldName: string,
+    extensionName: string,
+    value: any,
+  ): this;
+
+  public removeFieldExtension(fieldName: string, extensionName: string): this;
 
   // -----------------------------------------------
   // Misc methods

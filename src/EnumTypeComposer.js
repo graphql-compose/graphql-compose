@@ -13,13 +13,13 @@ import { defineEnumValues, defineEnumValuesToConfig } from './utils/configToDefi
 import { graphqlVersion } from './utils/graphqlVersion';
 import type { TypeAsString } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
-import type { Extensions } from './TypeComposer';
-
-export type EnumTypeComposerDefinition = TypeAsString | ComposeEnumTypeConfig | GraphQLEnumType;
+import type { Extensions } from './utils/definitions';
 
 export type ComposeEnumTypeConfig = GraphQLEnumTypeConfig & {
   +extensions?: Extensions,
 };
+
+export type EnumTypeComposerDefinition = TypeAsString | ComposeEnumTypeConfig | GraphQLEnumType;
 
 export type GraphQLEnumTypeExtended = GraphQLEnumType & {
   _gqcExtensions?: Extensions,

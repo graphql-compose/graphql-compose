@@ -7,11 +7,16 @@ import {
   GraphQLInputType,
   InputValueDefinitionNode,
 } from './graphql';
-import { Thunk, ObjMap } from './utils/definitions';
+import { Thunk, ObjMap, Extensions } from './utils/definitions';
 import { TypeAsString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
+
+export type GraphQLInputObjectTypeExtended = GraphQLInputObjectType & {
+  _gqcFields?: ComposeInputFieldConfigMap;
+  _gqcExtensions?: Extensions;
+};
 
 export type ComposeInputFieldConfigMap = ObjMap<ComposeInputFieldConfig>;
 
@@ -25,6 +30,7 @@ export type ComposeInputFieldConfigAsObject = {
   defaultValue?: any;
   description?: string | null;
   astNode?: InputValueDefinitionNode | null;
+  extensions?: Extensions;
   [key: string]: any;
 } & { $call?: void };
 
@@ -48,6 +54,7 @@ export type ComposeInputObjectTypeConfig = {
   name: string;
   fields: Thunk<ComposeInputFieldConfigMap>;
   description?: string | null;
+  extensions?: Extensions;
 };
 
 export type InputTypeComposerDefinition =
@@ -59,7 +66,7 @@ export class InputTypeComposer {
   public static schemaComposer: SchemaComposer<any>;
   public schemaComposer: SchemaComposer<any>;
 
-  public gqType: GraphQLInputObjectType;
+  public gqType: GraphQLInputObjectTypeExtended;
 
   public constructor(gqType: GraphQLInputObjectType);
 
@@ -154,6 +161,46 @@ export class InputTypeComposer {
   public setDescription(description: string): this;
 
   public clone(newTypeName: string): InputTypeComposer;
+
+  // -----------------------------------------------
+  // Extensions methods
+  // -----------------------------------------------
+
+  public getExtensions(): Extensions;
+
+  public setExtensions(extensions: Extensions): this;
+
+  public extendExtensions(extensions: Extensions): this;
+
+  public clearExtensions(): this;
+
+  public getExtension(extensionName: string): any;
+
+  public hasExtension(extensionName: string): boolean;
+
+  public setExtension(extensionName: string, value: any): this;
+
+  public removeExtension(extensionName: string): this;
+
+  public getFieldExtensions(fieldName: string): Extensions;
+
+  public setFieldExtensions(fieldName: string, extensions: Extensions): this;
+
+  public extendFieldExtensions(fieldName: string, extensions: Extensions): this;
+
+  public clearFieldExtensions(fieldName: string): this;
+
+  public getFieldExtension(fieldName: string, extensionName: string): any;
+
+  public hasFieldExtension(fieldName: string, extensionName: string): boolean;
+
+  public setFieldExtension(
+    fieldName: string,
+    extensionName: string,
+    value: any,
+  ): this;
+
+  public removeFieldExtension(fieldName: string, extensionName: string): this;
 
   // -----------------------------------------------
   // Misc methods

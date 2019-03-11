@@ -13,12 +13,11 @@ import { deprecate } from './utils/debug';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveInputConfigMapAsThunk, resolveInputConfigAsThunk } from './utils/configAsThunk';
 import { typeByPath } from './utils/typeByPath';
-import type { Thunk, ObjMap } from './utils/definitions';
+import type { Thunk, ObjMap, Extensions } from './utils/definitions';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import type { TypeAsString } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
-import type { Extensions } from './TypeComposer';
 import type {
   GraphQLInputFieldConfig,
   GraphQLInputFieldConfigMap,
@@ -45,8 +44,8 @@ export type ComposeInputFieldConfigAsObject = {
   defaultValue?: mixed,
   description?: ?string,
   astNode?: ?InputValueDefinitionNode,
-  [key: string]: any,
   extensions?: Extensions,
+  [key: string]: any,
 };
 
 export type ComposeInputType =

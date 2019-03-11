@@ -11,7 +11,7 @@ import type {
 } from './graphql';
 import type { TypeAsString } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
-import type { Extensions } from './TypeComposer';
+import type { Extensions } from './utils/definitions';
 
 export type ComposeScalarTypeConfig = GraphQLScalarTypeConfig<any, any> & {
   +extensions?: Extensions,
