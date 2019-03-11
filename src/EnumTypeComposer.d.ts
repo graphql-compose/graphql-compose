@@ -27,8 +27,8 @@ export type GraphQLEnumTypeExtended = GraphQLEnumType & {
 
 export class EnumTypeComposer {
   public static schemaComposer: SchemaComposer<any>;
-  public schemaComposer: SchemaComposer<any>;
 
+  public schemaComposer: SchemaComposer<any>;
   protected gqType: GraphQLEnumTypeExtended;
 
   public constructor(gqType: GraphQLEnumType);

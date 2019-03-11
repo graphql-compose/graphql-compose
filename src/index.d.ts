@@ -77,7 +77,7 @@ export {
   RelationOpts,
   RelationOptsWithResolver,
   RelationOptsWithFieldConfig,
-  ArgsType,
+  ArgsMap,
   RelationArgsMapperFn,
   RelationArgsMapper,
 } from './TypeComposer';

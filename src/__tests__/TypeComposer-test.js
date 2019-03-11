@@ -614,13 +614,13 @@ describe('TypeComposer', () => {
         name: 'findById',
         resolve: () => '123',
       });
-      expect(await tc.getResolver('findById').resolve({})).toBe('123');
+      expect(await tc.getResolver('findById').resolve(({}: any))).toBe('123');
 
       tc.wrapResolverResolve('findById', next => async rp => {
         const prev = await next(rp);
         return `${prev}456`;
       });
-      expect(await tc.getResolver('findById').resolve({})).toBe('123456');
+      expect(await tc.getResolver('findById').resolve(({}: any))).toBe('123456');
     });
 
     it('wrapResolver() should wrap resolver via callback', async () => {
@@ -628,14 +628,14 @@ describe('TypeComposer', () => {
         name: 'update',
         resolve: () => '123',
       });
-      expect(await tc.getResolver('update').resolve({})).toBe('123');
+      expect(await tc.getResolver('update').resolve(({}: any))).toBe('123');
       const prevResolver = tc.getResolver('update');
 
       tc.wrapResolver('update', resolver => {
         resolver.resolve = () => '456'; // eslint-disable-line
         return resolver;
       });
-      expect(await tc.getResolver('update').resolve({})).toBe('456');
+      expect(await tc.getResolver('update').resolve(({}: any))).toBe('456');
       expect(tc.getResolver('update')).not.toBe(prevResolver);
       expect(prevResolver.resolve((undefined: any))).toBe('123');
     });
@@ -649,15 +649,15 @@ describe('TypeComposer', () => {
         },
         resolve: () => '123',
       });
-      expect(await tc.getResolver('update').resolve({})).toBe('123');
+      expect(await tc.getResolver('update').resolve(({}: any))).toBe('123');
 
       tc.wrapResolverAs('updateExt', 'update', resolver => {
         resolver.resolve = () => '456'; // eslint-disable-line
         resolver.addArgs({ c: 'Boolean' });
         return resolver;
       });
-      expect(await tc.getResolver('updateExt').resolve({})).toBe('456');
-      expect(await tc.getResolver('update').resolve({})).toBe('123');
+      expect(await tc.getResolver('updateExt').resolve(({}: any))).toBe('456');
+      expect(await tc.getResolver('update').resolve(({}: any))).toBe('123');
 
       expect(tc.getResolver('update').getArgNames()).toEqual(['a', 'b']);
       expect(tc.getResolver('updateExt').getArgNames()).toEqual(['a', 'b', 'c']);
@@ -685,7 +685,7 @@ describe('TypeComposer', () => {
           return '123';
         },
       });
-      expect(await tc.getResolver('update', [mw1, mw2]).resolve({})).toBe('123');
+      expect(await tc.getResolver('update', [mw1, mw2]).resolve(({}: any))).toBe('123');
       expect(log).toEqual(['m1.before', 'm2.before', 'call update', 'm2.after', 'm1.after']);
     });
   });

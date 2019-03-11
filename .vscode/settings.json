@@ -1,0 +1,7 @@
+{
+  "prettier.eslintIntegration": true,
+  "eslint.validate": [
+    "javascript",
+  ],
+  "javascript.validate.enable": false
+}

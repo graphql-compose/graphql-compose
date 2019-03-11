@@ -18,11 +18,11 @@ import type { SchemaComposer } from '../SchemaComposer';
  */
 export function typeByPath(
   src:
-    | TypeComposer<any>
+    | TypeComposer<any, any>
     | InputTypeComposer
-    | Resolver<any, any>
-    | InterfaceTypeComposer<any>
-    | UnionTypeComposer<any>,
+    | Resolver<any, any, any>
+    | InterfaceTypeComposer<any, any>
+    | UnionTypeComposer<any, any>,
   path: string | Array<string>
 ) {
   const parts = Array.isArray(path) ? path : String(path).split('.');
@@ -44,7 +44,7 @@ export function typeByPath(
   return src;
 }
 
-export function typeByPathTC(tc: TypeComposer<any>, parts: Array<string>) {
+export function typeByPathTC(tc: TypeComposer<any, any>, parts: Array<string>) {
   if (!tc) return undefined;
   if (parts.length === 0) return tc;
 
@@ -81,7 +81,7 @@ export function typeByPathITC(itc: InputTypeComposer, parts: Array<string>) {
   return processType(fieldType, parts.slice(1), itc.constructor.schemaComposer);
 }
 
-function typeByPathRSV(rsv: Resolver<any, any>, parts: Array<string>) {
+function typeByPathRSV(rsv: Resolver<any, any, any>, parts: Array<string>) {
   if (!rsv) return undefined;
   if (parts.length === 0) return rsv;
   const name = parts[0];
@@ -98,12 +98,12 @@ function typeByPathRSV(rsv: Resolver<any, any>, parts: Array<string>) {
 }
 
 /** @deprecated 6.0.0 */
-export function typeByPathFTC(tc: InterfaceTypeComposer<any>, parts: Array<string>) {
+export function typeByPathFTC(tc: InterfaceTypeComposer<any, any>, parts: Array<string>) {
   deprecate('Use `typeByPathIFTC()` method instead');
   return typeByPathIFTC(tc, parts);
 }
 
-export function typeByPathIFTC(tc: InterfaceTypeComposer<any>, parts: Array<string>) {
+export function typeByPathIFTC(tc: InterfaceTypeComposer<any, any>, parts: Array<string>) {
   if (!tc) return undefined;
   if (parts.length === 0) return tc;
 

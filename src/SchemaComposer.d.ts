@@ -34,8 +34,8 @@ type MustHaveTypes<TContext> =
   | TypeComposer<any, TContext>
   | InputTypeComposer
   | EnumTypeComposer
-  | InterfaceTypeComposer<TContext>
-  | UnionTypeComposer<TContext>
+  | InterfaceTypeComposer<any, TContext>
+  | UnionTypeComposer<any, TContext>
   | ScalarTypeComposer
   | GraphQLNamedType;
 
@@ -111,15 +111,15 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     onCreate?: (etc: EnumTypeComposer) => any,
   ): EnumTypeComposer;
 
-  public getOrCreateIFTC(
+  public getOrCreateIFTC<TSource = any>(
     typeName: string,
-    onCreate?: (iftc: InterfaceTypeComposer<TContext>) => any,
-  ): InterfaceTypeComposer<TContext>;
+    onCreate?: (iftc: InterfaceTypeComposer<TSource, TContext>) => any,
+  ): InterfaceTypeComposer<TSource, TContext>;
 
-  public getOrCreateUTC(
+  public getOrCreateUTC<TSource = any>(
     typeName: string,
-    onCreate?: (utc: UnionTypeComposer<TContext>) => any,
-  ): UnionTypeComposer<TContext>;
+    onCreate?: (utc: UnionTypeComposer<TSource, TContext>) => any,
+  ): UnionTypeComposer<TSource, TContext>;
 
   public getOrCreateSTC(
     typeName: string,
@@ -129,11 +129,11 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   public getAnyTC(
     typeName: any,
   ):
-    | TypeComposer<TContext>
+    | TypeComposer<any, TContext>
     | InputTypeComposer
     | EnumTypeComposer
-    | InterfaceTypeComposer<TContext>
-    | UnionTypeComposer<TContext>
+    | InterfaceTypeComposer<any, TContext>
+    | UnionTypeComposer<any, TContext>
     | ScalarTypeComposer;
 
   public add(typeOrSDL: any): string | null;
@@ -147,25 +147,25 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   ): void;
 
   // alias for createObjectTC
-  public createTC(
-    typeDef: TypeComposerDefinition<TContext>,
-  ): TypeComposer<TContext>;
+  public createTC<TSource = any>(
+    typeDef: TypeComposerDefinition<TSource, TContext>,
+  ): TypeComposer<TSource, TContext>;
 
-  public createObjectTC(
-    typeDef: TypeComposerDefinition<TContext>,
-  ): TypeComposer<TContext>;
+  public createObjectTC<TSource = any>(
+    typeDef: TypeComposerDefinition<TSource, TContext>,
+  ): TypeComposer<TSource, TContext>;
 
   public createInputTC(typeDef: InputTypeComposerDefinition): InputTypeComposer;
 
   public createEnumTC(typeDef: EnumTypeComposerDefinition): EnumTypeComposer;
 
-  public createInterfaceTC(
-    typeDef: InterfaceTypeComposerDefinition<TContext>,
-  ): InterfaceTypeComposer<TContext>;
+  public createInterfaceTC<TSource = any>(
+    typeDef: InterfaceTypeComposerDefinition<TSource, TContext>,
+  ): InterfaceTypeComposer<TSource, TContext>;
 
-  public createUnionTC(
-    typeDef: UnionTypeComposerDefinition<TContext>,
-  ): UnionTypeComposer<TContext>;
+  public createUnionTC<TSource = any>(
+    typeDef: UnionTypeComposerDefinition<TSource, TContext>,
+  ): UnionTypeComposer<TSource, TContext>;
 
   public createScalarTC(
     typeDef: ScalarTypeComposerDefinition,

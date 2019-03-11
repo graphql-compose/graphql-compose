@@ -123,7 +123,7 @@ export function resolveArgConfigAsThunk(
 
 export function resolveArgConfigMapAsThunk(
   schema: SchemaComposer<any>,
-  argMap: ComposeFieldConfigArgumentMap,
+  argMap: ComposeFieldConfigArgumentMap<any>,
   fieldName?: string,
   typeName?: string
 ): GraphQLFieldConfigArgumentMap {

@@ -1,6 +1,7 @@
 import { GraphQLType, GraphQLInputType, GraphQLObjectType } from '../graphql';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { TypeComposer } from '../TypeComposer';
+import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { SchemaComposer } from '../SchemaComposer';
 
 export interface ToInputObjectTypeOpts {
@@ -9,7 +10,7 @@ export interface ToInputObjectTypeOpts {
 }
 
 export function toInputObjectType(
-  typeComposer: TypeComposer<any, any>,
+  typeComposer: TypeComposer<any, any> | InterfaceTypeComposer<any, any>,
   opts?: ToInputObjectTypeOpts,
 ): InputTypeComposer;
 
@@ -24,4 +25,4 @@ export function convertInputObjectField(
   field: GraphQLType,
   opts: ConvertInputObjectFieldOpts,
   schemaComposer: SchemaComposer<any>,
-): GraphQLInputType;
+): GraphQLInputType | null;
