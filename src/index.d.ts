@@ -15,9 +15,13 @@ declare const GQC: SchemaComposer<any>;
 declare const schemaComposer: SchemaComposer<any>;
 export { SchemaComposer, schemaComposer, GQC };
 
-export { TypeComposer as TypeComposerClass } from './TypeComposer';
+export {
+  TypeComposer as TypeComposerClass,
+  isComposeOutputType,
+} from './TypeComposer';
 export {
   InputTypeComposer as InputTypeComposerClass,
+  isComposeInputType,
 } from './InputTypeComposer';
 export { EnumTypeComposer as EnumTypeComposerClass } from './EnumTypeComposer';
 export {

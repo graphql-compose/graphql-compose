@@ -32,8 +32,11 @@ export {
   TypeMapper,
 };
 
-export { TypeComposer as TypeComposerClass } from './TypeComposer';
-export { InputTypeComposer as InputTypeComposerClass } from './InputTypeComposer';
+export { TypeComposer as TypeComposerClass, isComposeOutputType } from './TypeComposer';
+export {
+  InputTypeComposer as InputTypeComposerClass,
+  isComposeInputType,
+} from './InputTypeComposer';
 export { EnumTypeComposer as EnumTypeComposerClass } from './EnumTypeComposer';
 export { ScalarTypeComposer as ScalarTypeComposerClass } from './ScalarTypeComposer';
 export { InterfaceTypeComposer as InterfaceTypeComposerClass } from './InterfaceTypeComposer';

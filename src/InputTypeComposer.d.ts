@@ -42,6 +42,8 @@ export type ComposeInputType =
       | TypeAsString
     >;
 
+export function isComposeInputType(type: any): boolean;
+
 export type ComposeInputObjectTypeConfig = {
   name: string;
   fields: Thunk<ComposeInputFieldConfigMap>;

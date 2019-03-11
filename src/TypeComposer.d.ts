@@ -114,6 +114,8 @@ export type ComposeOutputType<TSource, TContext, TArgs = any> =
       | UnionTypeComposer<TContext>
     >;
 
+export function isComposeOutputType(type: any): boolean;
+
 // Compose Args -----------------------------
 export type ComposeArgumentType =
   | GraphQLInputType
