@@ -47,6 +47,7 @@
     "Iterator": true,
     "$Shape": true,
     "$FlowFixMe": true,
-    "$ReadOnlyArray": true
+    "$ReadOnlyArray": true,
+    "$Keys": true
   }
 }

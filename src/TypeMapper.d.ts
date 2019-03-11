@@ -36,7 +36,7 @@ export type TypeAsString =
   | TypeWrappedString
   | TypeNameString;
 export type ComposeObjectType =
-  | TypeComposer<any>
+  | TypeComposer<any, any>
   | GraphQLObjectType
   | TypeDefinitionString
   | TypeAsString;
@@ -87,7 +87,7 @@ declare class TypeMapper {
   ): GraphQLArgumentConfig;
 
   public convertArgConfigMap(
-    composeArgsConfigMap: ComposeFieldConfigArgumentMap,
+    composeArgsConfigMap: ComposeFieldConfigArgumentMap<any>,
     fieldName?: string,
     typeName?: string,
   ): GraphQLFieldConfigArgumentMap;

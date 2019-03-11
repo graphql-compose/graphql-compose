@@ -578,10 +578,12 @@ describe('Resolver', () => {
           filterTypeNameFallback: 'FilterOtherUniqueNameInput',
         });
 
-      await newResolver.resolve({
-        args: { filter: { age: 15, isActive: false } },
-        someKey: 16,
-      });
+      await newResolver.resolve(
+        ({
+          args: { filter: { age: 15, isActive: false } },
+          someKey: 16,
+        }: any)
+      );
 
       expect((rpSnap: any).rawQuery).toEqual({
         age: { $gt: 15 },
@@ -717,7 +719,7 @@ describe('Resolver', () => {
         sortTypeNameFallback: 'SortEnum',
       });
 
-      newResolver.resolve({ args: { sort: 'PRICE_ASC' }, query });
+      newResolver.resolve(({ args: { sort: 'PRICE_ASC' }, query }: any));
       expect((rpSnap: any).args.sort).toEqual({ price: 1 });
       expect(whereSnap).toEqual({ price: { $gt: 0 } });
     });
@@ -841,10 +843,12 @@ describe('Resolver', () => {
           displayName: 'User.find()',
           resolve: () => {},
         });
-        r1.debugParams('args, args.sort, source.name').resolve({
-          source: { id: 1, name: 'Pavel' },
-          args: { limit: 1, sort: 'id' },
-        });
+        r1.debugParams('args, args.sort, source.name').resolve(
+          ({
+            source: { id: 1, name: 'Pavel' },
+            args: { limit: 1, sort: 'id' },
+          }: any)
+        );
 
         expect(console.log.mock.calls[0]).toEqual(['ResolveParams for User.find():']);
         expect(console.dir.mock.calls[0]).toEqual([
@@ -918,10 +922,12 @@ describe('Resolver', () => {
             params: 'args.sort source.name',
             payload: 'b, c.3',
           })
-          .resolve({
-            source: { id: 1, name: 'Pavel' },
-            args: { limit: 1, sort: 'id' },
-          });
+          .resolve(
+            ({
+              source: { id: 1, name: 'Pavel' },
+              args: { limit: 1, sort: 'id' },
+            }: any)
+          );
 
         expect(console.time.mock.calls[0]).toEqual(['Execution time for User.find()']);
         expect(console.timeEnd.mock.calls[0]).toEqual(['Execution time for User.find()']);
@@ -1055,7 +1061,7 @@ describe('Resolver', () => {
         return res;
       };
 
-      const res = await r.withMiddlewares([mw1, mw2]).resolve({});
+      const res = await r.withMiddlewares([mw1, mw2]).resolve(({}: any));
       expect(res).toBe('users result');
       expect(log).toEqual(['m1.before', 'm2.before', 'call User.find()', 'm2.after', 'm1.after']);
     });

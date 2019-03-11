@@ -11,11 +11,11 @@ import type { GraphQLNamedType } from './graphql';
 
 type K = any;
 type V<TContext> =
-  | TypeComposer<TContext>
+  | TypeComposer<any, TContext>
   | InputTypeComposer
   | EnumTypeComposer
-  | InterfaceTypeComposer<TContext>
-  | UnionTypeComposer<TContext>
+  | InterfaceTypeComposer<any, TContext>
+  | UnionTypeComposer<any, TContext>
   | ScalarTypeComposer
   | GraphQLNamedType;
 
@@ -119,7 +119,7 @@ export class TypeStorage<TContext> {
     return gqType;
   }
 
-  getTC(typeName: K): TypeComposer<TContext> {
+  getTC(typeName: K): TypeComposer<any, TContext> {
     if (!this.hasInstance(typeName, TypeComposer)) {
       throw new Error(`Cannot find TypeComposer with name ${typeName}`);
     }
@@ -140,14 +140,14 @@ export class TypeStorage<TContext> {
     return (this.get(typeName): any);
   }
 
-  getIFTC(typeName: K): InterfaceTypeComposer<TContext> {
+  getIFTC(typeName: K): InterfaceTypeComposer<any, TContext> {
     if (!this.hasInstance(typeName, InterfaceTypeComposer)) {
       throw new Error(`Cannot find InterfaceTypeComposer with name ${typeName}`);
     }
     return (this.get(typeName): any);
   }
 
-  getUTC(typeName: K): UnionTypeComposer<TContext> {
+  getUTC(typeName: K): UnionTypeComposer<any, TContext> {
     if (!this.hasInstance(typeName, UnionTypeComposer)) {
       throw new Error(`Cannot find UnionTypeComposer with name ${typeName}`);
     }

@@ -52,11 +52,11 @@ type ExtraSchemaConfig = {
 };
 
 type MustHaveTypes<TContext> =
-  | _TypeComposer<TContext>
+  | _TypeComposer<any, TContext>
   | _InputTypeComposer
   | _EnumTypeComposer
-  | _InterfaceTypeComposer<TContext>
-  | _UnionTypeComposer<TContext>
+  | _InterfaceTypeComposer<any, TContext>
+  | _UnionTypeComposer<any, TContext>
   | _ScalarTypeComposer
   | GraphQLNamedType;
 
@@ -79,13 +79,13 @@ const BUILT_IN_DIRECTIVES = [
 
 export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   typeMapper: TypeMapper<TContext>;
-  TypeComposer: Class<_TypeComposer<TContext>>;
+  TypeComposer: Class<_TypeComposer<any, TContext>>;
   InputTypeComposer: typeof _InputTypeComposer;
   EnumTypeComposer: typeof _EnumTypeComposer;
-  InterfaceTypeComposer: Class<_InterfaceTypeComposer<TContext>>;
-  UnionTypeComposer: Class<_UnionTypeComposer<TContext>>;
+  InterfaceTypeComposer: Class<_InterfaceTypeComposer<any, TContext>>;
+  UnionTypeComposer: Class<_UnionTypeComposer<any, TContext>>;
   ScalarTypeComposer: typeof _ScalarTypeComposer;
-  Resolver: Class<_Resolver<any, TContext>>;
+  Resolver: Class<_Resolver<any, TContext, any>>;
   _schemaMustHaveTypes: Array<MustHaveTypes<TContext>> = [];
   _directives: Array<GraphQLDirective> = BUILT_IN_DIRECTIVES;
 
@@ -93,7 +93,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     super();
     const schema = this;
 
-    class TypeComposer extends _TypeComposer<TContext> {
+    class TypeComposer extends _TypeComposer<any, TContext> {
       static schemaComposer = schema;
     }
     this.TypeComposer = TypeComposer;
@@ -103,7 +103,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     }
     this.InputTypeComposer = InputTypeComposer;
 
-    class Resolver extends _Resolver<any, TContext> {
+    class Resolver extends _Resolver<any, TContext, any> {
       static schemaComposer = schema;
     }
     this.Resolver = Resolver;
@@ -113,12 +113,12 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     }
     this.EnumTypeComposer = EnumTypeComposer;
 
-    class InterfaceTypeComposer extends _InterfaceTypeComposer<TContext> {
+    class InterfaceTypeComposer extends _InterfaceTypeComposer<any, TContext> {
       static schemaComposer = schema;
     }
     this.InterfaceTypeComposer = InterfaceTypeComposer;
 
-    class UnionTypeComposer extends _UnionTypeComposer<TContext> {
+    class UnionTypeComposer extends _UnionTypeComposer<any, TContext> {
       static schemaComposer = schema;
     }
     this.UnionTypeComposer = UnionTypeComposer;
@@ -134,27 +134,27 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     /* :: return this; */
   }
 
-  get Query(): _TypeComposer<TContext> {
+  get Query(): _TypeComposer<any, TContext> {
     return this.rootQuery();
   }
 
-  rootQuery(): _TypeComposer<TContext> {
+  rootQuery(): _TypeComposer<any, TContext> {
     return this.getOrCreateTC('Query');
   }
 
-  get Mutation(): _TypeComposer<TContext> {
+  get Mutation(): _TypeComposer<any, TContext> {
     return this.rootMutation();
   }
 
-  rootMutation(): _TypeComposer<TContext> {
+  rootMutation(): _TypeComposer<any, TContext> {
     return this.getOrCreateTC('Mutation');
   }
 
-  get Subscription(): _TypeComposer<TContext> {
+  get Subscription(): _TypeComposer<any, TContext> {
     return this.rootSubscription();
   }
 
-  rootSubscription(): _TypeComposer<TContext> {
+  rootSubscription(): _TypeComposer<any, TContext> {
     return this.getOrCreateTC('Subscription');
   }
 
@@ -210,7 +210,10 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     return this;
   }
 
-  removeEmptyTypes(typeComposer: _TypeComposer<TContext>, passedTypes: Set<string> = new Set()) {
+  removeEmptyTypes(
+    typeComposer: _TypeComposer<any, TContext>,
+    passedTypes: Set<string> = new Set()
+  ) {
     typeComposer.getFieldNames().forEach(fieldName => {
       const fieldType = typeComposer.getFieldType(fieldName);
       if (fieldType instanceof GraphQLObjectType) {
@@ -235,8 +238,8 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   getOrCreateTC(
     typeName: string,
-    onCreate?: (_TypeComposer<TContext>) => any
-  ): _TypeComposer<TContext> {
+    onCreate?: (_TypeComposer<any, TContext>) => any
+  ): _TypeComposer<any, TContext> {
     try {
       return this.getTC(typeName);
     } catch (e) {
@@ -271,8 +274,8 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   getOrCreateIFTC(
     typeName: string,
-    onCreate?: (_InterfaceTypeComposer<TContext>) => any
-  ): _InterfaceTypeComposer<TContext> {
+    onCreate?: (_InterfaceTypeComposer<any, TContext>) => any
+  ): _InterfaceTypeComposer<any, TContext> {
     try {
       return this.getIFTC(typeName);
     } catch (e) {
@@ -285,15 +288,15 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   getOrCreateUTC(
     typeName: string,
-    onCreate?: (_UnionTypeComposer<TContext>) => any
-  ): _UnionTypeComposer<TContext> {
+    onCreate?: (_UnionTypeComposer<any, TContext>) => any
+  ): _UnionTypeComposer<any, TContext> {
     try {
       return this.getUTC(typeName);
     } catch (e) {
-      const iftc = this.UnionTypeComposer.create(typeName);
-      this.set(typeName, iftc);
-      if (onCreate && isFunction(onCreate)) onCreate(iftc);
-      return iftc;
+      const utc = this.UnionTypeComposer.create(typeName);
+      this.set(typeName, utc);
+      if (onCreate && isFunction(onCreate)) onCreate(utc);
+      return utc;
     }
   }
 
@@ -327,7 +330,7 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     this._directives = BUILT_IN_DIRECTIVES;
   }
 
-  getTC(typeName: any): _TypeComposer<TContext> {
+  getTC(typeName: any): _TypeComposer<any, TContext> {
     if (this.hasInstance(typeName, GraphQLObjectType)) {
       return this.TypeComposer.create((this.get(typeName): any));
     }
@@ -348,14 +351,14 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     return super.getETC(typeName);
   }
 
-  getIFTC(typeName: any): _InterfaceTypeComposer<TContext> {
+  getIFTC(typeName: any): _InterfaceTypeComposer<any, TContext> {
     if (this.hasInstance(typeName, GraphQLInterfaceType)) {
       return this.InterfaceTypeComposer.create((this.get(typeName): any));
     }
     return super.getIFTC(typeName);
   }
 
-  getUTC(typeName: any): _UnionTypeComposer<TContext> {
+  getUTC(typeName: any): _UnionTypeComposer<any, TContext> {
     if (this.hasInstance(typeName, GraphQLUnionType)) {
       return this.UnionTypeComposer.create((this.get(typeName): any));
     }
@@ -372,11 +375,11 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   getAnyTC(
     typeName: any
   ):
-    | _TypeComposer<TContext>
+    | _TypeComposer<any, TContext>
     | _InputTypeComposer
     | _EnumTypeComposer
-    | _InterfaceTypeComposer<TContext>
-    | _UnionTypeComposer<TContext>
+    | _InterfaceTypeComposer<any, TContext>
+    | _UnionTypeComposer<any, TContext>
     | _ScalarTypeComposer {
     const type = this.get(typeName);
     if (
@@ -501,11 +504,11 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   }
 
   // alias for createObjectTC
-  createTC(typeDef: TypeComposerDefinition<TContext>): _TypeComposer<TContext> {
+  createTC(typeDef: TypeComposerDefinition<any, TContext>): _TypeComposer<any, TContext> {
     return this.createObjectTC(typeDef);
   }
 
-  createObjectTC(typeDef: TypeComposerDefinition<TContext>): _TypeComposer<TContext> {
+  createObjectTC(typeDef: TypeComposerDefinition<any, TContext>): _TypeComposer<any, TContext> {
     return this.TypeComposer.create(typeDef);
   }
 
@@ -518,12 +521,14 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   }
 
   createInterfaceTC(
-    typeDef: InterfaceTypeComposerDefinition<TContext>
-  ): _InterfaceTypeComposer<TContext> {
+    typeDef: InterfaceTypeComposerDefinition<any, TContext>
+  ): _InterfaceTypeComposer<any, TContext> {
     return this.InterfaceTypeComposer.create(typeDef);
   }
 
-  createUnionTC(typeDef: UnionTypeComposerDefinition<TContext>): _UnionTypeComposer<TContext> {
+  createUnionTC(
+    typeDef: UnionTypeComposerDefinition<any, TContext>
+  ): _UnionTypeComposer<any, TContext> {
     return this.UnionTypeComposer.create(typeDef);
   }
 

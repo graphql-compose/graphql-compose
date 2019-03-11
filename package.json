@@ -89,7 +89,6 @@
     "tslint": "tslint -p . \"src/**/*.d.ts\"",
     "tscheck": "tsc --noEmit",
     "flow": "./node_modules/.bin/flow",
-    "glow": "./node_modules/.bin/glow --watch",
     "test": "npm run coverage && npm run lint && npm run flow && npm run tscheck",
     "link": "yarn link graphql && yarn link",
     "unlink": "yarn unlink graphql && yarn add graphql",

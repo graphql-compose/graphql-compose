@@ -163,8 +163,7 @@ export class InputTypeComposer {
       if (graphqlVersion >= 14) {
         this.gqType._gqcFields = (defineInputFieldMapToConfig(this.gqType._fields): any);
       } else {
-        // $FlowFixMe
-        const fields: Thunk<GraphQLInputFieldConfigMap> = this.gqType._typeConfig.fields;
+        const fields: Thunk<GraphQLInputFieldConfigMap> = (this.gqType: any)._typeConfig.fields;
         this.gqType._gqcFields = (resolveMaybeThunk(fields) || {}: any);
       }
     }
@@ -196,8 +195,7 @@ export class InputTypeComposer {
         );
       };
     } else {
-      // $FlowFixMe
-      this.gqType._typeConfig.fields = () => {
+      (this.gqType: any)._typeConfig.fields = () => {
         return resolveInputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName());
       };
       delete this.gqType._fields; // if schema was builded, delete defineFieldMap

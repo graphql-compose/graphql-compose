@@ -24,7 +24,7 @@ export type toInputObjectTypeOpts = {
 };
 
 export function toInputObjectType(
-  typeComposer: TypeComposer<any> | InterfaceTypeComposer<any>,
+  typeComposer: TypeComposer<any, any> | InterfaceTypeComposer<any, any>,
   opts: toInputObjectTypeOpts = {}
 ): InputTypeComposer {
   if (typeComposer.hasInputTypeComposer()) {

@@ -91,7 +91,7 @@ export type TypeWrappedString = string; // eg. Int, Int!, [Int]
 export type TypeNameString = string; // eg. Int, Float
 export type TypeAsString = TypeDefinitionString | TypeWrappedString | TypeNameString;
 export type ComposeObjectType =
-  | TypeComposer<any>
+  | TypeComposer<any, any>
   | GraphQLObjectType
   | TypeDefinitionString
   | TypeAsString;
@@ -525,7 +525,7 @@ export class TypeMapper<TContext> {
   }
 
   convertArgConfigMap(
-    composeArgsConfigMap: ComposeFieldConfigArgumentMap,
+    composeArgsConfigMap: ComposeFieldConfigArgumentMap<any>,
     fieldName?: string = '',
     typeName?: string = ''
   ): GraphQLFieldConfigArgumentMap {
