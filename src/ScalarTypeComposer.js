@@ -11,14 +11,23 @@ import type {
 } from './graphql';
 import type { TypeAsString } from './TypeMapper';
 import type { SchemaComposer } from './SchemaComposer';
+import type { Extensions } from './TypeComposer';
+
+export type ComposeScalarTypeConfig = GraphQLScalarTypeConfig<any, any> & {
+  +extensions?: Extensions,
+};
 
 export type ScalarTypeComposerDefinition =
   | TypeAsString
-  | GraphQLScalarTypeConfig<any, any>
+  | ComposeScalarTypeConfig
   | GraphQLScalarType;
 
+export type GraphQLScalarTypeExtended = GraphQLScalarType & {
+  _gqcExtensions?: Extensions,
+};
+
 export class ScalarTypeComposer {
-  gqType: GraphQLScalarType;
+  gqType: GraphQLScalarTypeExtended;
 
   static schemaComposer: SchemaComposer<any>;
 
@@ -65,6 +74,7 @@ export class ScalarTypeComposer {
         ...(typeDef: any),
       });
       STC = new this.schemaComposer.ScalarTypeComposer(type);
+      STC.gqType._gqcExtensions = typeDef.extensions || {};
     } else {
       throw new Error(
         'You should provide GraphQLScalarTypeConfig or string with scalar name or SDL'
@@ -165,5 +175,60 @@ export class ScalarTypeComposer {
     cloned.setDescription(this.getDescription());
 
     return cloned;
+  }
+
+  // -----------------------------------------------
+  // Extensions methods
+  // -----------------------------------------------
+
+  getExtensions(): Extensions {
+    if (!this.gqType._gqcExtensions) {
+      return {};
+    } else {
+      return this.gqType._gqcExtensions;
+    }
+  }
+
+  setExtensions(extensions: Extensions): ScalarTypeComposer {
+    this.gqType._gqcExtensions = extensions;
+    return this;
+  }
+
+  extendExtensions(extensions: Extensions): ScalarTypeComposer {
+    const current = this.getExtensions();
+    this.setExtensions({
+      ...current,
+      ...extensions,
+    });
+    return this;
+  }
+
+  clearExtensions(): ScalarTypeComposer {
+    this.setExtensions({});
+    return this;
+  }
+
+  getExtension(extensionName: string): ?any {
+    const extensions = this.getExtensions();
+    return extensions[extensionName];
+  }
+
+  hasExtension(extensionName: string): boolean {
+    const extensions = this.getExtensions();
+    return extensionName in extensions;
+  }
+
+  setExtension(extensionName: string, value: any): ScalarTypeComposer {
+    this.extendExtensions({
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeExtension(extensionName: string): ScalarTypeComposer {
+    const extensions = { ...this.getExtensions() };
+    delete extensions[extensionName];
+    this.setExtensions(extensions);
+    return this;
   }
 }

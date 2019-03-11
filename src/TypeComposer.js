@@ -8,6 +8,7 @@ import {
   GraphQLInputObjectType,
   getNamedType,
   GraphQLInterfaceType,
+  isType,
 } from './graphql';
 import type {
   GraphQLFieldConfig,
@@ -22,12 +23,12 @@ import type {
   FieldDefinitionNode,
   InputValueDefinitionNode,
 } from './graphql';
+import { ScalarTypeComposer } from './ScalarTypeComposer';
+import { EnumTypeComposer } from './EnumTypeComposer';
 import type { InputTypeComposer } from './InputTypeComposer';
-import type { ScalarTypeComposer } from './ScalarTypeComposer';
-import type { EnumTypeComposer } from './EnumTypeComposer';
 import type { TypeAsString } from './TypeMapper';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
-import type { UnionTypeComposer } from './UnionTypeComposer';
+import { UnionTypeComposer } from './UnionTypeComposer';
 import {
   Resolver,
   type ResolverOpts,
@@ -54,6 +55,8 @@ export type GetRecordIdFn<TSource, TContext> = (
   context?: TContext
 ) => string;
 
+export type Extensions = { [key: string]: any };
+
 export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
   _gqcInputTypeComposer?: InputTypeComposer,
   _gqcResolvers?: Map<string, Resolver<TSource, TContext>>,
@@ -61,6 +64,7 @@ export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
   _gqcRelations?: RelationThunkMap<TSource, TContext>,
   _gqcFields?: ComposeFieldConfigMap<TSource, TContext>,
   _gqcInterfaces?: Array<GraphQLInterfaceType | InterfaceTypeComposer<TContext>>,
+  _gqcExtensions?: Extensions,
   description?: ?string,
 };
 
@@ -71,6 +75,7 @@ export type ComposeObjectTypeConfig<TSource, TContext> = {
   +isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>,
   +description?: ?string,
   +isIntrospection?: boolean,
+  +extensions?: { [key: string]: any },
 };
 
 // extended GraphQLFieldConfigMap
@@ -97,6 +102,7 @@ export type ComposeFieldConfigAsObject<TSource, TContext> = {
   +deprecationReason?: ?string,
   +description?: ?string,
   +astNode?: FieldDefinitionNode | null,
+  +extensions?: Extensions,
   +[key: string]: any,
 };
 
@@ -107,6 +113,7 @@ export type ComposePartialFieldConfigAsObject<TSource, TContext> = {
   +subscribe?: GraphQLFieldResolver<TSource, TContext>,
   +deprecationReason?: ?string,
   +description?: ?string,
+  +extensions?: Extensions,
   +[key: string]: any,
 };
 
@@ -121,6 +128,19 @@ export type ComposeOutputType<TContext> =
   | UnionTypeComposer<TContext>
   | ScalarTypeComposer
   | Array<ComposeOutputType<TContext>>;
+
+export function isComposeOutputType(type: mixed): boolean %checks {
+  return (
+    isType(type) ||
+    (Array.isArray(type) && isComposeOutputType(type[0])) ||
+    type instanceof Resolver ||
+    type instanceof TypeComposer ||
+    type instanceof InterfaceTypeComposer ||
+    type instanceof EnumTypeComposer ||
+    type instanceof UnionTypeComposer ||
+    type instanceof ScalarTypeComposer
+  );
+}
 
 // Compose Args -----------------------------
 export type ComposeArgumentType =
@@ -193,6 +213,8 @@ export type TypeComposerDefinition<TContext> =
 
 export class TypeComposer<TContext> {
   gqType: GraphQLObjectTypeExtended<any, TContext>;
+  extensions: Extensions;
+
   static schemaComposer: SchemaComposer<TContext>;
 
   get schemaComposer(): SchemaComposer<TContext> {
@@ -247,6 +269,7 @@ export class TypeComposer<TContext> {
       });
       TC = new this.schemaComposer.TypeComposer(type);
       if (isObject(fields)) TC.addFields(fields);
+      TC.gqType._gqcExtensions = typeDef.extensions || {};
     } else {
       throw new Error(
         'You should provide GraphQLObjectTypeConfig or string with type name to TypeComposer.create(opts)'
@@ -296,7 +319,6 @@ export class TypeComposer<TContext> {
 
   setFields(fields: ComposeFieldConfigMap<any, TContext>): TypeComposer<TContext> {
     this.gqType._gqcFields = fields;
-
     if (graphqlVersion >= 14) {
       this.gqType._fields = () => {
         return defineFieldMap(
@@ -406,7 +428,7 @@ export class TypeComposer<TContext> {
 
   extendField(
     fieldName: string,
-    parialFieldConfig: ComposePartialFieldConfigAsObject<any, TContext>
+    partialFieldConfig: ComposePartialFieldConfigAsObject<any, TContext>
   ): TypeComposer<TContext> {
     let prevFieldConfig;
     try {
@@ -419,7 +441,7 @@ export class TypeComposer<TContext> {
 
     this.setField(fieldName, {
       ...(prevFieldConfig: any),
-      ...parialFieldConfig,
+      ...partialFieldConfig,
     });
     return this;
   }
@@ -854,6 +876,120 @@ export class TypeComposer<TContext> {
       interfaces.splice(idx, 1);
       this.setInterfaces(interfaces);
     }
+    return this;
+  }
+
+  // -----------------------------------------------
+  // Extensions methods
+  // -----------------------------------------------
+
+  getExtensions(): Extensions {
+    if (!this.gqType._gqcExtensions) {
+      return {};
+    } else {
+      return this.gqType._gqcExtensions;
+    }
+  }
+
+  setExtensions(extensions: Extensions): TypeComposer<TContext> {
+    this.gqType._gqcExtensions = extensions;
+    return this;
+  }
+
+  extendExtensions(extensions: Extensions): TypeComposer<TContext> {
+    const current = this.getExtensions();
+    this.setExtensions({
+      ...current,
+      ...extensions,
+    });
+    return this;
+  }
+
+  clearExtensions(): TypeComposer<TContext> {
+    this.setExtensions({});
+    return this;
+  }
+
+  getExtension(extensionName: string): ?any {
+    const extensions = this.getExtensions();
+    return extensions[extensionName];
+  }
+
+  hasExtension(extensionName: string): boolean {
+    const extensions = this.getExtensions();
+    return extensionName in extensions;
+  }
+
+  setExtension(extensionName: string, value: any): TypeComposer<TContext> {
+    this.extendExtensions({
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeExtension(extensionName: string): TypeComposer<TContext> {
+    const extensions = { ...this.getExtensions() };
+    delete extensions[extensionName];
+    this.setExtensions(extensions);
+    return this;
+  }
+
+  getFieldExtensions(fieldName: string): Extensions {
+    const field = this.getField(fieldName);
+    if (
+      isObject(field) &&
+      !isFunction(field) &&
+      !Array.isArray(field) &&
+      !isComposeOutputType(field)
+    ) {
+      return (field: ComposeObjectTypeConfig<any, any>).extensions || {};
+    } else {
+      return {};
+    }
+  }
+
+  setFieldExtensions(fieldName: string, extensions: Extensions): TypeComposer<TContext> {
+    this.extendField(fieldName, {
+      extensions,
+    });
+    return this;
+  }
+
+  extendFieldExtensions(fieldName: string, extensions: Extensions): TypeComposer<TContext> {
+    const current = this.getFieldExtensions(fieldName);
+    this.setFieldExtensions(fieldName, {
+      ...current,
+      ...extensions,
+    });
+    return this;
+  }
+
+  clearFieldExtensions(fieldName: string): TypeComposer<TContext> {
+    this.setFieldExtensions(fieldName, {});
+    return this;
+  }
+
+  getFieldExtension(fieldName: string, extensionName: string): ?any {
+    const extensions = this.getFieldExtensions(fieldName);
+    return extensions[extensionName];
+  }
+
+  hasFieldExtension(fieldName: string, extensionName: string): boolean {
+    const extensions = this.getFieldExtensions(fieldName);
+    return extensionName in extensions;
+  }
+
+  setFieldExtension(fieldName: string, extensionName: string, value: any): TypeComposer<TContext> {
+    this.extendFieldExtensions(fieldName, {
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeFieldExtension(fieldName: string, extensionName: string): TypeComposer<TContext> {
+    const extensions = { ...this.getFieldExtensions(fieldName) };
+    delete extensions[extensionName];
+    this.setFieldExtensions(fieldName, extensions);
     return this;
   }
 
