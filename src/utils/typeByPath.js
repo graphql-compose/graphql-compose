@@ -3,7 +3,7 @@
 
 import { GraphQLObjectType, GraphQLInputObjectType, getNamedType } from '../graphql';
 import type { GraphQLInputType, GraphQLOutputType } from '../graphql';
-import { deprecate } from './debug';
+// import { deprecate } from './debug';
 import { TypeComposer } from '../TypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
