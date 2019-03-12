@@ -9,7 +9,7 @@ import {
   isInputType,
 } from './graphql';
 import { resolveMaybeThunk, upperFirst } from './utils/misc';
-import { deprecate } from './utils/debug';
+// import { deprecate } from './utils/debug';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveInputConfigMapAsThunk, resolveInputConfigAsThunk } from './utils/configAsThunk';
 import { typeByPath } from './utils/typeByPath';
