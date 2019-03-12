@@ -97,12 +97,6 @@ function typeByPathRSV(rsv: Resolver<any, any, any>, parts: Array<string>) {
   return processType(rsv.getType(), parts, rsv.constructor.schemaComposer);
 }
 
-/** @deprecated 6.0.0 */
-export function typeByPathFTC(tc: InterfaceTypeComposer<any, any>, parts: Array<string>) {
-  deprecate('Use `typeByPathIFTC()` method instead');
-  return typeByPathIFTC(tc, parts);
-}
-
 export function typeByPathIFTC(tc: InterfaceTypeComposer<any, any>, parts: Array<string>) {
   if (!tc) return undefined;
   if (parts.length === 0) return tc;

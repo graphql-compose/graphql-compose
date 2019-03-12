@@ -398,12 +398,6 @@ export class InputTypeComposer {
     return new GraphQLNonNull(this.gqType);
   }
 
-  /** @deprecated 5.0.0 */
-  getTypeAsRequired(): GraphQLNonNull<GraphQLInputObjectType> {
-    deprecate('Use `InputTypeComposer.getTypeNonNull` method instead of `getTypeAsRequired`');
-    return this.getTypeNonNull();
-  }
-
   getTypeName(): string {
     return this.gqType.name;
   }
