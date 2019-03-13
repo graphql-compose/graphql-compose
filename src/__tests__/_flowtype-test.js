@@ -14,8 +14,8 @@ describe('Flowtype tests', () => {
       d2: number,
     };
 
-    const Schema: SchemaComposer<Context> = new SchemaComposer();
-    const UserTC = Schema.TypeComposer.create('User');
+    const sc: SchemaComposer<Context> = new SchemaComposer();
+    const UserTC = sc.createObjectTC('User');
     UserTC.addResolver({
       name: 'findOne',
       resolve: ({ context }) => {
@@ -28,8 +28,8 @@ describe('Flowtype tests', () => {
     //
     //
 
-    const Schema2: SchemaComposer<Context2> = new SchemaComposer();
-    const UserTC2 = Schema2.TypeComposer.create('User');
+    const sc2: SchemaComposer<Context2> = new SchemaComposer();
+    const UserTC2 = sc2.createObjectTC('User');
     UserTC2.addResolver({
       name: 'findOne',
       resolve: ({ context }) => {

@@ -1,7 +1,8 @@
 /* @flow strict */
 
-import { ScalarTypeComposer, schemaComposer } from '..';
+import { schemaComposer } from '..';
 import { GraphQLList, GraphQLNonNull, GraphQLScalarType } from '../graphql';
+import { ScalarTypeComposer } from '../ScalarTypeComposer';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -17,21 +18,24 @@ describe('ScalarTypeComposer', () => {
       serialize: () => {},
     });
 
-    stc = new ScalarTypeComposer(scalarType);
+    stc = new ScalarTypeComposer(scalarType, schemaComposer);
   });
 
   describe('create() [static method]', () => {
     it('should create STC by type template string', () => {
-      const myTC = ScalarTypeComposer.create('scalar SDLScalar');
+      const myTC = ScalarTypeComposer.create('scalar SDLScalar', schemaComposer);
       expect(myTC).toBeInstanceOf(ScalarTypeComposer);
       expect(myTC.getTypeName()).toBe('SDLScalar');
     });
 
     it('should create STC by GraphQLScalarTypeConfig', () => {
-      const myTC = ScalarTypeComposer.create({
-        name: 'TestType',
-        serialize: () => {},
-      });
+      const myTC = ScalarTypeComposer.create(
+        {
+          name: 'TestType',
+          serialize: () => {},
+        },
+        schemaComposer
+      );
       expect(myTC).toBeInstanceOf(ScalarTypeComposer);
       expect(myTC.getTypeName()).toBe('TestType');
     });
@@ -41,18 +45,18 @@ describe('ScalarTypeComposer', () => {
         name: 'TestTypeObj',
         serialize: () => {},
       });
-      const myTC = ScalarTypeComposer.create(objType);
+      const myTC = ScalarTypeComposer.create(objType, schemaComposer);
       expect(myTC).toBeInstanceOf(ScalarTypeComposer);
       expect(myTC.getType()).toBe(objType);
     });
 
     it('should create STC from string', () => {
-      const myTC = ScalarTypeComposer.create('MySSS');
+      const myTC = ScalarTypeComposer.create('MySSS', schemaComposer);
       expect(myTC.getTypeName()).toEqual('MySSS');
     });
 
     it('should create type and store it in schemaComposer', () => {
-      const SomeUserSTC = ScalarTypeComposer.create('SomeUserScalar');
+      const SomeUserSTC = ScalarTypeComposer.create('SomeUserScalar', schemaComposer);
       expect(schemaComposer.getSTC('SomeUserScalar')).toBe(SomeUserSTC);
     });
 

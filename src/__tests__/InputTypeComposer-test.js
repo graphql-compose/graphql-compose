@@ -8,7 +8,8 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from '../graphql';
-import { InputTypeComposer, schemaComposer } from '..';
+import { schemaComposer } from '..';
+import { InputTypeComposer } from '../InputTypeComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
@@ -28,7 +29,7 @@ describe('InputTypeComposer', () => {
         input2: { type: GraphQLString },
       },
     });
-    itc = new InputTypeComposer(objectType);
+    itc = new InputTypeComposer(objectType, schemaComposer);
   });
 
   describe('field manipulation methods', () => {
@@ -145,12 +146,12 @@ describe('InputTypeComposer', () => {
           input3: 'String',
         },
       };
-      const itc1 = InputTypeComposer.create(cfg);
+      const itc1 = schemaComposer.createInputTC(cfg);
       itc1.removeOtherFields('input1');
       expect(itc1.getFieldNames()).toEqual(expect.arrayContaining(['input1']));
       expect(itc1.getFieldNames()).not.toEqual(expect.arrayContaining(['input2', 'input3']));
 
-      const itc2 = InputTypeComposer.create(cfg);
+      const itc2 = schemaComposer.createInputTC(cfg);
       itc2.removeOtherFields(['input1', 'input2']);
       expect(itc2.getFieldNames()).toEqual(expect.arrayContaining(['input1', 'input2']));
       expect(itc2.getFieldNames()).not.toEqual(expect.arrayContaining(['input3']));
@@ -158,7 +159,7 @@ describe('InputTypeComposer', () => {
 
     describe('reorderFields()', () => {
       it('should change fields order', () => {
-        const itcOrder = InputTypeComposer.create({
+        const itcOrder = schemaComposer.createInputTC({
           name: 'Type',
           fields: { f1: 'Int', f2: 'Int', f3: 'Int ' },
         });
@@ -168,7 +169,7 @@ describe('InputTypeComposer', () => {
       });
 
       it('should append not listed fields', () => {
-        const itcOrder = InputTypeComposer.create({
+        const itcOrder = schemaComposer.createInputTC({
           name: 'Type',
           fields: { f1: 'Int', f2: 'Int', f3: 'Int ' },
         });
@@ -178,7 +179,7 @@ describe('InputTypeComposer', () => {
       });
 
       it('should skip non existed fields', () => {
-        const itcOrder = InputTypeComposer.create({
+        const itcOrder = schemaComposer.createInputTC({
           name: 'Type',
           fields: { f1: 'Int', f2: 'Int', f3: 'Int ' },
         });
@@ -318,14 +319,14 @@ describe('InputTypeComposer', () => {
 
   describe('static method create()', () => {
     it('should create ITC by typeName as a string', () => {
-      const itc1 = InputTypeComposer.create('TypeStub');
+      const itc1 = schemaComposer.createInputTC('TypeStub');
       expect(itc1).toBeInstanceOf(InputTypeComposer);
       expect(itc1.getType()).toBeInstanceOf(GraphQLInputObjectType);
       expect(itc1.getFields()).toEqual({});
     });
 
     it('should create ITC by type template string', () => {
-      const itc1 = InputTypeComposer.create(
+      const itc1 = schemaComposer.createInputTC(
         `
         input TestTypeTplInput {
           f1: String @default(value: "new")
@@ -343,7 +344,7 @@ describe('InputTypeComposer', () => {
     });
 
     it('should create ITC by GraphQLObjectTypeConfig', () => {
-      const itc1 = InputTypeComposer.create({
+      const itc1 = schemaComposer.createInputTC({
         name: 'TestTypeInput',
         fields: {
           f1: {
@@ -359,7 +360,7 @@ describe('InputTypeComposer', () => {
     });
 
     it('should create ITC by GraphQLObjectTypeConfig with fields as Thunk', () => {
-      const itc1 = InputTypeComposer.create({
+      const itc1 = schemaComposer.createInputTC({
         name: 'TestTypeInput',
         fields: (): any => ({
           f1: {
@@ -383,14 +384,14 @@ describe('InputTypeComposer', () => {
           },
         },
       });
-      const itc1 = InputTypeComposer.create(objType);
+      const itc1 = schemaComposer.createInputTC(objType);
       expect(itc1).toBeInstanceOf(InputTypeComposer);
       expect(itc1.getType()).toBe(objType);
       expect(itc1.getFieldType('f1')).toBe(GraphQLString);
     });
 
     it('should create type and store it in schemaComposer', () => {
-      const SomeUserITC = InputTypeComposer.create('SomeUserInput');
+      const SomeUserITC = schemaComposer.createInputTC('SomeUserInput');
       expect(schemaComposer.getITC('SomeUserInput')).toBe(SomeUserITC);
     });
 
@@ -409,14 +410,15 @@ describe('InputTypeComposer', () => {
             type: GraphQLString,
           },
         },
-      })
+      }),
+      schemaComposer
     );
 
     expect(itc1.get('field1')).toBe(GraphQLString);
   });
 
   it('should have chainable methods', () => {
-    const itc1 = InputTypeComposer.create('InputType');
+    const itc1 = schemaComposer.createInputTC('InputType');
     expect(itc1.setFields({})).toBe(itc1);
     expect(itc1.setField('f1', 'String')).toBe(itc1);
     expect(itc1.extendField('f1', {})).toBe(itc1);
@@ -431,12 +433,12 @@ describe('InputTypeComposer', () => {
   });
 
   describe('getFieldTC()', () => {
-    const myITC = InputTypeComposer.create('MyCustomInputType');
+    const myITC = schemaComposer.createInputTC('MyCustomInputType');
     myITC.addFields({
       scalar: 'String',
       list: '[Int]',
-      obj: InputTypeComposer.create(`input ICustomObjInputType { name: String }`),
-      objArr: [InputTypeComposer.create(`input ICustomObjInputType2 { name: String }`)],
+      obj: schemaComposer.createInputTC(`input ICustomObjInputType { name: String }`),
+      objArr: [schemaComposer.createInputTC(`input ICustomObjInputType2 { name: String }`)],
     });
 
     it('should return InputTypeComposer for object field', () => {

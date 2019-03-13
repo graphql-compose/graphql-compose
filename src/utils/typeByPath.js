@@ -66,11 +66,11 @@ export function typeByPathTC(tc: TypeComposer<any, any>, parts: Array<string>) {
 
   if (nextName && nextName.startsWith('@')) {
     const argType = tc.getFieldArgType(name, nextName.substring(1));
-    return processType(argType, parts.slice(2), tc.constructor.schemaComposer);
+    return processType(argType, parts.slice(2), tc.sc);
   }
 
   const fieldType = tc.getFieldType(name);
-  return processType(fieldType, parts.slice(1), tc.constructor.schemaComposer);
+  return processType(fieldType, parts.slice(1), tc.sc);
 }
 
 export function typeByPathITC(itc: InputTypeComposer, parts: Array<string>) {
@@ -78,7 +78,7 @@ export function typeByPathITC(itc: InputTypeComposer, parts: Array<string>) {
   if (parts.length === 0) return itc;
 
   const fieldType = itc.getFieldType(parts[0]);
-  return processType(fieldType, parts.slice(1), itc.constructor.schemaComposer);
+  return processType(fieldType, parts.slice(1), itc.sc);
 }
 
 function typeByPathRSV(rsv: Resolver<any, any, any>, parts: Array<string>) {
@@ -91,10 +91,10 @@ function typeByPathRSV(rsv: Resolver<any, any, any>, parts: Array<string>) {
     const argName = name.substring(1);
     const arg = rsv.getArg(argName);
     if (!arg) return undefined;
-    return processType(rsv.getArgType(argName), parts.slice(1), rsv.constructor.schemaComposer);
+    return processType(rsv.getArgType(argName), parts.slice(1), rsv.sc);
   }
 
-  return processType(rsv.getType(), parts, rsv.constructor.schemaComposer);
+  return processType(rsv.getType(), parts, rsv.sc);
 }
 
 export function typeByPathIFTC(tc: InterfaceTypeComposer<any, any>, parts: Array<string>) {
@@ -112,11 +112,11 @@ export function typeByPathIFTC(tc: InterfaceTypeComposer<any, any>, parts: Array
 
   if (nextName && nextName.startsWith('@')) {
     const argType = tc.getFieldArgType(name, nextName.substring(1));
-    return processType(argType, parts.slice(2), tc.constructor.schemaComposer);
+    return processType(argType, parts.slice(2), tc.sc);
   }
 
   const fieldType = tc.getFieldType(name);
-  return processType(fieldType, parts.slice(1), tc.constructor.schemaComposer);
+  return processType(fieldType, parts.slice(1), tc.sc);
 }
 
 export function processType(
@@ -128,13 +128,13 @@ export function processType(
   const unwrappedType = getNamedType(type);
 
   if (unwrappedType instanceof GraphQLObjectType) {
-    const tc = new schema.TypeComposer(unwrappedType);
+    const tc = new TypeComposer(unwrappedType, schema);
     if (restParts.length > 0) {
       return typeByPathTC(tc, restParts);
     }
     return tc;
   } else if (unwrappedType instanceof GraphQLInputObjectType) {
-    const itc = new schema.InputTypeComposer(unwrappedType);
+    const itc = new InputTypeComposer(unwrappedType, schema);
     if (restParts.length > 0) {
       return typeByPathITC(itc, restParts);
     }

@@ -208,7 +208,7 @@ export class TypeMapper<TContext> {
     return undefined;
   }
 
-  parseTypesFromString(str: string): TypeStorage<GraphQLNamedType> {
+  parseTypesFromString(str: string): TypeStorage<string, GraphQLNamedType> {
     const astDocument: DocumentNode = parse(str);
 
     if (!astDocument || astDocument.kind !== 'Document') {
@@ -218,7 +218,7 @@ export class TypeMapper<TContext> {
     return this.parseTypesFromAst(astDocument);
   }
 
-  parseTypesFromAst(astDocument: DocumentNode): TypeStorage<GraphQLNamedType> {
+  parseTypesFromAst(astDocument: DocumentNode): TypeStorage<string, GraphQLNamedType> {
     const typeStorage = new TypeStorage();
     for (let i = 0; i < astDocument.definitions.length; i++) {
       const def = astDocument.definitions[i];
@@ -708,7 +708,7 @@ function typeFromAST(inputTypeAST: TypeNode, schema: SchemaComposer<any>): ?Grap
 function typeDefNamed(
   typeName: string,
   schema: SchemaComposer<any>,
-  typeStorage: ?TypeStorage<any>
+  typeStorage: ?TypeStorage<any, any>
 ): GraphQLNamedType {
   const type = schema.typeMapper.get(typeName);
   if (type) {
@@ -729,7 +729,7 @@ function typeDefNamed(
   throw new Error(`Cannot find type with name '${typeName}' in SchemaComposer.`);
 }
 
-function makeSchemaDef(def, schema: SchemaComposer<any>, typeStorage: ?TypeStorage<any>) {
+function makeSchemaDef(def, schema: SchemaComposer<any>, typeStorage: ?TypeStorage<any, any>) {
   if (!def) {
     throw new Error('def must be defined');
   }
@@ -772,7 +772,7 @@ function getInputDefaultValue(value: InputValueDefinitionNode, type: GraphQLInpu
 function makeInputValues(
   values: ?$ReadOnlyArray<InputValueDefinitionNode>,
   schema: SchemaComposer<any>,
-  typeStorage: ?TypeStorage<any>
+  typeStorage: ?TypeStorage<any, any>
 ) {
   if (!values) return {};
   return keyValMap(
@@ -792,7 +792,7 @@ function makeInputValues(
 function makeFieldDefMap(
   def: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode,
   schema: SchemaComposer<any>,
-  typeStorage: ?TypeStorage<any>
+  typeStorage: ?TypeStorage<any, any>
 ) {
   if (!def.fields) return {};
   return keyValMap(
@@ -831,7 +831,7 @@ function makeEnumDef(def: EnumTypeDefinitionNode) {
 function makeInputObjectDef(
   def: InputObjectTypeDefinitionNode,
   schema: SchemaComposer<any>,
-  typeStorage: ?TypeStorage<any>
+  typeStorage: ?TypeStorage<any, any>
 ) {
   return new GraphQLInputObjectType({
     name: def.name.value,
@@ -844,7 +844,7 @@ function makeInputObjectDef(
 function makeDirectiveDef(
   def: DirectiveDefinitionNode,
   schema: SchemaComposer<any>,
-  typeStorage: ?TypeStorage<any>
+  typeStorage: ?TypeStorage<any, any>
 ): GraphQLDirective {
   const locations = def.locations.map(({ value }) => (value: any));
 
@@ -911,7 +911,7 @@ function buildWrappedType(innerType: GraphQLType, inputTypeAST: TypeNode): Graph
 function produceOutputType(
   typeAST: TypeNode,
   schema: SchemaComposer<any>,
-  typeStorage: ?TypeStorage<any>
+  typeStorage: ?TypeStorage<any, any>
 ): GraphQLOutputType {
   const type = produceType(typeAST, schema, typeStorage);
   invariant(isOutputType(type), 'Expected Output type.');
@@ -921,7 +921,7 @@ function produceOutputType(
 function produceType(
   typeAST: TypeNode,
   schema: SchemaComposer<any>,
-  typeStorage: ?TypeStorage<any>
+  typeStorage: ?TypeStorage<any, any>
 ): GraphQLType {
   const typeName = getNamedTypeAST(typeAST).name.value;
   const typeDef = typeDefNamed(typeName, schema, typeStorage);
@@ -931,7 +931,7 @@ function produceType(
 function produceInputType(
   typeAST: TypeNode,
   schema: SchemaComposer<any>,
-  typeStorage: ?TypeStorage<any>
+  typeStorage: ?TypeStorage<any, any>
 ): GraphQLInputType {
   const type = produceType(typeAST, schema, typeStorage);
   invariant(isInputType(type), 'Expected Input type.');
@@ -941,7 +941,7 @@ function produceInputType(
 function produceInterfaceType(
   typeAST: TypeNode,
   schema: SchemaComposer<any>,
-  typeStorage: ?TypeStorage<any>
+  typeStorage: ?TypeStorage<any, any>
 ): GraphQLInterfaceType {
   const type = produceType(typeAST, schema, typeStorage);
   invariant(type instanceof GraphQLInterfaceType, 'Expected Object type.');
@@ -951,7 +951,7 @@ function produceInterfaceType(
 function makeImplementedInterfaces(
   def: ObjectTypeDefinitionNode,
   schema: SchemaComposer<any>,
-  typeStorage: ?TypeStorage<any>
+  typeStorage: ?TypeStorage<any, any>
 ) {
   return (
     def.interfaces && def.interfaces.map(iface => produceInterfaceType(iface, schema, typeStorage))
@@ -961,7 +961,7 @@ function makeImplementedInterfaces(
 function makeTypeDef(
   def: ObjectTypeDefinitionNode,
   schema: SchemaComposer<any>,
-  typeStorage: ?TypeStorage<any>
+  typeStorage: ?TypeStorage<any, any>
 ) {
   return new GraphQLObjectType({
     name: def.name.value,
@@ -975,7 +975,7 @@ function makeTypeDef(
 function makeInterfaceDef(
   def: InterfaceTypeDefinitionNode,
   schema: SchemaComposer<any>,
-  typeStorage: ?TypeStorage<any>
+  typeStorage: ?TypeStorage<any, any>
 ) {
   return new GraphQLInterfaceType({
     name: def.name.value,
@@ -988,7 +988,7 @@ function makeInterfaceDef(
 function makeUnionDef(
   def: UnionTypeDefinitionNode,
   schema: SchemaComposer<any>,
-  typeStorage: ?TypeStorage<any>
+  typeStorage: ?TypeStorage<any, any>
 ) {
   const types: ?$ReadOnlyArray<NamedTypeNode> = def.types;
   return new GraphQLUnionType({

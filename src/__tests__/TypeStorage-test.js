@@ -2,14 +2,12 @@
 
 import { TypeStorage } from '../TypeStorage';
 import { GraphQLString, GraphQLObjectType } from '../graphql';
-import {
-  TypeComposer,
-  InputTypeComposer,
-  ScalarTypeComposer,
-  EnumTypeComposer,
-  InterfaceTypeComposer,
-  UnionTypeComposer,
-} from '..';
+import { TypeComposer } from '../TypeComposer';
+import { InputTypeComposer } from '../InputTypeComposer';
+import { ScalarTypeComposer } from '../ScalarTypeComposer';
+import { EnumTypeComposer } from '../EnumTypeComposer';
+import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
+import { UnionTypeComposer } from '../UnionTypeComposer';
 
 let typeStorage;
 beforeEach(() => {
@@ -59,7 +57,6 @@ describe('typeStorage', () => {
       const typeName = typeStorage.add(tc);
       expect(typeName).toBe('User');
       expect(typeStorage.get('User')).toBe(tc);
-      expect(typeStorage.getTC('User')).toBe(tc);
     });
 
     it('should add InputTypeComposer', () => {
@@ -67,7 +64,6 @@ describe('typeStorage', () => {
       const typeName = typeStorage.add(itc);
       expect(typeName).toBe('UserInput');
       expect(typeStorage.get('UserInput')).toBe(itc);
-      expect(typeStorage.getITC('UserInput')).toBe(itc);
     });
 
     it('should add ScalarTypeComposer', () => {
@@ -75,7 +71,6 @@ describe('typeStorage', () => {
       const typeName = typeStorage.add(stc);
       expect(typeName).toBe('UserScalar');
       expect(typeStorage.get('UserScalar')).toBe(stc);
-      expect(typeStorage.getSTC('UserScalar')).toBe(stc);
     });
 
     it('should add EnumTypeComposer', () => {
@@ -83,7 +78,6 @@ describe('typeStorage', () => {
       const typeName = typeStorage.add(etc);
       expect(typeName).toBe('UserEnum');
       expect(typeStorage.get('UserEnum')).toBe(etc);
-      expect(typeStorage.getETC('UserEnum')).toBe(etc);
     });
 
     it('should add GraphQLObjectType', () => {
@@ -101,7 +95,6 @@ describe('typeStorage', () => {
       const typeName = typeStorage.add(iftc);
       expect(typeName).toBe('UserInterface');
       expect(typeStorage.get('UserInterface')).toBe(iftc);
-      expect(typeStorage.getIFTC('UserInterface')).toBe(iftc);
     });
 
     it('should add UnionTypeComposer', () => {
@@ -109,7 +102,6 @@ describe('typeStorage', () => {
       const typeName = typeStorage.add(utc);
       expect(typeName).toBe('UserUnion');
       expect(typeStorage.get('UserUnion')).toBe(utc);
-      expect(typeStorage.getUTC('UserUnion')).toBe(utc);
     });
   });
 });

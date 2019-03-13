@@ -8,15 +8,17 @@ import {
   GraphQLUnionType,
   graphql,
 } from '../graphql';
-import { UnionTypeComposer, schemaComposer, TypeComposer } from '..';
+import { schemaComposer as sc } from '..';
+import { UnionTypeComposer } from '../UnionTypeComposer';
+import { TypeComposer } from '../TypeComposer';
 
 beforeEach(() => {
-  schemaComposer.clear();
+  sc.clear();
 });
 
 describe('UnionTypeComposer', () => {
   let objectType: GraphQLUnionType;
-  let utc: UnionTypeComposer;
+  let utc: UnionTypeComposer<any, any>;
 
   beforeEach(() => {
     objectType = new GraphQLUnionType({
@@ -26,21 +28,24 @@ describe('UnionTypeComposer', () => {
         new GraphQLObjectType({ name: 'B', fields: { b: { type: GraphQLInt } } }),
       ],
     });
-    utc = new UnionTypeComposer(objectType);
+    utc = new UnionTypeComposer(objectType, sc);
   });
 
   describe('create() [static method]', () => {
     it('should create Union by typeName as a string', () => {
-      const myUTC = UnionTypeComposer.create('UnionStub');
+      const myUTC = UnionTypeComposer.create('UnionStub', sc);
       expect(myUTC).toBeInstanceOf(UnionTypeComposer);
       expect(myUTC.getType()).toBeInstanceOf(GraphQLUnionType);
       expect(myUTC.getTypes()).toEqual([]);
     });
 
     it('should create Union by type template string', () => {
-      const myUTC = UnionTypeComposer.create(`
+      const myUTC = UnionTypeComposer.create(
+        `
         union TestTypeTpl = A | B
-      `);
+      `,
+        sc
+      );
       expect(myUTC).toBeInstanceOf(UnionTypeComposer);
       expect(myUTC.getTypeName()).toBe('TestTypeTpl');
 
@@ -48,8 +53,8 @@ describe('UnionTypeComposer', () => {
       expect(() => myUTC.getTypes()).toThrowError("Cannot find type with name 'A'");
 
       // when types A & B defined, getTypes() returns them
-      TypeComposer.create('type A { a: Int }');
-      TypeComposer.create('type B { b: Int }');
+      TypeComposer.create('type A { a: Int }', sc);
+      TypeComposer.create('type B { b: Int }', sc);
       const types = myUTC.getTypes();
       expect(types).toHaveLength(2);
       expect(types[0]).toBeInstanceOf(GraphQLObjectType);
@@ -57,12 +62,15 @@ describe('UnionTypeComposer', () => {
     });
 
     it('should create UTC by UnionTypeConfig', () => {
-      const myUTC = UnionTypeComposer.create({
-        name: 'TestType',
-        types: () => [`type AA { a: Int }`, `BB`],
-      });
+      const myUTC = UnionTypeComposer.create(
+        {
+          name: 'TestType',
+          types: () => [`type AA { a: Int }`, `BB`],
+        },
+        sc
+      );
       expect(myUTC).toBeInstanceOf(UnionTypeComposer);
-      TypeComposer.create(`type BB { b: Int }`);
+      TypeComposer.create(`type BB { b: Int }`, sc);
       const types = myUTC.getTypes();
       expect(types).toHaveLength(2);
       expect(types[0]).toBeInstanceOf(GraphQLObjectType);
@@ -74,20 +82,20 @@ describe('UnionTypeComposer', () => {
         name: 'TestTypeObj',
         types: [new GraphQLObjectType({ name: 'C', fields: () => ({}) })],
       });
-      const myUTC = UnionTypeComposer.create(objType);
+      const myUTC = UnionTypeComposer.create(objType, sc);
       expect(myUTC).toBeInstanceOf(UnionTypeComposer);
       expect(myUTC.getType()).toBe(objType);
       expect((myUTC.getTypes(): any)[0].name).toBe('C');
     });
 
     it('should create type and store it in schemaComposer', () => {
-      const UserUnion = UnionTypeComposer.create('UserUnion');
-      expect(schemaComposer.getUTC('UserUnion')).toBe(UserUnion);
+      const UserUnion = UnionTypeComposer.create('UserUnion', sc);
+      expect(sc.getUTC('UserUnion')).toBe(UserUnion);
     });
 
     it('createTemp() should not store type in schemaComposer', () => {
       UnionTypeComposer.createTemp('SomeUnion');
-      expect(schemaComposer.has('SomeUnion')).toBeFalsy();
+      expect(sc.has('SomeUnion')).toBeFalsy();
     });
   });
 
@@ -124,7 +132,7 @@ describe('UnionTypeComposer', () => {
       it('should add by type name', () => {
         utc.addType('SomeType');
         expect(utc.hasType('SomeType')).toBeTruthy();
-        TypeComposer.create('SomeType');
+        TypeComposer.create('SomeType', sc);
         expect(utc.getTypes()).toHaveLength(3);
       });
 
@@ -158,7 +166,7 @@ describe('UnionTypeComposer', () => {
 
         expect(utc.getTypes()).toHaveLength(3);
 
-        TypeComposer.create('type DD { a: Int }');
+        TypeComposer.create('type DD { a: Int }', sc);
         expect(utc.getType().getTypes()).toHaveLength(3);
       });
     });
@@ -241,30 +249,39 @@ describe('UnionTypeComposer', () => {
     beforeEach(() => {
       utc.clearTypes();
 
-      PersonTC = TypeComposer.create(`
+      PersonTC = TypeComposer.create(
+        `
         type Person { age: Int, field1: String, field2: String }
-      `);
+      `,
+        sc
+      );
       utc.addTypeResolver(PersonTC, value => {
         return value.hasOwnProperty('age');
       });
 
-      KindRedTC = TypeComposer.create(`
+      KindRedTC = TypeComposer.create(
+        `
         type KindRed { kind: String, field1: String, field2: String, red: String }
-      `);
+      `,
+        sc
+      );
       utc.addTypeResolver(KindRedTC, value => {
         return value.kind === 'red';
       });
 
-      KindBlueTC = TypeComposer.create(`
+      KindBlueTC = TypeComposer.create(
+        `
         type KindBlue { kind: String, field1: String, field2: String, blue: String }
-      `);
+      `,
+        sc
+      );
       utc.addTypeResolver(KindBlueTC, value => {
         return value.kind === 'blue';
       });
     });
 
     it('integration test', async () => {
-      schemaComposer.Query.addFields({
+      sc.Query.addFields({
         test: {
           type: [utc],
           resolve: () => [
@@ -276,7 +293,7 @@ describe('UnionTypeComposer', () => {
       });
 
       const res = await graphql(
-        schemaComposer.buildSchema(),
+        sc.buildSchema(),
         `
           query {
             test {
@@ -313,7 +330,7 @@ describe('UnionTypeComposer', () => {
       expect(utc.hasTypeResolver(PersonTC)).toBeTruthy();
       expect(utc.hasTypeResolver(KindRedTC)).toBeTruthy();
       expect(utc.hasTypeResolver(KindBlueTC)).toBeTruthy();
-      expect(utc.hasTypeResolver(TypeComposer.create('NewOne'))).toBeFalsy();
+      expect(utc.hasTypeResolver(TypeComposer.create('NewOne', sc))).toBeFalsy();
     });
 
     it('getTypeResolvers()', () => {
@@ -398,7 +415,7 @@ describe('UnionTypeComposer', () => {
 
     describe('check native resolveType methods', () => {
       it('check methods setResolveType() getResolveType()', () => {
-        const utc1 = schemaComposer.createUnionTC(`union U = A | B`);
+        const utc1 = sc.createUnionTC(`union U = A | B`);
         const resolveType = () => 'A';
         expect(utc1.getResolveType()).toBeUndefined();
         utc1.setResolveType(resolveType);
@@ -406,9 +423,9 @@ describe('UnionTypeComposer', () => {
       });
 
       it('integration test', async () => {
-        const aTC = schemaComposer.createTC('type A { a: Int }');
-        const bTC = schemaComposer.createTC('type B { b: Int }');
-        const utc1 = schemaComposer.createUnionTC(`union U = A | B`);
+        const aTC = sc.createTC('type A { a: Int }');
+        const bTC = sc.createTC('type B { b: Int }');
+        const utc1 = sc.createUnionTC(`union U = A | B`);
         const resolveType = value => {
           if (value) {
             if (value.a) return 'A';
@@ -418,16 +435,16 @@ describe('UnionTypeComposer', () => {
         };
 
         utc1.setResolveType(resolveType);
-        schemaComposer.addSchemaMustHaveType(aTC);
-        schemaComposer.addSchemaMustHaveType(bTC);
-        schemaComposer.Query.addFields({
+        sc.addSchemaMustHaveType(aTC);
+        sc.addSchemaMustHaveType(bTC);
+        sc.Query.addFields({
           check: {
             type: '[U]',
             resolve: () => [{ a: 1 }, { b: 2 }, { c: 3 }],
           },
         });
         const res = await graphql(
-          schemaComposer.buildSchema(),
+          sc.buildSchema(),
           `
             query {
               check {

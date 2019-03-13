@@ -1,52 +1,66 @@
 /* @flow strict */
 
 import { GraphQLString, GraphQLInt, GraphQLFloat } from '../../graphql';
-import { TypeComposer, InputTypeComposer, Resolver, InterfaceTypeComposer } from '../..';
+import { sc } from '../..';
+import { TypeComposer } from '../../TypeComposer';
+import { InputTypeComposer } from '../../InputTypeComposer';
+import { Resolver } from '../../Resolver';
+import { InterfaceTypeComposer } from '../../InterfaceTypeComposer';
 
 describe('typeByPath', () => {
-  const lonLatTC = TypeComposer.create('type LonLat { lon: Float, lat: Float }');
+  const lonLatTC = TypeComposer.create('type LonLat { lon: Float, lat: Float }', sc);
   const spotITC = InputTypeComposer.create(
-    'input SpotInput { lon: Float, lat: Float, distance: Float }'
+    'input SpotInput { lon: Float, lat: Float, distance: Float }',
+    sc
   );
   spotITC.setField('subSpot', spotITC);
-  const tc = TypeComposer.create({
-    name: 'Place',
-    fields: {
-      title: 'String!',
-      lonLat: lonLatTC,
-      image: {
-        type: 'String',
-        args: {
-          size: 'Int',
+  const tc = TypeComposer.create(
+    {
+      name: 'Place',
+      fields: {
+        title: 'String!',
+        lonLat: lonLatTC,
+        image: {
+          type: 'String',
+          args: {
+            size: 'Int',
+          },
         },
+        points: '[LonLat]',
       },
-      points: '[LonLat]',
     },
-  });
-  const rsv = new Resolver({
-    name: 'findMany',
-    args: {
-      limit: 'Int',
-      search: 'String',
-      spot: spotITC,
+    sc
+  );
+  const rsv = new Resolver(
+    {
+      name: 'findMany',
+      args: {
+        limit: 'Int',
+        search: 'String',
+        spot: spotITC,
+      },
+      type: tc,
     },
-    type: tc,
-  });
+    sc
+  );
   tc.setResolver('findSpots', rsv);
-  const ifc = InterfaceTypeComposer.create({
-    name: 'Place',
-    fields: {
-      title: 'String!',
-      lonLat: lonLatTC,
-      image: {
-        type: 'String',
-        args: {
-          size: 'Int',
+  const ifc = InterfaceTypeComposer.create(
+    {
+      name: 'Place',
+      fields: {
+        title: 'String!',
+        lonLat: lonLatTC,
+        image: {
+          type: 'String',
+          args: {
+            size: 'Int',
+          },
         },
+        points: '[LonLat]',
       },
-      points: '[LonLat]',
     },
-  });
+    sc
+  );
 
   describe('for TypeComposer', () => {
     it('should return field type', () => {

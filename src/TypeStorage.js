@@ -1,29 +1,12 @@
 /* @flow strict */
 
 import { isFunction } from './utils/is';
-import { TypeComposer } from './TypeComposer';
-import { InputTypeComposer } from './InputTypeComposer';
-import { ScalarTypeComposer } from './ScalarTypeComposer';
-import { EnumTypeComposer } from './EnumTypeComposer';
-import { InterfaceTypeComposer } from './InterfaceTypeComposer';
-import { UnionTypeComposer } from './UnionTypeComposer';
-import type { GraphQLNamedType } from './graphql';
-
-type K = any;
-type V<TContext> =
-  | TypeComposer<any, TContext>
-  | InputTypeComposer
-  | EnumTypeComposer
-  | InterfaceTypeComposer<any, TContext>
-  | UnionTypeComposer<any, TContext>
-  | ScalarTypeComposer
-  | GraphQLNamedType;
 
 // TypeStorage has all methods from Map class
-export class TypeStorage<TContext> {
-  types: Map<K, V<TContext>>;
+export class TypeStorage<K, V> {
+  types: Map<K | string, V>;
 
-  constructor(): TypeStorage<TContext> {
+  constructor(): TypeStorage<K, V> {
     this.types = new Map();
 
     // alive proper Flow type casting in autosuggestions
@@ -42,18 +25,18 @@ export class TypeStorage<TContext> {
     return this.types.delete(typeName);
   }
 
-  entries(): Iterator<[K, V<TContext>]> {
+  entries(): Iterator<[K | string, V]> {
     return this.types.entries();
   }
 
   forEach(
-    callbackfn: (value: V<TContext>, index: K, map: Map<K, V<TContext>>) => mixed,
+    callbackfn: (value: V, index: K | string, map: Map<K | string, V>) => mixed,
     thisArg?: any
   ): void {
     return this.types.forEach(callbackfn, thisArg);
   }
 
-  get(typeName: K): V<TContext> {
+  get(typeName: K): V {
     const v = this.types.get(typeName);
     if (!v) {
       throw new Error(`Type with name ${JSON.stringify(typeName)} does not exists`);
@@ -65,20 +48,20 @@ export class TypeStorage<TContext> {
     return this.types.has(typeName);
   }
 
-  keys(): Iterator<K> {
+  keys(): Iterator<K | string> {
     return this.types.keys();
   }
 
-  set(typeName: K, value: V<TContext>): TypeStorage<TContext> {
+  set(typeName: K | string, value: V): TypeStorage<K, V> {
     this.types.set(typeName, value);
     return this;
   }
 
-  values(): Iterator<V<TContext>> {
+  values(): Iterator<V> {
     return this.types.values();
   }
 
-  add(value: V<TContext>): ?string {
+  add(value: V): ?string {
     if (value) {
       let typeName: ?string;
       if (value.getTypeName && value.getTypeName.call) {
@@ -105,59 +88,17 @@ export class TypeStorage<TContext> {
     return false;
   }
 
-  getOrSet(typeName: K, typeOrThunk: V<TContext> | (() => V<TContext>)): V<TContext> {
+  getOrSet(typeName: K, typeOrThunk: V | (() => V)): V {
     const existedType = (this.types.get(typeName): any);
     if (existedType) {
       return existedType;
     }
 
-    const gqType: any = isFunction(typeOrThunk) ? typeOrThunk() : typeOrThunk;
+    const gqType: any = isFunction(typeOrThunk) ? (typeOrThunk: any)() : typeOrThunk;
     if (gqType) {
       this.set(typeName, gqType);
     }
 
     return gqType;
-  }
-
-  getTC(typeName: K): TypeComposer<any, TContext> {
-    if (!this.hasInstance(typeName, TypeComposer)) {
-      throw new Error(`Cannot find TypeComposer with name ${typeName}`);
-    }
-    return (this.get(typeName): any);
-  }
-
-  getITC(typeName: K): InputTypeComposer {
-    if (!this.hasInstance(typeName, InputTypeComposer)) {
-      throw new Error(`Cannot find InputTypeComposer with name ${typeName}`);
-    }
-    return (this.get(typeName): any);
-  }
-
-  getETC(typeName: K): EnumTypeComposer {
-    if (!this.hasInstance(typeName, EnumTypeComposer)) {
-      throw new Error(`Cannot find EnumTypeComposer with name ${typeName}`);
-    }
-    return (this.get(typeName): any);
-  }
-
-  getIFTC(typeName: K): InterfaceTypeComposer<any, TContext> {
-    if (!this.hasInstance(typeName, InterfaceTypeComposer)) {
-      throw new Error(`Cannot find InterfaceTypeComposer with name ${typeName}`);
-    }
-    return (this.get(typeName): any);
-  }
-
-  getUTC(typeName: K): UnionTypeComposer<any, TContext> {
-    if (!this.hasInstance(typeName, UnionTypeComposer)) {
-      throw new Error(`Cannot find UnionTypeComposer with name ${typeName}`);
-    }
-    return (this.get(typeName): any);
-  }
-
-  getSTC(typeName: K): ScalarTypeComposer {
-    if (!this.hasInstance(typeName, ScalarTypeComposer)) {
-      throw new Error(`Cannot find ScalarTypeComposer with name ${typeName}`);
-    }
-    return (this.get(typeName): any);
   }
 }

@@ -7,30 +7,36 @@ import {
   GraphQLList,
   GraphQLInt,
 } from '../../graphql';
-import { TypeComposer, InputTypeComposer, InterfaceTypeComposer, schemaComposer } from '../..';
+import { schemaComposer as sc } from '../..';
+import { TypeComposer } from '../../TypeComposer';
+import { InputTypeComposer } from '../../InputTypeComposer';
+import { InterfaceTypeComposer } from '../../InterfaceTypeComposer';
 import { toInputObjectType } from '../toInputObjectType';
 
 describe('toInputObjectType()', () => {
-  let PersonTC: TypeComposer;
+  let PersonTC: TypeComposer<any, any>;
 
   beforeEach(() => {
-    schemaComposer.clear();
-    PersonTC = TypeComposer.create({
-      name: 'Person',
-      fields: {
-        name: 'String',
-        age: { type: GraphQLInt },
-        address: {
-          type: new GraphQLObjectType({
-            name: 'Address',
-            fields: {
-              city: { type: GraphQLString },
-              street: { type: GraphQLString },
-            },
-          }),
+    sc.clear();
+    PersonTC = TypeComposer.create(
+      {
+        name: 'Person',
+        fields: {
+          name: 'String',
+          age: { type: GraphQLInt },
+          address: {
+            type: new GraphQLObjectType({
+              name: 'Address',
+              fields: {
+                city: { type: GraphQLString },
+                street: { type: GraphQLString },
+              },
+            }),
+          },
         },
       },
-    });
+      sc
+    );
   });
 
   it('should return InputTypeComposer', () => {
@@ -76,12 +82,15 @@ describe('toInputObjectType()', () => {
   });
 
   it('should convert InterfaceTypeComposer to InputTypeComposer', () => {
-    const iftc = InterfaceTypeComposer.create(`
+    const iftc = InterfaceTypeComposer.create(
+      `
       interface IFace {
         name: String
         age: Int
       }
-    `);
+    `,
+      sc
+    );
     const itc = toInputObjectType(iftc);
     expect(itc.getFieldType('name')).toBe(GraphQLString);
     expect(itc.getFieldType('age')).toBe(GraphQLInt);
@@ -89,19 +98,25 @@ describe('toInputObjectType()', () => {
   });
 
   it('should convert field with InterfaceType to InputType', () => {
-    InterfaceTypeComposer.create(`
+    InterfaceTypeComposer.create(
+      `
       interface IFace {
         name: String
         age: Int
       }
-    `);
-    const tc = TypeComposer.create(`
+    `,
+      sc
+    );
+    const tc = TypeComposer.create(
+      `
       type Example implements IFace {
         name: String
         age: Int
         neighbor: IFace
       }
-    `);
+    `,
+      sc
+    );
     const itc = toInputObjectType(tc);
     expect(itc.getFieldType('name')).toBe(GraphQLString);
     expect(itc.getFieldType('age')).toBe(GraphQLInt);

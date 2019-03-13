@@ -69,11 +69,6 @@
       "path": "./node_modules/cz-conventional-changelog"
     }
   },
-  "jest": {
-    "roots": [
-      "<rootDir>/src"
-    ]
-  },
   "scripts": {
     "build": "npm run build-cjs && npm run build-mjs && npm run build-esm",
     "build-cjs": "rimraf lib && BABEL_ENV=cjs babel src --ignore __tests__,__mocks__ -d lib && COPY_TO_FOLDER=lib npm run build-flow && COPY_TO_FOLDER=lib npm run build-ts",

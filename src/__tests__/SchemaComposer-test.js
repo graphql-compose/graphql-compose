@@ -26,21 +26,21 @@ import {
 describe('SchemaComposer', () => {
   it('should implements `add` method', () => {
     const sc = new SchemaComposer();
-    const SomeTC = sc.TypeComposer.create({ name: 'validType' });
+    const SomeTC = sc.createObjectTC({ name: 'validType' });
     sc.add(SomeTC);
     expect(sc.get('validType')).toBe(SomeTC);
   });
 
   it('should implements `get` method', () => {
     const sc = new SchemaComposer();
-    const SomeTC = sc.TypeComposer.create({ name: 'validType' });
+    const SomeTC = sc.createObjectTC({ name: 'validType' });
     sc.add(SomeTC);
     expect(sc.get('validType')).toBe(SomeTC);
   });
 
   it('should implements `has` method`', () => {
     const sc = new SchemaComposer();
-    const SomeTC = sc.TypeComposer.create({ name: 'validType' });
+    const SomeTC = sc.createObjectTC({ name: 'validType' });
     sc.add(SomeTC);
     expect(sc.has('validType')).toBe(true);
     expect(sc.has('unexistedType')).toBe(false);
@@ -214,8 +214,8 @@ describe('SchemaComposer', () => {
     it('should accept additional types', () => {
       const sc = new SchemaComposer();
       sc.Query.addFields({ time: 'Int' });
-      const me1 = sc.TypeComposer.create('type Me1 { a: Int }').getType();
-      const me2 = sc.TypeComposer.create('type Me2 { a: Int }').getType();
+      const me1 = sc.createObjectTC('type Me1 { a: Int }').getType();
+      const me2 = sc.createObjectTC('type Me2 { a: Int }').getType();
       const schema = sc.buildSchema({ types: [me1, me1, me2] });
 
       expect(schema._typeMap.Me1).toEqual(me1);
@@ -305,7 +305,7 @@ describe('SchemaComposer', () => {
 
   describe('SchemaMustHaveType', () => {
     const sc = new SchemaComposer();
-    const tc = sc.TypeComposer.create(`type Me { name: String }`);
+    const tc = sc.createObjectTC(`type Me { name: String }`);
 
     sc.addSchemaMustHaveType(tc);
     expect(sc._schemaMustHaveTypes).toContain(tc);
@@ -322,7 +322,7 @@ describe('SchemaComposer', () => {
   describe('getTC', () => {
     it('should return TypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.TypeComposer.create(`
+      sc.createObjectTC(`
           type Author {
             name: String
           }
@@ -343,7 +343,7 @@ describe('SchemaComposer', () => {
 
     it('should throw error for incorrect type', () => {
       const sc = new SchemaComposer();
-      sc.InputTypeComposer.create(`
+      sc.createInputTC(`
         input Author {
           name: String
         }
@@ -355,7 +355,7 @@ describe('SchemaComposer', () => {
   describe('getITC', () => {
     it('should return InputTypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.InputTypeComposer.create(`
+      sc.createInputTC(`
           input Author {
             name: String
           }
@@ -376,7 +376,7 @@ describe('SchemaComposer', () => {
 
     it('should throw error for incorrect type', () => {
       const sc = new SchemaComposer();
-      sc.TypeComposer.create(`
+      sc.createObjectTC(`
         type Author {
           name: String
         }
@@ -390,7 +390,7 @@ describe('SchemaComposer', () => {
   describe('getSTC', () => {
     it('should return ScalarTypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.ScalarTypeComposer.create(`scalar UInt`);
+      sc.createScalarTC(`scalar UInt`);
       expect(sc.getSTC('UInt')).toBeInstanceOf(ScalarTypeComposer);
     });
 
@@ -407,7 +407,7 @@ describe('SchemaComposer', () => {
 
     it('should throw error for incorrect type', () => {
       const sc = new SchemaComposer();
-      sc.TypeComposer.create(`
+      sc.createObjectTC(`
         type Sort {
           name: String
         }
@@ -419,7 +419,7 @@ describe('SchemaComposer', () => {
   describe('getETC', () => {
     it('should return EnumTypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.EnumTypeComposer.create(`
+      sc.createEnumTC(`
           enum Sort {
             ASC DESC
           }
@@ -440,7 +440,7 @@ describe('SchemaComposer', () => {
 
     it('should throw error for incorrect type', () => {
       const sc = new SchemaComposer();
-      sc.TypeComposer.create(`
+      sc.createObjectTC(`
         type Sort {
           name: String
         }
@@ -452,7 +452,7 @@ describe('SchemaComposer', () => {
   describe('getIFTC', () => {
     it('should return InterfaceTypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.InterfaceTypeComposer.create(`
+      sc.createInterfaceTC(`
           interface IFace {
             name: String
           }
@@ -473,7 +473,7 @@ describe('SchemaComposer', () => {
 
     it('should throw error for incorrect type', () => {
       const sc = new SchemaComposer();
-      sc.TypeComposer.create(`
+      sc.createObjectTC(`
         type IFace {
           name: String
         }
@@ -487,7 +487,7 @@ describe('SchemaComposer', () => {
   describe('getAnyTC()', () => {
     it('should return TypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.TypeComposer.create(`type Object1 { name: String }`);
+      sc.createObjectTC(`type Object1 { name: String }`);
       expect(sc.getAnyTC('Object1')).toBeInstanceOf(TypeComposer);
       sc.add(
         new GraphQLObjectType({
@@ -500,7 +500,7 @@ describe('SchemaComposer', () => {
 
     it('should return InputTypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.InputTypeComposer.create(`input Input1 { name: String }`);
+      sc.createInputTC(`input Input1 { name: String }`);
       expect(sc.getAnyTC('Input1')).toBeInstanceOf(InputTypeComposer);
       sc.add(
         new GraphQLInputObjectType({
@@ -513,7 +513,7 @@ describe('SchemaComposer', () => {
 
     it('should return ScalarTypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.ScalarTypeComposer.create(`scalar Scalar1`);
+      sc.createScalarTC(`scalar Scalar1`);
       expect(sc.getAnyTC('Scalar1')).toBeInstanceOf(ScalarTypeComposer);
       sc.add(
         new GraphQLScalarType({
@@ -526,7 +526,7 @@ describe('SchemaComposer', () => {
 
     it('should return EnumTypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.EnumTypeComposer.create(`enum Enum1 { A B }`);
+      sc.createEnumTC(`enum Enum1 { A B }`);
       expect(sc.getAnyTC('Enum1')).toBeInstanceOf(EnumTypeComposer);
       sc.add(
         new GraphQLEnumType({
@@ -539,7 +539,7 @@ describe('SchemaComposer', () => {
 
     it('should return InterfaceTypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.InterfaceTypeComposer.create(`interface Iface1 { f1: Int }`);
+      sc.createInterfaceTC(`interface Iface1 { f1: Int }`);
       expect(sc.getAnyTC('Iface1')).toBeInstanceOf(InterfaceTypeComposer);
       sc.add(
         new GraphQLInterfaceType({
@@ -553,7 +553,7 @@ describe('SchemaComposer', () => {
     it('should return UnionTypeComposer', () => {
       const sc = new SchemaComposer();
       const a = sc.createObjectTC(`type A { f: Int }`);
-      sc.UnionTypeComposer.create(`union Union1 = A`);
+      sc.createUnionTC(`union Union1 = A`);
       expect(sc.getAnyTC('Union1')).toBeInstanceOf(UnionTypeComposer);
       sc.add(
         new GraphQLUnionType({
@@ -568,7 +568,7 @@ describe('SchemaComposer', () => {
   describe('add()', () => {
     it('should add TypeComposer', () => {
       const sc = new SchemaComposer();
-      const tc = sc.TypeComposer.createTemp('User');
+      const tc = TypeComposer.createTemp('User');
       const typeName = sc.add(tc);
       expect(typeName).toBe('User');
       expect(sc.get('User')).toBe(tc);
@@ -579,7 +579,7 @@ describe('SchemaComposer', () => {
 
     it('should add InputTypeComposer', () => {
       const sc = new SchemaComposer();
-      const itc = sc.InputTypeComposer.createTemp('UserInput');
+      const itc = InputTypeComposer.createTemp('UserInput');
       const typeName = sc.add(itc);
       expect(typeName).toBe('UserInput');
       expect(sc.get('UserInput')).toBe(itc);
@@ -590,7 +590,7 @@ describe('SchemaComposer', () => {
 
     it('should add ScalarTypeComposer', () => {
       const sc = new SchemaComposer();
-      const stc = sc.ScalarTypeComposer.createTemp('UserScalar');
+      const stc = ScalarTypeComposer.createTemp('UserScalar');
       const typeName = sc.add(stc);
       expect(typeName).toBe('UserScalar');
       expect(sc.get('UserScalar')).toBe(stc);
@@ -601,7 +601,7 @@ describe('SchemaComposer', () => {
 
     it('should add EnumTypeComposer', () => {
       const sc = new SchemaComposer();
-      const etc = sc.EnumTypeComposer.createTemp('UserEnum');
+      const etc = EnumTypeComposer.createTemp('UserEnum');
       const typeName = sc.add(etc);
       expect(typeName).toBe('UserEnum');
       expect(sc.get('UserEnum')).toBe(etc);
@@ -623,7 +623,7 @@ describe('SchemaComposer', () => {
 
     it('should add InterfaceTypeComposer', () => {
       const sc = new SchemaComposer();
-      const iftc = sc.InterfaceTypeComposer.createTemp('UserInterface');
+      const iftc = InterfaceTypeComposer.createTemp('UserInterface');
       const typeName = sc.add(iftc);
       expect(typeName).toBe('UserInterface');
       expect(sc.get('UserInterface')).toBe(iftc);
@@ -634,7 +634,7 @@ describe('SchemaComposer', () => {
 
     it('should add UnionTypeComposer', () => {
       const sc = new SchemaComposer();
-      const utc = sc.UnionTypeComposer.createTemp('UserUnion');
+      const utc = UnionTypeComposer.createTemp('UserUnion');
       const typeName = sc.add(utc);
       expect(typeName).toBe('UserUnion');
       expect(sc.get('UserUnion')).toBe(utc);
@@ -649,7 +649,7 @@ describe('SchemaComposer', () => {
     it('should add TypeComposer', () => {
       const sc = new SchemaComposer();
       sc.addAsComposer(`type Object1 { name: String }`);
-      sc.addAsComposer(sc.TypeComposer.createTemp(`type Object2 { name: String }`));
+      sc.addAsComposer(TypeComposer.createTemp(`type Object2 { name: String }`));
       sc.addAsComposer(
         new GraphQLObjectType({
           name: 'Object3',
@@ -665,7 +665,7 @@ describe('SchemaComposer', () => {
     it('should return InputTypeComposer', () => {
       const sc = new SchemaComposer();
       sc.addAsComposer(`input Object1 { name: String }`);
-      sc.addAsComposer(sc.InputTypeComposer.createTemp(`input Object2 { name: String }`));
+      sc.addAsComposer(InputTypeComposer.createTemp(`input Object2 { name: String }`));
       sc.addAsComposer(
         new GraphQLInputObjectType({
           name: 'Object3',
@@ -681,7 +681,7 @@ describe('SchemaComposer', () => {
     it('should return ScalarTypeComposer', () => {
       const sc = new SchemaComposer();
       sc.addAsComposer(`scalar Object1`);
-      sc.addAsComposer(sc.ScalarTypeComposer.createTemp(`scalar Object2`));
+      sc.addAsComposer(ScalarTypeComposer.createTemp(`scalar Object2`));
       sc.addAsComposer(
         new GraphQLScalarType({
           name: 'Object3',
@@ -697,7 +697,7 @@ describe('SchemaComposer', () => {
     it('should return EnumTypeComposer', () => {
       const sc = new SchemaComposer();
       sc.addAsComposer(`enum Object1 { A B }`);
-      sc.addAsComposer(sc.EnumTypeComposer.createTemp(`enum Object2 { A B }`));
+      sc.addAsComposer(EnumTypeComposer.createTemp(`enum Object2 { A B }`));
       sc.addAsComposer(
         new GraphQLEnumType({
           name: 'Object3',
@@ -713,7 +713,7 @@ describe('SchemaComposer', () => {
     it('should return InterfaceTypeComposer', () => {
       const sc = new SchemaComposer();
       sc.addAsComposer(`interface Object1 { a: Int }`);
-      sc.addAsComposer(sc.InterfaceTypeComposer.createTemp(`interface Object2 { a: Int }`));
+      sc.addAsComposer(InterfaceTypeComposer.createTemp(`interface Object2 { a: Int }`));
       sc.addAsComposer(
         new GraphQLInterfaceType({
           name: 'Object3',
@@ -730,7 +730,7 @@ describe('SchemaComposer', () => {
       const sc = new SchemaComposer();
       const a = sc.createObjectTC(`type A { f: Int }`);
       sc.addAsComposer(`union Object1 = A`);
-      sc.addAsComposer(sc.UnionTypeComposer.createTemp(`union Object2 = A`));
+      sc.addAsComposer(UnionTypeComposer.createTemp(`union Object2 = A`));
       sc.addAsComposer(
         new GraphQLUnionType({
           name: 'Object3',
@@ -788,14 +788,14 @@ describe('SchemaComposer', () => {
 
       // Post type should be the same instance
       const Post = sc.get('Post');
-      const PostInAuthor = sc.TypeComposer.createTemp((sc.get('Author'): any))
+      const PostInAuthor = TypeComposer.createTemp((sc.get('Author'): any))
         .getFieldTC('posts')
         .getType();
       expect(Post).toBe(PostInAuthor);
 
       // Author type should be the same instance
       const Author = sc.get('Author');
-      const AuthorInPost = sc.TypeComposer.createTemp((sc.get('Post'): any))
+      const AuthorInPost = TypeComposer.createTemp((sc.get('Post'): any))
         .getFieldTC('author')
         .getType();
       expect(Author).toBe(AuthorInPost);
@@ -927,6 +927,10 @@ describe('SchemaComposer', () => {
       const tc2 = sc.createTC(`type B { f: Int }`);
       expect(tc2).toBeInstanceOf(TypeComposer);
       expect(tc2.hasField('f')).toBeTruthy();
+
+      const tc3 = sc.createOutputTC(`type C { f: Int }`);
+      expect(tc3).toBeInstanceOf(TypeComposer);
+      expect(tc3.hasField('f')).toBeTruthy();
     });
 
     it('createInputTC()', () => {

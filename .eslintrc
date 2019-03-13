@@ -48,6 +48,7 @@
     "$Shape": true,
     "$FlowFixMe": true,
     "$ReadOnlyArray": true,
-    "$Keys": true
+    "$Keys": true,
+    "$ReadOnly": true
   }
 }

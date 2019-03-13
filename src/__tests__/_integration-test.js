@@ -1,6 +1,6 @@
 /* @flow */
 
-import { TypeComposer, schemaComposer } from '..';
+import { schemaComposer } from '..';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -8,13 +8,13 @@ beforeEach(() => {
 
 describe('created types via TypeComposer.create should be avaliable in SDL', () => {
   it('simple case', () => {
-    const UserTC = TypeComposer.create(`
+    const UserTC = schemaComposer.createObjectTC(`
       type User {
         name: String
       }
     `);
 
-    const ArticleTC = TypeComposer.create(`
+    const ArticleTC = schemaComposer.createObjectTC(`
       type Article {
         text: String
         user: User
@@ -25,7 +25,7 @@ describe('created types via TypeComposer.create should be avaliable in SDL', () 
   });
 
   it('hoisting case', () => {
-    const UserTC = TypeComposer.create({
+    const UserTC = schemaComposer.createObjectTC({
       name: 'User',
       fields: {
         name: 'String',
@@ -33,7 +33,7 @@ describe('created types via TypeComposer.create should be avaliable in SDL', () 
       },
     });
 
-    const ArticleTC = TypeComposer.create({
+    const ArticleTC = schemaComposer.createObjectTC({
       name: 'Article',
       fields: {
         text: 'String',

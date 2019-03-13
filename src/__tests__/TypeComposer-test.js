@@ -12,13 +12,11 @@ import {
   GraphQLInputObjectType,
   graphql,
 } from '../graphql';
-import {
-  TypeComposer,
-  InputTypeComposer,
-  Resolver,
-  schemaComposer,
-  InterfaceTypeComposer,
-} from '..';
+import { schemaComposer } from '..';
+import { Resolver } from '../Resolver';
+import { TypeComposer } from '../TypeComposer';
+import { InputTypeComposer } from '../InputTypeComposer';
+import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
@@ -27,7 +25,7 @@ beforeEach(() => {
 
 describe('TypeComposer', () => {
   let objectType: GraphQLObjectType;
-  let tc: TypeComposer;
+  let tc: TypeComposer<any, any>;
 
   beforeEach(() => {
     objectType = new GraphQLObjectType({
@@ -37,7 +35,7 @@ describe('TypeComposer', () => {
         field2: { type: GraphQLString },
       },
     });
-    tc = new TypeComposer(objectType);
+    tc = new TypeComposer(objectType, schemaComposer);
   });
 
   describe('fields manipulation', () => {
@@ -45,7 +43,7 @@ describe('TypeComposer', () => {
       const fieldNames = Object.keys(tc.getFields());
       expect(fieldNames).toEqual(expect.arrayContaining(['field1', 'field2']));
 
-      const tc2 = TypeComposer.create('SomeType');
+      const tc2 = TypeComposer.create('SomeType', schemaComposer);
       expect(tc2.getFields()).toEqual({});
     });
 
@@ -337,12 +335,15 @@ describe('TypeComposer', () => {
       fields: () => ({ id: { type: GraphQLInt } }),
       resolveType: () => {},
     });
-    const iftc = InterfaceTypeComposer.create(`
+    const iftc = InterfaceTypeComposer.create(
+      `
       interface SimpleObject {
         id: Int
         name: String
       }
-    `);
+    `,
+      schemaComposer
+    );
 
     it('getInterfaces()', () => {
       if (graphqlVersion >= 14) {
@@ -373,9 +374,9 @@ describe('TypeComposer', () => {
       expect(tc.hasInterface('MyIface123')).toBeFalsy();
       expect(tc.hasInterface('MyIface')).toBeTruthy();
       expect(tc.hasInterface(MyIface)).toBeTruthy();
-      expect(tc.hasInterface(InterfaceTypeComposer.create(MyIface))).toBeTruthy();
+      expect(tc.hasInterface(InterfaceTypeComposer.create(MyIface, schemaComposer))).toBeTruthy();
 
-      tc.addInterface(InterfaceTypeComposer.create('MyIface123'));
+      tc.addInterface(InterfaceTypeComposer.create('MyIface123', schemaComposer));
       expect(tc.hasInterface('MyIface123')).toBeTruthy();
     });
 
@@ -419,7 +420,7 @@ describe('TypeComposer', () => {
 
   describe('create() [static method]', () => {
     it('should create TC by typeName as a string', () => {
-      const myTC = TypeComposer.create('TypeStub');
+      const myTC = TypeComposer.create('TypeStub', schemaComposer);
       expect(myTC).toBeInstanceOf(TypeComposer);
       expect(myTC.getType()).toBeInstanceOf(GraphQLObjectType);
       expect(myTC.getFields()).toEqual({});
@@ -433,7 +434,8 @@ describe('TypeComposer', () => {
           # Description for some required Int field
           f2: Int!
         }
-      `
+      `,
+        schemaComposer
       );
       expect(myTC).toBeInstanceOf(TypeComposer);
       expect(myTC.getTypeName()).toBe('TestTypeTpl');
@@ -443,15 +445,18 @@ describe('TypeComposer', () => {
     });
 
     it('should create TC by GraphQLObjectTypeConfig', () => {
-      const myTC = TypeComposer.create({
-        name: 'TestType',
-        fields: {
-          f1: {
-            type: 'String',
+      const myTC = TypeComposer.create(
+        {
+          name: 'TestType',
+          fields: {
+            f1: {
+              type: 'String',
+            },
+            f2: 'Int!',
           },
-          f2: 'Int!',
         },
-      });
+        schemaComposer
+      );
       expect(myTC).toBeInstanceOf(TypeComposer);
       expect(myTC.getFieldType('f1')).toBe(GraphQLString);
       expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
@@ -459,15 +464,18 @@ describe('TypeComposer', () => {
     });
 
     it('should create TC by GraphQLObjectTypeConfig with fields as Thunk', () => {
-      const myTC = TypeComposer.create({
-        name: 'TestType',
-        fields: (): any => ({
-          f1: {
-            type: 'String',
-          },
-          f2: 'Int!',
-        }),
-      });
+      const myTC = TypeComposer.create(
+        {
+          name: 'TestType',
+          fields: (): any => ({
+            f1: {
+              type: 'String',
+            },
+            f2: 'Int!',
+          }),
+        },
+        schemaComposer
+      );
       expect(myTC).toBeInstanceOf(TypeComposer);
       expect(myTC.getFieldType('f1')).toBe(GraphQLString);
       expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
@@ -483,25 +491,25 @@ describe('TypeComposer', () => {
           },
         },
       });
-      const myTC = TypeComposer.create(objType);
+      const myTC = TypeComposer.create(objType, schemaComposer);
       expect(myTC).toBeInstanceOf(TypeComposer);
       expect(myTC.getType()).toBe(objType);
       expect(myTC.getFieldType('f1')).toBe(GraphQLString);
     });
 
     it('should create type and store it in schemaComposer', () => {
-      const SomeUserTC = TypeComposer.create('SomeUser');
+      const SomeUserTC = TypeComposer.create('SomeUser', schemaComposer);
       expect(schemaComposer.getTC('SomeUser')).toBe(SomeUserTC);
     });
 
     it('should create type and NOTE store root types in schemaComposer', () => {
-      TypeComposer.create('Query');
+      TypeComposer.create('Query', schemaComposer);
       expect(schemaComposer.has('Query')).toBeFalsy();
 
-      TypeComposer.create('Mutation');
+      TypeComposer.create('Mutation', schemaComposer);
       expect(schemaComposer.has('Query')).toBeFalsy();
 
-      TypeComposer.create('Subscription');
+      TypeComposer.create('Subscription', schemaComposer);
       expect(schemaComposer.has('Query')).toBeFalsy();
     });
 
@@ -543,7 +551,8 @@ describe('TypeComposer', () => {
               },
             },
           },
-        })
+        }),
+        schemaComposer
       );
 
       expect(myTC.get('field1')).toBe(GraphQLString);
@@ -553,9 +562,12 @@ describe('TypeComposer', () => {
 
   describe('Resolvers manipulation', () => {
     it('addResolver() should accept Resolver instance', () => {
-      const resolver = new Resolver({
-        name: 'myResolver',
-      });
+      const resolver = new Resolver(
+        {
+          name: 'myResolver',
+        },
+        schemaComposer
+      );
       tc.addResolver(resolver);
       expect(tc.getResolver('myResolver')).toBe(resolver);
       expect(tc.hasResolver('myResolver')).toBe(true);
@@ -580,9 +592,12 @@ describe('TypeComposer', () => {
     });
 
     it('removeResolver() should work', () => {
-      const resolver = new Resolver({
-        name: 'myResolver3',
-      });
+      const resolver = new Resolver(
+        {
+          name: 'myResolver3',
+        },
+        schemaComposer
+      );
       tc.addResolver(resolver);
       expect(tc.hasResolver('myResolver3')).toBe(true);
       tc.removeResolver('myResolver3');
@@ -593,9 +608,12 @@ describe('TypeComposer', () => {
     });
 
     it('setResolver() should add resolver with specific name', () => {
-      const resolver = new Resolver({
-        name: 'myResolver4',
-      });
+      const resolver = new Resolver(
+        {
+          name: 'myResolver4',
+        },
+        schemaComposer
+      );
       tc.setResolver('specName4', resolver);
       expect(tc.hasResolver('specName4')).toBe(true);
       expect(tc.hasResolver('myResolver4')).toBe(false);
@@ -691,8 +709,8 @@ describe('TypeComposer', () => {
   });
 
   describe('addRelation()', () => {
-    let UserTC: TypeComposer;
-    let ArticleTC: TypeComposer;
+    let UserTC: TypeComposer<any, any>;
+    let ArticleTC: TypeComposer<any, any>;
 
     beforeEach(() => {
       UserTC = TypeComposer.create(
@@ -701,7 +719,8 @@ describe('TypeComposer', () => {
           id: Int,
           name: String,
         }
-      `
+      `,
+        schemaComposer
       );
       UserTC.addResolver({
         name: 'findById',
@@ -716,7 +735,8 @@ describe('TypeComposer', () => {
           userId: Int,
           title: String,
         }
-      `
+      `,
+        schemaComposer
       );
 
       ArticleTC.addResolver({
@@ -852,8 +872,10 @@ describe('TypeComposer', () => {
     expect(tc.addInterface(('A': any))).toBe(tc);
     expect(tc.removeInterface(('A': any))).toBe(tc);
 
-    expect(tc.setResolver('myResolver', new Resolver({ name: 'myResolver' }))).toBe(tc);
-    expect(tc.addResolver(new Resolver({ name: 'myResolver' }))).toBe(tc);
+    expect(tc.setResolver('myResolver', new Resolver({ name: 'myResolver' }, schemaComposer))).toBe(
+      tc
+    );
+    expect(tc.addResolver(new Resolver({ name: 'myResolver' }, schemaComposer))).toBe(tc);
     expect(tc.removeResolver('myResolver')).toBe(tc);
 
     expect(tc.setTypeName('Type2')).toBe(tc);
@@ -862,17 +884,20 @@ describe('TypeComposer', () => {
   });
 
   describe('deprecateFields()', () => {
-    let tc1: TypeComposer;
+    let tc1: TypeComposer<any, any>;
 
     beforeEach(() => {
-      tc1 = TypeComposer.create({
-        name: 'MyType',
-        fields: {
-          name: 'String',
-          age: 'Int',
-          dob: 'Date',
+      tc1 = TypeComposer.create(
+        {
+          name: 'MyType',
+          fields: {
+            name: 'String',
+            age: 'Int',
+            dob: 'Date',
+          },
         },
-      });
+        schemaComposer
+      );
     });
 
     it('should accept string', () => {
@@ -915,12 +940,12 @@ describe('TypeComposer', () => {
   });
 
   describe('getFieldTC()', () => {
-    const myTC = TypeComposer.create('MyCustomType');
+    const myTC = TypeComposer.create('MyCustomType', schemaComposer);
     myTC.addFields({
       scalar: 'String',
       list: '[Int]',
-      obj: TypeComposer.create(`type MyCustomObjType { name: String }`),
-      objArr: [TypeComposer.create(`type MyCustomObjType2 { name: String }`)],
+      obj: TypeComposer.create(`type MyCustomObjType { name: String }`, schemaComposer),
+      objArr: [TypeComposer.create(`type MyCustomObjType2 { name: String }`, schemaComposer)],
     });
 
     it('should return TypeComposer for object field', () => {
