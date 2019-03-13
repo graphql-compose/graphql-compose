@@ -136,7 +136,7 @@ export type ResolverMiddleware<TSource, TContext, TArgs> = (
   info: GraphQLResolveInfo
 ) => any;
 
-export class Resolver<TSource, TContext, TArgs> {
+export class Resolver<TSource, TContext, TArgs = ArgsMap> {
   static schemaComposer: SchemaComposer<TContext>;
 
   get schemaComposer(): SchemaComposer<TContext> {
@@ -145,7 +145,7 @@ export class Resolver<TSource, TContext, TArgs> {
 
   type: ComposeOutputType<TSource, TContext>;
   args: ComposeFieldConfigArgumentMap<any>;
-  resolve: ResolverRpCb<TSource, TContext, TArgs>;
+  resolve: (resolveParams: $Shape<ResolveParams<TSource, TContext, TArgs>>) => Promise<any> | any;
   name: string;
   displayName: ?string;
   kind: ?ResolverKinds;

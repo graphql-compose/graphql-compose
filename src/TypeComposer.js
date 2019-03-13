@@ -106,7 +106,7 @@ export type ComposeFieldConfigAsObject<TSource, TContext, TArgs> = {
   +[key: string]: any,
 };
 
-export type ComposePartialFieldConfigAsObject<TSource, TContext, TArgs> = {
+export type ComposePartialFieldConfigAsObject<TSource, TContext, TArgs = ArgsMap> = {
   +type?: Thunk<ComposeOutputType<TSource, TContext>> | GraphQLOutputType,
   +args?: ComposeFieldConfigArgumentMap<TArgs>,
   +resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>,
