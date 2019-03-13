@@ -1,11 +1,11 @@
 /* @flow strict */
 
-import { TypeComposer } from '../..';
+import { schemaComposer } from '../..';
 
 describe('github issue #72', () => {
   it('extendField after addRelation', () => {
-    const MyTypeTC = TypeComposer.create(`type MyType { name: String }`);
-    const OtherTypeTC = TypeComposer.create(`type OtherType { name: String }`);
+    const MyTypeTC = schemaComposer.createObjectTC(`type MyType { name: String }`);
+    const OtherTypeTC = schemaComposer.createObjectTC(`type OtherType { name: String }`);
     OtherTypeTC.addResolver({
       name: 'findOne',
       type: OtherTypeTC,

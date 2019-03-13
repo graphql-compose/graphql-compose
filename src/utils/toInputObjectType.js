@@ -3,7 +3,6 @@
 
 import util from 'util';
 import {
-  GraphQLInputObjectType,
   GraphQLObjectType,
   GraphQLInterfaceType,
   isInputType,
@@ -24,37 +23,34 @@ export type toInputObjectTypeOpts = {
 };
 
 export function toInputObjectType(
-  typeComposer: TypeComposer<any, any> | InterfaceTypeComposer<any, any>,
+  tc: TypeComposer<any, any> | InterfaceTypeComposer<any, any>,
   opts: toInputObjectTypeOpts = {}
 ): InputTypeComposer {
-  if (typeComposer.hasInputTypeComposer()) {
-    return typeComposer.getInputTypeComposer();
+  if (tc.hasInputTypeComposer()) {
+    return tc.getInputTypeComposer();
   }
 
-  const schemaComposer = typeComposer.constructor.schemaComposer;
   const prefix: string = opts.prefix || '';
   const postfix: string = opts.postfix || 'Input';
 
-  const inputTypeName = `${prefix}${typeComposer.getTypeName()}${postfix}`;
+  const inputTypeName = `${prefix}${tc.getTypeName()}${postfix}`;
 
-  const inputTypeComposer = new schemaComposer.InputTypeComposer(
-    new GraphQLInputObjectType({
-      name: inputTypeName,
-      fields: {},
-    })
-  );
-  typeComposer.setInputTypeComposer(inputTypeComposer);
+  const inputTypeComposer = tc.sc.createInputTC({
+    name: inputTypeName,
+    fields: {},
+  });
+  tc.setInputTypeComposer(inputTypeComposer);
 
-  const fieldNames = typeComposer.getFieldNames();
+  const fieldNames = tc.getFieldNames();
   const inputFields = {};
   fieldNames.forEach(fieldName => {
     const fieldOpts = {
       ...opts,
       fieldName,
-      outputTypeName: typeComposer.getTypeName(),
+      outputTypeName: tc.getTypeName(),
     };
-    const fc = typeComposer.getFieldConfig(fieldName);
-    const inputType = convertInputObjectField(fc.type, fieldOpts, schemaComposer);
+    const fc = tc.getFieldConfig(fieldName);
+    const inputType = convertInputObjectField(fc.type, fieldOpts, tc.sc);
     if (inputType) {
       inputFields[fieldName] = {
         type: inputType,
@@ -77,7 +73,7 @@ export type ConvertInputObjectFieldOpts = {
 export function convertInputObjectField(
   field: GraphQLType,
   opts: ConvertInputObjectFieldOpts,
-  schemaComposer: SchemaComposer<any>
+  sc: SchemaComposer<any>
 ): ?GraphQLInputType {
   let fieldType = field;
 
@@ -99,8 +95,8 @@ export function convertInputObjectField(
       };
       const tc =
         fieldType instanceof GraphQLObjectType
-          ? new schemaComposer.TypeComposer(fieldType)
-          : new schemaComposer.InterfaceTypeComposer(fieldType);
+          ? sc.createObjectTC(fieldType)
+          : sc.createInterfaceTC(fieldType);
       fieldType = toInputObjectType(tc, typeOpts).getType();
     } else {
       // eslint-disable-next-line

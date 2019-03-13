@@ -12,14 +12,17 @@ import type {
 import { defineEnumValues, defineEnumValuesToConfig } from './utils/configToDefine';
 import { graphqlVersion } from './utils/graphqlVersion';
 import type { TypeAsString } from './TypeMapper';
-import type { SchemaComposer } from './SchemaComposer';
+import { SchemaComposer } from './SchemaComposer';
 import type { Extensions } from './utils/definitions';
 
 export type ComposeEnumTypeConfig = GraphQLEnumTypeConfig & {
   +extensions?: Extensions,
 };
 
-export type EnumTypeComposerDefinition = TypeAsString | ComposeEnumTypeConfig | GraphQLEnumType;
+export type EnumTypeComposerDefinition =
+  | TypeAsString
+  | $ReadOnly<ComposeEnumTypeConfig>
+  | $ReadOnly<GraphQLEnumType>;
 
 export type GraphQLEnumTypeExtended = GraphQLEnumType & {
   _gqcExtensions?: Extensions,
@@ -27,23 +30,24 @@ export type GraphQLEnumTypeExtended = GraphQLEnumType & {
 
 export class EnumTypeComposer {
   gqType: GraphQLEnumTypeExtended;
+  sc: SchemaComposer<any>;
 
-  static schemaComposer: SchemaComposer<any>;
-
-  get schemaComposer(): SchemaComposer<any> {
-    return this.constructor.schemaComposer;
-  }
-
-  static create(typeDef: EnumTypeComposerDefinition): EnumTypeComposer {
-    const etc = this.createTemp(typeDef);
-    this.schemaComposer.add(etc);
+  static create(typeDef: EnumTypeComposerDefinition, sc: SchemaComposer<any>): EnumTypeComposer {
+    if (!(sc instanceof SchemaComposer)) {
+      throw new Error(
+        'You must provide SchemaComposer instance as a second argument for `EnumTypeComposer.create(typeDef, schemaComposer)`'
+      );
+    }
+    const etc = this.createTemp(typeDef, sc);
+    if (sc) sc.add(etc);
     return etc;
   }
 
-  static createTemp(typeDef: EnumTypeComposerDefinition): EnumTypeComposer {
-    if (!this.schemaComposer) {
-      throw new Error('Class<EnumTypeComposer> must be created by a SchemaComposer.');
-    }
+  static createTemp(
+    typeDef: EnumTypeComposerDefinition,
+    _sc?: SchemaComposer<any>
+  ): EnumTypeComposer {
+    const sc = _sc || new SchemaComposer();
 
     let ETC;
 
@@ -51,30 +55,31 @@ export class EnumTypeComposer {
       const typeName: string = typeDef;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
-        ETC = new this.schemaComposer.EnumTypeComposer(
+        ETC = new EnumTypeComposer(
           new GraphQLEnumType({
             name: typeName,
             values: graphqlVersion < 13 ? { _OldGraphqlStubValue_: {} } : {},
-          })
+          }),
+          sc
         );
       } else {
-        const type = this.schemaComposer.typeMapper.createType(typeName);
+        const type = sc.typeMapper.createType(typeName);
         if (!(type instanceof GraphQLEnumType)) {
           throw new Error(
             'You should provide correct GraphQLEnumType type definition.' +
               'Eg. `enum MyType { KEY1 KEY2 KEY3 }`'
           );
         }
-        ETC = new this.schemaComposer.EnumTypeComposer(type);
+        ETC = new EnumTypeComposer(type, sc);
       }
     } else if (typeDef instanceof GraphQLEnumType) {
-      ETC = new this.schemaComposer.EnumTypeComposer(typeDef);
+      ETC = new EnumTypeComposer(typeDef, sc);
     } else if (isObject(typeDef)) {
       const type = new GraphQLEnumType({
         ...(typeDef: any),
       });
-      ETC = new this.schemaComposer.EnumTypeComposer(type);
-      ETC.gqType._gqcExtensions = typeDef.extensions || {};
+      ETC = new EnumTypeComposer(type, sc);
+      ETC.gqType._gqcExtensions = (typeDef: any).extensions || {};
     } else {
       throw new Error('You should provide GraphQLEnumTypeConfig or string with enum name or SDL');
     }
@@ -82,10 +87,13 @@ export class EnumTypeComposer {
     return ETC;
   }
 
-  constructor(gqType: GraphQLEnumType) {
-    if (!this.schemaComposer) {
-      throw new Error('Class<EnumTypeComposer> can only be created by a SchemaComposer.');
+  constructor(gqType: GraphQLEnumType, sc: SchemaComposer<any>) {
+    if (!(sc instanceof SchemaComposer)) {
+      throw new Error(
+        'You must provide SchemaComposer instance as a second argument for `new EnumTypeComposer(GraphQLEnumType, SchemaComposer)`'
+      );
     }
+    this.sc = sc;
 
     if (!(gqType instanceof GraphQLEnumType)) {
       throw new Error('EnumTypeComposer accept only GraphQLEnumType in constructor');
@@ -345,7 +353,7 @@ export class EnumTypeComposer {
 
   setTypeName(name: string): EnumTypeComposer {
     this.gqType.name = name;
-    this.schemaComposer.add(this);
+    this.sc.add(this);
     return this;
   }
 
@@ -370,11 +378,12 @@ export class EnumTypeComposer {
       delete newValues[fieldName].isDeprecated;
     });
 
-    const cloned = new this.schemaComposer.EnumTypeComposer(
+    const cloned = new EnumTypeComposer(
       new GraphQLEnumType({
         name: newTypeName,
         values: newValues,
-      })
+      }),
+      this.sc
     );
 
     cloned.setDescription(this.getDescription());

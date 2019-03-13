@@ -36,7 +36,7 @@ import {
   type ResolverWrapCb,
   type ResolverMiddleware,
 } from './Resolver';
-import type { SchemaComposer } from './SchemaComposer';
+import { SchemaComposer } from './SchemaComposer';
 import { resolveMaybeThunk, upperFirst, inspect } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './utils/configAsThunk';
@@ -220,64 +220,64 @@ export type TypeComposerDefinition<TSource, TContext> =
 
 export class TypeComposer<TSource, TContext> {
   gqType: GraphQLObjectTypeExtended<TSource, TContext>;
-
-  static schemaComposer: SchemaComposer<TContext>;
-
-  get schemaComposer(): SchemaComposer<TContext> {
-    return this.constructor.schemaComposer;
-  }
+  sc: SchemaComposer<TContext>;
 
   static create(
-    typeDef: TypeComposerDefinition<TSource, TContext>
+    typeDef: TypeComposerDefinition<TSource, TContext>,
+    sc: SchemaComposer<TContext>
   ): TypeComposer<TSource, TContext> {
-    const tc = this.createTemp(typeDef);
+    if (!(sc instanceof SchemaComposer)) {
+      throw new Error(
+        'You must provide SchemaComposer instance as a second argument for `TypeComposer.create(typeDef, schemaComposer)`'
+      );
+    }
+    const tc = this.createTemp(typeDef, sc);
     const typeName = tc.getTypeName();
     if (typeName !== 'Query' && typeName !== 'Mutation' && typeName !== 'Subscription') {
-      this.schemaComposer.add(tc);
+      sc.add(tc);
     }
     return tc;
   }
 
   static createTemp(
-    typeDef: TypeComposerDefinition<TSource, TContext>
+    typeDef: TypeComposerDefinition<TSource, TContext>,
+    _sc?: SchemaComposer<TContext>
   ): TypeComposer<TSource, TContext> {
-    if (!this.schemaComposer) {
-      throw new Error('Class<TypeComposer> must be created by a SchemaComposer.');
-    }
-
+    const sc = _sc || new SchemaComposer();
     let TC;
 
     if (isString(typeDef)) {
       const typeName: string = typeDef;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
-        TC = new this.schemaComposer.TypeComposer(
+        TC = new TypeComposer(
           new GraphQLObjectType({
             name: typeName,
             fields: () => ({}),
-          })
+          }),
+          sc
         );
       } else {
-        const type = this.schemaComposer.typeMapper.createType(typeName);
+        const type = sc.typeMapper.createType(typeName);
         if (!(type instanceof GraphQLObjectType)) {
           throw new Error(
             'You should provide correct GraphQLObjectType type definition.' +
               'Eg. `type MyType { name: String }`'
           );
         }
-        TC = new this.schemaComposer.TypeComposer(type);
+        TC = new TypeComposer(type, sc);
       }
     } else if (typeDef instanceof GraphQLObjectType) {
-      TC = new this.schemaComposer.TypeComposer(typeDef);
+      TC = new TypeComposer(typeDef, sc);
     } else if (isObject(typeDef)) {
       const fields = typeDef.fields;
       const type = new GraphQLObjectType({
         ...(typeDef: any),
         fields: isFunction(fields)
-          ? () => resolveOutputConfigMapAsThunk(this.schemaComposer, (fields(): any), typeDef.name)
+          ? () => resolveOutputConfigMapAsThunk(sc, (fields(): any), typeDef.name)
           : () => ({}),
       });
-      TC = new this.schemaComposer.TypeComposer(type);
+      TC = new TypeComposer(type, sc);
       if (isObject(fields)) TC.addFields(fields);
       TC.gqType._gqcExtensions = typeDef.extensions || {};
     } else {
@@ -289,10 +289,16 @@ export class TypeComposer<TSource, TContext> {
     return TC;
   }
 
-  constructor(gqType: GraphQLObjectType): TypeComposer<TSource, TContext> {
-    if (!this.schemaComposer) {
-      throw new Error('Class<TypeComposer> can only be created by a SchemaComposer.');
+  constructor(
+    gqType: GraphQLObjectType,
+    sc: SchemaComposer<TContext>
+  ): TypeComposer<TSource, TContext> {
+    if (!(sc instanceof SchemaComposer)) {
+      throw new Error(
+        'You must provide SchemaComposer instance as a second argument for `new TypeComposer(GraphQLObjectType, SchemaComposer)`'
+      );
     }
+    this.sc = sc;
 
     if (!(gqType instanceof GraphQLObjectType)) {
       throw new Error('TypeComposer accept only GraphQLObjectType in constructor');
@@ -333,12 +339,12 @@ export class TypeComposer<TSource, TContext> {
       this.gqType._fields = () => {
         return defineFieldMap(
           this.gqType,
-          resolveOutputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName())
+          resolveOutputConfigMapAsThunk(this.sc, fields, this.getTypeName())
         );
       };
     } else {
       (this.gqType: any)._typeConfig.fields = () => {
-        return resolveOutputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName());
+        return resolveOutputConfigMapAsThunk(this.sc, fields, this.getTypeName());
       };
       delete this.gqType._fields; // clear builded fields in type
     }
@@ -385,9 +391,7 @@ export class TypeComposer<TSource, TContext> {
         // nested field
         let childTC;
         if (!this.hasField(name)) {
-          childTC = this.schemaComposer.TypeComposer.createTemp(
-            `${this.getTypeName()}${upperFirst(name)}`
-          );
+          childTC = TypeComposer.createTemp(`${this.getTypeName()}${upperFirst(name)}`, this.sc);
           this.setField(name, {
             type: childTC,
             resolve: () => ({}),
@@ -480,7 +484,7 @@ export class TypeComposer<TSource, TContext> {
       throw new Error(`Type ${this.getTypeName()} does not have field with name '${fieldName}'`);
     }
 
-    return resolveOutputConfigAsThunk(this.schemaComposer, fc, fieldName, this.getTypeName());
+    return resolveOutputConfigAsThunk(this.sc, fc, fieldName, this.getTypeName());
   }
 
   getFieldType(fieldName: string): GraphQLOutputType {
@@ -495,7 +499,7 @@ export class TypeComposer<TSource, TContext> {
           `This field should be ObjectType, but it has type '${fieldType.constructor.name}'`
       );
     }
-    return this.schemaComposer.TypeComposer.createTemp(fieldType);
+    return TypeComposer.createTemp(fieldType, this.sc);
   }
 
   makeFieldNonNull(fieldNameOrArray: string | Array<string>): TypeComposer<TSource, TContext> {
@@ -620,7 +624,7 @@ export class TypeComposer<TSource, TContext> {
 
   setTypeName(name: string): TypeComposer<TSource, TContext> {
     this.gqType.name = name;
-    this.schemaComposer.add(this);
+    this.sc.add(this);
     return this;
   }
 
@@ -644,11 +648,12 @@ export class TypeComposer<TSource, TContext> {
       newFields[fieldName] = { ...(fc: any) };
     });
 
-    const cloned = new this.schemaComposer.TypeComposer(
+    const cloned = new TypeComposer(
       new GraphQLObjectType({
         name: newTypeName,
         fields: newFields,
-      })
+      }),
+      this.sc
     );
 
     cloned.setDescription(this.getDescription());
@@ -773,7 +778,7 @@ export class TypeComposer<TSource, TContext> {
       if (!resolverOpts.hasOwnProperty('resolve')) {
         resolverOpts.resolve = () => ({});
       }
-      resolver = new this.schemaComposer.Resolver((resolverOpts: ResolverOpts<any, TContext, any>));
+      resolver = new Resolver((resolverOpts: ResolverOpts<any, TContext, any>), this.sc);
     } else {
       resolver = opts;
     }

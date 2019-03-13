@@ -3,9 +3,9 @@
 import { graphql } from '../../graphql';
 import type { GraphQLResolveInfo, GraphQLObjectType } from '../../graphql';
 import { getProjectionFromAST, extendByFieldProjection } from '../projection';
-import { TypeComposer, schemaComposer } from '../..';
+import { schemaComposer } from '../..';
 
-const Level2TC = TypeComposer.create({
+const Level2TC = schemaComposer.createObjectTC({
   name: 'Level2',
   fields: {
     field2a: 'String',
@@ -18,7 +18,7 @@ const Level2TC = TypeComposer.create({
     },
   },
 });
-const Level1TC = TypeComposer.create({
+const Level1TC = schemaComposer.createObjectTC({
   name: 'Level1',
   fields: {
     field1a: [Level2TC],

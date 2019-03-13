@@ -2,7 +2,7 @@
 
 import { getComposeTypeName } from '../typeHelpers';
 import { GraphQLObjectType, GraphQLInputObjectType } from '../../graphql';
-import { schemaComposer } from '../..';
+import { schemaComposer as sc } from '../..';
 
 describe('typeHelpers', () => {
   describe('getComposeTypeName()', () => {
@@ -32,10 +32,8 @@ describe('typeHelpers', () => {
     });
 
     it('understands compose types', () => {
-      expect(getComposeTypeName(schemaComposer.TypeComposer.create('TypeTC'))).toBe('TypeTC');
-      expect(getComposeTypeName(schemaComposer.InputTypeComposer.create('TypeITC'))).toBe(
-        'TypeITC'
-      );
+      expect(getComposeTypeName(sc.createObjectTC('TypeTC'))).toBe('TypeTC');
+      expect(getComposeTypeName(sc.createInputTC('TypeITC'))).toBe('TypeITC');
     });
   });
 });

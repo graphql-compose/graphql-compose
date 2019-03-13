@@ -1,6 +1,7 @@
 /* @flow strict */
 
-import { EnumTypeComposer, schemaComposer } from '..';
+import { schemaComposer } from '..';
+import { EnumTypeComposer } from '../EnumTypeComposer';
 import { GraphQLList, GraphQLNonNull, GraphQLEnumType } from '../graphql';
 import { graphqlVersion } from '../utils/graphqlVersion';
 
@@ -21,7 +22,7 @@ describe('EnumTypeComposer', () => {
       },
     });
 
-    etc = new EnumTypeComposer(enumType);
+    etc = new EnumTypeComposer(enumType, schemaComposer);
   });
 
   describe('values manipulation', () => {
@@ -32,7 +33,7 @@ describe('EnumTypeComposer', () => {
 
     if (graphqlVersion >= 13) {
       it('getFields() from empty Enum', () => {
-        const etc2 = EnumTypeComposer.create('SomeType');
+        const etc2 = EnumTypeComposer.create('SomeType', schemaComposer);
         expect(etc2.getFields()).toEqual({});
       });
     }
@@ -150,7 +151,7 @@ describe('EnumTypeComposer', () => {
   describe('create() [static method]', () => {
     if (graphqlVersion >= 13) {
       it('should create ETC by typeName as a string', () => {
-        const myTC = EnumTypeComposer.create('TypeStub');
+        const myTC = EnumTypeComposer.create('TypeStub', schemaComposer);
         expect(myTC).toBeInstanceOf(EnumTypeComposer);
         expect(myTC.getType()).toBeInstanceOf(GraphQLEnumType);
         expect(myTC.getFields()).toEqual({});
@@ -158,20 +159,23 @@ describe('EnumTypeComposer', () => {
     }
 
     it('should create ETC by type template string', () => {
-      const myTC = EnumTypeComposer.create('enum SDLEnum { V1 V2 V3 }');
+      const myTC = EnumTypeComposer.create('enum SDLEnum { V1 V2 V3 }', schemaComposer);
       expect(myTC).toBeInstanceOf(EnumTypeComposer);
       expect(myTC.getTypeName()).toBe('SDLEnum');
       expect(myTC.getFieldNames()).toEqual(['V1', 'V2', 'V3']);
     });
 
     it('should create ETC by GraphQLEnumTypeConfig', () => {
-      const myTC = EnumTypeComposer.create({
-        name: 'TestType',
-        values: {
-          v1: {},
-          v2: {},
+      const myTC = EnumTypeComposer.create(
+        {
+          name: 'TestType',
+          values: {
+            v1: {},
+            v2: {},
+          },
         },
-      });
+        schemaComposer
+      );
       expect(myTC).toBeInstanceOf(EnumTypeComposer);
       expect(myTC.getTypeName()).toBe('TestType');
       expect(myTC.getFieldNames()).toEqual(['v1', 'v2']);
@@ -185,19 +189,19 @@ describe('EnumTypeComposer', () => {
           v2: {},
         },
       });
-      const myTC = EnumTypeComposer.create(objType);
+      const myTC = EnumTypeComposer.create(objType, schemaComposer);
       expect(myTC).toBeInstanceOf(EnumTypeComposer);
       expect(myTC.getType()).toBe(objType);
       expect(myTC.getFieldNames()).toEqual(['v1', 'v2']);
     });
 
     it('should create TC without values from string', () => {
-      const myTC = EnumTypeComposer.create('MyEnum');
+      const myTC = EnumTypeComposer.create('MyEnum', schemaComposer);
       expect(myTC.getFieldNames()).toEqual([]);
     });
 
     it('should create type and store it in schemaComposer', () => {
-      const SomeUserETC = EnumTypeComposer.create('SomeUserEnum');
+      const SomeUserETC = EnumTypeComposer.create('SomeUserEnum', schemaComposer);
       expect(schemaComposer.getETC('SomeUserEnum')).toBe(SomeUserETC);
     });
 

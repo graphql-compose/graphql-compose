@@ -10,7 +10,7 @@ import type {
   GraphQLScalarLiteralParser,
 } from './graphql';
 import type { TypeAsString } from './TypeMapper';
-import type { SchemaComposer } from './SchemaComposer';
+import { SchemaComposer } from './SchemaComposer';
 import type { Extensions } from './utils/definitions';
 
 export type ComposeScalarTypeConfig = GraphQLScalarTypeConfig<any, any> & {
@@ -19,8 +19,8 @@ export type ComposeScalarTypeConfig = GraphQLScalarTypeConfig<any, any> & {
 
 export type ScalarTypeComposerDefinition =
   | TypeAsString
-  | ComposeScalarTypeConfig
-  | GraphQLScalarType;
+  | $ReadOnly<ComposeScalarTypeConfig>
+  | $ReadOnly<GraphQLScalarType>;
 
 export type GraphQLScalarTypeExtended = GraphQLScalarType & {
   _gqcExtensions?: Extensions,
@@ -28,23 +28,27 @@ export type GraphQLScalarTypeExtended = GraphQLScalarType & {
 
 export class ScalarTypeComposer {
   gqType: GraphQLScalarTypeExtended;
+  sc: SchemaComposer<any>;
 
-  static schemaComposer: SchemaComposer<any>;
-
-  get schemaComposer(): SchemaComposer<any> {
-    return this.constructor.schemaComposer;
-  }
-
-  static create(typeDef: ScalarTypeComposerDefinition): ScalarTypeComposer {
-    const stc = this.createTemp(typeDef);
-    this.schemaComposer.add(stc);
+  static create(
+    typeDef: ScalarTypeComposerDefinition,
+    sc: SchemaComposer<any>
+  ): ScalarTypeComposer {
+    if (!(sc instanceof SchemaComposer)) {
+      throw new Error(
+        'You must provide SchemaComposer instance as a second argument for `ScalarTypeComposer.create(typeDef, schemaComposer)`'
+      );
+    }
+    const stc = this.createTemp(typeDef, sc);
+    sc.add(stc);
     return stc;
   }
 
-  static createTemp(typeDef: ScalarTypeComposerDefinition): ScalarTypeComposer {
-    if (!this.schemaComposer) {
-      throw new Error('Class<ScalarTypeComposer> must be created by a SchemaComposer.');
-    }
+  static createTemp(
+    typeDef: ScalarTypeComposerDefinition,
+    _sc?: SchemaComposer<any>
+  ): ScalarTypeComposer {
+    const sc = _sc || new SchemaComposer();
 
     let STC;
 
@@ -52,29 +56,30 @@ export class ScalarTypeComposer {
       const typeName: string = typeDef;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
-        STC = new this.schemaComposer.ScalarTypeComposer(
+        STC = new ScalarTypeComposer(
           new GraphQLScalarType({
             name: typeName,
             serialize: () => {},
-          })
+          }),
+          sc
         );
       } else {
-        const type = this.schemaComposer.typeMapper.createType(typeName);
+        const type = sc.typeMapper.createType(typeName);
         if (!(type instanceof GraphQLScalarType)) {
           throw new Error(
             'You should provide correct GraphQLScalarType type definition. Eg. `scalar UInt`'
           );
         }
-        STC = new this.schemaComposer.ScalarTypeComposer(type);
+        STC = new ScalarTypeComposer(type, sc);
       }
     } else if (typeDef instanceof GraphQLScalarType) {
-      STC = new this.schemaComposer.ScalarTypeComposer(typeDef);
+      STC = new ScalarTypeComposer(typeDef, sc);
     } else if (isObject(typeDef)) {
       const type = new GraphQLScalarType({
         ...(typeDef: any),
       });
-      STC = new this.schemaComposer.ScalarTypeComposer(type);
-      STC.gqType._gqcExtensions = typeDef.extensions || {};
+      STC = new ScalarTypeComposer(type, sc);
+      STC.gqType._gqcExtensions = (typeDef: any).extensions || {};
     } else {
       throw new Error(
         'You should provide GraphQLScalarTypeConfig or string with scalar name or SDL'
@@ -84,10 +89,13 @@ export class ScalarTypeComposer {
     return STC;
   }
 
-  constructor(gqType: GraphQLScalarType) {
-    if (!this.schemaComposer) {
-      throw new Error('Class<ScalarTypeComposer> can only be created by a SchemaComposer.');
+  constructor(gqType: GraphQLScalarType, sc: SchemaComposer<any>) {
+    if (!(sc instanceof SchemaComposer)) {
+      throw new Error(
+        'You must provide SchemaComposer instance as a second argument for `new ScalarTypeComposer(GraphQLScalarType, SchemaComposer)`'
+      );
     }
+    this.sc = sc;
 
     if (!(gqType instanceof GraphQLScalarType)) {
       throw new Error('ScalarTypeComposer accept only GraphQLScalarType in constructor');
@@ -145,7 +153,7 @@ export class ScalarTypeComposer {
 
   setTypeName(name: string): ScalarTypeComposer {
     this.gqType.name = name;
-    this.schemaComposer.add(this);
+    this.sc.add(this);
     return this;
   }
 
@@ -163,13 +171,14 @@ export class ScalarTypeComposer {
       throw new Error('You should provide newTypeName:string for ScalarTypeComposer.clone()');
     }
 
-    const cloned = new this.schemaComposer.ScalarTypeComposer(
+    const cloned = new ScalarTypeComposer(
       new GraphQLScalarType({
         name: newTypeName,
         serialize: this.getSerialize(),
         parseValue: this.getParseValue(),
         parseLiteral: this.getParseLiteral(),
-      })
+      }),
+      this.sc
     );
 
     cloned.setDescription(this.getDescription());

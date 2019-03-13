@@ -11,7 +11,10 @@ import {
   GraphQLInputObjectType,
   graphql,
 } from '../graphql';
-import { InterfaceTypeComposer, InputTypeComposer, schemaComposer, TypeComposer } from '..';
+import { schemaComposer } from '..';
+import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
+import { InputTypeComposer } from '../InputTypeComposer';
+// , InputTypeComposer, TypeComposer
 import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
@@ -20,7 +23,7 @@ beforeEach(() => {
 
 describe('InterfaceTypeComposer', () => {
   let objectType: GraphQLInterfaceType;
-  let iftc: InterfaceTypeComposer;
+  let iftc: InterfaceTypeComposer<any, any>;
 
   beforeEach(() => {
     objectType = new GraphQLInterfaceType({
@@ -30,7 +33,7 @@ describe('InterfaceTypeComposer', () => {
         field2: { type: GraphQLString },
       },
     });
-    iftc = new InterfaceTypeComposer(objectType);
+    iftc = new InterfaceTypeComposer(objectType, schemaComposer);
   });
 
   describe('fields manipulation', () => {
@@ -38,7 +41,7 @@ describe('InterfaceTypeComposer', () => {
       const fieldNames = Object.keys(iftc.getFields());
       expect(fieldNames).toEqual(expect.arrayContaining(['field1', 'field2']));
 
-      const iftc2 = InterfaceTypeComposer.create('SomeType');
+      const iftc2 = schemaComposer.createInterfaceTC('SomeType');
       expect(iftc2.getFields()).toEqual({});
     });
 
@@ -301,14 +304,14 @@ describe('InterfaceTypeComposer', () => {
 
   describe('create() [static method]', () => {
     it('should create Interface by typeName as a string', () => {
-      const myIFTC = InterfaceTypeComposer.create('TypeStub');
+      const myIFTC = schemaComposer.createInterfaceTC('TypeStub');
       expect(myIFTC).toBeInstanceOf(InterfaceTypeComposer);
       expect(myIFTC.getType()).toBeInstanceOf(GraphQLInterfaceType);
       expect(myIFTC.getFields()).toEqual({});
     });
 
     it('should create Interface by type template string', () => {
-      const myIFTC = InterfaceTypeComposer.create(
+      const myIFTC = schemaComposer.createInterfaceTC(
         `
         interface TestTypeTpl {
           f1: String
@@ -325,7 +328,7 @@ describe('InterfaceTypeComposer', () => {
     });
 
     it('should create TC by GraphQLInterfaceTypeConfig', () => {
-      const myIFTC = InterfaceTypeComposer.create({
+      const myIFTC = schemaComposer.createInterfaceTC({
         name: 'TestType',
         fields: {
           f1: {
@@ -341,7 +344,7 @@ describe('InterfaceTypeComposer', () => {
     });
 
     it('should create TC by GraphQLInterfaceTypeConfig with fields as Thunk', () => {
-      const myIFTC = InterfaceTypeComposer.create({
+      const myIFTC = schemaComposer.createInterfaceTC({
         name: 'TestType',
         fields: (): any => ({
           f1: {
@@ -365,14 +368,14 @@ describe('InterfaceTypeComposer', () => {
           },
         },
       });
-      const myIFTC = InterfaceTypeComposer.create(objType);
+      const myIFTC = schemaComposer.createInterfaceTC(objType);
       expect(myIFTC).toBeInstanceOf(InterfaceTypeComposer);
       expect(myIFTC.getType()).toBe(objType);
       expect(myIFTC.getFieldType('f1')).toBe(GraphQLString);
     });
 
     it('should create type and store it in schemaComposer', () => {
-      const SomeUserTC = InterfaceTypeComposer.create('SomeUser');
+      const SomeUserTC = schemaComposer.createInterfaceTC('SomeUser');
       expect(schemaComposer.getIFTC('SomeUser')).toBe(SomeUserTC);
     });
 
@@ -414,7 +417,8 @@ describe('InterfaceTypeComposer', () => {
               },
             },
           },
-        })
+        }),
+        schemaComposer
       );
 
       expect(myIFTC.get('field1')).toBe(GraphQLString);
@@ -446,10 +450,10 @@ describe('InterfaceTypeComposer', () => {
   });
 
   describe('deprecateFields()', () => {
-    let iftc1: InterfaceTypeComposer;
+    let iftc1: InterfaceTypeComposer<any, any>;
 
     beforeEach(() => {
-      iftc1 = InterfaceTypeComposer.create({
+      iftc1 = schemaComposer.createInterfaceTC({
         name: 'MyType',
         fields: {
           name: 'String',
@@ -499,7 +503,7 @@ describe('InterfaceTypeComposer', () => {
   });
 
   describe('getFieldTC()', () => {
-    const myIFTC = InterfaceTypeComposer.create('MyCustomType');
+    const myIFTC = schemaComposer.createInterfaceTC('MyCustomType');
     myIFTC.addFields({
       scalar: 'String',
       list: '[Int]',
@@ -522,7 +526,7 @@ describe('InterfaceTypeComposer', () => {
     let KindBlueTC;
 
     beforeEach(() => {
-      PersonTC = TypeComposer.create(`
+      PersonTC = schemaComposer.createObjectTC(`
         type Person { age: Int, field1: String, field2: String }
       `);
       PersonTC.addInterface(iftc);
@@ -530,7 +534,7 @@ describe('InterfaceTypeComposer', () => {
         return value.hasOwnProperty('age');
       });
 
-      KindRedTC = TypeComposer.create(`
+      KindRedTC = schemaComposer.createObjectTC(`
         type KindRed { kind: String, field1: String, field2: String, red: String }
       `);
       KindRedTC.addInterface(iftc);
@@ -538,7 +542,7 @@ describe('InterfaceTypeComposer', () => {
         return value.kind === 'red';
       });
 
-      KindBlueTC = TypeComposer.create(`
+      KindBlueTC = schemaComposer.createObjectTC(`
         type KindBlue { kind: String, field1: String, field2: String, blue: String }
       `);
       KindBlueTC.addInterface(iftc);
@@ -551,7 +555,7 @@ describe('InterfaceTypeComposer', () => {
       expect(iftc.hasTypeResolver(PersonTC)).toBeTruthy();
       expect(iftc.hasTypeResolver(KindRedTC)).toBeTruthy();
       expect(iftc.hasTypeResolver(KindBlueTC)).toBeTruthy();
-      expect(iftc.hasTypeResolver(TypeComposer.create('NewOne'))).toBeFalsy();
+      expect(iftc.hasTypeResolver(schemaComposer.createObjectTC('NewOne'))).toBeFalsy();
     });
 
     it('getTypeResolvers()', () => {

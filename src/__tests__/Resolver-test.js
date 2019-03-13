@@ -13,18 +13,21 @@ import {
   GraphQLList,
 } from '../graphql';
 import schemaComposer from '../__mocks__/schemaComposer';
-import { Resolver, TypeComposer, InputTypeComposer, EnumTypeComposer } from '..';
+import { Resolver } from '../Resolver';
+import { TypeComposer } from '../TypeComposer';
+import { InputTypeComposer } from '../InputTypeComposer';
+// import { Resolver, TypeComposer, InputTypeComposer, EnumTypeComposer } from '..';
 
 describe('Resolver', () => {
-  let resolver: Resolver;
+  let resolver: Resolver<any, any, any>;
 
   beforeEach(() => {
-    resolver = new Resolver({ name: 'find' });
+    resolver = new Resolver({ name: 'find' }, schemaComposer);
   });
 
   it('should throw error if not passed name in opts', () => {
     expect(() => {
-      new Resolver({});
+      new Resolver({}, schemaComposer);
     }).toThrowError();
   });
 
@@ -58,10 +61,13 @@ describe('Resolver', () => {
     });
 
     it('should convert type as string to GraphQLType', () => {
-      const myResolver = new Resolver({
-        name: 'myResolver',
-        type: 'String!',
-      });
+      const myResolver = new Resolver(
+        {
+          name: 'myResolver',
+          type: 'String!',
+        },
+        schemaComposer
+      );
 
       const type: any = myResolver.getType();
       expect(type).toBeInstanceOf(GraphQLNonNull);
@@ -69,66 +75,82 @@ describe('Resolver', () => {
     });
 
     it('should convert type definition to GraphQLType', () => {
-      const myResolver = new Resolver({
-        name: 'myResolver',
-        type: `
+      const myResolver = new Resolver(
+        {
+          name: 'myResolver',
+          type: `
           type SomeType {
             name: String
           }
         `,
-      });
+        },
+        schemaComposer
+      );
       const type: any = myResolver.getType();
       expect(type).toBeInstanceOf(GraphQLObjectType);
       expect(type.name).toBe('SomeType');
     });
 
     it('should accept TypeComposer for `type` option', () => {
-      const typeTC = TypeComposer.create('type SomeType22 { test: String }');
-      const myResolver = new Resolver({
-        name: 'myResolver',
-        type: typeTC,
-      });
+      const typeTC = schemaComposer.createObjectTC('type SomeType22 { test: String }');
+      const myResolver = new Resolver(
+        {
+          name: 'myResolver',
+          type: typeTC,
+        },
+        schemaComposer
+      );
       const type: any = myResolver.getType();
       expect(type).toBeInstanceOf(GraphQLObjectType);
       expect(type.name).toBe('SomeType22');
     });
 
     it('should throw error on InputTypeComposer for `type` option', () => {
-      const someInputITC = InputTypeComposer.create('input SomeInputType { add: String }');
+      const someInputITC = schemaComposer.createInputTC('input SomeInputType { add: String }');
       expect(() => {
         new Resolver(
           ({
             name: 'myResolver',
             type: someInputITC,
-          }: any)
+          }: any),
+          schemaComposer
         );
       }).toThrowError('InputTypeComposer');
     });
 
     it('should accept Resolver for `type` option', () => {
-      const someOtherResolver = new Resolver({
-        name: 'someOtherResolver',
-        type: `
+      const someOtherResolver = new Resolver(
+        {
+          name: 'someOtherResolver',
+          type: `
           type SomeType {
             name: String
           }
         `,
-      });
+        },
+        schemaComposer
+      );
 
-      const myResolver = new Resolver({
-        name: 'myResolver',
-        type: someOtherResolver,
-      });
+      const myResolver = new Resolver(
+        {
+          name: 'myResolver',
+          type: someOtherResolver,
+        },
+        schemaComposer
+      );
       const type: any = myResolver.getType();
       expect(type).toBeInstanceOf(GraphQLObjectType);
       expect(type.name).toBe('SomeType');
     });
 
     it('should accept array for `type` option', () => {
-      const myResolver = new Resolver({
-        name: 'myResolver',
-        type: ['String'],
-      });
+      const myResolver = new Resolver(
+        {
+          name: 'myResolver',
+          type: ['String'],
+        },
+        schemaComposer
+      );
       const type: any = myResolver.getType();
       expect(type).toBeInstanceOf(GraphQLList);
       expect(type.ofType).toBe(GraphQLString);
@@ -351,8 +373,9 @@ describe('Resolver', () => {
     it('should work with arg as thunk', () => {
       resolver.setArgs({
         a: () => 'String',
-        b: () => InputTypeComposer.create(`input ArgAsThunk1 { b: Int }`),
-        c: () => GraphQLNonNull(InputTypeComposer.create(`input ArgAsThunk2 { b: Int }`).getType()),
+        b: () => schemaComposer.createInputTC(`input ArgAsThunk1 { b: Int }`),
+        c: () =>
+          GraphQLNonNull(schemaComposer.createInputTC(`input ArgAsThunk2 { b: Int }`).getType()),
       });
       expect(resolver.getArgType('a')).toBe(GraphQLString);
       expect((resolver.getArgType('b'): any).name).toBe('ArgAsThunk1');
@@ -426,7 +449,7 @@ describe('Resolver', () => {
     });
 
     it('should return resolver from callback, cause it can be overridden there', () => {
-      const customResolver = new Resolver({ name: 'find' });
+      const customResolver = new Resolver({ name: 'find' }, schemaComposer);
 
       expect(
         resolver.wrap((newResolver, prevResolver) => {
@@ -438,7 +461,7 @@ describe('Resolver', () => {
   });
 
   describe('wrapCloneArg()', () => {
-    let newResolver: Resolver;
+    let newResolver: Resolver<any, any, any>;
 
     beforeEach(() => {
       resolver.setArgs({
@@ -498,15 +521,18 @@ describe('Resolver', () => {
   });
 
   it('should return data from resolve', async () => {
-    const myResolver = new Resolver({
-      name: 'customResolver',
-      resolve: () => ({ name: 'Nodkz' }),
-      type: `
+    const myResolver = new Resolver(
+      {
+        name: 'customResolver',
+        resolve: () => ({ name: 'Nodkz' }),
+        type: `
         type SomeType {
           name: String
         }
       `,
-    });
+      },
+      schemaComposer
+    );
 
     schemaComposer.rootQuery().addRelation('resolveUser', {
       resolver: () => myResolver,
@@ -541,8 +567,8 @@ describe('Resolver', () => {
       expect(filterCfg.type).toBeInstanceOf(GraphQLInputObjectType);
       expect(filterCfg.defaultValue).toEqual({ age: 20 });
 
-      const filterITC = new InputTypeComposer((filterCfg.type: any));
-      expect(filterITC.getField('age').description).toBe('Age filter');
+      const filterITC = schemaComposer.createInputTC((filterCfg.type: any));
+      expect((filterITC.getField('age'): any).description).toBe('Age filter');
       const ageType: any = filterITC.getFieldType('age');
       expect(ageType).toBeInstanceOf(GraphQLNonNull);
       expect(ageType.ofType).toBe(GraphQLInt);
@@ -640,7 +666,7 @@ describe('Resolver', () => {
   });
 
   it('should return nested name for Resolver', () => {
-    const r1 = new Resolver({ name: 'find' });
+    const r1 = new Resolver({ name: 'find' }, schemaComposer);
     const r2 = r1.wrapResolve(next => resolveParams => {
       // eslint-disable-line
       return 'function code';
@@ -651,7 +677,7 @@ describe('Resolver', () => {
   });
 
   it('should on toString() call provide debug info with source code', () => {
-    const r1 = new Resolver({ name: 'find' });
+    const r1 = new Resolver({ name: 'find' }, schemaComposer);
     const r2 = r1.wrapResolve(next => resolveParams => {
       // eslint-disable-line
       return 'function code';
@@ -661,13 +687,16 @@ describe('Resolver', () => {
   });
 
   it('should return type by path', () => {
-    const rsv = new Resolver({
-      name: 'find',
-      type: 'type LonLat { lon: Float, lat: Float }',
-      args: {
-        distance: 'Int!',
+    const rsv = new Resolver(
+      {
+        name: 'find',
+        type: 'type LonLat { lon: Float, lat: Float }',
+        args: {
+          distance: 'Int!',
+        },
       },
-    });
+      schemaComposer
+    );
 
     expect(rsv.get('lat')).toBe(GraphQLFloat);
     expect(rsv.get('@distance')).toBe(GraphQLInt);
@@ -732,7 +761,7 @@ describe('Resolver', () => {
       });
 
       const sortType: any = resolver.getArgType('sort');
-      const etc = EnumTypeComposer.create(sortType);
+      const etc = schemaComposer.createEnumTC(sortType);
       expect(etc.getFieldNames()).toEqual(['ID_ASC', 'ID_DESC', 'PRICE_ASC']);
     });
 
@@ -795,11 +824,14 @@ describe('Resolver', () => {
 
     describe('debugExecTime()', () => {
       it('should measure execution time', async () => {
-        const r1 = new Resolver({
-          name: 'find',
-          displayName: 'User.find()',
-          resolve: () => {},
-        });
+        const r1 = new Resolver(
+          {
+            name: 'find',
+            displayName: 'User.find()',
+            resolve: () => {},
+          },
+          schemaComposer
+        );
         await r1.debugExecTime().resolve((undefined: any));
 
         expect(console.time.mock.calls[0]).toEqual(['Execution time for User.find()']);
@@ -809,11 +841,14 @@ describe('Resolver', () => {
 
     describe('debugParams()', () => {
       it('should show resolved payload', () => {
-        const r1 = new Resolver({
-          name: 'find',
-          displayName: 'User.find()',
-          resolve: () => {},
-        });
+        const r1 = new Resolver(
+          {
+            name: 'find',
+            displayName: 'User.find()',
+            resolve: () => {},
+          },
+          schemaComposer
+        );
         r1.debugParams().resolve(
           ({
             source: { id: 1 },
@@ -838,11 +873,14 @@ describe('Resolver', () => {
       });
 
       it('should show filtered resolved payload', () => {
-        const r1 = new Resolver({
-          name: 'find',
-          displayName: 'User.find()',
-          resolve: () => {},
-        });
+        const r1 = new Resolver(
+          {
+            name: 'find',
+            displayName: 'User.find()',
+            resolve: () => {},
+          },
+          schemaComposer
+        );
         r1.debugParams('args, args.sort, source.name').resolve(
           ({
             source: { id: 1, name: 'Pavel' },
@@ -864,11 +902,14 @@ describe('Resolver', () => {
 
     describe('debugPayload()', () => {
       it('should show resolved payload', async () => {
-        const r1 = new Resolver({
-          name: 'find',
-          displayName: 'User.find()',
-          resolve: async () => ({ a: 123 }),
-        });
+        const r1 = new Resolver(
+          {
+            name: 'find',
+            displayName: 'User.find()',
+            resolve: async () => ({ a: 123 }),
+          },
+          schemaComposer
+        );
         await r1.debugPayload().resolve((undefined: any));
 
         expect(console.log.mock.calls[0]).toEqual(['Resolved Payload for User.find():']);
@@ -876,11 +917,14 @@ describe('Resolver', () => {
       });
 
       it('should show filtered resolved payload', async () => {
-        const r1 = new Resolver({
-          name: 'find',
-          displayName: 'User.find()',
-          resolve: async () => ({ a: 123, b: 345, c: [0, 1, 2, 3] }),
-        });
+        const r1 = new Resolver(
+          {
+            name: 'find',
+            displayName: 'User.find()',
+            resolve: async () => ({ a: 123, b: 345, c: [0, 1, 2, 3] }),
+          },
+          schemaComposer
+        );
         await r1.debugPayload(['b', 'c.3']).resolve((undefined: any));
 
         expect(console.log.mock.calls[0]).toEqual(['Resolved Payload for User.find():']);
@@ -892,13 +936,16 @@ describe('Resolver', () => {
 
       it('should show rejected payload', async () => {
         const err = new Error('Request failed');
-        const r1 = new Resolver({
-          name: 'find',
-          displayName: 'User.find()',
-          resolve: async () => {
-            throw err;
+        const r1 = new Resolver(
+          {
+            name: 'find',
+            displayName: 'User.find()',
+            resolve: async () => {
+              throw err;
+            },
           },
-        });
+          schemaComposer
+        );
         await r1
           .debugPayload()
           .resolve((undefined: any))
@@ -911,11 +958,14 @@ describe('Resolver', () => {
 
     describe('debug()', () => {
       it('should output execution time, resolve params and payload', async () => {
-        const r1 = new Resolver({
-          name: 'find',
-          displayName: 'User.find()',
-          resolve: () => ({ a: 123, b: 345, c: [0, 1, 2, 3] }),
-        });
+        const r1 = new Resolver(
+          {
+            name: 'find',
+            displayName: 'User.find()',
+            resolve: () => ({ a: 123, b: 345, c: [0, 1, 2, 3] }),
+          },
+          schemaComposer
+        );
 
         await r1
           .debug({
@@ -956,16 +1006,19 @@ describe('Resolver', () => {
   });
 
   describe('getArgTC()', () => {
-    const myResolver = new Resolver({
-      name: 'someResolver',
-      type: 'String',
-      args: {
-        scalar: 'String',
-        list: '[Int]',
-        obj: InputTypeComposer.create(`input RCustomInputType { name: String }`),
-        objArr: [InputTypeComposer.create(`input RCustomInputType2 { name: String }`)],
+    const myResolver = new Resolver(
+      {
+        name: 'someResolver',
+        type: 'String',
+        args: {
+          scalar: 'String',
+          list: '[Int]',
+          obj: schemaComposer.createInputTC(`input RCustomInputType { name: String }`),
+          objArr: [schemaComposer.createInputTC(`input RCustomInputType2 { name: String }`)],
+        },
       },
-    });
+      schemaComposer
+    );
 
     it('should return InputTypeComposer for object argument', () => {
       const objTC = myResolver.getArgTC('obj');
@@ -990,26 +1043,32 @@ describe('Resolver', () => {
 
   describe('getTypeComposer()', () => {
     it('should return TypeComposer for GraphQLObjectType', () => {
-      const r = new Resolver({
-        name: 'find',
-        type: `type MyOutputType { name: String }`,
-        displayName: 'User.find()',
-        resolve: () => {},
-      });
+      const r = new Resolver(
+        {
+          name: 'find',
+          type: `type MyOutputType { name: String }`,
+          displayName: 'User.find()',
+          resolve: () => {},
+        },
+        schemaComposer
+      );
       expect(r.getType()).toBeInstanceOf(GraphQLObjectType);
       expect(r.getTypeComposer()).toBeInstanceOf(TypeComposer);
       expect(r.getTypeComposer().getTypeName()).toBe('MyOutputType');
     });
 
     it('should unwrap List and NonNull GraphQLObjectType', () => {
-      TypeComposer.create(`type MyOutputType { name: String }`);
+      schemaComposer.createObjectTC(`type MyOutputType { name: String }`);
 
-      const r = new Resolver({
-        name: 'find',
-        type: '[MyOutputType!]!',
-        displayName: 'User.find()',
-        resolve: () => {},
-      });
+      const r = new Resolver(
+        {
+          name: 'find',
+          type: '[MyOutputType!]!',
+          displayName: 'User.find()',
+          resolve: () => {},
+        },
+        schemaComposer
+      );
 
       expect(r.type).toBe('[MyOutputType!]!');
       const type: any = r.getType();
@@ -1020,12 +1079,15 @@ describe('Resolver', () => {
     });
 
     it('should throw error if output type is not GraphQLObjectType', () => {
-      const r = new Resolver({
-        name: 'find',
-        type: 'String',
-        displayName: 'User.find()',
-        resolve: () => {},
-      });
+      const r = new Resolver(
+        {
+          name: 'find',
+          type: 'String',
+          displayName: 'User.find()',
+          resolve: () => {},
+        },
+        schemaComposer
+      );
       expect(r.type).toBe('String');
       expect(r.getType()).toBe(GraphQLString);
       expect(() => r.getTypeComposer()).toThrow();
@@ -1036,15 +1098,18 @@ describe('Resolver', () => {
     let r;
     const log = [];
     beforeEach(() => {
-      r = new Resolver({
-        name: 'find',
-        type: 'String',
-        displayName: 'User.find()',
-        resolve: () => {
-          log.push('call User.find()');
-          return 'users result';
+      r = new Resolver(
+        {
+          name: 'find',
+          type: 'String',
+          displayName: 'User.find()',
+          resolve: () => {
+            log.push('call User.find()');
+            return 'users result';
+          },
         },
-      });
+        schemaComposer
+      );
     });
 
     it('should apply middlewares', async () => {

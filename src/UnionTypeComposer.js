@@ -8,7 +8,7 @@ import { inspect } from './utils/misc';
 import { TypeComposer } from './TypeComposer';
 import type { GraphQLResolveInfo, GraphQLTypeResolver } from './graphql';
 import type { TypeAsString, ComposeObjectType } from './TypeMapper';
-import type { SchemaComposer } from './SchemaComposer';
+import { SchemaComposer } from './SchemaComposer';
 import type { Thunk, Extensions, MaybePromise } from './utils/definitions';
 import { resolveTypeArrayAsThunk } from './utils/configAsThunk';
 import { getGraphQLType, getComposeTypeName } from './utils/typeHelpers';
@@ -47,63 +47,63 @@ export type UnionTypeComposerDefinition<TSource, TContext> =
 
 export class UnionTypeComposer<TSource, TContext> {
   gqType: GraphQLUnionTypeExtended<any, TContext>;
-
-  static schemaComposer: SchemaComposer<TContext>;
-
-  get schemaComposer(): SchemaComposer<TContext> {
-    return this.constructor.schemaComposer;
-  }
+  sc: SchemaComposer<TContext>;
 
   // Also supported `GraphQLUnionType` but in such case Flowtype force developers
   // to explicitly write annotations in their code. But it's bad.
   static create(
-    typeDef: UnionTypeComposerDefinition<TSource, TContext>
+    typeDef: UnionTypeComposerDefinition<TSource, TContext>,
+    sc: SchemaComposer<TContext>
   ): UnionTypeComposer<TSource, TContext> {
-    const utc = this.createTemp(typeDef);
-    this.schemaComposer.add(utc);
+    if (!(sc instanceof SchemaComposer)) {
+      throw new Error(
+        'You must provide SchemaComposer instance as a second argument for `UnionTypeComposer.create(typeDef, schemaComposer)`'
+      );
+    }
+    const utc = this.createTemp(typeDef, sc);
+    sc.add(utc);
     return utc;
   }
 
   static createTemp(
-    typeDef: UnionTypeComposerDefinition<TSource, TContext>
+    typeDef: UnionTypeComposerDefinition<TSource, TContext>,
+    _sc?: SchemaComposer<TContext>
   ): UnionTypeComposer<TSource, TContext> {
-    if (!this.schemaComposer) {
-      throw new Error('Class<UnionTypeComposer> must be created by a SchemaComposer.');
-    }
-
+    const sc = _sc || new SchemaComposer();
     let UTC;
 
     if (isString(typeDef)) {
       const typeName: string = typeDef;
       const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
       if (NAME_RX.test(typeName)) {
-        UTC = new this.schemaComposer.UnionTypeComposer(
+        UTC = new UnionTypeComposer(
           new GraphQLUnionType({
             name: typeName,
             types: () => [],
-          })
+          }),
+          sc
         );
       } else {
-        const type = this.schemaComposer.typeMapper.createType(typeName);
+        const type = sc.typeMapper.createType(typeName);
         if (!(type instanceof GraphQLUnionType)) {
           throw new Error(
             'You should provide correct GraphQLUnionType type definition.' +
               'Eg. `union MyType = Photo | Person`'
           );
         }
-        UTC = new this.schemaComposer.UnionTypeComposer(type);
+        UTC = new UnionTypeComposer(type, sc);
       }
     } else if (typeDef instanceof GraphQLUnionType) {
-      UTC = new this.schemaComposer.UnionTypeComposer(typeDef);
+      UTC = new UnionTypeComposer(typeDef, sc);
     } else if (isObject(typeDef)) {
       const types = typeDef.types;
       const type = new GraphQLUnionType({
         ...(typeDef: any),
         types: isFunction(types)
-          ? () => resolveTypeArrayAsThunk(this.schemaComposer, (types(): any), typeDef.name)
+          ? () => resolveTypeArrayAsThunk(sc, (types(): any), typeDef.name)
           : () => [],
       });
-      UTC = new this.schemaComposer.UnionTypeComposer(type);
+      UTC = new UnionTypeComposer(type, sc);
       if (Array.isArray(types)) UTC.setTypes(types);
       UTC.gqType._gqcExtensions = typeDef.extensions || {};
     } else {
@@ -115,13 +115,18 @@ export class UnionTypeComposer<TSource, TContext> {
     return UTC;
   }
 
-  constructor(gqType: GraphQLUnionType) {
-    if (!this.schemaComposer) {
-      throw new Error('Class<UnionTypeComposer> can only be created by a SchemaComposer.');
+  constructor(gqType: GraphQLUnionType, sc: SchemaComposer<TContext>) {
+    if (!(sc instanceof SchemaComposer)) {
+      throw new Error(
+        'You must provide SchemaComposer instance as a second argument for `new UnionTypeComposer(GraphQLUnionType, SchemaComposer)`'
+      );
     }
+    this.sc = sc;
 
     if (!(gqType instanceof GraphQLUnionType)) {
-      throw new Error('UnionTypeComposer accept only GraphQLUnionType in constructor');
+      throw new Error(
+        'UnionTypeComposer accept only GraphQLUnionType in constructor. Try to use more flexible method `UnionTypeComposer.create()`.'
+      );
     }
     this.gqType = (gqType: any);
   }
@@ -146,12 +151,12 @@ export class UnionTypeComposer<TSource, TContext> {
 
       if (graphqlVersion >= 14) {
         this.gqType._types = () => {
-          return resolveTypeArrayAsThunk(this.schemaComposer, this.getTypes(), this.getTypeName());
+          return resolveTypeArrayAsThunk(this.sc, this.getTypes(), this.getTypeName());
         };
       } else {
         (this.gqType: any)._types = null;
         (this.gqType: any)._typeConfig.types = () => {
-          return resolveTypeArrayAsThunk(this.schemaComposer, this.getTypes(), this.getTypeName());
+          return resolveTypeArrayAsThunk(this.sc, this.getTypes(), this.getTypeName());
         };
       }
     }
@@ -225,7 +230,7 @@ export class UnionTypeComposer<TSource, TContext> {
 
   setTypeName(name: string): UnionTypeComposer<TSource, TContext> {
     this.gqType.name = name;
-    this.schemaComposer.add(this);
+    this.sc.add(this);
     return this;
   }
 
@@ -243,7 +248,7 @@ export class UnionTypeComposer<TSource, TContext> {
       throw new Error('You should provide newTypeName:string for UnionTypeComposer.clone()');
     }
 
-    const cloned = this.schemaComposer.UnionTypeComposer.create(newTypeName);
+    const cloned = UnionTypeComposer.create(newTypeName, this.sc);
     cloned.setTypes(this.getTypes());
     cloned.setDescription(this.getDescription());
 

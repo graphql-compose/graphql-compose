@@ -1,7 +1,7 @@
 /* @flow strict */
 
 import { GraphQLString, GraphQLObjectType, GraphQLInputObjectType } from '../../graphql';
-import { TypeComposer, InputTypeComposer, schemaComposer } from '../..';
+import { schemaComposer } from '../..';
 import {
   resolveOutputConfigMapAsThunk,
   resolveInputConfigMapAsThunk,
@@ -31,7 +31,7 @@ describe('configAsThunk', () => {
           description: 'Field3',
         },
         f5: () => ({
-          type: TypeComposer.create('type LonLat { lon: Float, lat: Float}'),
+          type: schemaComposer.createObjectTC('type LonLat { lon: Float, lat: Float}'),
           description: 'Field5',
         }),
       };
@@ -73,7 +73,7 @@ describe('configAsThunk', () => {
           type: () => 'String',
         },
         f5: {
-          type: () => TypeComposer.create('type LonLat { lon: Float, lat: Float}'),
+          type: () => schemaComposer.createObjectTC('type LonLat { lon: Float, lat: Float}'),
           description: 'Field5',
         },
       };
@@ -152,7 +152,7 @@ describe('configAsThunk', () => {
           description: 'Field3',
         },
         f5: () => ({
-          type: InputTypeComposer.create('input LonLat { lon: Float, lat: Float}'),
+          type: schemaComposer.createInputTC('input LonLat { lon: Float, lat: Float}'),
           description: 'Field5',
         }),
       };
@@ -194,7 +194,7 @@ describe('configAsThunk', () => {
           type: () => 'String',
         },
         f5: {
-          type: () => InputTypeComposer.create('input LonLat { lon: Float, lat: Float}'),
+          type: () => schemaComposer.createInputTC('input LonLat { lon: Float, lat: Float}'),
           description: 'Field5',
         },
       };
@@ -258,7 +258,7 @@ describe('configAsThunk', () => {
           description: 'Field3',
         },
         f5: () => ({
-          type: InputTypeComposer.create('input LonLat { lon: Float, lat: Float}'),
+          type: schemaComposer.createInputTC('input LonLat { lon: Float, lat: Float}'),
           description: 'Field5',
         }),
       };
@@ -300,7 +300,7 @@ describe('configAsThunk', () => {
           type: () => 'String',
         },
         f5: {
-          type: () => InputTypeComposer.create('input LonLat { lon: Float, lat: Float}'),
+          type: () => schemaComposer.createInputTC('input LonLat { lon: Float, lat: Float}'),
           description: 'Field5',
         },
       };
@@ -350,7 +350,7 @@ describe('configAsThunk', () => {
           name: 'SubtypeAsGQL',
           fields: () => ({ a: { type: GraphQLString } }),
         }),
-        TypeComposer.create('type SubtypeAsTC { a: String }'),
+        schemaComposer.createObjectTC('type SubtypeAsTC { a: String }'),
         'type SubtypeAsSDL { name: Int }',
       ];
 
