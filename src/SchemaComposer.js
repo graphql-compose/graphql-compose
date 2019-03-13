@@ -24,7 +24,7 @@ import {
   UnionTypeComposer as _UnionTypeComposer,
   type UnionTypeComposerDefinition,
 } from './UnionTypeComposer';
-import { Resolver as _Resolver } from './Resolver';
+import { Resolver as _Resolver, type ResolverOpts } from './Resolver';
 import { isFunction } from './utils/is';
 import { inspect } from './utils/misc';
 import { getGraphQLType } from './utils/typeHelpers';
@@ -534,6 +534,10 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   createScalarTC(typeDef: ScalarTypeComposerDefinition): _ScalarTypeComposer {
     return this.ScalarTypeComposer.create(typeDef);
+  }
+
+  createResolver(opts: ResolverOpts<any, any, any>): _Resolver<any, TContext, any> {
+    return new _Resolver<any, TContext, any>(opts, this);
   }
 
   addDirective(directive: GraphQLDirective): SchemaComposer<TContext> {
