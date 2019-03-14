@@ -11,7 +11,7 @@ import {
 } from './graphql';
 import { isObject, isString, isFunction } from './utils/is';
 import { resolveMaybeThunk, inspect } from './utils/misc';
-import { TypeComposer, isComposeOutputType } from './TypeComposer';
+import { ObjectTypeComposer, isComposeOutputType } from './ObjectTypeComposer';
 import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
@@ -31,7 +31,7 @@ import type {
   ComposeFieldConfig,
   ComposePartialFieldConfigAsObject,
   ComposeObjectTypeConfig,
-} from './TypeComposer';
+} from './ObjectTypeComposer';
 import type { Thunk, Extensions, MaybePromise } from './utils/definitions';
 import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './utils/configAsThunk';
 import { toInputObjectType } from './utils/toInputObjectType';
@@ -48,7 +48,7 @@ export type GraphQLInterfaceTypeExtended<TSource, TContext> = GraphQLInterfaceTy
 };
 
 export type InterfaceTypeResolversMap<TSource, TContext> = Map<
-  TypeComposer<any, TContext> | GraphQLObjectType,
+  ObjectTypeComposer<any, TContext> | GraphQLObjectType,
   InterfaceTypeResolverCheckFn<TSource, TContext>
 >;
 
@@ -306,15 +306,15 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return this.getFieldConfig(fieldName).type;
   }
 
-  getFieldTC(fieldName: string): TypeComposer<any, TContext> {
+  getFieldTC(fieldName: string): ObjectTypeComposer<any, TContext> {
     const fieldType = getNamedType(this.getFieldType(fieldName));
     if (!(fieldType instanceof GraphQLObjectType)) {
       throw new Error(
-        `Cannot get TypeComposer for field '${fieldName}' in type ${this.getTypeName()}. ` +
+        `Cannot get ObjectTypeComposer for field '${fieldName}' in type ${this.getTypeName()}. ` +
           `This field should be ObjectType, but it has type '${fieldType.constructor.name}'`
       );
     }
-    return TypeComposer.createTemp(fieldType, this.sc);
+    return ObjectTypeComposer.createTemp(fieldType, this.sc);
   }
 
   makeFieldNonNull(
@@ -524,7 +524,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return this;
   }
 
-  hasTypeResolver(type: TypeComposer<any, TContext> | GraphQLObjectType): boolean {
+  hasTypeResolver(type: ObjectTypeComposer<any, TContext> | GraphQLObjectType): boolean {
     const typeResolversMap = this.getTypeResolvers();
     return typeResolversMap.has(type);
   }
@@ -537,7 +537,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   getTypeResolverCheckFn(
-    type: TypeComposer<any, TContext> | GraphQLObjectType
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType
   ): InterfaceTypeResolverCheckFn<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
 
@@ -556,7 +556,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
     const names = [];
     typeResolversMap.forEach((resolveFn, composeType) => {
-      if (composeType instanceof TypeComposer) {
+      if (composeType instanceof ObjectTypeComposer) {
         names.push(composeType.getTypeName());
       } else if (composeType && composeType.name) {
         names.push(composeType.name);
@@ -581,7 +581,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
     this.gqType._gqcTypeResolvers = typeResolversMap;
 
-    // extract GraphQLObjectType from TypeComposer
+    // extract GraphQLObjectType from ObjectTypeComposer
     const fastEntries = [];
     for (const [composeType, checkFn] of typeResolversMap.entries()) {
       fastEntries.push([((getGraphQLType(composeType): any): GraphQLObjectType), checkFn]);
@@ -626,7 +626,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
         if (!(type instanceof GraphQLObjectType)) throw new Error('Must be GraphQLObjectType');
       } catch (e) {
         throw new Error(
-          `For interface type resolver ${this.getTypeName()} you must provide GraphQLObjectType or TypeComposer, but provided ${inspect(
+          `For interface type resolver ${this.getTypeName()} you must provide GraphQLObjectType or ObjectTypeComposer, but provided ${inspect(
             composeType
           )}`
         );
@@ -663,7 +663,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   addTypeResolver(
-    type: TypeComposer<any, TContext> | GraphQLObjectType,
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
     checkFn: InterfaceTypeResolverCheckFn<TSource, TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
@@ -673,7 +673,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   removeTypeResolver(
-    type: TypeComposer<any, TContext> | GraphQLObjectType
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType
   ): InterfaceTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
     typeResolversMap.delete(type);

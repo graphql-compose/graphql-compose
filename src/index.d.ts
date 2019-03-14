@@ -3,39 +3,19 @@ import { SchemaComposer } from './SchemaComposer';
 
 export { graphql };
 
-export { TypeComposer } from './TypeComposer';
-export { InputTypeComposer } from './InputTypeComposer';
-export { ScalarTypeComposer } from './ScalarTypeComposer';
+declare const schemaComposer: SchemaComposer<any>;
+declare const sc: SchemaComposer<any>;
+export { SchemaComposer, schemaComposer, sc };
+
+export { ObjectTypeComposer, isComposeOutputType } from './ObjectTypeComposer';
+export { InputTypeComposer, isComposeInputType } from './InputTypeComposer';
 export { EnumTypeComposer } from './EnumTypeComposer';
+export { ScalarTypeComposer } from './ScalarTypeComposer';
 export { InterfaceTypeComposer } from './InterfaceTypeComposer';
 export { UnionTypeComposer } from './UnionTypeComposer';
 export { Resolver } from './Resolver';
-export { TypeMapper } from './TypeMapper';
-declare const GQC: SchemaComposer<any>;
-declare const schemaComposer: SchemaComposer<any>;
-export { SchemaComposer, schemaComposer, GQC };
-
-export {
-  TypeComposer as TypeComposerClass,
-  isComposeOutputType,
-} from './TypeComposer';
-export {
-  InputTypeComposer as InputTypeComposerClass,
-  isComposeInputType,
-} from './InputTypeComposer';
-export { EnumTypeComposer as EnumTypeComposerClass } from './EnumTypeComposer';
-export {
-  ScalarTypeComposer as ScalarTypeComposerClass,
-} from './ScalarTypeComposer';
-export {
-  InterfaceTypeComposer as InterfaceTypeComposerClass,
-} from './InterfaceTypeComposer';
-export {
-  UnionTypeComposer as UnionTypeComposerClass,
-} from './UnionTypeComposer';
-export { Resolver as ResolverClass } from './Resolver';
-
 export { TypeStorage } from './TypeStorage';
+export { TypeMapper } from './TypeMapper';
 
 // Scalar types
 export {
@@ -80,7 +60,7 @@ export {
   ArgsMap,
   RelationArgsMapperFn,
   RelationArgsMapper,
-} from './TypeComposer';
+} from './ObjectTypeComposer';
 
 export {
   ComposeInputType,

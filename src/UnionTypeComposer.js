@@ -5,7 +5,7 @@
 import { GraphQLUnionType, GraphQLObjectType, GraphQLList, GraphQLNonNull } from './graphql';
 import { isObject, isString, isFunction } from './utils/is';
 import { inspect } from './utils/misc';
-import { TypeComposer } from './TypeComposer';
+import { ObjectTypeComposer } from './ObjectTypeComposer';
 import type { GraphQLResolveInfo, GraphQLTypeResolver } from './graphql';
 import type { TypeAsString, ComposeObjectType } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
@@ -135,7 +135,7 @@ export class UnionTypeComposer<TSource, TContext> {
   // Union Types methods
   // -----------------------------------------------
 
-  hasType(name: string | GraphQLObjectType | TypeComposer<any, TContext>): boolean {
+  hasType(name: string | GraphQLObjectType | ObjectTypeComposer<any, TContext>): boolean {
     const nameAsString = getComposeTypeName(name);
     return this.getTypeNames().includes(nameAsString);
   }
@@ -270,7 +270,7 @@ export class UnionTypeComposer<TSource, TContext> {
     return this;
   }
 
-  hasTypeResolver(type: TypeComposer<any, TContext> | GraphQLObjectType): boolean {
+  hasTypeResolver(type: ObjectTypeComposer<any, TContext> | GraphQLObjectType): boolean {
     const typeResolversMap = this.getTypeResolvers();
     return typeResolversMap.has(type);
   }
@@ -283,7 +283,7 @@ export class UnionTypeComposer<TSource, TContext> {
   }
 
   getTypeResolverCheckFn(
-    type: TypeComposer<any, TContext> | GraphQLObjectType
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType
   ): UnionTypeResolverCheckFn<any, TContext> {
     const typeResolversMap = this.getTypeResolvers();
 
@@ -302,7 +302,7 @@ export class UnionTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
     const names = [];
     typeResolversMap.forEach((resolveFn, composeType) => {
-      if (composeType instanceof TypeComposer) {
+      if (composeType instanceof ObjectTypeComposer) {
         names.push(composeType.getTypeName());
       } else if (composeType && typeof composeType.name === 'string') {
         names.push(composeType.name);
@@ -327,7 +327,7 @@ export class UnionTypeComposer<TSource, TContext> {
 
     this.gqType._gqcTypeResolvers = typeResolversMap;
 
-    // extract GraphQLObjectType from TypeComposer
+    // extract GraphQLObjectType from ObjectTypeComposer
     const fastEntries = [];
     for (const [composeType, checkFn] of typeResolversMap.entries()) {
       fastEntries.push([((getGraphQLType(composeType): any): GraphQLObjectType), checkFn]);
@@ -373,7 +373,7 @@ export class UnionTypeComposer<TSource, TContext> {
         if (!(type instanceof GraphQLObjectType)) throw new Error('Must be GraphQLObjectType');
       } catch (e) {
         throw new Error(
-          `For union type resolver ${this.getTypeName()} you must provide GraphQLObjectType or TypeComposer, but provided ${inspect(
+          `For union type resolver ${this.getTypeName()} you must provide GraphQLObjectType or ObjectTypeComposer, but provided ${inspect(
             composeType
           )}`
         );
@@ -408,7 +408,7 @@ export class UnionTypeComposer<TSource, TContext> {
   }
 
   addTypeResolver(
-    type: TypeComposer<any, TContext> | GraphQLObjectType,
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
     checkFn: UnionTypeResolverCheckFn<TSource, TContext>
   ): UnionTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
@@ -418,7 +418,7 @@ export class UnionTypeComposer<TSource, TContext> {
   }
 
   removeTypeResolver(
-    type: TypeComposer<any, TContext> | GraphQLObjectType
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType
   ): UnionTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
     typeResolversMap.delete(type);

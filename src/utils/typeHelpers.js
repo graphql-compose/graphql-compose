@@ -6,7 +6,7 @@ import { inspect } from './misc';
 export function getGraphQLType(anyType: mixed): GraphQLType {
   let type = (anyType: any);
 
-  // extract type from TypeComposer, InputTypeComposer, EnumTypeComposer and Resolver
+  // extract type from ObjectTypeComposer, InputTypeComposer, EnumTypeComposer and Resolver
   if (type && isFunction(type.getType)) {
     type = type.getType();
   }

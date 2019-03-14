@@ -3,8 +3,7 @@
 
 import { GraphQLObjectType, GraphQLInputObjectType, getNamedType } from '../graphql';
 import type { GraphQLInputType, GraphQLOutputType } from '../graphql';
-// import { deprecate } from './debug';
-import { TypeComposer } from '../TypeComposer';
+import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { UnionTypeComposer } from '../UnionTypeComposer';
@@ -18,7 +17,7 @@ import type { SchemaComposer } from '../SchemaComposer';
  */
 export function typeByPath(
   src:
-    | TypeComposer<any, any>
+    | ObjectTypeComposer<any, any>
     | InputTypeComposer
     | Resolver<any, any, any>
     | InterfaceTypeComposer<any, any>
@@ -31,7 +30,7 @@ export function typeByPath(
     return src;
   }
 
-  if (src instanceof TypeComposer) {
+  if (src instanceof ObjectTypeComposer) {
     return typeByPathTC(src, parts);
   } else if (src instanceof InputTypeComposer) {
     return typeByPathITC(src, parts);
@@ -44,7 +43,7 @@ export function typeByPath(
   return src;
 }
 
-export function typeByPathTC(tc: TypeComposer<any, any>, parts: Array<string>) {
+export function typeByPathTC(tc: ObjectTypeComposer<any, any>, parts: Array<string>) {
   if (!tc) return undefined;
   if (parts.length === 0) return tc;
 
@@ -128,7 +127,7 @@ export function processType(
   const unwrappedType = getNamedType(type);
 
   if (unwrappedType instanceof GraphQLObjectType) {
-    const tc = new TypeComposer(unwrappedType, schema);
+    const tc = new ObjectTypeComposer(unwrappedType, schema);
     if (restParts.length > 0) {
       return typeByPathTC(tc, restParts);
     }

@@ -52,8 +52,8 @@ describe('github issue #107 merge Schema types on GQL', () => {
     expect(RemoteQueryTC.getTypeName()).toBe('Query');
     expect(RemoteQueryTC.getFieldNames()).toEqual(['users']);
 
-    // remoteMutationTC = TypeComposer.create(remoteSchema._mutationType);
-    // remoteSubscriptionTC = TypeComposer.create(remoteSchema._subscriptionType);
+    // remoteMutationTC = ObjectTypeComposer.create(remoteSchema._mutationType);
+    // remoteSubscriptionTC = ObjectTypeComposer.create(remoteSchema._subscriptionType);
   });
 
   it('get nested TC from remote schema', () => {

@@ -15,12 +15,12 @@ import {
   ComposeInputFieldConfigMap,
 } from './InputTypeComposer';
 import {
-  TypeComposer,
+  ObjectTypeComposer,
   ComposeArgumentConfig,
   ComposeFieldConfig,
   ComposeFieldConfigArgumentMap,
   ComposeFieldConfigMap,
-} from './TypeComposer';
+} from './ObjectTypeComposer';
 import {
   TypeDefinitionString,
   TypeNameString,
@@ -36,7 +36,7 @@ export type TypeAsString =
   | TypeWrappedString
   | TypeNameString;
 export type ComposeObjectType =
-  | TypeComposer<any, any>
+  | ObjectTypeComposer<any, any>
   | GraphQLObjectType
   | TypeDefinitionString
   | TypeAsString;

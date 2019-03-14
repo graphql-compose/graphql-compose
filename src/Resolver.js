@@ -19,7 +19,7 @@ import type {
   GraphQLInputType,
   GraphQLResolveInfo,
 } from './graphql';
-import { TypeComposer } from './TypeComposer';
+import { ObjectTypeComposer } from './ObjectTypeComposer';
 import type {
   ComposeOutputType,
   ComposeArgumentConfig,
@@ -27,7 +27,7 @@ import type {
   ComposePartialArgumentConfigAsObject,
   ComposeArgumentType,
   ArgsMap, // eslint-disable-line
-} from './TypeComposer';
+} from './ObjectTypeComposer';
 import { InputTypeComposer, type ComposeInputFieldConfig } from './InputTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { SchemaComposer } from './SchemaComposer';
@@ -44,7 +44,6 @@ import { getProjectionFromAST } from './utils/projection';
 import type { ProjectionType } from './utils/projection';
 import { typeByPath } from './utils/typeByPath';
 import GraphQLJSON from './type/json';
-// import { deprecate } from './utils/debug';
 
 export type ResolveParams<TSource, TContext, TArgs = ArgsMap> = {
   source: TSource,
@@ -197,15 +196,15 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return fc.type;
   }
 
-  getTypeComposer(): TypeComposer<any, TContext> {
+  getTypeComposer(): ObjectTypeComposer<any, TContext> {
     const outputType = getNamedType(this.getType());
     if (!(outputType instanceof GraphQLObjectType)) {
       throw new Error(
-        `Resolver ${this.name} cannot return its output type as TypeComposer instance. ` +
+        `Resolver ${this.name} cannot return its output type as ObjectTypeComposer instance. ` +
           `Cause '${this.type.toString()}' does not instance of GraphQLObjectType.`
       );
     }
-    return new TypeComposer(outputType, this.sc);
+    return new ObjectTypeComposer(outputType, this.sc);
   }
 
   setType(composeType: ComposeOutputType<any, TContext>): Resolver<TSource, TContext, TArgs> {

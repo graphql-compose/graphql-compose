@@ -3,7 +3,7 @@
 import { GraphQLInt, GraphQLString } from '../graphql';
 import { schemaComposer } from '..';
 
-schemaComposer.getOrCreateTC('User', tc =>
+schemaComposer.getOrCreateOTC('User', tc =>
   tc.addFields({
     name: {
       type: GraphQLString,

@@ -72,8 +72,8 @@ import type {
   ComposeFieldConfig,
   ComposeArgumentConfig,
   ComposeFieldConfigArgumentMap,
-} from './TypeComposer';
-import { TypeComposer } from './TypeComposer';
+} from './ObjectTypeComposer';
+import { ObjectTypeComposer } from './ObjectTypeComposer';
 import type { SchemaComposer } from './SchemaComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
@@ -91,7 +91,7 @@ export type TypeWrappedString = string; // eg. Int, Int!, [Int]
 export type TypeNameString = string; // eg. Int, Float
 export type TypeAsString = TypeDefinitionString | TypeWrappedString | TypeNameString;
 export type ComposeObjectType =
-  | TypeComposer<any, any>
+  | ObjectTypeComposer<any, any>
   | GraphQLObjectType
   | TypeDefinitionString
   | TypeAsString;
@@ -231,8 +231,8 @@ export class TypeMapper<TContext> {
   }
 
   convertOutputType(composeType: ComposeObjectType): GraphQLObjectType {
-    if (this.schemaComposer.hasInstance(composeType, TypeComposer)) {
-      return this.schemaComposer.getTC(composeType).getType();
+    if (this.schemaComposer.hasInstance(composeType, ObjectTypeComposer)) {
+      return this.schemaComposer.getOTC(composeType).getType();
     } else if (typeof composeType === 'string') {
       const type = RegexpOutputTypeDefinition.test(composeType)
         ? this.createType(composeType)
@@ -249,7 +249,7 @@ export class TypeMapper<TContext> {
       return type;
     } else if (composeType instanceof GraphQLObjectType) {
       return composeType;
-    } else if (composeType instanceof TypeComposer) {
+    } else if (composeType instanceof ObjectTypeComposer) {
       return composeType.getType();
     }
 
@@ -274,7 +274,7 @@ export class TypeMapper<TContext> {
     } else if (composeFC instanceof Resolver) {
       return composeFC.getFieldConfig();
     } else if (
-      composeFC instanceof TypeComposer ||
+      composeFC instanceof ObjectTypeComposer ||
       composeFC instanceof EnumTypeComposer ||
       composeFC instanceof InterfaceTypeComposer ||
       composeFC instanceof UnionTypeComposer ||
@@ -320,8 +320,8 @@ export class TypeMapper<TContext> {
         );
       }
 
-      if (this.schemaComposer.hasInstance(composeType, TypeComposer)) {
-        fieldConfig.type = this.schemaComposer.getTC(composeType).getType();
+      if (this.schemaComposer.hasInstance(composeType, ObjectTypeComposer)) {
+        fieldConfig.type = this.schemaComposer.getOTC(composeType).getType();
       } else {
         const type =
           RegexpOutputTypeDefinition.test(composeType) ||
@@ -338,7 +338,7 @@ export class TypeMapper<TContext> {
         fieldConfig.type = (type: any);
       }
     } else if (
-      composeType instanceof TypeComposer ||
+      composeType instanceof ObjectTypeComposer ||
       composeType instanceof EnumTypeComposer ||
       composeType instanceof InterfaceTypeComposer ||
       composeType instanceof UnionTypeComposer ||
@@ -450,9 +450,9 @@ export class TypeMapper<TContext> {
       composeType = composeType[0];
     }
 
-    if (composeType instanceof TypeComposer) {
+    if (composeType instanceof ObjectTypeComposer) {
       throw new Error(
-        `You cannot provide TypeComposer to the arg '${typeName}.${fieldName}.@${argName}'. It should be InputType.`
+        `You cannot provide ObjectTypeComposer to the arg '${typeName}.${fieldName}.@${argName}'. It should be InputType.`
       );
     }
 
@@ -588,9 +588,9 @@ export class TypeMapper<TContext> {
       composeType = composeType[0];
     }
 
-    if (composeType instanceof TypeComposer) {
+    if (composeType instanceof ObjectTypeComposer) {
       throw new Error(
-        `You cannot provide TypeComposer to the field '${typeName}.${fieldName}'. It should be InputType.`
+        `You cannot provide ObjectTypeComposer to the field '${typeName}.${fieldName}'. It should be InputType.`
       );
     }
 

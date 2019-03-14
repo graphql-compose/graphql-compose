@@ -17,8 +17,8 @@ import { SchemaComposer } from './SchemaComposer';
 import {
   ComposeFieldConfig,
   ComposeFieldConfigMap,
-  TypeComposer,
-} from './TypeComposer';
+  ObjectTypeComposer,
+} from './ObjectTypeComposer';
 import { TypeAsString } from './TypeMapper';
 import { Thunk, MaybePromise, Extensions } from './utils/definitions';
 
@@ -33,7 +33,7 @@ export type GraphQLInterfaceTypeExtended<
 };
 
 export type InterfaceTypeResolversMap<TSource, TContext> = Map<
-  TypeComposer<any, TContext> | GraphQLObjectType,
+  ObjectTypeComposer<any, TContext> | GraphQLObjectType,
   InterfaceTypeResolverCheckFn<TSource, TContext>
 >;
 
@@ -114,7 +114,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public getFieldType(fieldName: string): GraphQLOutputType;
 
-  public getFieldTC(fieldName: string): TypeComposer<any, TContext>;
+  public getFieldTC(fieldName: string): ObjectTypeComposer<any, TContext>;
 
   public makeFieldNonNull(fieldNameOrArray: string | string[]): this;
 
@@ -179,13 +179,13 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public hasTypeResolver(
-    type: TypeComposer<any, TContext> | GraphQLObjectType,
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
   ): boolean;
 
   public getTypeResolvers(): InterfaceTypeResolversMap<TSource, TContext>;
 
   public getTypeResolverCheckFn(
-    type: TypeComposer<any, TContext> | GraphQLObjectType,
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
   ): InterfaceTypeResolverCheckFn<TSource, TContext>;
 
   public getTypeResolverNames(): string[];
@@ -197,12 +197,12 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public addTypeResolver(
-    type: TypeComposer<any, TContext> | GraphQLObjectType,
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
     checkFn: InterfaceTypeResolverCheckFn<TSource, TContext>,
   ): this;
 
   public removeTypeResolver(
-    type: TypeComposer<any, TContext> | GraphQLObjectType,
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
   ): this;
 
   // -----------------------------------------------

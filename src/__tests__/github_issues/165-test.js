@@ -855,7 +855,7 @@ describe('github issue #165: Add support for `directives` in SDL', () => {
     schemaComposer.clear();
     schemaComposer.addTypeDefs(typeDefs);
     expect(schemaComposer.types.size).toBe(99);
-    const SettingTC = schemaComposer.getTC('Settings');
+    const SettingTC = schemaComposer.getOTC('Settings');
     expect(SettingTC.getFieldNames()).toEqual(['cache_id', 'notificationSounds', 'notifications']);
   });
 });

@@ -14,7 +14,7 @@ import {
 import { schemaComposer } from '..';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
-// , InputTypeComposer, TypeComposer
+// , InputTypeComposer, ObjectTypeComposer
 import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {

@@ -8,17 +8,17 @@ import {
   GraphQLInt,
 } from '../../graphql';
 import { schemaComposer as sc } from '../..';
-import { TypeComposer } from '../../TypeComposer';
+import { ObjectTypeComposer } from '../../ObjectTypeComposer';
 import { InputTypeComposer } from '../../InputTypeComposer';
 import { InterfaceTypeComposer } from '../../InterfaceTypeComposer';
 import { toInputObjectType } from '../toInputObjectType';
 
 describe('toInputObjectType()', () => {
-  let PersonTC: TypeComposer<any, any>;
+  let PersonTC: ObjectTypeComposer<any, any>;
 
   beforeEach(() => {
     sc.clear();
-    PersonTC = TypeComposer.create(
+    PersonTC = ObjectTypeComposer.create(
       {
         name: 'Person',
         fields: {
@@ -107,7 +107,7 @@ describe('toInputObjectType()', () => {
     `,
       sc
     );
-    const tc = TypeComposer.create(
+    const tc = ObjectTypeComposer.create(
       `
       type Example implements IFace {
         name: String

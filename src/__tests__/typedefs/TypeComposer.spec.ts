@@ -1,6 +1,6 @@
 /* eslint-disable no-param-reassign, no-unused-vars, import/no-unresolved */
 
-import { TypeComposer } from '../../TypeComposer';
+import { ObjectTypeComposer } from '../../ObjectTypeComposer';
 
 // Person from this schemaComposer gets the context defined for that schemaComposer
 import {
@@ -17,7 +17,7 @@ import {
 
 // create from default schemaComposer uses the context type passed in
 // TSource Person, TContext Context
-const PersonTC = TypeComposer.create<Person, Context>({
+const PersonTC = ObjectTypeComposer.create<Person, Context>({
   name: 'Person',
   fields: {
     name: 'String',
@@ -27,10 +27,10 @@ const PersonTC = TypeComposer.create<Person, Context>({
 });
 
 // TSource Art, TContext Context
-const ArtTC = schemaComposerWithContext.getOrCreateTC<Art>('Art');
+const ArtTC = schemaComposerWithContext.getOrCreateOTC<Art>('Art');
 
 // TSource any, TContext any
-const PostTC = TypeComposer.create('Post');
+const PostTC = ObjectTypeComposer.create('Post');
 
 // ****************************
 // Resolvers
@@ -42,7 +42,7 @@ const PostTC = TypeComposer.create('Post');
 // ****************************
 
 // TC.getResolver()
-// should be without errors! By default in resolvers source should be `any` even if provided TypeComposer.create<Person, Context>
+// should be without errors! By default in resolvers source should be `any` even if provided ObjectTypeComposer.create<Person, Context>
 PersonTC.getResolver('findOne').wrapResolve(next => rp => {
   rp.source.name = 5; // source any
   rp.source.age = 'string';
@@ -150,7 +150,7 @@ PersonTC.addFields({
       // An error pops up here, this is as TypeScript cannot infer TSource and TContext
       // So you need to explicitly set it up.
       // The error actually shows up at the resolve field of ageIn2030
-      TypeComposer.create<Person, Context>({
+      ObjectTypeComposer.create<Person, Context>({
         name: 'deepAge',
         fields: {
           age: {

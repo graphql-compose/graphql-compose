@@ -14,9 +14,9 @@ import {
 } from '../graphql';
 import schemaComposer from '../__mocks__/schemaComposer';
 import { Resolver } from '../Resolver';
-import { TypeComposer } from '../TypeComposer';
+import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
-// import { Resolver, TypeComposer, InputTypeComposer, EnumTypeComposer } from '..';
+// import { Resolver, ObjectTypeComposer, InputTypeComposer, EnumTypeComposer } from '..';
 
 describe('Resolver', () => {
   let resolver: Resolver<any, any, any>;
@@ -91,7 +91,7 @@ describe('Resolver', () => {
       expect(type.name).toBe('SomeType');
     });
 
-    it('should accept TypeComposer for `type` option', () => {
+    it('should accept ObjectTypeComposer for `type` option', () => {
       const typeTC = schemaComposer.createObjectTC('type SomeType22 { test: String }');
       const myResolver = new Resolver(
         {
@@ -1042,7 +1042,7 @@ describe('Resolver', () => {
   });
 
   describe('getTypeComposer()', () => {
-    it('should return TypeComposer for GraphQLObjectType', () => {
+    it('should return ObjectTypeComposer for GraphQLObjectType', () => {
       const r = new Resolver(
         {
           name: 'find',
@@ -1053,7 +1053,7 @@ describe('Resolver', () => {
         schemaComposer
       );
       expect(r.getType()).toBeInstanceOf(GraphQLObjectType);
-      expect(r.getTypeComposer()).toBeInstanceOf(TypeComposer);
+      expect(r.getTypeComposer()).toBeInstanceOf(ObjectTypeComposer);
       expect(r.getTypeComposer().getTypeName()).toBe('MyOutputType');
     });
 
@@ -1074,7 +1074,7 @@ describe('Resolver', () => {
       const type: any = r.getType();
       expect(type).toBeInstanceOf(GraphQLNonNull);
       expect(type.ofType).toBeInstanceOf(GraphQLList);
-      expect(r.getTypeComposer()).toBeInstanceOf(TypeComposer);
+      expect(r.getTypeComposer()).toBeInstanceOf(ObjectTypeComposer);
       expect(r.getTypeComposer().getTypeName()).toBe('MyOutputType');
     });
 
