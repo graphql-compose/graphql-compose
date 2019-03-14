@@ -5,7 +5,7 @@ import { EnumTypeComposer } from '../EnumTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
-import { TypeComposer } from '../TypeComposer';
+import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { UnionTypeComposer } from '../UnionTypeComposer';
 
 beforeEach(() => {
@@ -13,9 +13,9 @@ beforeEach(() => {
 });
 
 describe('Extensions', () => {
-  describe('TypeComposer', () => {
+  describe('ObjectTypeComposer', () => {
     it('has type Extensions methods', () => {
-      const typeComposer = TypeComposer.create(
+      const tc = ObjectTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -25,11 +25,11 @@ describe('Extensions', () => {
         },
         sc
       );
-      testTypeExtensions(typeComposer);
+      testTypeExtensions(tc);
     });
 
     it('has field Extensions methods', () => {
-      const typeComposer = TypeComposer.create(
+      const tc = ObjectTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -39,11 +39,11 @@ describe('Extensions', () => {
         },
         sc
       );
-      testFieldExtensions(typeComposer);
+      testFieldExtensions(tc);
     });
 
     it('has type extension initializers', () => {
-      const typeComposer = TypeComposer.create(
+      const tc = ObjectTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -54,11 +54,11 @@ describe('Extensions', () => {
         },
         sc
       );
-      expect(typeComposer.getExtensions()).toEqual({ tags: ['generated'] });
+      expect(tc.getExtensions()).toEqual({ tags: ['generated'] });
     });
 
     it('has field extension initializers', () => {
-      const typeComposer = TypeComposer.create(
+      const tc = ObjectTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -73,7 +73,7 @@ describe('Extensions', () => {
         },
         sc
       );
-      expect(typeComposer.getFieldExtensions('name')).toEqual({
+      expect(tc.getFieldExtensions('name')).toEqual({
         noFilter: true,
       });
     });
@@ -81,7 +81,7 @@ describe('Extensions', () => {
 
   describe('InputTypeComposer', () => {
     it('has type Extensions methods', () => {
-      const typeComposer = InputTypeComposer.create(
+      const tc = InputTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -91,11 +91,11 @@ describe('Extensions', () => {
         },
         sc
       );
-      testTypeExtensions(typeComposer);
+      testTypeExtensions(tc);
     });
 
     it('has field Extensions methods', () => {
-      const typeComposer = InputTypeComposer.create(
+      const tc = InputTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -105,11 +105,11 @@ describe('Extensions', () => {
         },
         sc
       );
-      testFieldExtensions(typeComposer);
+      testFieldExtensions(tc);
     });
 
     it('has type extension initializers', () => {
-      const typeComposer = InputTypeComposer.create(
+      const tc = InputTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -120,11 +120,11 @@ describe('Extensions', () => {
         },
         sc
       );
-      expect(typeComposer.getExtensions()).toEqual({ tags: ['generated'] });
+      expect(tc.getExtensions()).toEqual({ tags: ['generated'] });
     });
 
     it('has field extension initializers', () => {
-      const typeComposer = InputTypeComposer.create(
+      const tc = InputTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -139,7 +139,7 @@ describe('Extensions', () => {
         },
         sc
       );
-      expect(typeComposer.getFieldExtensions('name')).toEqual({
+      expect(tc.getFieldExtensions('name')).toEqual({
         noFilter: true,
       });
     });
@@ -147,7 +147,7 @@ describe('Extensions', () => {
 
   describe('InterfaceTypeComposer', () => {
     it('has type Extensions methods', () => {
-      const typeComposer = InterfaceTypeComposer.create(
+      const tc = InterfaceTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -157,11 +157,11 @@ describe('Extensions', () => {
         },
         sc
       );
-      testTypeExtensions(typeComposer);
+      testTypeExtensions(tc);
     });
 
     it('has field Extensions methods', () => {
-      const typeComposer = InterfaceTypeComposer.create(
+      const tc = InterfaceTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -171,11 +171,11 @@ describe('Extensions', () => {
         },
         sc
       );
-      testFieldExtensions(typeComposer);
+      testFieldExtensions(tc);
     });
 
     it('has type extension initializers', () => {
-      const typeComposer = InterfaceTypeComposer.create(
+      const tc = InterfaceTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -186,11 +186,11 @@ describe('Extensions', () => {
         },
         sc
       );
-      expect(typeComposer.getExtensions()).toEqual({ tags: ['generated'] });
+      expect(tc.getExtensions()).toEqual({ tags: ['generated'] });
     });
 
     it('has field extension initializers', () => {
-      const typeComposer = InterfaceTypeComposer.create(
+      const tc = InterfaceTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -205,7 +205,7 @@ describe('Extensions', () => {
         },
         sc
       );
-      expect(typeComposer.getFieldExtensions('name')).toEqual({
+      expect(tc.getFieldExtensions('name')).toEqual({
         noFilter: true,
       });
     });
@@ -213,7 +213,7 @@ describe('Extensions', () => {
 
   describe('EnumTypeComposer', () => {
     it('has type Extensions methods', () => {
-      const typeComposer = EnumTypeComposer.create(
+      const tc = EnumTypeComposer.create(
         {
           name: 'Foo',
           values: {
@@ -223,11 +223,11 @@ describe('Extensions', () => {
         },
         sc
       );
-      testTypeExtensions(typeComposer);
+      testTypeExtensions(tc);
     });
 
     it('has type extension initializers', () => {
-      const typeComposer = EnumTypeComposer.create(
+      const tc = EnumTypeComposer.create(
         {
           name: 'Foo',
           values: {
@@ -238,13 +238,13 @@ describe('Extensions', () => {
         },
         sc
       );
-      expect(typeComposer.getExtensions()).toEqual({ tags: ['generated'] });
+      expect(tc.getExtensions()).toEqual({ tags: ['generated'] });
     });
   });
 
   describe('UnionTypeComposer', () => {
     it('has type Extensions methods', () => {
-      const foo = TypeComposer.create(
+      const foo = ObjectTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -254,18 +254,18 @@ describe('Extensions', () => {
         },
         sc
       );
-      const typeComposer = UnionTypeComposer.create(
+      const tc = UnionTypeComposer.create(
         {
           name: 'FooUnion',
           types: [foo],
         },
         sc
       );
-      testTypeExtensions(typeComposer);
+      testTypeExtensions(tc);
     });
 
     it('has type extension initializers', () => {
-      const foo = TypeComposer.create(
+      const foo = ObjectTypeComposer.create(
         {
           name: 'Foo',
           fields: {
@@ -275,7 +275,7 @@ describe('Extensions', () => {
         },
         sc
       );
-      const typeComposer = UnionTypeComposer.create(
+      const tc = UnionTypeComposer.create(
         {
           name: 'FooUnion',
           types: [foo],
@@ -283,24 +283,24 @@ describe('Extensions', () => {
         },
         sc
       );
-      expect(typeComposer.getExtensions()).toEqual({ tags: ['generated'] });
+      expect(tc.getExtensions()).toEqual({ tags: ['generated'] });
     });
   });
 
   describe('ScalarTypeComposer', () => {
     it('has type Extensions methods', () => {
-      const typeComposer = ScalarTypeComposer.create(
+      const tc = ScalarTypeComposer.create(
         {
           name: 'Foo',
           serialize() {},
         },
         sc
       );
-      testTypeExtensions(typeComposer);
+      testTypeExtensions(tc);
     });
 
     it('has type extension initializers', () => {
-      const typeComposer = ScalarTypeComposer.create(
+      const tc = ScalarTypeComposer.create(
         {
           name: 'Foo',
           serialize: () => {},
@@ -308,7 +308,7 @@ describe('Extensions', () => {
         },
         sc
       );
-      expect(typeComposer.getExtensions()).toEqual({ tags: ['generated'] });
+      expect(tc.getExtensions()).toEqual({ tags: ['generated'] });
     });
   });
 

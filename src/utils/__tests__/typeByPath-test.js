@@ -2,19 +2,19 @@
 
 import { GraphQLString, GraphQLInt, GraphQLFloat } from '../../graphql';
 import { sc } from '../..';
-import { TypeComposer } from '../../TypeComposer';
+import { ObjectTypeComposer } from '../../ObjectTypeComposer';
 import { InputTypeComposer } from '../../InputTypeComposer';
 import { Resolver } from '../../Resolver';
 import { InterfaceTypeComposer } from '../../InterfaceTypeComposer';
 
 describe('typeByPath', () => {
-  const lonLatTC = TypeComposer.create('type LonLat { lon: Float, lat: Float }', sc);
+  const lonLatTC = ObjectTypeComposer.create('type LonLat { lon: Float, lat: Float }', sc);
   const spotITC = InputTypeComposer.create(
     'input SpotInput { lon: Float, lat: Float, distance: Float }',
     sc
   );
   spotITC.setField('subSpot', spotITC);
-  const tc = TypeComposer.create(
+  const tc = ObjectTypeComposer.create(
     {
       name: 'Place',
       fields: {
@@ -62,13 +62,13 @@ describe('typeByPath', () => {
     sc
   );
 
-  describe('for TypeComposer', () => {
+  describe('for ObjectTypeComposer', () => {
     it('should return field type', () => {
       expect(tc.get('title')).toBe(GraphQLString);
     });
 
     it('should return TypeCompose for complex type', () => {
-      expect(tc.get('lonLat')).toBeInstanceOf(TypeComposer);
+      expect(tc.get('lonLat')).toBeInstanceOf(ObjectTypeComposer);
       expect(tc.get('lonLat').getTypeName()).toBe('LonLat');
     });
 
@@ -98,7 +98,7 @@ describe('typeByPath', () => {
 
     it('should return same GraphQL type instances', () => {
       expect(tc.get('lonLat').getType()).toBeTruthy();
-      // via TypeComposer
+      // via ObjectTypeComposer
       expect(tc.get('lonLat').getType()).toBe(tc.get('lonLat').getType());
       // scalar type
       expect(tc.get('lonLat.lat')).toBe(tc.get('lonLat.lat'));
@@ -153,7 +153,7 @@ describe('typeByPath', () => {
     });
 
     it('should return TypeCompose for complex type', () => {
-      expect(ifc.get('lonLat')).toBeInstanceOf(TypeComposer);
+      expect(ifc.get('lonLat')).toBeInstanceOf(ObjectTypeComposer);
       expect(ifc.get('lonLat').getTypeName()).toBe('LonLat');
     });
 
@@ -168,7 +168,7 @@ describe('typeByPath', () => {
 
     it('should return same GraphQL type instances', () => {
       expect(ifc.get('lonLat').getType()).toBeTruthy();
-      // via TypeComposer
+      // via ObjectTypeComposer
       expect(ifc.get('lonLat').getType()).toBe(ifc.get('lonLat').getType());
       // scalar type
       expect(ifc.get('lonLat.lat')).toBe(ifc.get('lonLat.lat'));

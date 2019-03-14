@@ -15,9 +15,9 @@ import {
   ComposeArgumentConfigAsObject,
   ComposeFieldConfigArgumentMap,
   ComposeOutputType,
-  TypeComposer,
+  ObjectTypeComposer,
   ArgsMap,
-} from './TypeComposer';
+} from './ObjectTypeComposer';
 import { ProjectionType } from './utils/projection';
 
 export type ResolveParams<TSource, TContext, TArgs = ArgsMap> = {
@@ -141,7 +141,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap> {
 
   public getType(): GraphQLOutputType;
 
-  public getTypeComposer(): TypeComposer<any, TContext>;
+  public getTypeComposer(): ObjectTypeComposer<any, TContext>;
 
   public setType(gqType: ComposeOutputType<any, TContext>): this;
 

@@ -1,4 +1,4 @@
 import { Post, schemaComposerWithContext } from './mock-typedefs';
 
-// getTC from TypeStorage
-const Post = schemaComposerWithContext.getTC<Post>('Post');
+// getOTC from TypeStorage
+const Post = schemaComposerWithContext.getOTC<Post>('Post');

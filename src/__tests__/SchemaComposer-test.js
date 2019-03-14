@@ -1,7 +1,7 @@
 /* @flow strict */
 
 import { SchemaComposer } from '..';
-import { TypeComposer } from '../TypeComposer';
+import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
@@ -46,19 +46,19 @@ describe('SchemaComposer', () => {
     expect(sc.has('unexistedType')).toBe(false);
   });
 
-  describe('getOrCreateTC()', () => {
+  describe('getOrCreateOTC()', () => {
     it('should create TC if not exists', () => {
       const sc = new SchemaComposer();
-      const UserTC = sc.getOrCreateTC('User');
-      expect(UserTC).toBeInstanceOf(TypeComposer);
+      const UserTC = sc.getOrCreateOTC('User');
+      expect(UserTC).toBeInstanceOf(ObjectTypeComposer);
       expect(sc.has('User')).toBeTruthy();
-      expect(sc.hasInstance('User', TypeComposer)).toBeTruthy();
-      expect(sc.getTC('User')).toBe(UserTC);
+      expect(sc.hasInstance('User', ObjectTypeComposer)).toBeTruthy();
+      expect(sc.getOTC('User')).toBe(UserTC);
     });
 
     it('should create TC if not exists with onCreate', () => {
       const sc = new SchemaComposer();
-      const UserTC = sc.getOrCreateTC('User', tc => {
+      const UserTC = sc.getOrCreateOTC('User', tc => {
         tc.setDescription('User model');
       });
       expect(UserTC.getDescription()).toBe('User model');
@@ -66,10 +66,10 @@ describe('SchemaComposer', () => {
 
     it('should return already created TC without onCreate', () => {
       const sc = new SchemaComposer();
-      const UserTC = sc.getOrCreateTC('User', tc => {
+      const UserTC = sc.getOrCreateOTC('User', tc => {
         tc.setDescription('User model');
       });
-      const UserTC2 = sc.getOrCreateTC('User', tc => {
+      const UserTC2 = sc.getOrCreateOTC('User', tc => {
         tc.setDescription('updated description');
       });
       expect(UserTC).toBe(UserTC2);
@@ -250,10 +250,10 @@ describe('SchemaComposer', () => {
   describe('removeEmptyTypes()', () => {
     it('should remove fields with Types which have no fields', () => {
       const sc = new SchemaComposer();
-      const TypeWithoutFieldsTC = sc.getOrCreateTC('Stub');
+      const TypeWithoutFieldsTC = sc.getOrCreateOTC('Stub');
       TypeWithoutFieldsTC.setFields({});
 
-      const ViewerTC = sc.getOrCreateTC('Viewer');
+      const ViewerTC = sc.getOrCreateOTC('Viewer');
       ViewerTC.setFields({
         name: 'String',
         stub: TypeWithoutFieldsTC,
@@ -276,7 +276,7 @@ describe('SchemaComposer', () => {
 
     it('should not produce Maximum call stack size exceeded', () => {
       const sc = new SchemaComposer();
-      const UserTC = sc.getOrCreateTC('User');
+      const UserTC = sc.getOrCreateOTC('User');
       UserTC.setField('friend', UserTC);
 
       sc.removeEmptyTypes(UserTC);
@@ -319,18 +319,18 @@ describe('SchemaComposer', () => {
     expect(schema._typeMap.Me).toEqual(tc.getType());
   });
 
-  describe('getTC', () => {
-    it('should return TypeComposer', () => {
+  describe('getOTC', () => {
+    it('should return ObjectTypeComposer', () => {
       const sc = new SchemaComposer();
       sc.createObjectTC(`
           type Author {
             name: String
           }
         `);
-      expect(sc.getTC('Author')).toBeInstanceOf(TypeComposer);
+      expect(sc.getOTC('Author')).toBeInstanceOf(ObjectTypeComposer);
     });
 
-    it('should return GraphQLObjectType as TypeComposer', () => {
+    it('should return GraphQLObjectType as ObjectTypeComposer', () => {
       const sc = new SchemaComposer();
       sc.add(
         new GraphQLObjectType({
@@ -338,7 +338,7 @@ describe('SchemaComposer', () => {
           fields: { name: { type: GraphQLString } },
         })
       );
-      expect(sc.getTC('Author')).toBeInstanceOf(TypeComposer);
+      expect(sc.getOTC('Author')).toBeInstanceOf(ObjectTypeComposer);
     });
 
     it('should throw error for incorrect type', () => {
@@ -348,7 +348,9 @@ describe('SchemaComposer', () => {
           name: String
         }
       `);
-      expect(() => sc.getTC('Author')).toThrowError('Cannot find TypeComposer with name Author');
+      expect(() => sc.getOTC('Author')).toThrowError(
+        'Cannot find ObjectTypeComposer with name Author'
+      );
     });
   });
 
@@ -485,17 +487,17 @@ describe('SchemaComposer', () => {
   });
 
   describe('getAnyTC()', () => {
-    it('should return TypeComposer', () => {
+    it('should return ObjectTypeComposer', () => {
       const sc = new SchemaComposer();
       sc.createObjectTC(`type Object1 { name: String }`);
-      expect(sc.getAnyTC('Object1')).toBeInstanceOf(TypeComposer);
+      expect(sc.getAnyTC('Object1')).toBeInstanceOf(ObjectTypeComposer);
       sc.add(
         new GraphQLObjectType({
           name: 'Object2',
           fields: () => ({}),
         })
       );
-      expect(sc.getAnyTC('Object2')).toBeInstanceOf(TypeComposer);
+      expect(sc.getAnyTC('Object2')).toBeInstanceOf(ObjectTypeComposer);
     });
 
     it('should return InputTypeComposer', () => {
@@ -566,15 +568,15 @@ describe('SchemaComposer', () => {
   });
 
   describe('add()', () => {
-    it('should add TypeComposer', () => {
+    it('should add ObjectTypeComposer', () => {
       const sc = new SchemaComposer();
-      const tc = TypeComposer.createTemp('User');
+      const tc = ObjectTypeComposer.createTemp('User');
       const typeName = sc.add(tc);
       expect(typeName).toBe('User');
       expect(sc.get('User')).toBe(tc);
-      expect(sc.getTC('User')).toBe(tc);
+      expect(sc.getOTC('User')).toBe(tc);
       sc.add(`type Object { a: Int }`);
-      expect(sc.get('Object')).toBeInstanceOf(TypeComposer);
+      expect(sc.get('Object')).toBeInstanceOf(ObjectTypeComposer);
     });
 
     it('should add InputTypeComposer', () => {
@@ -646,10 +648,10 @@ describe('SchemaComposer', () => {
   });
 
   describe('addAsComposer()', () => {
-    it('should add TypeComposer', () => {
+    it('should add ObjectTypeComposer', () => {
       const sc = new SchemaComposer();
       sc.addAsComposer(`type Object1 { name: String }`);
-      sc.addAsComposer(TypeComposer.createTemp(`type Object2 { name: String }`));
+      sc.addAsComposer(ObjectTypeComposer.createTemp(`type Object2 { name: String }`));
       sc.addAsComposer(
         new GraphQLObjectType({
           name: 'Object3',
@@ -657,9 +659,9 @@ describe('SchemaComposer', () => {
         })
       );
 
-      expect(sc.get('Object1')).toBeInstanceOf(TypeComposer);
-      expect(sc.get('Object2')).toBeInstanceOf(TypeComposer);
-      expect(sc.get('Object3')).toBeInstanceOf(TypeComposer);
+      expect(sc.get('Object1')).toBeInstanceOf(ObjectTypeComposer);
+      expect(sc.get('Object2')).toBeInstanceOf(ObjectTypeComposer);
+      expect(sc.get('Object3')).toBeInstanceOf(ObjectTypeComposer);
     });
 
     it('should return InputTypeComposer', () => {
@@ -788,14 +790,14 @@ describe('SchemaComposer', () => {
 
       // Post type should be the same instance
       const Post = sc.get('Post');
-      const PostInAuthor = TypeComposer.createTemp((sc.get('Author'): any))
+      const PostInAuthor = ObjectTypeComposer.createTemp((sc.get('Author'): any))
         .getFieldTC('posts')
         .getType();
       expect(Post).toBe(PostInAuthor);
 
       // Author type should be the same instance
       const Author = sc.get('Author');
-      const AuthorInPost = TypeComposer.createTemp((sc.get('Post'): any))
+      const AuthorInPost = ObjectTypeComposer.createTemp((sc.get('Post'): any))
         .getFieldTC('author')
         .getType();
       expect(Author).toBe(AuthorInPost);
@@ -811,14 +813,14 @@ describe('SchemaComposer', () => {
           some(arg: Int): String
         }
       `);
-      expect(sc.getTC('Author').hasFieldArg('some', 'arg')).toBeTruthy();
+      expect(sc.getOTC('Author').hasFieldArg('some', 'arg')).toBeTruthy();
 
       sc.addTypeDefs(`
         type Author {
           name: String
         }
       `);
-      expect(sc.getTC('Author').hasFieldArg('some', 'arg')).toBeFalsy();
+      expect(sc.getOTC('Author').hasFieldArg('some', 'arg')).toBeFalsy();
     });
 
     it('should merge Root types', () => {
@@ -921,15 +923,15 @@ describe('SchemaComposer', () => {
     it('createObjectTC()', () => {
       const sc = new SchemaComposer();
       const tc = sc.createObjectTC(`type A { f: Int }`);
-      expect(tc).toBeInstanceOf(TypeComposer);
+      expect(tc).toBeInstanceOf(ObjectTypeComposer);
       expect(tc.hasField('f')).toBeTruthy();
 
       const tc2 = sc.createTC(`type B { f: Int }`);
-      expect(tc2).toBeInstanceOf(TypeComposer);
+      expect(tc2).toBeInstanceOf(ObjectTypeComposer);
       expect(tc2.hasField('f')).toBeTruthy();
 
       const tc3 = sc.createOutputTC(`type C { f: Int }`);
-      expect(tc3).toBeInstanceOf(TypeComposer);
+      expect(tc3).toBeInstanceOf(ObjectTypeComposer);
       expect(tc3.hasField('f')).toBeTruthy();
     });
 

@@ -8,26 +8,21 @@ export { graphql };
 const schemaComposer = new SchemaComposer<any>();
 const sc = schemaComposer;
 export {
-  // SchemaComposer default global instance (alias for schemaComposer)
-  sc,
-  // SchemaComposer default global instance
-  schemaComposer,
-  // SchemaComposer class
-  SchemaComposer,
+  SchemaComposer, // SchemaComposer class
+  schemaComposer, // SchemaComposer default global instance
+  sc, // SchemaComposer default global instance (alias for schemaComposer)
 };
 
-export { TypeComposer as TypeComposerClass, isComposeOutputType } from './TypeComposer';
-export {
-  InputTypeComposer as InputTypeComposerClass,
-  isComposeInputType,
-} from './InputTypeComposer';
-export { EnumTypeComposer as EnumTypeComposerClass } from './EnumTypeComposer';
-export { ScalarTypeComposer as ScalarTypeComposerClass } from './ScalarTypeComposer';
-export { InterfaceTypeComposer as InterfaceTypeComposerClass } from './InterfaceTypeComposer';
-export { UnionTypeComposer as UnionTypeComposerClass } from './UnionTypeComposer';
-export { Resolver as ResolverClass } from './Resolver';
+export { ObjectTypeComposer, isComposeOutputType } from './ObjectTypeComposer';
+export { InputTypeComposer, isComposeInputType } from './InputTypeComposer';
+export { EnumTypeComposer } from './EnumTypeComposer';
+export { ScalarTypeComposer } from './ScalarTypeComposer';
+export { InterfaceTypeComposer } from './InterfaceTypeComposer';
+export { UnionTypeComposer } from './UnionTypeComposer';
+export { Resolver } from './Resolver';
 
 export { TypeStorage } from './TypeStorage';
+export { TypeMapper } from './TypeMapper';
 
 // Scalar types
 export { GraphQLDate, GraphQLBuffer, GraphQLGeneric, GraphQLJSON } from './type';
@@ -61,7 +56,7 @@ export type {
   ArgsMap,
   RelationArgsMapperFn,
   RelationArgsMapper,
-} from './TypeComposer';
+} from './ObjectTypeComposer';
 
 export type {
   ComposeInputType,

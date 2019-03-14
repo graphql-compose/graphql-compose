@@ -1,5 +1,5 @@
 import { GraphQLNamedType, GraphQLScalarType } from 'graphql';
-import { TypeComposer } from './TypeComposer';
+import { ObjectTypeComposer } from './ObjectTypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
@@ -8,7 +8,7 @@ import { UnionTypeComposer } from './UnionTypeComposer';
 
 type K = any;
 type V<TContext> =
-  | TypeComposer<any, TContext>
+  | ObjectTypeComposer<any, TContext>
   | InputTypeComposer
   | EnumTypeComposer
   | InterfaceTypeComposer<any, TContext>
@@ -52,20 +52,4 @@ export class TypeStorage<TContext> {
     key: K,
     typeOrThunk: V<TContext> | (() => V<TContext>),
   ): V<TContext>;
-
-  public getTC<TSource = any>(typeName: K): TypeComposer<TSource, TContext>;
-
-  public getITC(typeName: K): InputTypeComposer;
-
-  public getETC(typeName: K): EnumTypeComposer;
-
-  public getIFTC<TSource = any>(
-    typeName: K,
-  ): InterfaceTypeComposer<TSource, TContext>;
-
-  public getUTC<TSource = any>(
-    typeName: K,
-  ): UnionTypeComposer<TSource, TContext>;
-
-  public getSTC(typeName: K): ScalarTypeComposer;
 }

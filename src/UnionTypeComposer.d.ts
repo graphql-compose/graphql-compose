@@ -17,8 +17,8 @@ import { SchemaComposer } from './SchemaComposer';
 import {
   ComposeFieldConfig,
   ComposeFieldConfigMap,
-  TypeComposer,
-} from './TypeComposer';
+  ObjectTypeComposer,
+} from './ObjectTypeComposer';
 import { TypeAsString, ComposeObjectType } from './TypeMapper';
 import { Thunk, Extensions, MaybePromise } from './utils/definitions';
 
@@ -74,7 +74,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   // -----------------------------------------------
 
   public hasType(
-    name: string | GraphQLObjectType | TypeComposer<any, TContext>,
+    name: string | GraphQLObjectType | ObjectTypeComposer<any, TContext>,
   ): boolean;
 
   public getTypes(): ComposeTypesArray;
@@ -120,13 +120,13 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public hasTypeResolver(
-    type: TypeComposer<any, TContext> | GraphQLObjectType,
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
   ): boolean;
 
   public getTypeResolvers(): UnionTypeResolversMap<TSource, TContext>;
 
   public getTypeResolverCheckFn(
-    type: TypeComposer<any, TContext> | GraphQLObjectType,
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
   ): UnionTypeResolverCheckFn<any, TContext>;
 
   public getTypeResolverNames(): string[];
@@ -138,12 +138,12 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public addTypeResolver(
-    type: TypeComposer<any, TContext> | GraphQLObjectType,
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
     checkFn: UnionTypeResolverCheckFn<TSource, TContext>,
   ): this;
 
   public removeTypeResolver(
-    type: TypeComposer<any, TContext> | GraphQLObjectType,
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
   ): this;
 
   // -----------------------------------------------

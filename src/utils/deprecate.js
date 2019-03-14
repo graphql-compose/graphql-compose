@@ -1,6 +1,6 @@
 /* @flow strict */
 
-export function deprecate(msg: string) {
+export default function deprecate(msg: string) {
   let stack;
   let stackStr = '';
   const error = new Error();

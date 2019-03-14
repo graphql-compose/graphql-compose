@@ -5,7 +5,10 @@ import {
   SchemaDefinitionNode,
   GraphQLResolveInfo,
 } from 'graphql';
-import { TypeComposer, TypeComposerDefinition } from './TypeComposer';
+import {
+  ObjectTypeComposer,
+  ObjectTypeComposerDefinition,
+} from './ObjectTypeComposer';
 import {
   InputTypeComposer,
   InputTypeComposerDefinition,
@@ -31,7 +34,7 @@ import { TypeMapper } from './TypeMapper';
 import { Resolver } from './Resolver';
 
 type MustHaveTypes<TContext> =
-  | TypeComposer<any, TContext>
+  | ObjectTypeComposer<any, TContext>
   | InputTypeComposer
   | EnumTypeComposer
   | InterfaceTypeComposer<any, TContext>
@@ -58,7 +61,7 @@ type AddResolveMethods<TContext> = {
 
 export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   public TypeMapper: TypeMapper;
-  public TypeComposer: typeof TypeComposer;
+  public ObjectTypeComposer: typeof ObjectTypeComposer;
   public InputTypeComposer: typeof InputTypeComposer;
   public EnumTypeComposer: typeof EnumTypeComposer;
   public InterfaceTypeComposer: typeof InterfaceTypeComposer;
@@ -66,23 +69,26 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   public ScalarTypeComposer: typeof ScalarTypeComposer;
   public Resolver: typeof Resolver;
 
-  public Query: TypeComposer<any, TContext>;
-  public Mutation: TypeComposer<any, TContext>;
-  public Subscription: TypeComposer<any, TContext>;
+  public Query: ObjectTypeComposer<any, TContext>;
+  public Mutation: ObjectTypeComposer<any, TContext>;
+  public Subscription: ObjectTypeComposer<any, TContext>;
 
   protected _schemaMustHaveTypes: Array<MustHaveTypes<TContext>>;
   protected _directives: GraphQLDirective[];
 
   public constructor();
 
-  public rootQuery<TRootQuery = any>(): TypeComposer<TRootQuery, TContext>;
+  public rootQuery<TRootQuery = any>(): ObjectTypeComposer<
+    TRootQuery,
+    TContext
+  >;
 
-  public rootMutation<TRootMutation = any>(): TypeComposer<
+  public rootMutation<TRootMutation = any>(): ObjectTypeComposer<
     TRootMutation,
     TContext
   >;
 
-  public rootSubscription<TRootSubscription = any>(): TypeComposer<
+  public rootSubscription<TRootSubscription = any>(): ObjectTypeComposer<
     TRootSubscription,
     TContext
   >;
@@ -92,14 +98,14 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   public addSchemaMustHaveType(type: MustHaveTypes<TContext>): this;
 
   public removeEmptyTypes(
-    typeComposer: TypeComposer<any, TContext>,
+    tc: ObjectTypeComposer<any, TContext>,
     passedTypes: Set<string>,
   ): void;
 
-  public getOrCreateTC<TSource = any>(
+  public getOrCreateOTC<TSource = any>(
     typeName: string,
-    onCreate?: (tc: TypeComposer<TSource, TContext>) => any,
-  ): TypeComposer<TSource, TContext>;
+    onCreate?: (tc: ObjectTypeComposer<TSource, TContext>) => any,
+  ): ObjectTypeComposer<TSource, TContext>;
 
   public getOrCreateITC(
     typeName: string,
@@ -126,10 +132,28 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     onCreate?: (stc: ScalarTypeComposer) => any,
   ): ScalarTypeComposer;
 
+  public getOTC<TSource = any>(
+    typeName: any,
+  ): ObjectTypeComposer<TSource, TContext>;
+
+  public getITC(typeName: any): InputTypeComposer;
+
+  public getETC(typeName: any): EnumTypeComposer;
+
+  public getIFTC<TSource = any>(
+    typeName: any,
+  ): InterfaceTypeComposer<TSource, TContext>;
+
+  public getUTC<TSource = any>(
+    typeName: any,
+  ): UnionTypeComposer<TSource, TContext>;
+
+  public getSTC(typeName: any): ScalarTypeComposer;
+
   public getAnyTC(
     typeName: any,
   ):
-    | TypeComposer<any, TContext>
+    | ObjectTypeComposer<any, TContext>
     | InputTypeComposer
     | EnumTypeComposer
     | InterfaceTypeComposer<any, TContext>
@@ -148,12 +172,12 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   // alias for createObjectTC
   public createTC<TSource = any>(
-    typeDef: TypeComposerDefinition<TSource, TContext>,
-  ): TypeComposer<TSource, TContext>;
+    typeDef: ObjectTypeComposerDefinition<TSource, TContext>,
+  ): ObjectTypeComposer<TSource, TContext>;
 
   public createObjectTC<TSource = any>(
-    typeDef: TypeComposerDefinition<TSource, TContext>,
-  ): TypeComposer<TSource, TContext>;
+    typeDef: ObjectTypeComposerDefinition<TSource, TContext>,
+  ): ObjectTypeComposer<TSource, TContext>;
 
   public createInputTC(typeDef: InputTypeComposerDefinition): InputTypeComposer;
 

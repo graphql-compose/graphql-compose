@@ -14,7 +14,7 @@ import {
 } from '../graphql';
 import { schemaComposer } from '..';
 import { Resolver } from '../Resolver';
-import { TypeComposer } from '../TypeComposer';
+import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
@@ -23,9 +23,9 @@ beforeEach(() => {
   schemaComposer.clear();
 });
 
-describe('TypeComposer', () => {
+describe('ObjectTypeComposer', () => {
   let objectType: GraphQLObjectType;
-  let tc: TypeComposer<any, any>;
+  let tc: ObjectTypeComposer<any, any>;
 
   beforeEach(() => {
     objectType = new GraphQLObjectType({
@@ -35,7 +35,7 @@ describe('TypeComposer', () => {
         field2: { type: GraphQLString },
       },
     });
-    tc = new TypeComposer(objectType, schemaComposer);
+    tc = new ObjectTypeComposer(objectType, schemaComposer);
   });
 
   describe('fields manipulation', () => {
@@ -43,7 +43,7 @@ describe('TypeComposer', () => {
       const fieldNames = Object.keys(tc.getFields());
       expect(fieldNames).toEqual(expect.arrayContaining(['field1', 'field2']));
 
-      const tc2 = TypeComposer.create('SomeType', schemaComposer);
+      const tc2 = ObjectTypeComposer.create('SomeType', schemaComposer);
       expect(tc2.getFields()).toEqual({});
     });
 
@@ -420,14 +420,14 @@ describe('TypeComposer', () => {
 
   describe('create() [static method]', () => {
     it('should create TC by typeName as a string', () => {
-      const myTC = TypeComposer.create('TypeStub', schemaComposer);
-      expect(myTC).toBeInstanceOf(TypeComposer);
+      const myTC = ObjectTypeComposer.create('TypeStub', schemaComposer);
+      expect(myTC).toBeInstanceOf(ObjectTypeComposer);
       expect(myTC.getType()).toBeInstanceOf(GraphQLObjectType);
       expect(myTC.getFields()).toEqual({});
     });
 
     it('should create TC by type template string', () => {
-      const myTC = TypeComposer.create(
+      const myTC = ObjectTypeComposer.create(
         `
         type TestTypeTpl {
           f1: String
@@ -437,7 +437,7 @@ describe('TypeComposer', () => {
       `,
         schemaComposer
       );
-      expect(myTC).toBeInstanceOf(TypeComposer);
+      expect(myTC).toBeInstanceOf(ObjectTypeComposer);
       expect(myTC.getTypeName()).toBe('TestTypeTpl');
       expect(myTC.getFieldType('f1')).toBe(GraphQLString);
       expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
@@ -445,7 +445,7 @@ describe('TypeComposer', () => {
     });
 
     it('should create TC by GraphQLObjectTypeConfig', () => {
-      const myTC = TypeComposer.create(
+      const myTC = ObjectTypeComposer.create(
         {
           name: 'TestType',
           fields: {
@@ -457,14 +457,14 @@ describe('TypeComposer', () => {
         },
         schemaComposer
       );
-      expect(myTC).toBeInstanceOf(TypeComposer);
+      expect(myTC).toBeInstanceOf(ObjectTypeComposer);
       expect(myTC.getFieldType('f1')).toBe(GraphQLString);
       expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
       expect((myTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });
 
     it('should create TC by GraphQLObjectTypeConfig with fields as Thunk', () => {
-      const myTC = TypeComposer.create(
+      const myTC = ObjectTypeComposer.create(
         {
           name: 'TestType',
           fields: (): any => ({
@@ -476,7 +476,7 @@ describe('TypeComposer', () => {
         },
         schemaComposer
       );
-      expect(myTC).toBeInstanceOf(TypeComposer);
+      expect(myTC).toBeInstanceOf(ObjectTypeComposer);
       expect(myTC.getFieldType('f1')).toBe(GraphQLString);
       expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
       expect((myTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
@@ -491,30 +491,30 @@ describe('TypeComposer', () => {
           },
         },
       });
-      const myTC = TypeComposer.create(objType, schemaComposer);
-      expect(myTC).toBeInstanceOf(TypeComposer);
+      const myTC = ObjectTypeComposer.create(objType, schemaComposer);
+      expect(myTC).toBeInstanceOf(ObjectTypeComposer);
       expect(myTC.getType()).toBe(objType);
       expect(myTC.getFieldType('f1')).toBe(GraphQLString);
     });
 
     it('should create type and store it in schemaComposer', () => {
-      const SomeUserTC = TypeComposer.create('SomeUser', schemaComposer);
-      expect(schemaComposer.getTC('SomeUser')).toBe(SomeUserTC);
+      const SomeUserTC = ObjectTypeComposer.create('SomeUser', schemaComposer);
+      expect(schemaComposer.getOTC('SomeUser')).toBe(SomeUserTC);
     });
 
     it('should create type and NOTE store root types in schemaComposer', () => {
-      TypeComposer.create('Query', schemaComposer);
+      ObjectTypeComposer.create('Query', schemaComposer);
       expect(schemaComposer.has('Query')).toBeFalsy();
 
-      TypeComposer.create('Mutation', schemaComposer);
+      ObjectTypeComposer.create('Mutation', schemaComposer);
       expect(schemaComposer.has('Query')).toBeFalsy();
 
-      TypeComposer.create('Subscription', schemaComposer);
+      ObjectTypeComposer.create('Subscription', schemaComposer);
       expect(schemaComposer.has('Query')).toBeFalsy();
     });
 
     it('createTemp() should not store type in schemaComposer', () => {
-      TypeComposer.createTemp('SomeUser');
+      ObjectTypeComposer.createTemp('SomeUser');
       expect(schemaComposer.has('SomeUser')).toBeFalsy();
     });
   });
@@ -538,7 +538,7 @@ describe('TypeComposer', () => {
 
   describe('get()', () => {
     it('should return type by path', () => {
-      const myTC = new TypeComposer(
+      const myTC = new ObjectTypeComposer(
         new GraphQLObjectType({
           name: 'Readable',
           fields: {
@@ -709,11 +709,11 @@ describe('TypeComposer', () => {
   });
 
   describe('addRelation()', () => {
-    let UserTC: TypeComposer<any, any>;
-    let ArticleTC: TypeComposer<any, any>;
+    let UserTC: ObjectTypeComposer<any, any>;
+    let ArticleTC: ObjectTypeComposer<any, any>;
 
     beforeEach(() => {
-      UserTC = TypeComposer.create(
+      UserTC = ObjectTypeComposer.create(
         `
         type User {
           id: Int,
@@ -728,7 +728,7 @@ describe('TypeComposer', () => {
         resolve: () => null,
       });
 
-      ArticleTC = TypeComposer.create(
+      ArticleTC = ObjectTypeComposer.create(
         `
         type Article {
           id: Int,
@@ -884,10 +884,10 @@ describe('TypeComposer', () => {
   });
 
   describe('deprecateFields()', () => {
-    let tc1: TypeComposer<any, any>;
+    let tc1: ObjectTypeComposer<any, any>;
 
     beforeEach(() => {
-      tc1 = TypeComposer.create(
+      tc1 = ObjectTypeComposer.create(
         {
           name: 'MyType',
           fields: {
@@ -940,20 +940,20 @@ describe('TypeComposer', () => {
   });
 
   describe('getFieldTC()', () => {
-    const myTC = TypeComposer.create('MyCustomType', schemaComposer);
+    const myTC = ObjectTypeComposer.create('MyCustomType', schemaComposer);
     myTC.addFields({
       scalar: 'String',
       list: '[Int]',
-      obj: TypeComposer.create(`type MyCustomObjType { name: String }`, schemaComposer),
-      objArr: [TypeComposer.create(`type MyCustomObjType2 { name: String }`, schemaComposer)],
+      obj: ObjectTypeComposer.create(`type MyCustomObjType { name: String }`, schemaComposer),
+      objArr: [ObjectTypeComposer.create(`type MyCustomObjType2 { name: String }`, schemaComposer)],
     });
 
-    it('should return TypeComposer for object field', () => {
+    it('should return ObjectTypeComposer for object field', () => {
       const objTC = myTC.getFieldTC('obj');
       expect(objTC.getTypeName()).toBe('MyCustomObjType');
     });
 
-    it('should return TypeComposer for wrapped object field', () => {
+    it('should return ObjectTypeComposer for wrapped object field', () => {
       const objTC = myTC.getFieldTC('objArr');
       expect(objTC.getTypeName()).toBe('MyCustomObjType2');
     });

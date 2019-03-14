@@ -10,7 +10,7 @@ import {
 } from '../graphql';
 import { schemaComposer as sc } from '..';
 import { UnionTypeComposer } from '../UnionTypeComposer';
-import { TypeComposer } from '../TypeComposer';
+import { ObjectTypeComposer } from '../ObjectTypeComposer';
 
 beforeEach(() => {
   sc.clear();
@@ -53,8 +53,8 @@ describe('UnionTypeComposer', () => {
       expect(() => myUTC.getTypes()).toThrowError("Cannot find type with name 'A'");
 
       // when types A & B defined, getTypes() returns them
-      TypeComposer.create('type A { a: Int }', sc);
-      TypeComposer.create('type B { b: Int }', sc);
+      ObjectTypeComposer.create('type A { a: Int }', sc);
+      ObjectTypeComposer.create('type B { b: Int }', sc);
       const types = myUTC.getTypes();
       expect(types).toHaveLength(2);
       expect(types[0]).toBeInstanceOf(GraphQLObjectType);
@@ -70,7 +70,7 @@ describe('UnionTypeComposer', () => {
         sc
       );
       expect(myUTC).toBeInstanceOf(UnionTypeComposer);
-      TypeComposer.create(`type BB { b: Int }`, sc);
+      ObjectTypeComposer.create(`type BB { b: Int }`, sc);
       const types = myUTC.getTypes();
       expect(types).toHaveLength(2);
       expect(types[0]).toBeInstanceOf(GraphQLObjectType);
@@ -132,7 +132,7 @@ describe('UnionTypeComposer', () => {
       it('should add by type name', () => {
         utc.addType('SomeType');
         expect(utc.hasType('SomeType')).toBeTruthy();
-        TypeComposer.create('SomeType', sc);
+        ObjectTypeComposer.create('SomeType', sc);
         expect(utc.getTypes()).toHaveLength(3);
       });
 
@@ -166,7 +166,7 @@ describe('UnionTypeComposer', () => {
 
         expect(utc.getTypes()).toHaveLength(3);
 
-        TypeComposer.create('type DD { a: Int }', sc);
+        ObjectTypeComposer.create('type DD { a: Int }', sc);
         expect(utc.getType().getTypes()).toHaveLength(3);
       });
     });
@@ -249,7 +249,7 @@ describe('UnionTypeComposer', () => {
     beforeEach(() => {
       utc.clearTypes();
 
-      PersonTC = TypeComposer.create(
+      PersonTC = ObjectTypeComposer.create(
         `
         type Person { age: Int, field1: String, field2: String }
       `,
@@ -259,7 +259,7 @@ describe('UnionTypeComposer', () => {
         return value.hasOwnProperty('age');
       });
 
-      KindRedTC = TypeComposer.create(
+      KindRedTC = ObjectTypeComposer.create(
         `
         type KindRed { kind: String, field1: String, field2: String, red: String }
       `,
@@ -269,7 +269,7 @@ describe('UnionTypeComposer', () => {
         return value.kind === 'red';
       });
 
-      KindBlueTC = TypeComposer.create(
+      KindBlueTC = ObjectTypeComposer.create(
         `
         type KindBlue { kind: String, field1: String, field2: String, blue: String }
       `,
@@ -330,7 +330,7 @@ describe('UnionTypeComposer', () => {
       expect(utc.hasTypeResolver(PersonTC)).toBeTruthy();
       expect(utc.hasTypeResolver(KindRedTC)).toBeTruthy();
       expect(utc.hasTypeResolver(KindBlueTC)).toBeTruthy();
-      expect(utc.hasTypeResolver(TypeComposer.create('NewOne', sc))).toBeFalsy();
+      expect(utc.hasTypeResolver(ObjectTypeComposer.create('NewOne', sc))).toBeFalsy();
     });
 
     it('getTypeResolvers()', () => {

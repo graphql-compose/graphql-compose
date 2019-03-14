@@ -6,7 +6,7 @@ beforeEach(() => {
   schemaComposer.clear();
 });
 
-describe('created types via TypeComposer.create should be avaliable in SDL', () => {
+describe('created types via ObjectTypeComposer.create should be avaliable in SDL', () => {
   it('simple case', () => {
     const UserTC = schemaComposer.createObjectTC(`
       type User {

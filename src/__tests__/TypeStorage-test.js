@@ -2,7 +2,7 @@
 
 import { TypeStorage } from '../TypeStorage';
 import { GraphQLString, GraphQLObjectType } from '../graphql';
-import { TypeComposer } from '../TypeComposer';
+import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
@@ -52,8 +52,8 @@ describe('typeStorage', () => {
   });
 
   describe('add()', () => {
-    it('should add TypeComposer', () => {
-      const tc = TypeComposer.createTemp('User');
+    it('should add ObjectTypeComposer', () => {
+      const tc = ObjectTypeComposer.createTemp('User');
       const typeName = typeStorage.add(tc);
       expect(typeName).toBe('User');
       expect(typeStorage.get('User')).toBe(tc);

@@ -1,6 +1,6 @@
 import { GraphQLType, GraphQLInputType, GraphQLObjectType } from '../graphql';
 import { InputTypeComposer } from '../InputTypeComposer';
-import { TypeComposer } from '../TypeComposer';
+import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { SchemaComposer } from '../SchemaComposer';
 
@@ -10,7 +10,7 @@ export interface ToInputObjectTypeOpts {
 }
 
 export function toInputObjectType(
-  typeComposer: TypeComposer<any, any> | InterfaceTypeComposer<any, any>,
+  tc: ObjectTypeComposer<any, any> | InterfaceTypeComposer<any, any>,
   opts?: ToInputObjectTypeOpts,
 ): InputTypeComposer;
 

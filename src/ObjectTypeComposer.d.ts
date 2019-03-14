@@ -96,7 +96,7 @@ export type ComposeFieldConfigAsObject<TSource, TContext, TArgs = ArgsMap> = {
 // extended GraphQLOutputType
 export type ComposeOutputType<TSource, TContext> =
   | GraphQLOutputType
-  | TypeComposer<TSource, TContext>
+  | ObjectTypeComposer<TSource, TContext>
   | EnumTypeComposer
   | ScalarTypeComposer
   | TypeAsString
@@ -105,7 +105,7 @@ export type ComposeOutputType<TSource, TContext> =
   | UnionTypeComposer<TSource, TContext>
   | Array<
       | GraphQLOutputType
-      | TypeComposer<TSource, TContext>
+      | ObjectTypeComposer<TSource, TContext>
       | EnumTypeComposer
       | ScalarTypeComposer
       | TypeAsString
@@ -196,12 +196,12 @@ export type RelationArgsMapper<TSource, TContext, TArgs = ArgsMap> = {
     | any[];
 };
 
-export type TypeComposerDefinition<TSource, TContext> =
+export type ObjectTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeObjectTypeConfig<TSource, TContext>
   | GraphQLObjectType;
 
-export class TypeComposer<TSource = any, TContext = any> {
+export class ObjectTypeComposer<TSource = any, TContext = any> {
   public static schemaComposer: SchemaComposer<any>;
   public schemaComposer: SchemaComposer<TContext>;
 
@@ -210,12 +210,12 @@ export class TypeComposer<TSource = any, TContext = any> {
   public constructor(gqType: GraphQLObjectType);
 
   public static create<TSrc = any, TCtx = any>(
-    typeDef: TypeComposerDefinition<TSrc, TCtx>,
-  ): TypeComposer<TSrc, TCtx>;
+    typeDef: ObjectTypeComposerDefinition<TSrc, TCtx>,
+  ): ObjectTypeComposer<TSrc, TCtx>;
 
   public static createTemp<TSrc = any, TCtx = any>(
-    typeDef: TypeComposerDefinition<TSrc, TCtx>,
-  ): TypeComposer<TSrc, TCtx>;
+    typeDef: ObjectTypeComposerDefinition<TSrc, TCtx>,
+  ): ObjectTypeComposer<TSrc, TCtx>;
 
   // -----------------------------------------------
   // Field methods
@@ -271,7 +271,7 @@ export class TypeComposer<TSource = any, TContext = any> {
 
   public getFieldType(fieldName: string): GraphQLOutputType;
 
-  public getFieldTC(fieldName: string): TypeComposer<TSource, TContext>;
+  public getFieldTC(fieldName: string): ObjectTypeComposer<TSource, TContext>;
 
   public makeFieldNonNull(fieldNameOrArray: string | string[]): this;
 
@@ -309,7 +309,7 @@ export class TypeComposer<TSource = any, TContext = any> {
 
   public clone<TCloneSource = any>(
     newTypeName: string,
-  ): TypeComposer<TCloneSource, TContext>;
+  ): ObjectTypeComposer<TCloneSource, TContext>;
 
   public getIsTypeOf(): GraphQLIsTypeOfFn<TSource, TContext> | null | void;
 

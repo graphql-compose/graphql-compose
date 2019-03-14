@@ -18,7 +18,7 @@ import type {
   ComposeFieldConfigMap,
   ComposeArgumentConfig,
   ComposeFieldConfigArgumentMap,
-} from '../TypeComposer';
+} from '../ObjectTypeComposer';
 import type { ComposeObjectType } from '../TypeMapper';
 import type { Thunk } from './definitions';
 
