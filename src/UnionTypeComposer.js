@@ -46,7 +46,7 @@ export type UnionTypeComposerDefinition<TSource, TContext> =
   | ComposeUnionTypeConfig<TSource, TContext>;
 
 export class UnionTypeComposer<TSource, TContext> {
-  gqType: GraphQLUnionTypeExtended<any, TContext>;
+  gqType: GraphQLUnionTypeExtended<TSource, TContext>;
   sc: SchemaComposer<TContext>;
 
   // Also supported `GraphQLUnionType` but in such case Flowtype force developers
