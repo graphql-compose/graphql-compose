@@ -105,16 +105,9 @@ export type ComposeFieldConfigAsObject<TSource, TContext, TArgs> = {
   +[key: string]: any,
 };
 
-export type ComposePartialFieldConfigAsObject<TSource, TContext, TArgs = ArgsMap> = {
-  +type?: Thunk<ComposeOutputType<TSource, TContext>> | GraphQLOutputType,
-  +args?: ComposeFieldConfigArgumentMap<TArgs>,
-  +resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>,
-  +subscribe?: GraphQLFieldResolver<TSource, TContext>,
-  +deprecationReason?: ?string,
-  +description?: ?string,
-  +extensions?: Extensions,
-  +[key: string]: any,
-};
+export type ComposePartialFieldConfigAsObject<TSource, TContext, TArgs = ArgsMap> = $Shape<
+  ComposeFieldConfigAsObject<TSource, TContext, TArgs>
+>;
 
 // extended GraphQLOutputType
 export type ComposeOutputType<TSource, TContext> =
@@ -380,7 +373,7 @@ export class ObjectTypeComposer<TSource, TContext> {
    * Add new fields or replace existed (where field name may have dots)
    */
   addNestedFields(
-    newFields: ComposeFieldConfigMap<any, TContext>
+    newFields: ComposeFieldConfigMap<TSource, TContext>
   ): ObjectTypeComposer<TSource, TContext> {
     Object.keys(newFields).forEach(fieldName => {
       const fc = newFields[fieldName];
@@ -811,7 +804,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
   wrapResolver(
     resolverName: string,
-    cbResolver: ResolverWrapCb<any, TContext, ArgsMap>
+    cbResolver: ResolverWrapCb<TSource, TSource, TContext, ArgsMap, ArgsMap>
   ): ObjectTypeComposer<TSource, TContext> {
     const resolver = this.getResolver(resolverName);
     const newResolver = resolver.wrap(cbResolver);
@@ -822,7 +815,7 @@ export class ObjectTypeComposer<TSource, TContext> {
   wrapResolverAs(
     resolverName: string,
     fromResolverName: string,
-    cbResolver: ResolverWrapCb<any, TContext, ArgsMap>
+    cbResolver: ResolverWrapCb<TSource, TSource, TContext, ArgsMap, ArgsMap>
   ): ObjectTypeComposer<TSource, TContext> {
     const resolver = this.getResolver(fromResolverName);
     const newResolver = resolver.wrap(cbResolver);
@@ -832,7 +825,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
   wrapResolverResolve(
     resolverName: string,
-    cbNextRp: ResolverNextRpCb<any, TContext, ArgsMap>
+    cbNextRp: ResolverNextRpCb<TSource, TContext, ArgsMap>
   ): ObjectTypeComposer<TSource, TContext> {
     const resolver = this.getResolver(resolverName);
     this.setResolver(resolverName, resolver.wrapResolve(cbNextRp));

@@ -165,7 +165,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return !!fields[name];
   }
 
-  getFields(): ComposeFieldConfigMap<any, TContext> {
+  getFields(): ComposeFieldConfigMap<TSource, TContext> {
     if (!this.gqType._gqcFields) {
       if (graphqlVersion >= 14) {
         this.gqType._gqcFields = (defineFieldMapToConfig(this.gqType._fields): any);
@@ -179,7 +179,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return this.gqType._gqcFields;
   }
 
-  getField(name: string): ComposeFieldConfig<any, TContext> {
+  getField(name: string): ComposeFieldConfig<TSource, TContext> {
     const values = this.getFields();
 
     if (!values[name]) {
@@ -196,7 +196,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   setFields(
-    fields: ComposeFieldConfigMap<any, TContext>
+    fields: ComposeFieldConfigMap<TSource, TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
     this.gqType._gqcFields = fields;
 
@@ -218,7 +218,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   setField(
     name: string,
-    fieldConfig: ComposeFieldConfig<any, TContext>
+    fieldConfig: ComposeFieldConfig<TSource, TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
     this.addFields({ [name]: fieldConfig });
     return this;
@@ -228,7 +228,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
    * Add new fields or replace existed in a GraphQL type
    */
   addFields(
-    newValues: ComposeFieldConfigMap<any, TContext>
+    newValues: ComposeFieldConfigMap<TSource, TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
     this.setFields({ ...this.getFields(), ...newValues });
     return this;

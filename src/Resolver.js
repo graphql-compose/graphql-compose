@@ -98,13 +98,19 @@ export type ResolverOpts<TSource, TContext, TArgs> = {|
   displayName?: string,
   kind?: ResolverKinds,
   description?: string,
-  parent?: Resolver<TSource, TContext, any>,
+  parent?: Resolver<any, TContext, any>,
 |};
 
-export type ResolverWrapCb<TSource, TContext, TArgs> = (
-  newResolver: Resolver<TSource, TContext, TArgs>,
-  prevResolver: Resolver<TSource, TContext, any>
-) => Resolver<TSource, TContext, TArgs>;
+export type ResolverWrapCb<
+  TNewSource,
+  TPrevSource,
+  TContext,
+  TNewArgs = ArgsMap,
+  TPrevArgs = ArgsMap
+> = (
+  newResolver: Resolver<TNewSource, TContext, TNewArgs>,
+  prevResolver: Resolver<TPrevSource, TContext, TPrevArgs>
+) => Resolver<TNewSource, TContext, TNewArgs>;
 
 export type ResolverRpCb<TSource, TContext, TArgs> = (
   resolveParams: ResolveParams<TSource, TContext, TArgs>
@@ -207,12 +213,14 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return new ObjectTypeComposer(outputType, this.sc);
   }
 
-  setType(composeType: ComposeOutputType<any, TContext>): Resolver<TSource, TContext, TArgs> {
+  setType<TNewSource>(
+    composeType: ComposeOutputType<TNewSource, TContext>
+  ): Resolver<TNewSource, TContext, TArgs> {
     // check that `composeType` has correct data
     this.sc.typeMapper.convertOutputFieldConfig(composeType, 'setType', 'Resolver');
 
-    this.type = composeType;
-    return this;
+    this.type = (composeType: any);
+    return (this: any);
   }
 
   // -----------------------------------------------
@@ -262,9 +270,11 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return Object.keys(this.args);
   }
 
-  setArgs(args: ComposeFieldConfigArgumentMap<TArgs>): Resolver<TSource, TContext, TArgs> {
+  setArgs<TNewArgs>(
+    args: ComposeFieldConfigArgumentMap<TNewArgs>
+  ): Resolver<TSource, TContext, TNewArgs> {
     this.args = args;
-    return this;
+    return (this: any);
   }
 
   setArg(argName: string, argConfig: ComposeArgumentConfig): Resolver<TSource, TContext, TArgs> {
@@ -293,7 +303,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return this;
   }
 
-  addArgs(newArgs: ComposeFieldConfigArgumentMap<TArgs>): Resolver<TSource, TContext, TArgs> {
+  addArgs(newArgs: ComposeFieldConfigArgumentMap<ArgsMap>): Resolver<TSource, TContext, TArgs> {
     this.setArgs({ ...this.getArgs(), ...newArgs });
     return this;
   }
@@ -613,16 +623,18 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return resolver;
   }
 
-  wrap(
-    cb: ?ResolverWrapCb<TSource, TContext, TArgs>,
-    newResolverOpts: ?$Shape<ResolverOpts<TSource, TContext, TArgs>> = {}
-  ): Resolver<TSource, TContext, TArgs> {
+  wrap<TNewSource, TNewArgs>(
+    cb: ?ResolverWrapCb<TNewSource, TSource, TContext, TNewArgs, TArgs>,
+    newResolverOpts: ?$Shape<ResolverOpts<TNewSource, TContext, TNewArgs>> = {}
+  ): Resolver<TNewSource, TContext, TNewArgs> {
     const prevResolver: Resolver<TSource, TContext, TArgs> = this;
-    const newResolver = this.clone({
-      name: 'wrap',
-      parent: prevResolver,
-      ...newResolverOpts,
-    });
+    const newResolver = this.clone(
+      ({
+        name: 'wrap',
+        parent: prevResolver,
+        ...newResolverOpts,
+      }: any)
+    );
 
     if (isFunction(cb)) {
       const resolver = cb(newResolver, prevResolver);
@@ -646,10 +658,10 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     );
   }
 
-  wrapArgs(
-    cb: ResolverWrapArgsCb<TArgs>,
+  wrapArgs<TNewArgs>(
+    cb: ResolverWrapArgsCb<TNewArgs>,
     wrapperName?: string = 'wrapArgs'
-  ): Resolver<TSource, TContext, TArgs> {
+  ): Resolver<TSource, TContext, TNewArgs> {
     return this.wrap(
       (newResolver, prevResolver) => {
         // clone prevArgs, to avoid changing args in callback
@@ -735,9 +747,9 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return typeByPath(this, path);
   }
 
-  clone(
-    opts: $Shape<ResolverOpts<TSource, TContext, TArgs>> = {}
-  ): Resolver<TSource, TContext, TArgs> {
+  clone<TNewSource, TNewArgs>(
+    opts: $Shape<ResolverOpts<TNewSource, TContext, TNewArgs>> = {}
+  ): Resolver<TNewSource, TContext, TNewArgs> {
     const oldOpts = {};
 
     const self: Resolver<TSource, TContext, TArgs> = this;
@@ -750,7 +762,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     oldOpts.displayName = undefined;
     oldOpts.args = ({ ...this.args }: GraphQLFieldConfigArgumentMap);
     return new Resolver(
-      (({ ...oldOpts, ...opts }: any): ResolverOpts<TSource, TContext, TArgs>),
+      (({ ...oldOpts, ...opts }: any): ResolverOpts<TNewSource, TContext, TNewArgs>),
       this.sc
     );
   }
