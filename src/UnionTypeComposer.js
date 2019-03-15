@@ -51,10 +51,10 @@ export class UnionTypeComposer<TSource, TContext> {
 
   // Also supported `GraphQLUnionType` but in such case Flowtype force developers
   // to explicitly write annotations in their code. But it's bad.
-  static create(
-    typeDef: UnionTypeComposerDefinition<TSource, TContext>,
-    sc: SchemaComposer<TContext>
-  ): UnionTypeComposer<TSource, TContext> {
+  static create<TSrc, TCtx>(
+    typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
+    sc: SchemaComposer<TCtx>
+  ): UnionTypeComposer<TSrc, TCtx> {
     if (!(sc instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `UnionTypeComposer.create(typeDef, schemaComposer)`'
@@ -65,10 +65,10 @@ export class UnionTypeComposer<TSource, TContext> {
     return utc;
   }
 
-  static createTemp(
-    typeDef: UnionTypeComposerDefinition<TSource, TContext>,
-    _sc?: SchemaComposer<TContext>
-  ): UnionTypeComposer<TSource, TContext> {
+  static createTemp<TSrc, TCtx>(
+    typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
+    _sc?: SchemaComposer<TCtx>
+  ): UnionTypeComposer<TSrc, TCtx> {
     const sc = _sc || new SchemaComposer();
     let UTC;
 

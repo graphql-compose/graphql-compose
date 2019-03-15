@@ -5,7 +5,9 @@ import { SchemaComposer } from './SchemaComposer';
 
 export { graphql };
 
-const schemaComposer = new SchemaComposer<any>();
+type TContext = any;
+
+const schemaComposer = new SchemaComposer<TContext>();
 const sc = schemaComposer;
 export {
   SchemaComposer, // SchemaComposer class

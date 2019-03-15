@@ -926,7 +926,7 @@ describe('SchemaComposer', () => {
       expect(tc).toBeInstanceOf(ObjectTypeComposer);
       expect(tc.hasField('f')).toBeTruthy();
 
-      const tc2 = sc.createTC(`type B { f: Int }`);
+      const tc2 = sc.createObjectTC(`type B { f: Int }`);
       expect(tc2).toBeInstanceOf(ObjectTypeComposer);
       expect(tc2.hasField('f')).toBeTruthy();
 

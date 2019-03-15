@@ -7,7 +7,10 @@ export default function deprecate(msg: string) {
 
   if (error.stack) {
     stack = error.stack.replace(/^\s+at\s+/gm, '').split('\n');
-    stackStr = `\n    ${stack.slice(2, 7).join('\n    ')}`;
+    stack.slice(2, 7).forEach((s, i) => {
+      stackStr += i === 1 ? '\n--> ' : '\n    ';
+      stackStr += s;
+    });
   }
 
   // eslint-disable-next-line

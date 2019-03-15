@@ -971,7 +971,7 @@ describe('ObjectTypeComposer', () => {
 
   describe('check isTypeOf methods', () => {
     it('check methods setIstypeOf() getIstypeOf()', () => {
-      const tc1 = schemaComposer.createTC('type A { f: Int }');
+      const tc1 = schemaComposer.createObjectTC('type A { f: Int }');
       expect(tc1.getIsTypeOf()).toBeUndefined();
       const isTypeOf = () => true;
       tc1.setIsTypeOf(isTypeOf);
@@ -979,11 +979,11 @@ describe('ObjectTypeComposer', () => {
     });
 
     it('integration test', async () => {
-      const tc1 = schemaComposer.createTC('type A { a: Int }');
+      const tc1 = schemaComposer.createObjectTC('type A { a: Int }');
       tc1.setIsTypeOf(source => {
         return source && source.kind === 'A';
       });
-      const tc2 = schemaComposer.createTC('type B { b: Int }');
+      const tc2 = schemaComposer.createObjectTC('type B { b: Int }');
       tc2.setIsTypeOf(source => {
         return source && source.kind === 'B';
       });

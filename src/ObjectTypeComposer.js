@@ -221,10 +221,10 @@ export class ObjectTypeComposer<TSource, TContext> {
   gqType: GraphQLObjectTypeExtended<TSource, TContext>;
   sc: SchemaComposer<TContext>;
 
-  static create(
-    typeDef: ObjectTypeComposerDefinition<TSource, TContext>,
-    sc: SchemaComposer<TContext>
-  ): ObjectTypeComposer<TSource, TContext> {
+  static create<TSrc, TCtx>(
+    typeDef: ObjectTypeComposerDefinition<TSrc, TCtx>,
+    sc: SchemaComposer<TCtx>
+  ): ObjectTypeComposer<TSrc, TCtx> {
     if (!(sc instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `ObjectTypeComposer.create(typeDef, schemaComposer)`'
@@ -238,10 +238,10 @@ export class ObjectTypeComposer<TSource, TContext> {
     return tc;
   }
 
-  static createTemp(
-    typeDef: ObjectTypeComposerDefinition<TSource, TContext>,
-    _sc?: SchemaComposer<TContext>
-  ): ObjectTypeComposer<TSource, TContext> {
+  static createTemp<TSrc, TCtx>(
+    typeDef: ObjectTypeComposerDefinition<TSrc, TCtx>,
+    _sc?: SchemaComposer<TCtx>
+  ): ObjectTypeComposer<TSrc, TCtx> {
     const sc = _sc || new SchemaComposer();
     let TC;
 
