@@ -6,19 +6,8 @@ import { EnumTypeComposer } from './EnumTypeComposer';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
 
-type K = any;
-type V<TContext> =
-  | ObjectTypeComposer<any, TContext>
-  | InputTypeComposer
-  | EnumTypeComposer
-  | InterfaceTypeComposer<any, TContext>
-  | UnionTypeComposer<any, TContext>
-  | ScalarTypeComposer
-  | GraphQLNamedType
-  | GraphQLScalarType;
-
-export class TypeStorage<TContext> {
-  public types: Map<K, V<TContext>>;
+export class TypeStorage<K, V> {
+  public types: Map<K, V>;
   public readonly size: number;
 
   public constructor();
@@ -27,29 +16,26 @@ export class TypeStorage<TContext> {
 
   public delete(key: K): boolean;
 
-  public entries(): Iterator<[K, V<TContext>]>;
+  public entries(): Iterator<[K, V]>;
 
   public forEach(
-    callbackfn: (value: V<TContext>, index: K, map: Map<K, V<TContext>>) => any,
+    callbackfn: (value: V, index: K, map: Map<K, V>) => any,
     thisArg?: any,
   ): void;
 
-  public get(key: K): V<TContext>;
+  public get(key: K): V;
 
   public has(key: K): boolean;
 
   public keys(): Iterator<K>;
 
-  public set(key: K, value: V<TContext>): this;
+  public set(key: K, value: V): this;
 
-  public values(): Iterator<V<TContext>>;
+  public values(): Iterator<V>;
 
-  public add(value: V<TContext>): string | null;
+  public add(value: V): string | null;
 
   public hasInstance(key: K, ClassObj: any): boolean;
 
-  public getOrSet(
-    key: K,
-    typeOrThunk: V<TContext> | (() => V<TContext>),
-  ): V<TContext>;
+  public getOrSet(key: K, typeOrThunk: V | (() => V)): V;
 }

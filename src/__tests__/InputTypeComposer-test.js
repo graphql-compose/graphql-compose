@@ -18,7 +18,7 @@ beforeEach(() => {
 
 describe('InputTypeComposer', () => {
   let objectType: GraphQLInputObjectType;
-  let itc: InputTypeComposer;
+  let itc: InputTypeComposer<any>;
 
   beforeEach(() => {
     objectType = new GraphQLInputObjectType({

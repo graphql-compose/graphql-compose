@@ -360,8 +360,8 @@ describe('UnionTypeComposer', () => {
     describe('setTypeResolvers()', () => {
       it('async mode', async () => {
         const map = new Map([
-          [PersonTC.getType(), async () => Promise.resolve(false)],
-          [KindRedTC, async () => Promise.resolve(true)],
+          [PersonTC.getType(), async () => false],
+          [KindRedTC, async () => true],
         ]);
         utc.setTypeResolvers(map);
 

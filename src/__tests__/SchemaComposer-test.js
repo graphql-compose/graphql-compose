@@ -286,19 +286,19 @@ describe('SchemaComposer', () => {
   describe('root type getters', () => {
     it('Query', () => {
       const sc = new SchemaComposer();
-      expect(sc.Query).toBe(sc.rootQuery());
+      expect(sc.Query).toBe(sc.Query);
       expect(sc.Query.getTypeName()).toBe('Query');
     });
 
     it('Mutation', () => {
       const sc = new SchemaComposer();
-      expect(sc.Mutation).toBe(sc.rootMutation());
+      expect(sc.Mutation).toBe(sc.Mutation);
       expect(sc.Mutation.getTypeName()).toBe('Mutation');
     });
 
     it('Subscription', () => {
       const sc = new SchemaComposer();
-      expect(sc.Subscription).toBe(sc.rootSubscription());
+      expect(sc.Subscription).toBe(sc.Subscription);
       expect(sc.Subscription.getTypeName()).toBe('Subscription');
     });
   });
@@ -929,10 +929,6 @@ describe('SchemaComposer', () => {
       const tc2 = sc.createObjectTC(`type B { f: Int }`);
       expect(tc2).toBeInstanceOf(ObjectTypeComposer);
       expect(tc2.hasField('f')).toBeTruthy();
-
-      const tc3 = sc.createOutputTC(`type C { f: Int }`);
-      expect(tc3).toBeInstanceOf(ObjectTypeComposer);
-      expect(tc3.hasField('f')).toBeTruthy();
     });
 
     it('createInputTC()', () => {

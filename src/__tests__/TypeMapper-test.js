@@ -126,7 +126,7 @@ describe('TypeMapper', () => {
     expect(type).toBeInstanceOf(GraphQLInputObjectType);
     expect(typeMapper.get('InputIntRange')).toBe(type);
 
-    const IntRangeTC = new InputTypeComposer(type, sc);
+    const IntRangeTC: any = new InputTypeComposer(type, sc);
     expect(IntRangeTC.getTypeName()).toBe('InputIntRange');
     expect(IntRangeTC.getField('min').defaultValue).toBe(0);
     expect(IntRangeTC.getField('min').type).toBe(GraphQLInt);

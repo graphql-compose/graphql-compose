@@ -35,21 +35,21 @@ import {
 } from './graphql';
 
 type ExtraSchemaConfig = {
-  types?: ?Array<GraphQLNamedType>,
-  directives?: ?Array<GraphQLDirective>,
-  astNode?: ?SchemaDefinitionNode,
+  types?: GraphQLNamedType[] | null,
+  directives?: GraphQLDirective[] | null,
+  astNode?: SchemaDefinitionNode | null,
 };
 
 type MustHaveTypes<TContext> =
   | ObjectTypeComposer<any, TContext>
-  | InputTypeComposer
-  | EnumTypeComposer
+  | InputTypeComposer<TContext>
+  | EnumTypeComposer<TContext>
   | InterfaceTypeComposer<any, TContext>
   | UnionTypeComposer<any, TContext>
-  | ScalarTypeComposer
+  | ScalarTypeComposer<TContext>
   | GraphQLNamedType;
 
-type AddResolveMethods<TContext> = {
+type GraphQLToolsResolveMethods<TContext> = {
   [typeName: string]: {
     [fieldName: string]: (
       source: any,
@@ -75,31 +75,37 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     super();
     this.typeMapper = new TypeMapper(this);
 
-    // alive proper Flow type casting in autosuggestions
+    // alive proper Flow type casting in autosuggestions for class with Generics
     /* :: return this; */
   }
 
   get Query(): ObjectTypeComposer<any, TContext> {
-    return this.rootQuery();
+    return this.getOrCreateOTC('Query');
   }
 
+  /* @deprecated 7.0.0 */
   rootQuery(): ObjectTypeComposer<any, TContext> {
+    deprecate('Use schemaComposer.Query property instead');
     return this.getOrCreateOTC('Query');
   }
 
   get Mutation(): ObjectTypeComposer<any, TContext> {
-    return this.rootMutation();
+    return this.getOrCreateOTC('Mutation');
   }
 
+  /* @deprecated 7.0.0 */
   rootMutation(): ObjectTypeComposer<any, TContext> {
+    deprecate('Use schemaComposer.Query property instead');
     return this.getOrCreateOTC('Mutation');
   }
 
   get Subscription(): ObjectTypeComposer<any, TContext> {
-    return this.rootSubscription();
+    return this.getOrCreateOTC('Subscription');
   }
 
+  /* @deprecated 7.0.0 */
   rootSubscription(): ObjectTypeComposer<any, TContext> {
+    deprecate('Use schemaComposer.Query property instead');
     return this.getOrCreateOTC('Subscription');
   }
 
@@ -155,7 +161,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     return this;
   }
 
-  removeEmptyTypes(tc: ObjectTypeComposer<any, TContext>, passedTypes: Set<string> = new Set()) {
+  removeEmptyTypes(
+    tc: ObjectTypeComposer<any, TContext>,
+    passedTypes: Set<string> = new Set()
+  ): void {
     tc.getFieldNames().forEach(fieldName => {
       const fieldType = tc.getFieldType(fieldName);
       if (fieldType instanceof GraphQLObjectType) {
@@ -201,7 +210,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     }
   }
 
-  getOrCreateITC(typeName: string, onCreate?: InputTypeComposer => any): InputTypeComposer {
+  getOrCreateITC(
+    typeName: string,
+    onCreate?: (InputTypeComposer<TContext>) => any
+  ): InputTypeComposer<TContext> {
     try {
       return this.getITC(typeName);
     } catch (e) {
@@ -212,7 +224,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     }
   }
 
-  getOrCreateETC(typeName: string, onCreate?: EnumTypeComposer => any): EnumTypeComposer {
+  getOrCreateETC(
+    typeName: string,
+    onCreate?: (EnumTypeComposer<TContext>) => any
+  ): EnumTypeComposer<TContext> {
     try {
       return this.getETC(typeName);
     } catch (e) {
@@ -251,7 +266,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     }
   }
 
-  getOrCreateSTC(typeName: string, onCreate?: ScalarTypeComposer => any): ScalarTypeComposer {
+  getOrCreateSTC(
+    typeName: string,
+    onCreate?: (ScalarTypeComposer<TContext>) => any
+  ): ScalarTypeComposer<TContext> {
     try {
       return this.getSTC(typeName);
     } catch (e) {
@@ -297,7 +315,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     throw new Error(`Cannot find ObjectTypeComposer with name ${typeName}`);
   }
 
-  getITC(typeName: any): InputTypeComposer {
+  getITC(typeName: any): InputTypeComposer<TContext> {
     if (this.hasInstance(typeName, GraphQLInputObjectType)) {
       return InputTypeComposer.create((this.get(typeName): any), this);
     }
@@ -307,7 +325,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     throw new Error(`Cannot find InputTypeComposer with name ${typeName}`);
   }
 
-  getETC(typeName: any): EnumTypeComposer {
+  getETC(typeName: any): EnumTypeComposer<TContext> {
     if (this.hasInstance(typeName, GraphQLEnumType)) {
       return EnumTypeComposer.create((this.get(typeName): any), this);
     }
@@ -337,7 +355,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     throw new Error(`Cannot find UnionTypeComposer with name ${typeName}`);
   }
 
-  getSTC(typeName: any): ScalarTypeComposer {
+  getSTC(typeName: any): ScalarTypeComposer<TContext> {
     if (this.hasInstance(typeName, GraphQLScalarType)) {
       return ScalarTypeComposer.create((this.get(typeName): any), this);
     }
@@ -351,11 +369,11 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     typeName: any
   ):
     | ObjectTypeComposer<any, TContext>
-    | InputTypeComposer
-    | EnumTypeComposer
+    | InputTypeComposer<TContext>
+    | EnumTypeComposer<TContext>
     | InterfaceTypeComposer<any, TContext>
     | UnionTypeComposer<any, TContext>
-    | ScalarTypeComposer {
+    | ScalarTypeComposer<TContext> {
     const type = this.get(typeName);
     if (
       type instanceof ObjectTypeComposer ||
@@ -455,7 +473,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     return types;
   }
 
-  addResolveMethods(typesFieldsResolve: AddResolveMethods<TContext>): void {
+  addResolveMethods(typesFieldsResolve: GraphQLToolsResolveMethods<TContext>): void {
     const typeNames = Object.keys(typesFieldsResolve);
     typeNames.forEach(typeName => {
       if (this.get(typeName) instanceof GraphQLScalarType) {
@@ -489,24 +507,17 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     return this.createObjectTC(typeDef);
   }
 
-  // alias for createObjectTC
-  createOutputTC(
-    typeDef: ObjectTypeComposerDefinition<any, TContext>
-  ): ObjectTypeComposer<any, TContext> {
-    return this.createObjectTC(typeDef);
-  }
-
   createObjectTC(
     typeDef: ObjectTypeComposerDefinition<any, TContext>
   ): ObjectTypeComposer<any, TContext> {
     return ObjectTypeComposer.create(typeDef, this);
   }
 
-  createInputTC(typeDef: InputTypeComposerDefinition): InputTypeComposer {
+  createInputTC(typeDef: InputTypeComposerDefinition): InputTypeComposer<TContext> {
     return InputTypeComposer.create(typeDef, this);
   }
 
-  createEnumTC(typeDef: EnumTypeComposerDefinition): EnumTypeComposer {
+  createEnumTC(typeDef: EnumTypeComposerDefinition): EnumTypeComposer<TContext> {
     return EnumTypeComposer.create(typeDef, this);
   }
 
@@ -522,11 +533,11 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     return UnionTypeComposer.create(typeDef, this);
   }
 
-  createScalarTC(typeDef: ScalarTypeComposerDefinition): ScalarTypeComposer {
+  createScalarTC(typeDef: ScalarTypeComposerDefinition): ScalarTypeComposer<TContext> {
     return ScalarTypeComposer.create(typeDef, this);
   }
 
-  createResolver(opts: ResolverOpts<any, any, any>): Resolver<any, TContext, any> {
+  createResolver(opts: ResolverOpts<any, TContext>): Resolver<any, TContext> {
     return new Resolver<any, TContext, any>(opts, this);
   }
 

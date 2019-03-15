@@ -17,20 +17,23 @@ import {
 
 // create from default schemaComposer uses the context type passed in
 // TSource Person, TContext Context
-const PersonTC = ObjectTypeComposer.create<Person, Context>({
-  name: 'Person',
-  fields: {
-    name: 'String',
-    nickName: 'String',
-    age: 'Int',
+const PersonTC = ObjectTypeComposer.create<Person, Context>(
+  {
+    name: 'Person',
+    fields: {
+      name: 'String',
+      nickName: 'String',
+      age: 'Int',
+    },
   },
-});
+  schemaComposerWithContext,
+);
 
 // TSource Art, TContext Context
 const ArtTC = schemaComposerWithContext.getOrCreateOTC<Art>('Art');
 
 // TSource any, TContext any
-const PostTC = ObjectTypeComposer.create('Post');
+const PostTC = ObjectTypeComposer.createTemp('Post');
 
 // ****************************
 // Resolvers
@@ -150,7 +153,7 @@ PersonTC.addFields({
       // An error pops up here, this is as TypeScript cannot infer TSource and TContext
       // So you need to explicitly set it up.
       // The error actually shows up at the resolve field of ageIn2030
-      ObjectTypeComposer.create<Person, Context>({
+      ObjectTypeComposer.createTemp<Person, Context>({
         name: 'deepAge',
         fields: {
           age: {

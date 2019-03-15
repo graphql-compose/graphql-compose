@@ -18,7 +18,7 @@ import type { SchemaComposer } from '../SchemaComposer';
 export function typeByPath(
   src:
     | ObjectTypeComposer<any, any>
-    | InputTypeComposer
+    | InputTypeComposer<any>
     | Resolver<any, any, any>
     | InterfaceTypeComposer<any, any>
     | UnionTypeComposer<any, any>,
@@ -72,7 +72,7 @@ export function typeByPathTC(tc: ObjectTypeComposer<any, any>, parts: Array<stri
   return processType(fieldType, parts.slice(1), tc.schemaComposer);
 }
 
-export function typeByPathITC(itc: InputTypeComposer, parts: Array<string>) {
+export function typeByPathITC(itc: InputTypeComposer<any>, parts: Array<string>) {
   if (!itc) return undefined;
   if (parts.length === 0) return itc;
 

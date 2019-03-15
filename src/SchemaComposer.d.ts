@@ -8,6 +8,7 @@ import {
 import {
   ObjectTypeComposer,
   ObjectTypeComposerDefinition,
+  ArgsMap,
 } from './ObjectTypeComposer';
 import {
   InputTypeComposer,
@@ -31,7 +32,7 @@ import {
 } from './UnionTypeComposer';
 import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
-import { Resolver } from './Resolver';
+import { Resolver, ResolverOpts } from './Resolver';
 
 type ExtraSchemaConfig = {
   types?: GraphQLNamedType[] | null;
@@ -41,14 +42,14 @@ type ExtraSchemaConfig = {
 
 type MustHaveTypes<TContext> =
   | ObjectTypeComposer<any, TContext>
-  | InputTypeComposer
-  | EnumTypeComposer
+  | InputTypeComposer<TContext>
+  | EnumTypeComposer<TContext>
   | InterfaceTypeComposer<any, TContext>
   | UnionTypeComposer<any, TContext>
-  | ScalarTypeComposer
+  | ScalarTypeComposer<TContext>
   | GraphQLNamedType;
 
-type AddResolveMethods<TContext> = {
+type GraphQLToolsResolveMethods<TContext> = {
   [typeName: string]: {
     [fieldName: string]: (
       source: any,
@@ -59,8 +60,8 @@ type AddResolveMethods<TContext> = {
   };
 };
 
-export class SchemaComposer<TContext> extends TypeStorage<TContext> {
-  public typeMapper: TypeMapper;
+export class SchemaComposer<TContext> extends TypeStorage<any, any> {
+  public typeMapper: TypeMapper<TContext>;
 
   public Query: ObjectTypeComposer<any, TContext>;
   public Mutation: ObjectTypeComposer<any, TContext>;
@@ -70,14 +71,6 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   protected _directives: GraphQLDirective[];
 
   public constructor();
-  public rootQuery<TSource = any>(): ObjectTypeComposer<TSource, TContext>;
-
-  public rootMutation<TSource = any>(): ObjectTypeComposer<TSource, TContext>;
-
-  public rootSubscription<TSource = any>(): ObjectTypeComposer<
-    TSource,
-    TContext
-  >;
 
   public buildSchema(extraConfig?: ExtraSchemaConfig): GraphQLSchema;
 
@@ -95,13 +88,13 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   public getOrCreateITC(
     typeName: string,
-    onCreate?: (itc: InputTypeComposer) => any,
-  ): InputTypeComposer;
+    onCreate?: (itc: InputTypeComposer<TContext>) => any,
+  ): InputTypeComposer<TContext>;
 
   public getOrCreateETC(
     typeName: string,
-    onCreate?: (etc: EnumTypeComposer) => any,
-  ): EnumTypeComposer;
+    onCreate?: (etc: EnumTypeComposer<TContext>) => any,
+  ): EnumTypeComposer<TContext>;
 
   public getOrCreateIFTC<TSource = any>(
     typeName: string,
@@ -115,16 +108,16 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   public getOrCreateSTC(
     typeName: string,
-    onCreate?: (stc: ScalarTypeComposer) => any,
-  ): ScalarTypeComposer;
+    onCreate?: (stc: ScalarTypeComposer<TContext>) => any,
+  ): ScalarTypeComposer<TContext>;
 
   public getOTC<TSource = any>(
     typeName: any,
   ): ObjectTypeComposer<TSource, TContext>;
 
-  public getITC(typeName: any): InputTypeComposer;
+  public getITC(typeName: any): InputTypeComposer<TContext>;
 
-  public getETC(typeName: any): EnumTypeComposer;
+  public getETC(typeName: any): EnumTypeComposer<TContext>;
 
   public getIFTC<TSource = any>(
     typeName: any,
@@ -134,40 +127,39 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
     typeName: any,
   ): UnionTypeComposer<TSource, TContext>;
 
-  public getSTC(typeName: any): ScalarTypeComposer;
+  public getSTC(typeName: any): ScalarTypeComposer<TContext>;
 
   public getAnyTC(
     typeName: any,
   ):
     | ObjectTypeComposer<any, TContext>
-    | InputTypeComposer
-    | EnumTypeComposer
+    | InputTypeComposer<TContext>
+    | EnumTypeComposer<TContext>
     | InterfaceTypeComposer<any, TContext>
     | UnionTypeComposer<any, TContext>
-    | ScalarTypeComposer;
+    | ScalarTypeComposer<TContext>;
 
   public add(typeOrSDL: any): string | null;
 
   public addAsComposer(typeOrSDL: any): string;
 
-  public addTypeDefs(typeDefs: string): TypeStorage<GraphQLNamedType>;
+  public addTypeDefs(typeDefs: string): TypeStorage<string, GraphQLNamedType>;
 
   public addResolveMethods(
-    typesFieldsResolve: AddResolveMethods<TContext>,
+    typesFieldsResolve: GraphQLToolsResolveMethods<TContext>,
   ): void;
-
-  // alias for createObjectTC
-  public createTC<TSource = any>(
-    typeDef: ObjectTypeComposerDefinition<TSource, TContext>,
-  ): ObjectTypeComposer<TSource, TContext>;
 
   public createObjectTC<TSource = any>(
     typeDef: ObjectTypeComposerDefinition<TSource, TContext>,
   ): ObjectTypeComposer<TSource, TContext>;
 
-  public createInputTC(typeDef: InputTypeComposerDefinition): InputTypeComposer;
+  public createInputTC(
+    typeDef: InputTypeComposerDefinition,
+  ): InputTypeComposer<TContext>;
 
-  public createEnumTC(typeDef: EnumTypeComposerDefinition): EnumTypeComposer;
+  public createEnumTC(
+    typeDef: EnumTypeComposerDefinition,
+  ): EnumTypeComposer<TContext>;
 
   public createInterfaceTC<TSource = any>(
     typeDef: InterfaceTypeComposerDefinition<TSource, TContext>,
@@ -179,7 +171,11 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
 
   public createScalarTC(
     typeDef: ScalarTypeComposerDefinition,
-  ): ScalarTypeComposer;
+  ): ScalarTypeComposer<TContext>;
+
+  public createResolver<TSource = any, TArgs = ArgsMap>(
+    opts: ResolverOpts<TSource, TContext, TArgs>,
+  ): Resolver<TSource, TContext, TArgs>;
 
   public addDirective(directive: GraphQLDirective): this;
 

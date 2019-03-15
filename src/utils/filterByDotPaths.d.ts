@@ -5,8 +5,17 @@ export interface FilterOpts {
 
 export type PathsFilter = string | string[];
 
-export default function filterByDotPaths(
+export function filterByDotPaths(
   obj: object,
   pathsFilter: PathsFilter | null,
   opts?: FilterOpts,
 ): object;
+
+export function preparePathsFilter(
+  pathsFilter?: PathsFilter | null,
+): string[] | null;
+
+export function isPresentInDotFilter(
+  name: string,
+  pathsFilter: string | string[] | null,
+): boolean;

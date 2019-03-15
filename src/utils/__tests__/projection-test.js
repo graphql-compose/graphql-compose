@@ -33,7 +33,7 @@ const Level1TC = schemaComposer.createObjectTC({
   },
 });
 const resolve = jest.fn(() => ({}));
-schemaComposer.rootQuery().addFields({ field0: { type: Level1TC, resolve } });
+schemaComposer.Query.addFields({ field0: { type: Level1TC, resolve } });
 const schema = schemaComposer.buildSchema();
 
 const getResolveInfo = async (query: string): Promise<GraphQLResolveInfo> => {

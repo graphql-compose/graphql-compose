@@ -17,7 +17,7 @@ import { SchemaComposer } from './SchemaComposer';
 import {
   ComposeFieldConfig,
   ComposeFieldConfigMap,
-  ComposePartialFieldConfigAsObject,
+  ComposeFieldConfigAsObject,
   ObjectTypeComposer,
 } from './ObjectTypeComposer';
 import { TypeAsString } from './TypeMapper';
@@ -28,14 +28,14 @@ export type GraphQLInterfaceTypeExtended<
   TContext
 > = GraphQLInterfaceType & {
   _gqcFields?: ComposeFieldConfigMap<TSource, TContext>;
-  _gqcInputTypeComposer?: InputTypeComposer;
-  _gqcTypeResolvers?: InterfaceTypeResolversMap<TSource, TContext>;
+  _gqcInputTypeComposer?: InputTypeComposer<TContext>;
+  _gqcTypeResolvers?: InterfaceTypeResolversMap<TContext>;
   _gqcExtensions?: Extensions;
 };
 
-export type InterfaceTypeResolversMap<TSource, TContext> = Map<
+export type InterfaceTypeResolversMap<TContext> = Map<
   ObjectTypeComposer<any, TContext> | GraphQLObjectType,
-  InterfaceTypeResolverCheckFn<TSource, TContext>
+  InterfaceTypeResolverCheckFn<any, TContext>
 >;
 
 export type InterfaceTypeResolverCheckFn<TSource, TContext> = (
@@ -45,11 +45,11 @@ export type InterfaceTypeResolverCheckFn<TSource, TContext> = (
 ) => MaybePromise<boolean | null | undefined>;
 
 export type ComposeInterfaceTypeConfig<TSource, TContext> = {
-  readonly name: string;
-  readonly fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>;
-  readonly resolveType?: GraphQLTypeResolver<TSource, TContext> | null;
-  readonly description?: string | null;
-  readonly extensions?: Extensions;
+  name: string;
+  fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>;
+  resolveType?: GraphQLTypeResolver<TSource, TContext> | null;
+  description?: string | null;
+  extensions?: Extensions;
 };
 
 export type InterfaceTypeComposerDefinition<TSource, TContext> =
@@ -61,17 +61,20 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   protected gqType: GraphQLInterfaceTypeExtended<TSource, TContext>;
 
+  public constructor(
+    gqType: GraphQLInterfaceType,
+    schemaComposer: SchemaComposer<TContext>,
+  );
+
   public static create<TSrc = any, TCtx = any>(
     typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
-    sc: SchemaComposer<TCtx>
+    schemaComposer: SchemaComposer<TCtx>,
   ): InterfaceTypeComposer<TSrc, TCtx>;
 
   public static createTemp<TSrc = any, TCtx = any>(
     typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
-    _sc?: SchemaComposer<TCtx>
+    schemaComposer?: SchemaComposer<TCtx>,
   ): InterfaceTypeComposer<TSrc, TCtx>;
-
-  public constructor(gqType: GraphQLInterfaceType, sc: SchemaComposer<TContext>);
 
   // -----------------------------------------------
   // Field methods
@@ -79,23 +82,23 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public hasField(name: string): boolean;
 
-  public getFields(): ComposeFieldConfigMap<any, TContext>;
+  public getFields(): ComposeFieldConfigMap<TSource, TContext>;
 
-  public getField(name: string): ComposeFieldConfig<any, TContext>;
+  public getField(name: string): ComposeFieldConfig<TSource, TContext>;
 
   public getFieldNames(): string[];
 
-  public setFields(fields: ComposeFieldConfigMap<any, TContext>): this;
+  public setFields(fields: ComposeFieldConfigMap<TSource, TContext>): this;
 
   public setField(
     name: string,
-    fieldConfig: ComposeFieldConfig<any, TContext>,
+    fieldConfig: ComposeFieldConfig<TSource, TContext>,
   ): this;
 
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  public addFields(newValues: ComposeFieldConfigMap<any, TContext>): this;
+  public addFields(newValues: ComposeFieldConfigMap<TSource, TContext>): this;
 
   public removeField(nameOrArray: string | string[]): this;
 
@@ -105,7 +108,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public extendField(
     fieldName: string,
-    partialFieldConfig: ComposePartialFieldConfigAsObject<any, TContext>,
+    partialFieldConfig: Partial<ComposeFieldConfigAsObject<TSource, TContext>>,
   ): this;
 
   public isFieldNonNull(fieldName: string): boolean;
@@ -162,11 +165,11 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public hasInputTypeComposer(): boolean;
 
-  public setInputTypeComposer(itc: InputTypeComposer): this;
+  public setInputTypeComposer(itc: InputTypeComposer<TContext>): this;
 
-  public getInputTypeComposer(): InputTypeComposer;
+  public getInputTypeComposer(): InputTypeComposer<TContext>;
 
-  public getITC(): InputTypeComposer;
+  public getITC(): InputTypeComposer<TContext>;
 
   public removeInputTypeComposer(): this;
 
@@ -184,7 +187,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
   ): boolean;
 
-  public getTypeResolvers(): InterfaceTypeResolversMap<TSource, TContext>;
+  public getTypeResolvers(): InterfaceTypeResolversMap<TContext>;
 
   public getTypeResolverCheckFn(
     type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
@@ -195,12 +198,12 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public getTypeResolverTypes(): GraphQLObjectType[];
 
   public setTypeResolvers(
-    typeResolversMap: InterfaceTypeResolversMap<TSource, TContext>,
+    typeResolversMap: InterfaceTypeResolversMap<TContext>,
   ): this;
 
-  public addTypeResolver(
-    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
-    checkFn: InterfaceTypeResolverCheckFn<TSource, TContext>,
+  public addTypeResolver<TSrc = any>(
+    type: ObjectTypeComposer<TSrc, TContext> | GraphQLObjectType,
+    checkFn: InterfaceTypeResolverCheckFn<TSrc, TContext>,
   ): this;
 
   public removeTypeResolver(

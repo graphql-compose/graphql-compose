@@ -9,7 +9,7 @@ export class TypeStorage<K, V> {
   constructor(): TypeStorage<K, V> {
     this.types = new Map();
 
-    // alive proper Flow type casting in autosuggestions
+    // alive proper Flow type casting in autosuggestions for class with Generics
     /* :: return this; */
   }
 

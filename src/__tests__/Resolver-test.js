@@ -534,7 +534,7 @@ describe('Resolver', () => {
       schemaComposer
     );
 
-    schemaComposer.rootQuery().addRelation('resolveUser', {
+    schemaComposer.Query.addRelation('resolveUser', {
       resolver: () => myResolver,
       projection: { _id: true },
     });
