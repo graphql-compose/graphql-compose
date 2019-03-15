@@ -649,8 +649,8 @@ describe('InterfaceTypeComposer', () => {
 
       it('integration test', async () => {
         const iftc1 = schemaComposer.createInterfaceTC(`interface F { f: Int }`);
-        const aTC = schemaComposer.createTC('type A implements F { a: Int, f: Int }');
-        const bTC = schemaComposer.createTC('type B implements F { b: Int, f: Int }');
+        const aTC = schemaComposer.createObjectTC('type A implements F { a: Int, f: Int }');
+        const bTC = schemaComposer.createObjectTC('type B implements F { b: Int, f: Int }');
         const resolveType = value => {
           if (value) {
             if (value.a) return 'A';

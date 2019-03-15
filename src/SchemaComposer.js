@@ -178,6 +178,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     });
   }
 
+  /* @deprecated 7.0.0 */
   getOrCreateTC(
     typeName: string,
     onCreate?: (ObjectTypeComposer<any, TContext>) => any
@@ -280,6 +281,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     this._directives = BUILT_IN_DIRECTIVES;
   }
 
+  /* @deprecated 7.0.0 */
   getTC(typeName: any): ObjectTypeComposer<any, TContext> {
     deprecate(`Use SchemaComposer.getOTC() method instead`);
     return this.getOTC(typeName);
@@ -479,9 +481,11 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
   }
 
   // alias for createObjectTC
+  /* @deprecated 7.0.0 */
   createTC(
     typeDef: ObjectTypeComposerDefinition<any, TContext>
   ): ObjectTypeComposer<any, TContext> {
+    deprecate(`Use SchemaComposer.getOTC() method instead`);
     return this.createObjectTC(typeDef);
   }
 

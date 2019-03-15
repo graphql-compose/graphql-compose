@@ -33,6 +33,12 @@ import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
 import { Resolver } from './Resolver';
 
+type ExtraSchemaConfig = {
+  types?: GraphQLNamedType[] | null;
+  directives?: GraphQLDirective[] | null;
+  astNode?: SchemaDefinitionNode | null;
+};
+
 type MustHaveTypes<TContext> =
   | ObjectTypeComposer<any, TContext>
   | InputTypeComposer
@@ -41,12 +47,6 @@ type MustHaveTypes<TContext> =
   | UnionTypeComposer<any, TContext>
   | ScalarTypeComposer
   | GraphQLNamedType;
-
-type ExtraSchemaConfig = {
-  types?: GraphQLNamedType[] | null;
-  directives?: GraphQLDirective[] | null;
-  astNode?: SchemaDefinitionNode | null;
-};
 
 type AddResolveMethods<TContext> = {
   [typeName: string]: {
@@ -60,14 +60,7 @@ type AddResolveMethods<TContext> = {
 };
 
 export class SchemaComposer<TContext> extends TypeStorage<TContext> {
-  public TypeMapper: TypeMapper;
-  public ObjectTypeComposer: typeof ObjectTypeComposer;
-  public InputTypeComposer: typeof InputTypeComposer;
-  public EnumTypeComposer: typeof EnumTypeComposer;
-  public InterfaceTypeComposer: typeof InterfaceTypeComposer;
-  public UnionTypeComposer: typeof UnionTypeComposer;
-  public ScalarTypeComposer: typeof ScalarTypeComposer;
-  public Resolver: typeof Resolver;
+  public typeMapper: TypeMapper;
 
   public Query: ObjectTypeComposer<any, TContext>;
   public Mutation: ObjectTypeComposer<any, TContext>;
@@ -77,19 +70,12 @@ export class SchemaComposer<TContext> extends TypeStorage<TContext> {
   protected _directives: GraphQLDirective[];
 
   public constructor();
+  public rootQuery<TSource = any>(): ObjectTypeComposer<TSource, TContext>;
 
-  public rootQuery<TRootQuery = any>(): ObjectTypeComposer<
-    TRootQuery,
-    TContext
-  >;
+  public rootMutation<TSource = any>(): ObjectTypeComposer<TSource, TContext>;
 
-  public rootMutation<TRootMutation = any>(): ObjectTypeComposer<
-    TRootMutation,
-    TContext
-  >;
-
-  public rootSubscription<TRootSubscription = any>(): ObjectTypeComposer<
-    TRootSubscription,
+  public rootSubscription<TSource = any>(): ObjectTypeComposer<
+    TSource,
     TContext
   >;
 

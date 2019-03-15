@@ -2,7 +2,6 @@
 
 import { schemaComposer } from '../..';
 
-// Should not be Flow errors
 export const resolver = schemaComposer.createResolver({
   name: 'findMany',
   kind: 'query',
@@ -14,3 +13,12 @@ export const resolver = schemaComposer.createResolver({
   },
   resolve: () => Promise.resolve(123),
 });
+
+export const UserTC = schemaComposer.createObjectTC(`
+  type User {
+    id: Int
+    name: String
+    age: Int
+    gender: String
+  }
+`);

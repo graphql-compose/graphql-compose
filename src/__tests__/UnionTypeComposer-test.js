@@ -423,8 +423,8 @@ describe('UnionTypeComposer', () => {
       });
 
       it('integration test', async () => {
-        const aTC = sc.createTC('type A { a: Int }');
-        const bTC = sc.createTC('type B { b: Int }');
+        const aTC = sc.createObjectTC('type A { a: Int }');
+        const bTC = sc.createObjectTC('type B { b: Int }');
         const utc1 = sc.createUnionTC(`union U = A | B`);
         const resolveType = value => {
           if (value) {

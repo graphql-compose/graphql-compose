@@ -76,10 +76,10 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   // Also supported `GraphQLInterfaceType` but in such case Flowtype force developers
   // to explicitly write annotations in their code. But it's bad.
-  static create(
-    typeDef: InterfaceTypeComposerDefinition<TSource, TContext>,
-    sc: SchemaComposer<TContext>
-  ): InterfaceTypeComposer<TSource, TContext> {
+  static create<TSrc, TCtx>(
+    typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
+    sc: SchemaComposer<TCtx>
+  ): InterfaceTypeComposer<TSrc, TCtx> {
     if (!(sc instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `InterfaceTypeComposer.create(typeDef, schemaComposer)`'
@@ -91,10 +91,10 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return iftc;
   }
 
-  static createTemp(
-    typeDef: InterfaceTypeComposerDefinition<TSource, TContext>,
-    _sc?: SchemaComposer<TContext>
-  ): InterfaceTypeComposer<TSource, TContext> {
+  static createTemp<TSrc, TCtx>(
+    typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
+    _sc?: SchemaComposer<TCtx>
+  ): InterfaceTypeComposer<TSrc, TCtx> {
     const sc = _sc || new SchemaComposer();
 
     let IFTC;
