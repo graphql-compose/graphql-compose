@@ -17,6 +17,7 @@ import { SchemaComposer } from './SchemaComposer';
 import {
   ComposeFieldConfig,
   ComposeFieldConfigMap,
+  ComposePartialFieldConfigAsObject,
   ObjectTypeComposer,
 } from './ObjectTypeComposer';
 import { TypeAsString } from './TypeMapper';
@@ -44,11 +45,11 @@ export type InterfaceTypeResolverCheckFn<TSource, TContext> = (
 ) => MaybePromise<boolean | null | undefined>;
 
 export type ComposeInterfaceTypeConfig<TSource, TContext> = {
-  name: string;
-  fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>;
-  resolveType?: GraphQLTypeResolver<TSource, TContext> | null;
-  description?: string | null;
-  extensions?: Extensions;
+  readonly name: string;
+  readonly fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>;
+  readonly resolveType?: GraphQLTypeResolver<TSource, TContext> | null;
+  readonly description?: string | null;
+  readonly extensions?: Extensions;
 };
 
 export type InterfaceTypeComposerDefinition<TSource, TContext> =
@@ -56,20 +57,21 @@ export type InterfaceTypeComposerDefinition<TSource, TContext> =
   | ComposeInterfaceTypeConfig<TSource, TContext>;
 
 export class InterfaceTypeComposer<TSource = any, TContext = any> {
-  public static schemaComposer: SchemaComposer<any>;
-  public schemaComposer: SchemaComposer<TContext>;
+  public sc: SchemaComposer<TContext>;
 
   protected gqType: GraphQLInterfaceTypeExtended<TSource, TContext>;
 
-  public constructor(gqType: GraphQLInterfaceType);
-
   public static create<TSrc = any, TCtx = any>(
     typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
+    sc: SchemaComposer<TCtx>
   ): InterfaceTypeComposer<TSrc, TCtx>;
 
   public static createTemp<TSrc = any, TCtx = any>(
     typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
+    _sc?: SchemaComposer<TCtx>
   ): InterfaceTypeComposer<TSrc, TCtx>;
+
+  public constructor(gqType: GraphQLInterfaceType, sc: SchemaComposer<TContext>);
 
   // -----------------------------------------------
   // Field methods
@@ -103,7 +105,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public extendField(
     fieldName: string,
-    parialFieldConfig: ComposeFieldConfig<any, TContext>,
+    partialFieldConfig: ComposePartialFieldConfigAsObject<any, TContext>,
   ): this;
 
   public isFieldNonNull(fieldName: string): boolean;
