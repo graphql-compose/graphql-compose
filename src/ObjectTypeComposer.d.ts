@@ -93,6 +93,10 @@ export type ComposeFieldConfigAsObject<TSource, TContext, TArgs = ArgsMap> = {
   [key: string]: any;
 } & { $call?: void };
 
+export type ComposePartialFieldConfigAsObject<TSource, TContext, TArgs = ArgsMap> = Partial<
+  ComposeFieldConfigAsObject<TSource, TContext, TArgs>
+>;
+
 // extended GraphQLOutputType
 export type ComposeOutputType<TSource, TContext> =
   | GraphQLOutputType
