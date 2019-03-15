@@ -19,7 +19,7 @@ type V<TContext> =
 
 export class TypeStorage<TContext> {
   public types: Map<K, V<TContext>>;
-  public size: number;
+  public readonly size: number;
 
   public constructor();
 
@@ -40,7 +40,7 @@ export class TypeStorage<TContext> {
 
   public keys(): Iterator<K>;
 
-  public set(key: K, value: V<TContext>): TypeStorage<TContext>;
+  public set(key: K, value: V<TContext>): this;
 
   public values(): Iterator<V<TContext>>;
 
