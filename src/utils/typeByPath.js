@@ -65,11 +65,11 @@ export function typeByPathTC(tc: ObjectTypeComposer<any, any>, parts: Array<stri
 
   if (nextName && nextName.startsWith('@')) {
     const argType = tc.getFieldArgType(name, nextName.substring(1));
-    return processType(argType, parts.slice(2), tc.sc);
+    return processType(argType, parts.slice(2), tc.schemaComposer);
   }
 
   const fieldType = tc.getFieldType(name);
-  return processType(fieldType, parts.slice(1), tc.sc);
+  return processType(fieldType, parts.slice(1), tc.schemaComposer);
 }
 
 export function typeByPathITC(itc: InputTypeComposer, parts: Array<string>) {
@@ -77,7 +77,7 @@ export function typeByPathITC(itc: InputTypeComposer, parts: Array<string>) {
   if (parts.length === 0) return itc;
 
   const fieldType = itc.getFieldType(parts[0]);
-  return processType(fieldType, parts.slice(1), itc.sc);
+  return processType(fieldType, parts.slice(1), itc.schemaComposer);
 }
 
 function typeByPathRSV(rsv: Resolver<any, any, any>, parts: Array<string>) {
@@ -90,10 +90,10 @@ function typeByPathRSV(rsv: Resolver<any, any, any>, parts: Array<string>) {
     const argName = name.substring(1);
     const arg = rsv.getArg(argName);
     if (!arg) return undefined;
-    return processType(rsv.getArgType(argName), parts.slice(1), rsv.sc);
+    return processType(rsv.getArgType(argName), parts.slice(1), rsv.schemaComposer);
   }
 
-  return processType(rsv.getType(), parts, rsv.sc);
+  return processType(rsv.getType(), parts, rsv.schemaComposer);
 }
 
 export function typeByPathIFTC(tc: InterfaceTypeComposer<any, any>, parts: Array<string>) {
@@ -111,11 +111,11 @@ export function typeByPathIFTC(tc: InterfaceTypeComposer<any, any>, parts: Array
 
   if (nextName && nextName.startsWith('@')) {
     const argType = tc.getFieldArgType(name, nextName.substring(1));
-    return processType(argType, parts.slice(2), tc.sc);
+    return processType(argType, parts.slice(2), tc.schemaComposer);
   }
 
   const fieldType = tc.getFieldType(name);
-  return processType(fieldType, parts.slice(1), tc.sc);
+  return processType(fieldType, parts.slice(1), tc.schemaComposer);
 }
 
 export function processType(

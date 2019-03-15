@@ -72,30 +72,30 @@ export type InterfaceTypeComposerDefinition<TSource, TContext> =
 
 export class InterfaceTypeComposer<TSource, TContext> {
   gqType: GraphQLInterfaceTypeExtended<TSource, TContext>;
-  sc: SchemaComposer<TContext>;
+  schemaComposer: SchemaComposer<TContext>;
 
   // Also supported `GraphQLInterfaceType` but in such case Flowtype force developers
   // to explicitly write annotations in their code. But it's bad.
   static create<TSrc, TCtx>(
     typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
-    sc: SchemaComposer<TCtx>
+    schemaComposer: SchemaComposer<TCtx>
   ): InterfaceTypeComposer<TSrc, TCtx> {
-    if (!(sc instanceof SchemaComposer)) {
+    if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `InterfaceTypeComposer.create(typeDef, schemaComposer)`'
       );
     }
 
-    const iftc = this.createTemp(typeDef, sc);
-    sc.add(iftc);
+    const iftc = this.createTemp(typeDef, schemaComposer);
+    schemaComposer.add(iftc);
     return iftc;
   }
 
   static createTemp<TSrc, TCtx>(
     typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
-    _sc?: SchemaComposer<TCtx>
+    schemaComposer?: SchemaComposer<TCtx>
   ): InterfaceTypeComposer<TSrc, TCtx> {
-    const sc = _sc || new SchemaComposer();
+    const sc = schemaComposer || new SchemaComposer();
 
     let IFTC;
 
@@ -142,13 +142,13 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return IFTC;
   }
 
-  constructor(gqType: GraphQLInterfaceType, sc: SchemaComposer<TContext>) {
-    if (!(sc instanceof SchemaComposer)) {
+  constructor(gqType: GraphQLInterfaceType, schemaComposer: SchemaComposer<TContext>) {
+    if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `new InterfaceTypeComposer(GraphQLInterfaceType, SchemaComposer)`'
       );
     }
-    this.sc = sc;
+    this.schemaComposer = schemaComposer;
 
     if (!(gqType instanceof GraphQLInterfaceType)) {
       throw new Error('InterfaceTypeComposer accept only GraphQLInterfaceType in constructor');
@@ -204,12 +204,12 @@ export class InterfaceTypeComposer<TSource, TContext> {
       this.gqType._fields = () => {
         return defineFieldMap(
           this.gqType,
-          resolveOutputConfigMapAsThunk(this.sc, fields, this.getTypeName())
+          resolveOutputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName())
         );
       };
     } else {
       (this.gqType: any)._typeConfig.fields = () => {
-        return resolveOutputConfigMapAsThunk(this.sc, fields, this.getTypeName());
+        return resolveOutputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName());
       };
       delete this.gqType._fields; // clear builded fields in type
     }
@@ -299,7 +299,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
       throw new Error(`Type ${this.getTypeName()} does not have field with name '${fieldName}'`);
     }
 
-    return resolveOutputConfigAsThunk(this.sc, fc, fieldName, this.getTypeName());
+    return resolveOutputConfigAsThunk(this.schemaComposer, fc, fieldName, this.getTypeName());
   }
 
   getFieldType(fieldName: string): GraphQLOutputType {
@@ -314,7 +314,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
           `This field should be ObjectType, but it has type '${fieldType.constructor.name}'`
       );
     }
-    return ObjectTypeComposer.createTemp(fieldType, this.sc);
+    return ObjectTypeComposer.createTemp(fieldType, this.schemaComposer);
   }
 
   makeFieldNonNull(
@@ -437,7 +437,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   setTypeName(name: string): InterfaceTypeComposer<TSource, TContext> {
     this.gqType.name = name;
-    this.sc.add(this);
+    this.schemaComposer.add(this);
     return this;
   }
 
@@ -466,7 +466,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
         name: newTypeName,
         fields: newFields,
       }),
-      this.sc
+      this.schemaComposer
     );
 
     cloned.setDescription(this.getDescription());

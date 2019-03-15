@@ -79,24 +79,27 @@ export type InputTypeComposerDefinition =
 
 export class InputTypeComposer {
   gqType: GraphQLInputObjectTypeExtended;
-  sc: SchemaComposer<any>;
+  schemaComposer: SchemaComposer<any>;
 
-  static create(typeDef: InputTypeComposerDefinition, sc: SchemaComposer<any>): InputTypeComposer {
-    if (!(sc instanceof SchemaComposer)) {
+  static create(
+    typeDef: InputTypeComposerDefinition,
+    schemaComposer: SchemaComposer<any>
+  ): InputTypeComposer {
+    if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `InputTypeComposer.create(typeDef, schemaComposer)`'
       );
     }
-    const itc = this.createTemp(typeDef, sc);
-    sc.add(itc);
+    const itc = this.createTemp(typeDef, schemaComposer);
+    schemaComposer.add(itc);
     return itc;
   }
 
   static createTemp(
     typeDef: InputTypeComposerDefinition,
-    _sc?: SchemaComposer<any>
+    schemaComposer?: SchemaComposer<any>
   ): InputTypeComposer {
-    const sc = _sc || new SchemaComposer();
+    const sc = schemaComposer || new SchemaComposer();
 
     let ITC;
 
@@ -144,13 +147,13 @@ export class InputTypeComposer {
     return ITC;
   }
 
-  constructor(gqType: GraphQLInputObjectType, sc: SchemaComposer<any>) {
-    if (!(sc instanceof SchemaComposer)) {
+  constructor(gqType: GraphQLInputObjectType, schemaComposer: SchemaComposer<any>) {
+    if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `new InputTypeComposer(GraphQLInputType, SchemaComposer)`'
       );
     }
-    this.sc = sc;
+    this.schemaComposer = schemaComposer;
 
     if (!(gqType instanceof GraphQLInputObjectType)) {
       throw new Error('InputTypeComposer accept only GraphQLInputObjectType in constructor');
@@ -195,12 +198,12 @@ export class InputTypeComposer {
       this.gqType._fields = () => {
         return defineInputFieldMap(
           this.gqType,
-          resolveInputConfigMapAsThunk(this.sc, fields, this.getTypeName())
+          resolveInputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName())
         );
       };
     } else {
       (this.gqType: any)._typeConfig.fields = () => {
-        return resolveInputConfigMapAsThunk(this.sc, fields, this.getTypeName());
+        return resolveInputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName());
       };
       delete this.gqType._fields; // if schema was builded, delete defineFieldMap
     }
@@ -238,7 +241,7 @@ export class InputTypeComposer {
         if (!this.hasField(name)) {
           childTC = InputTypeComposer.createTemp(
             `${this.getTypeName()}${upperFirst(name)}`,
-            this.sc
+            this.schemaComposer
           );
           this.setField(name, childTC);
         } else {
@@ -334,7 +337,7 @@ export class InputTypeComposer {
       throw new Error(`Type ${this.getTypeName()} does not have field with name '${fieldName}'`);
     }
 
-    return resolveInputConfigAsThunk(this.sc, fc, fieldName, this.getTypeName());
+    return resolveInputConfigAsThunk(this.schemaComposer, fc, fieldName, this.getTypeName());
   }
 
   getFieldType(fieldName: string): GraphQLInputType {
@@ -349,7 +352,7 @@ export class InputTypeComposer {
           `This field should be InputObjectType, but it has type '${fieldType.constructor.name}'`
       );
     }
-    return InputTypeComposer.createTemp(fieldType, this.sc);
+    return InputTypeComposer.createTemp(fieldType, this.schemaComposer);
   }
 
   makeFieldNonNull(fieldNameOrArray: string | Array<string>): InputTypeComposer {
@@ -409,7 +412,7 @@ export class InputTypeComposer {
 
   setTypeName(name: string): InputTypeComposer {
     this.gqType.name = name;
-    this.sc.add(this);
+    this.schemaComposer.add(this);
     return this;
   }
 
@@ -438,7 +441,7 @@ export class InputTypeComposer {
         name: newTypeName,
         fields: newFields,
       }),
-      this.sc
+      this.schemaComposer
     );
   }
 

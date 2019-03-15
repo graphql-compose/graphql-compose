@@ -28,27 +28,27 @@ export type GraphQLScalarTypeExtended = GraphQLScalarType & {
 
 export class ScalarTypeComposer {
   gqType: GraphQLScalarTypeExtended;
-  sc: SchemaComposer<any>;
+  schemaComposer: SchemaComposer<any>;
 
   static create(
     typeDef: ScalarTypeComposerDefinition,
-    sc: SchemaComposer<any>
+    schemaComposer: SchemaComposer<any>
   ): ScalarTypeComposer {
-    if (!(sc instanceof SchemaComposer)) {
+    if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `ScalarTypeComposer.create(typeDef, schemaComposer)`'
       );
     }
-    const stc = this.createTemp(typeDef, sc);
-    sc.add(stc);
+    const stc = this.createTemp(typeDef, schemaComposer);
+    schemaComposer.add(stc);
     return stc;
   }
 
   static createTemp(
     typeDef: ScalarTypeComposerDefinition,
-    _sc?: SchemaComposer<any>
+    schemaComposer?: SchemaComposer<any>
   ): ScalarTypeComposer {
-    const sc = _sc || new SchemaComposer();
+    const sc = schemaComposer || new SchemaComposer();
 
     let STC;
 
@@ -89,13 +89,13 @@ export class ScalarTypeComposer {
     return STC;
   }
 
-  constructor(gqType: GraphQLScalarType, sc: SchemaComposer<any>) {
-    if (!(sc instanceof SchemaComposer)) {
+  constructor(gqType: GraphQLScalarType, schemaComposer: SchemaComposer<any>) {
+    if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `new ScalarTypeComposer(GraphQLScalarType, SchemaComposer)`'
       );
     }
-    this.sc = sc;
+    this.schemaComposer = schemaComposer;
 
     if (!(gqType instanceof GraphQLScalarType)) {
       throw new Error('ScalarTypeComposer accept only GraphQLScalarType in constructor');
@@ -153,7 +153,7 @@ export class ScalarTypeComposer {
 
   setTypeName(name: string): ScalarTypeComposer {
     this.gqType.name = name;
-    this.sc.add(this);
+    this.schemaComposer.add(this);
     return this;
   }
 
@@ -178,7 +178,7 @@ export class ScalarTypeComposer {
         parseValue: this.getParseValue(),
         parseLiteral: this.getParseLiteral(),
       }),
-      this.sc
+      this.schemaComposer
     );
 
     cloned.setDescription(this.getDescription());
