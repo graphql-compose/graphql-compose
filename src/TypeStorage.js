@@ -1,6 +1,7 @@
 /* @flow strict */
 
 import { isFunction } from './utils/is';
+import { inspect } from './utils/misc';
 
 // TypeStorage has all methods from Map class
 export class TypeStorage<K, V> {
@@ -39,7 +40,7 @@ export class TypeStorage<K, V> {
   get(typeName: K): V {
     const v = this.types.get(typeName);
     if (!v) {
-      throw new Error(`Type with name ${JSON.stringify(typeName)} does not exists`);
+      throw new Error(`Type with name ${inspect(typeName)} does not exists`);
     }
     return v;
   }

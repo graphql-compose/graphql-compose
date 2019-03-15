@@ -640,7 +640,7 @@ export class TypeMapper<TContext> {
     if (!isFunction(fieldConfig.type)) {
       if (!isInputType(fieldConfig.type)) {
         throw new Error(
-          `${typeName}.${fieldName} provided incorrect InputType: '${JSON.stringify(composeType)}'`
+          `${typeName}.${fieldName} provided incorrect InputType: '${inspect(composeType)}'`
         );
       }
 

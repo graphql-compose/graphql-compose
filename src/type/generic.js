@@ -4,7 +4,7 @@ import { GraphQLScalarType, GraphQLError, Kind } from '../graphql';
 
 function coerceDate(value) {
   const json = JSON.stringify(value);
-  return json.replace(/"/g, "'");
+  return json ? json.replace(/"/g, "'") : null;
 }
 
 const GenericType = new GraphQLScalarType({
