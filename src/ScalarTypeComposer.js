@@ -26,14 +26,14 @@ export type GraphQLScalarTypeExtended = GraphQLScalarType & {
   _gqcExtensions?: Extensions,
 };
 
-export class ScalarTypeComposer {
+export class ScalarTypeComposer<TContext> {
   gqType: GraphQLScalarTypeExtended;
-  schemaComposer: SchemaComposer<any>;
+  schemaComposer: SchemaComposer<TContext>;
 
-  static create(
+  static create<TCtx>(
     typeDef: ScalarTypeComposerDefinition,
-    schemaComposer: SchemaComposer<any>
-  ): ScalarTypeComposer {
+    schemaComposer: SchemaComposer<TCtx>
+  ): ScalarTypeComposer<TCtx> {
     if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `ScalarTypeComposer.create(typeDef, schemaComposer)`'
@@ -44,10 +44,10 @@ export class ScalarTypeComposer {
     return stc;
   }
 
-  static createTemp(
+  static createTemp<TCtx>(
     typeDef: ScalarTypeComposerDefinition,
-    schemaComposer?: SchemaComposer<any>
-  ): ScalarTypeComposer {
+    schemaComposer?: SchemaComposer<TCtx>
+  ): ScalarTypeComposer<TCtx> {
     const sc = schemaComposer || new SchemaComposer();
 
     let STC;
@@ -89,7 +89,10 @@ export class ScalarTypeComposer {
     return STC;
   }
 
-  constructor(gqType: GraphQLScalarType, schemaComposer: SchemaComposer<any>) {
+  constructor(
+    gqType: GraphQLScalarType,
+    schemaComposer: SchemaComposer<TContext>
+  ): ScalarTypeComposer<TContext> {
     if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `new ScalarTypeComposer(GraphQLScalarType, SchemaComposer)`'
@@ -101,6 +104,9 @@ export class ScalarTypeComposer {
       throw new Error('ScalarTypeComposer accept only GraphQLScalarType in constructor');
     }
     this.gqType = gqType;
+
+    // alive proper Flow type casting in autosuggestions for class with Generics
+    /* :: return this; */
   }
 
   // -----------------------------------------------
@@ -151,7 +157,7 @@ export class ScalarTypeComposer {
     return this.gqType.name;
   }
 
-  setTypeName(name: string): ScalarTypeComposer {
+  setTypeName(name: string): ScalarTypeComposer<TContext> {
     this.gqType.name = name;
     this.schemaComposer.add(this);
     return this;
@@ -161,12 +167,12 @@ export class ScalarTypeComposer {
     return this.gqType.description || '';
   }
 
-  setDescription(description: string): ScalarTypeComposer {
+  setDescription(description: string): ScalarTypeComposer<TContext> {
     this.gqType.description = description;
     return this;
   }
 
-  clone(newTypeName: string): ScalarTypeComposer {
+  clone(newTypeName: string): ScalarTypeComposer<TContext> {
     if (!newTypeName) {
       throw new Error('You should provide newTypeName:string for ScalarTypeComposer.clone()');
     }
@@ -198,12 +204,12 @@ export class ScalarTypeComposer {
     }
   }
 
-  setExtensions(extensions: Extensions): ScalarTypeComposer {
+  setExtensions(extensions: Extensions): ScalarTypeComposer<TContext> {
     this.gqType._gqcExtensions = extensions;
     return this;
   }
 
-  extendExtensions(extensions: Extensions): ScalarTypeComposer {
+  extendExtensions(extensions: Extensions): ScalarTypeComposer<TContext> {
     const current = this.getExtensions();
     this.setExtensions({
       ...current,
@@ -212,7 +218,7 @@ export class ScalarTypeComposer {
     return this;
   }
 
-  clearExtensions(): ScalarTypeComposer {
+  clearExtensions(): ScalarTypeComposer<TContext> {
     this.setExtensions({});
     return this;
   }
@@ -227,14 +233,14 @@ export class ScalarTypeComposer {
     return extensionName in extensions;
   }
 
-  setExtension(extensionName: string, value: any): ScalarTypeComposer {
+  setExtension(extensionName: string, value: any): ScalarTypeComposer<TContext> {
     this.extendExtensions({
       [extensionName]: value,
     });
     return this;
   }
 
-  removeExtension(extensionName: string): ScalarTypeComposer {
+  removeExtension(extensionName: string): ScalarTypeComposer<TContext> {
     const extensions = { ...this.getExtensions() };
     delete extensions[extensionName];
     this.setExtensions(extensions);

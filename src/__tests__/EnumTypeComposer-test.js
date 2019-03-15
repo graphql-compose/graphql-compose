@@ -11,7 +11,7 @@ beforeEach(() => {
 
 describe('EnumTypeComposer', () => {
   let enumType: GraphQLEnumType;
-  let etc: EnumTypeComposer;
+  let etc: EnumTypeComposer<any>;
 
   beforeEach(() => {
     enumType = new GraphQLEnumType({

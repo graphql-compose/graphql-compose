@@ -5,7 +5,11 @@ export { graphql };
 
 declare const schemaComposer: SchemaComposer<any>;
 declare const sc: SchemaComposer<any>;
-export { SchemaComposer, schemaComposer, sc };
+export {
+  SchemaComposer, // SchemaComposer class
+  schemaComposer, // SchemaComposer default global instance
+  sc, // SchemaComposer default global instance (alias for schemaComposer)
+};
 
 export { ObjectTypeComposer, isComposeOutputType } from './ObjectTypeComposer';
 export { InputTypeComposer, isComposeInputType } from './InputTypeComposer';
@@ -14,6 +18,7 @@ export { ScalarTypeComposer } from './ScalarTypeComposer';
 export { InterfaceTypeComposer } from './InterfaceTypeComposer';
 export { UnionTypeComposer } from './UnionTypeComposer';
 export { Resolver } from './Resolver';
+
 export { TypeStorage } from './TypeStorage';
 export { TypeMapper } from './TypeMapper';
 
@@ -39,7 +44,8 @@ export * from './utils/is';
 export * from './utils/graphqlVersion';
 export { default as toDottedObject } from './utils/toDottedObject';
 export { default as deepmerge } from './utils/deepmerge';
-export { default as filterByDotPaths } from './utils/filterByDotPaths';
+export { filterByDotPaths } from './utils/filterByDotPaths';
+export { pluralize } from './utils/pluralize';
 
 export {
   GetRecordIdFn,

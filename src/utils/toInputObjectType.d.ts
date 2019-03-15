@@ -9,10 +9,10 @@ export interface ToInputObjectTypeOpts {
   postfix?: string;
 }
 
-export function toInputObjectType(
-  tc: ObjectTypeComposer<any, any> | InterfaceTypeComposer<any, any>,
+export function toInputObjectType<TContext>(
+  tc: ObjectTypeComposer<any, TContext> | InterfaceTypeComposer<any, TContext>,
   opts?: ToInputObjectTypeOpts,
-): InputTypeComposer;
+): InputTypeComposer<TContext>;
 
 export interface ConvertInputObjectFieldOpts {
   prefix?: string;

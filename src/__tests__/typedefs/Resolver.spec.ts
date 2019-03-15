@@ -1,33 +1,40 @@
 import { GraphQLInt, GraphQLString } from 'graphql';
 import { Resolver } from '../../Resolver';
+import { schemaComposer } from '../..';
 import { Args, Art, Context, Post } from './mock-typedefs';
 
-const findManyPost = new Resolver<Post, Context, Args>({
-  args: {
-    filter: { type: GraphQLString },
-    limit: { type: GraphQLInt },
-    skip: { type: GraphQLInt },
-    sort: { type: GraphQLString },
-    // unknown: {type: GraphQLInt}, errors
+const findManyPost = new Resolver<Post, Context, Args>(
+  {
+    args: {
+      filter: { type: GraphQLString },
+      limit: { type: GraphQLInt },
+      skip: { type: GraphQLInt },
+      sort: { type: GraphQLString },
+      // unknown: {type: GraphQLInt}, errors
+    },
+    resolve: rp => {
+      if (rp.source && rp.context) {
+        // rp.source.timestamp = 'fails';
+        rp.source.timestamp = 4;
+        rp.source.author = 'GraphQL superb with Compose';
+      }
+    },
   },
-  resolve: rp => {
-    if (rp.source && rp.context) {
-      // rp.source.timestamp = 'fails';
-      rp.source.timestamp = 4;
-      rp.source.author = 'GraphQL superb with Compose';
-    }
-  },
-});
+  schemaComposer,
+);
 
-const findOnePostAny = new Resolver({
-  resolve: rp => {
-    if (rp.source && rp.context) {
-      // rp.source.timestamp = 'fails';
-      rp.source.timestamp = 'compose';
-      rp.source.author = 4;
-    }
+const findOnePostAny = new Resolver(
+  {
+    resolve: rp => {
+      if (rp.source && rp.context) {
+        // rp.source.timestamp = 'fails';
+        rp.source.timestamp = 'compose';
+        rp.source.author = 4;
+      }
+    },
   },
-});
+  schemaComposer,
+);
 
 // wrap
 const findManyArt = findManyPost.wrap<Art>(
@@ -70,31 +77,37 @@ interface FindManyArtArgs {
   skip: number;
 }
 
-const findManyArt1 = new Resolver<any, any, FindManyArtArgs>({
-  resolve: rp => {
-    if (rp.args) {
-      // rp.args.skip = 'dsd';
-      rp.args.skip = 4;
-      rp.args.filter.id = 'string';
-    }
+const findManyArt1 = new Resolver<any, any, FindManyArtArgs>(
+  {
+    resolve: rp => {
+      if (rp.args) {
+        // rp.args.skip = 'dsd';
+        rp.args.skip = 4;
+        rp.args.filter.id = 'string';
+      }
+    },
   },
-});
+  schemaComposer,
+);
 
 // all any
-const findManyPost1 = new Resolver({
-  args: {
-    skip: { type: GraphQLInt },
-  },
-  resolve: ({ source, context, args }) => {
-    source.title = 555; // pass as source is any fails
-    source.title = 'A Title';
+const findManyPost1 = new Resolver(
+  {
+    args: {
+      skip: { type: GraphQLInt },
+    },
+    resolve: ({ source, context, args }) => {
+      source.title = 555; // pass as source is any fails
+      source.title = 'A Title';
 
-    if (args) {
-      args.skip = 'hello';
-      args.skip = 4;
-    }
+      if (args) {
+        args.skip = 'hello';
+        args.skip = 4;
+      }
+    },
   },
-});
+  schemaComposer,
+);
 
 // inherits findManyArtArgs, can be overwritten
 findManyArt1.wrapResolve<Art, FindManyArtArgs>(next => rp => {

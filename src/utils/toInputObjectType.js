@@ -22,10 +22,10 @@ export type toInputObjectTypeOpts = {
   postfix?: string,
 };
 
-export function toInputObjectType(
-  tc: ObjectTypeComposer<any, any> | InterfaceTypeComposer<any, any>,
+export function toInputObjectType<TContext>(
+  tc: ObjectTypeComposer<any, TContext> | InterfaceTypeComposer<any, TContext>,
   opts: toInputObjectTypeOpts = {}
-): InputTypeComposer {
+): InputTypeComposer<TContext> {
   if (tc.hasInputTypeComposer()) {
     return tc.getInputTypeComposer();
   }
@@ -73,7 +73,7 @@ export type ConvertInputObjectFieldOpts = {
 export function convertInputObjectField(
   field: GraphQLType,
   opts: ConvertInputObjectFieldOpts,
-  sc: SchemaComposer<any>
+  schemaComposer: SchemaComposer<any>
 ): ?GraphQLInputType {
   let fieldType = field;
 
@@ -95,8 +95,8 @@ export function convertInputObjectField(
       };
       const tc =
         fieldType instanceof GraphQLObjectType
-          ? sc.createObjectTC(fieldType)
-          : sc.createInterfaceTC(fieldType);
+          ? schemaComposer.createObjectTC(fieldType)
+          : schemaComposer.createInterfaceTC(fieldType);
       fieldType = toInputObjectType(tc, typeOpts).getType();
     } else {
       // eslint-disable-next-line

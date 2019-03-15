@@ -28,8 +28,6 @@ export type GraphQLUnionTypeExtended<TSource, TContext> = GraphQLUnionType & {
   _gqcExtensions?: Extensions;
 };
 
-export type ComposeTypesArray = ComposeObjectType[];
-
 export type UnionTypeResolversMap<TSource, TContext> = Map<
   ComposeObjectType,
   UnionTypeResolverCheckFn<TSource, TContext>
@@ -39,11 +37,11 @@ export type UnionTypeResolverCheckFn<TSource, TContext> = (
   value: TSource,
   context: TContext,
   info: GraphQLResolveInfo,
-) => MaybePromise<boolean | null | undefined>;
+) => MaybePromise<boolean | null | void>;
 
 export type ComposeUnionTypeConfig<TSource, TContext> = {
   name: string;
-  types?: Thunk<ComposeTypesArray>;
+  types?: Thunk<ComposeObjectType[]>;
   resolveType?: GraphQLTypeResolver<TSource, TContext> | null;
   description?: string | null;
   extensions?: Extensions;
@@ -54,19 +52,23 @@ export type UnionTypeComposerDefinition<TSource, TContext> =
   | ComposeUnionTypeConfig<TSource, TContext>;
 
 export class UnionTypeComposer<TSource = any, TContext = any> {
-  public static schemaComposer: SchemaComposer<any>;
-  public schemaComposer: SchemaComposer<TSource>;
+  public schemaComposer: SchemaComposer<TContext>;
 
   protected gqType: GraphQLUnionTypeExtended<TSource, TContext>;
 
-  public constructor(gqType: GraphQLUnionType);
+  public constructor(
+    gqType: GraphQLUnionType,
+    schemaComposer: SchemaComposer<TContext>,
+  );
 
   public static create<TSrc = any, TCtx = any>(
     typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
+    schemaComposer: SchemaComposer<TCtx>,
   ): UnionTypeComposer<TSrc, TCtx>;
 
   public static createTemp<TSrc = any, TCtx = any>(
     typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
+    schemaComposer?: SchemaComposer<TCtx>,
   ): UnionTypeComposer<TSrc, TCtx>;
 
   // -----------------------------------------------
@@ -77,11 +79,13 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
     name: string | GraphQLObjectType | ObjectTypeComposer<any, TContext>,
   ): boolean;
 
-  public getTypes(): ComposeTypesArray;
+  public getTypes(): ComposeObjectType[];
 
   public getTypeNames(): string[];
 
-  public setTypes(types: ComposeTypesArray): this;
+  public clearTypes(): UnionTypeComposer<TSource, TContext>;
+
+  public setTypes(types: ComposeObjectType[]): this;
 
   public addType(type: ComposeObjectType): this;
 
@@ -107,7 +111,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   public setDescription(description: string): this;
 
-  public clone(newTypeName: string): this;
+  public clone(newTypeName: string): UnionTypeComposer<TSource, TContext>;
 
   // -----------------------------------------------
   // ResolveType methods

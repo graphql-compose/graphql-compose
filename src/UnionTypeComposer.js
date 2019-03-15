@@ -20,8 +20,6 @@ export type GraphQLUnionTypeExtended<TSource, TContext> = GraphQLUnionType & {
   _gqcExtensions?: Extensions,
 };
 
-export type ComposeTypesArray = Array<ComposeObjectType>;
-
 export type UnionTypeResolversMap<TSource, TContext> = Map<
   ComposeObjectType,
   UnionTypeResolverCheckFn<TSource, TContext>
@@ -31,13 +29,13 @@ export type UnionTypeResolverCheckFn<TSource, TContext> = (
   value: TSource,
   context: TContext,
   info: GraphQLResolveInfo
-) => MaybePromise<?boolean>;
+) => MaybePromise<boolean | null | void>;
 
 export type ComposeUnionTypeConfig<TSource, TContext> = {
   +name: string,
-  +types?: Thunk<ComposeTypesArray>,
-  +resolveType?: ?GraphQLTypeResolver<TSource, TContext>,
-  +description?: ?string,
+  +types?: Thunk<ComposeObjectType[]>,
+  +resolveType?: GraphQLTypeResolver<TSource, TContext> | null,
+  +description?: string | null,
   +extensions?: Extensions,
 };
 
@@ -115,7 +113,10 @@ export class UnionTypeComposer<TSource, TContext> {
     return UTC;
   }
 
-  constructor(gqType: GraphQLUnionType, schemaComposer: SchemaComposer<TContext>) {
+  constructor(
+    gqType: GraphQLUnionType,
+    schemaComposer: SchemaComposer<TContext>
+  ): UnionTypeComposer<TSource, TContext> {
     if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `new UnionTypeComposer(GraphQLUnionType, SchemaComposer)`'
@@ -129,6 +130,9 @@ export class UnionTypeComposer<TSource, TContext> {
       );
     }
     this.gqType = (gqType: any);
+
+    // alive proper Flow type casting in autosuggestions for class with Generics
+    /* :: return this; */
   }
 
   // -----------------------------------------------
@@ -164,20 +168,20 @@ export class UnionTypeComposer<TSource, TContext> {
     return this.gqType._gqcTypeMap;
   }
 
-  getTypes(): ComposeTypesArray {
+  getTypes(): ComposeObjectType[] {
     return Array.from(this._getTypeMap().values());
   }
 
-  getTypeNames(): Array<string> {
+  getTypeNames(): string[] {
     return Array.from(this._getTypeMap().keys());
   }
 
-  clearTypes() {
+  clearTypes(): UnionTypeComposer<TSource, TContext> {
     this._getTypeMap().clear();
     return this;
   }
 
-  setTypes(types: ComposeTypesArray): UnionTypeComposer<TSource, TContext> {
+  setTypes(types: ComposeObjectType[]): UnionTypeComposer<TSource, TContext> {
     this.clearTypes();
     types.forEach(type => {
       this._getTypeMap().set(getComposeTypeName(type), type);
@@ -190,7 +194,7 @@ export class UnionTypeComposer<TSource, TContext> {
     return this;
   }
 
-  removeType(nameOrArray: string | Array<string>): UnionTypeComposer<TSource, TContext> {
+  removeType(nameOrArray: string | string[]): UnionTypeComposer<TSource, TContext> {
     const typeNames = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
     typeNames.forEach(typeName => {
       this._getTypeMap().delete(typeName);
@@ -198,7 +202,7 @@ export class UnionTypeComposer<TSource, TContext> {
     return this;
   }
 
-  removeOtherTypes(nameOrArray: string | Array<string>): UnionTypeComposer<TSource, TContext> {
+  removeOtherTypes(nameOrArray: string | string[]): UnionTypeComposer<TSource, TContext> {
     const keepTypeNames = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
     this._getTypeMap().forEach((v, i) => {
       if (keepTypeNames.indexOf(i) === -1) {
@@ -485,7 +489,7 @@ export class UnionTypeComposer<TSource, TContext> {
   // Misc methods
   // -----------------------------------------------
 
-  // get(path: string | Array<string>): any {
+  // get(path: string | string[]): any {
   //   return typeByPath(this, path);
   // }
 }

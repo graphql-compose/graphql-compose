@@ -28,14 +28,14 @@ export type GraphQLEnumTypeExtended = GraphQLEnumType & {
   _gqcExtensions?: Extensions,
 };
 
-export class EnumTypeComposer {
+export class EnumTypeComposer<TContext> {
   gqType: GraphQLEnumTypeExtended;
-  schemaComposer: SchemaComposer<any>;
+  schemaComposer: SchemaComposer<TContext>;
 
-  static create(
+  static create<TCtx>(
     typeDef: EnumTypeComposerDefinition,
-    schemaComposer: SchemaComposer<any>
-  ): EnumTypeComposer {
+    schemaComposer: SchemaComposer<TCtx>
+  ): EnumTypeComposer<TCtx> {
     if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `EnumTypeComposer.create(typeDef, schemaComposer)`'
@@ -46,10 +46,10 @@ export class EnumTypeComposer {
     return etc;
   }
 
-  static createTemp(
+  static createTemp<TCtx>(
     typeDef: EnumTypeComposerDefinition,
-    schemaComposer?: SchemaComposer<any>
-  ): EnumTypeComposer {
+    schemaComposer?: SchemaComposer<TCtx>
+  ): EnumTypeComposer<TCtx> {
     const sc = schemaComposer || new SchemaComposer();
 
     let ETC;
@@ -90,7 +90,10 @@ export class EnumTypeComposer {
     return ETC;
   }
 
-  constructor(gqType: GraphQLEnumType, schemaComposer: SchemaComposer<any>) {
+  constructor(
+    gqType: GraphQLEnumType,
+    schemaComposer: SchemaComposer<TContext>
+  ): EnumTypeComposer<TContext> {
     if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `new EnumTypeComposer(GraphQLEnumType, SchemaComposer)`'
@@ -102,6 +105,9 @@ export class EnumTypeComposer {
       throw new Error('EnumTypeComposer accept only GraphQLEnumType in constructor');
     }
     this.gqType = gqType;
+
+    // alive proper Flow type casting in autosuggestions for class with Generics
+    /* :: return this; */
   }
 
   // -----------------------------------------------
@@ -152,7 +158,7 @@ export class EnumTypeComposer {
    * Completely replace all values in GraphQL enum type
    * WARNING: this method rewrite an internal GraphQL instance properties.
    */
-  setFields(values: GraphQLEnumValueConfigMap): EnumTypeComposer {
+  setFields(values: GraphQLEnumValueConfigMap): EnumTypeComposer<TContext> {
     if (graphqlVersion >= 14) {
       this.gqType._values = defineEnumValues(this.gqType, values);
       this.gqType._valueLookup = new Map(
@@ -180,7 +186,7 @@ export class EnumTypeComposer {
     return this;
   }
 
-  setField(name: string, valueConfig: GraphQLEnumValueConfig): EnumTypeComposer {
+  setField(name: string, valueConfig: GraphQLEnumValueConfig): EnumTypeComposer<TContext> {
     this.addFields({ [name]: valueConfig });
     return this;
   }
@@ -188,12 +194,12 @@ export class EnumTypeComposer {
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  addFields(newValues: GraphQLEnumValueConfigMap): EnumTypeComposer {
+  addFields(newValues: GraphQLEnumValueConfigMap): EnumTypeComposer<TContext> {
     this.setFields({ ...this.getFields(), ...newValues });
     return this;
   }
 
-  removeField(nameOrArray: string | Array<string>): EnumTypeComposer {
+  removeField(nameOrArray: string | string[]): EnumTypeComposer<TContext> {
     const valueNames = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
     const values = this.getFields();
     valueNames.forEach(valueName => delete values[valueName]);
@@ -201,7 +207,7 @@ export class EnumTypeComposer {
     return this;
   }
 
-  removeOtherFields(fieldNameOrArray: string | Array<string>): EnumTypeComposer {
+  removeOtherFields(fieldNameOrArray: string | string[]): EnumTypeComposer<TContext> {
     const keepFieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     const fields = this.getFields();
     Object.keys(fields).forEach(fieldName => {
@@ -213,7 +219,7 @@ export class EnumTypeComposer {
     return this;
   }
 
-  reorderFields(names: string[]): EnumTypeComposer {
+  reorderFields(names: string[]): EnumTypeComposer<TContext> {
     const orderedFields = {};
     const fields = this.getFields();
     names.forEach(name => {
@@ -226,7 +232,10 @@ export class EnumTypeComposer {
     return this;
   }
 
-  extendField(name: string, partialValueConfig: $Shape<GraphQLEnumValueConfig>): EnumTypeComposer {
+  extendField(
+    name: string,
+    partialValueConfig: $Shape<GraphQLEnumValueConfig>
+  ): EnumTypeComposer<TContext> {
     let prevValueConfig;
     try {
       prevValueConfig = this.getField(name);
@@ -291,12 +300,12 @@ export class EnumTypeComposer {
     }
   }
 
-  setExtensions(extensions: Extensions): EnumTypeComposer {
+  setExtensions(extensions: Extensions): EnumTypeComposer<TContext> {
     this.gqType._gqcExtensions = extensions;
     return this;
   }
 
-  extendExtensions(extensions: Extensions): EnumTypeComposer {
+  extendExtensions(extensions: Extensions): EnumTypeComposer<TContext> {
     const current = this.getExtensions();
     this.setExtensions({
       ...current,
@@ -305,7 +314,7 @@ export class EnumTypeComposer {
     return this;
   }
 
-  clearExtensions(): EnumTypeComposer {
+  clearExtensions(): EnumTypeComposer<TContext> {
     this.setExtensions({});
     return this;
   }
@@ -320,14 +329,14 @@ export class EnumTypeComposer {
     return extensionName in extensions;
   }
 
-  setExtension(extensionName: string, value: any): EnumTypeComposer {
+  setExtension(extensionName: string, value: any): EnumTypeComposer<TContext> {
     this.extendExtensions({
       [extensionName]: value,
     });
     return this;
   }
 
-  removeExtension(extensionName: string): EnumTypeComposer {
+  removeExtension(extensionName: string): EnumTypeComposer<TContext> {
     const extensions = { ...this.getExtensions() };
     delete extensions[extensionName];
     this.setExtensions(extensions);
@@ -354,7 +363,7 @@ export class EnumTypeComposer {
     return this.gqType.name;
   }
 
-  setTypeName(name: string): EnumTypeComposer {
+  setTypeName(name: string): EnumTypeComposer<TContext> {
     this.gqType.name = name;
     this.schemaComposer.add(this);
     return this;
@@ -364,12 +373,12 @@ export class EnumTypeComposer {
     return this.gqType.description || '';
   }
 
-  setDescription(description: string): EnumTypeComposer {
+  setDescription(description: string): EnumTypeComposer<TContext> {
     this.gqType.description = description;
     return this;
   }
 
-  clone(newTypeName: string): EnumTypeComposer {
+  clone(newTypeName: string): EnumTypeComposer<TContext> {
     if (!newTypeName) {
       throw new Error('You should provide newTypeName:string for EnumTypeComposer.clone()');
     }

@@ -1,7 +1,7 @@
 /* @flow strict */
 /* eslint-disable no-nested-ternary */
 
-import pluralize from './pluralize';
+import { pluralize } from './pluralize';
 import type { Thunk } from './definitions';
 
 export function resolveMaybeThunk<+T>(thingOrThunk: Thunk<T>): T {

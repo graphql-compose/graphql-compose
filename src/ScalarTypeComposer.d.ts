@@ -28,21 +28,25 @@ export type GraphQLScalarTypeExtended = GraphQLScalarType & {
   _gqcExtensions?: Extensions;
 };
 
-export class ScalarTypeComposer {
-  public static schemaComposer: SchemaComposer<any>;
-  public schemaComposer: SchemaComposer<any>;
+export class ScalarTypeComposer<TContext = any> {
+  public schemaComposer: SchemaComposer<TContext>;
 
   protected gqType: GraphQLScalarTypeExtended;
 
-  public constructor(gqType: GraphQLScalarType);
+  public constructor(
+    gqType: GraphQLScalarType,
+    schemaComposer: SchemaComposer<TContext>,
+  );
 
-  public static create(
+  public static create<TCtx = any>(
     typeDef: ScalarTypeComposerDefinition,
-  ): ScalarTypeComposer;
+    schemaComposer: SchemaComposer<TCtx>,
+  ): ScalarTypeComposer<TCtx>;
 
-  public static createTemp(
+  public static createTemp<TCtx = any>(
     typeDef: ScalarTypeComposerDefinition,
-  ): ScalarTypeComposer;
+    schemaComposer?: SchemaComposer<TCtx>,
+  ): ScalarTypeComposer<TCtx>;
 
   // -----------------------------------------------
   // Serialize methods
@@ -78,7 +82,7 @@ export class ScalarTypeComposer {
 
   public setDescription(description: string): this;
 
-  public clone(newTypeName: string): ScalarTypeComposer;
+  public clone(newTypeName: string): ScalarTypeComposer<TContext>;
 
   // -----------------------------------------------
   // Extensions methods

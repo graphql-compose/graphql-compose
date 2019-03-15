@@ -79,7 +79,7 @@
     "build-ts": "find ./src -name '*.d.ts' -not -path '*/__*' | while read filepath; do cp $filepath `echo ./${COPY_TO_FOLDER:-lib}$filepath | sed 's/.\\/src\\//\\//g'`; done",
     "watch": "jest --watch",
     "coverage": "jest --coverage --maxWorkers 4",
-    "lint": "npm run eslint && npm run tslint",
+    "lint": "npm run eslint && npm run tslint && npm run tscheck",
     "eslint": "eslint --ext .js ./src",
     "tslint": "tslint -p . \"src/**/*.d.ts\"",
     "tscheck": "tsc --noEmit",

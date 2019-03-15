@@ -42,8 +42,6 @@ import {
   GraphQLIncludeDirective,
   GraphQLDeprecatedDirective,
   GraphQLUnionType,
-  // isOutputType,
-  // isInputType,
   isNamedType,
   isScalarType,
   valueFromAST,
@@ -96,7 +94,8 @@ export type ComposeObjectType =
   | TypeDefinitionString
   | TypeAsString;
 
-export function isOutputType(type: any): boolean {
+// solve Flow reqursion limit, do not import from graphql.js
+function isOutputType(type: any): boolean {
   return (
     type instanceof GraphQLScalarType ||
     type instanceof GraphQLObjectType ||
@@ -108,7 +107,8 @@ export function isOutputType(type: any): boolean {
   );
 }
 
-export function isInputType(type: any): boolean {
+// solve Flow reqursion limit, do not import from graphql.js
+function isInputType(type: any): boolean {
   return (
     type instanceof GraphQLScalarType ||
     type instanceof GraphQLEnumType ||
@@ -126,11 +126,14 @@ const RegexpScalarTypeDefinition = /scalar\s/im;
 export class TypeMapper<TContext> {
   schemaComposer: SchemaComposer<TContext>;
 
-  constructor(schemaComposer: SchemaComposer<TContext>) {
+  constructor(schemaComposer: SchemaComposer<TContext>): TypeMapper<TContext> {
     if (!schemaComposer) {
       throw new Error('TypeMapper must have SchemaComposer instance.');
     }
     this.schemaComposer = schemaComposer;
+
+    // alive proper Flow type casting in autosuggestions for class with Generics
+    /* :: return this; */
   }
 
   basicScalars: Map<string, GraphQLNamedType> = new Map([
@@ -142,7 +145,7 @@ export class TypeMapper<TContext> {
     ['ID', GraphQLID],
   ]);
 
-  get(name: string): ?GraphQLNamedType {
+  get(name: string): GraphQLNamedType | void {
     const basicScalar = this.basicScalars.get(name);
     if (basicScalar) return basicScalar;
 
@@ -157,7 +160,7 @@ export class TypeMapper<TContext> {
         this.schemaComposer.set(name, GraphQLBuffer);
         return GraphQLBuffer;
       } else {
-        return null;
+        return undefined;
       }
     }
 
@@ -168,7 +171,7 @@ export class TypeMapper<TContext> {
     return schemaType.getType();
   }
 
-  set(name: string, type: GraphQLNamedType) {
+  set(name: string, type: GraphQLNamedType): void {
     this.schemaComposer.set(name, type);
   }
 
@@ -176,12 +179,12 @@ export class TypeMapper<TContext> {
     return this.schemaComposer.has(name);
   }
 
-  getWrapped(str: TypeWrappedString | TypeNameString): ?GraphQLType {
+  getWrapped(str: TypeWrappedString | TypeNameString): GraphQLType | void {
     const typeAST: TypeNode = parseType(str);
     return typeFromAST(typeAST, this.schemaComposer);
   }
 
-  createType(str: TypeDefinitionString): ?GraphQLNamedType {
+  createType(str: TypeDefinitionString): GraphQLNamedType | void {
     const existedType = this.get(str);
     if (existedType) return existedType;
 
@@ -256,11 +259,11 @@ export class TypeMapper<TContext> {
     throw new Error(`Cannot convert to OutputType the following object: '${inspect(composeType)}'`);
   }
 
-  convertOutputFieldConfig(
-    composeFC: ComposeFieldConfig<any, TContext>,
+  convertOutputFieldConfig<TSource>(
+    composeFC: ComposeFieldConfig<TSource, TContext>,
     fieldName?: string = '',
     typeName?: string = ''
-  ): GraphQLFieldConfig<any, TContext> {
+  ): GraphQLFieldConfig<TSource, TContext> {
     invariant(composeFC, `You provide empty argument field config for ${typeName}.${fieldName}`);
 
     let composeType;
@@ -390,11 +393,11 @@ export class TypeMapper<TContext> {
     return fieldConfig;
   }
 
-  convertOutputFieldConfigMap(
-    composeFields: ComposeFieldConfigMap<any, TContext>,
+  convertOutputFieldConfigMap<TSource>(
+    composeFields: ComposeFieldConfigMap<TSource, TContext>,
     typeName?: string = ''
-  ): GraphQLFieldConfigMap<any, TContext> {
-    const fields: GraphQLFieldConfigMap<any, TContext> = ({}: any);
+  ): GraphQLFieldConfigMap<TSource, TContext> {
+    const fields: GraphQLFieldConfigMap<TSource, TContext> = ({}: any);
     Object.keys(composeFields).forEach(name => {
       fields[name] = this.convertOutputFieldConfig(composeFields[name], name, typeName);
     });
@@ -691,7 +694,7 @@ function parseTypes(
   return types;
 }
 
-function typeFromAST(inputTypeAST: TypeNode, schema: SchemaComposer<any>): ?GraphQLType {
+function typeFromAST(inputTypeAST: TypeNode, schema: SchemaComposer<any>): GraphQLType | void {
   let innerType;
   if (inputTypeAST.kind === Kind.LIST_TYPE) {
     innerType = typeFromAST(inputTypeAST.type, schema);

@@ -24,7 +24,7 @@ import type {
   ComposeOutputType,
   ComposeArgumentConfig,
   ComposeFieldConfigArgumentMap,
-  ComposePartialArgumentConfigAsObject,
+  ComposeArgumentConfigAsObject,
   ComposeArgumentType,
   ArgsMap, // eslint-disable-line
 } from './ObjectTypeComposer';
@@ -39,7 +39,7 @@ import {
 } from './utils/configAsThunk';
 import { only, clearName, inspect } from './utils/misc';
 import { isFunction, isString } from './utils/is';
-import filterByDotPaths from './utils/filterByDotPaths';
+import { filterByDotPaths } from './utils/filterByDotPaths';
 import { getProjectionFromAST } from './utils/projection';
 import type { ProjectionType } from './utils/projection';
 import { typeByPath } from './utils/typeByPath';
@@ -55,13 +55,13 @@ export type ResolveParams<TSource, TContext, TArgs = ArgsMap> = {
 };
 export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 
-export type ResolverFilterArgFn<TSource, TContext, TArgs> = (
+export type ResolverFilterArgFn<TSource, TContext, TArgs = ArgsMap> = (
   query: any,
   value: any,
   resolveParams: ResolveParams<TSource, TContext, TArgs>
 ) => any;
 
-export type ResolverFilterArgConfig<TSource, TContext, TArgs> = {
+export type ResolverFilterArgConfig<TSource, TContext, TArgs = ArgsMap> = {
   +name: string,
   +type: ComposeArgumentType,
   +description?: ?string,
@@ -70,11 +70,11 @@ export type ResolverFilterArgConfig<TSource, TContext, TArgs> = {
   +defaultValue?: any,
 };
 
-export type ResolverSortArgFn<TSource, TContext, TArgs> = (
+export type ResolverSortArgFn<TSource, TContext, TArgs = ArgsMap> = (
   resolveParams: ResolveParams<TSource, TContext, TArgs>
 ) => mixed;
 
-export type ResolverSortArgConfig<TSource, TContext, TArgs> = {
+export type ResolverSortArgConfig<TSource, TContext, TArgs = ArgsMap> = {
   name: string,
   sortTypeNameFallback?: string,
   // value also can be an `Object`, but flow does not understande union with object and function
@@ -85,12 +85,12 @@ export type ResolverSortArgConfig<TSource, TContext, TArgs> = {
     | string
     | number
     | boolean
-    | Array<any>,
-  deprecationReason?: ?string,
-  description?: ?string,
+    | any[],
+  deprecationReason?: string | null,
+  description?: string | null,
 };
 
-export type ResolverOpts<TSource, TContext, TArgs> = {|
+export type ResolverOpts<TSource, TContext, TArgs = ArgsMap> = {|
   type?: ComposeOutputType<any, TContext>,
   resolve?: ResolverRpCb<TSource, TContext, TArgs>,
   args?: ComposeFieldConfigArgumentMap<TArgs>,
@@ -112,14 +112,14 @@ export type ResolverWrapCb<
   prevResolver: Resolver<TPrevSource, TContext, TPrevArgs>
 ) => Resolver<TNewSource, TContext, TNewArgs>;
 
-export type ResolverRpCb<TSource, TContext, TArgs> = (
+export type ResolverRpCb<TSource, TContext, TArgs = ArgsMap> = (
   resolveParams: ResolveParams<TSource, TContext, TArgs>
 ) => Promise<any> | any;
-export type ResolverNextRpCb<TSource, TContext, TArgs> = (
+export type ResolverNextRpCb<TSource, TContext, TArgs = ArgsMap> = (
   next: ResolverRpCb<TSource, TContext, TArgs>
 ) => ResolverRpCb<TSource, TContext, TArgs>;
 
-export type ResolverWrapArgsCb<TArgs> = (
+export type ResolverWrapArgsCb<TArgs = ArgsMap> = (
   prevArgs: GraphQLFieldConfigArgumentMap
 ) => ComposeFieldConfigArgumentMap<TArgs>;
 
@@ -133,7 +133,7 @@ export type ResolveDebugOpts = {
   colors?: boolean,
 };
 
-export type ResolverMiddleware<TSource, TContext, TArgs> = (
+export type ResolverMiddleware<TSource, TContext, TArgs = ArgsMap> = (
   resolve: (source: TSource, args: TArgs, context: TContext, info: GraphQLResolveInfo) => any,
   source: TSource,
   args: TArgs,
@@ -147,10 +147,10 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
   args: ComposeFieldConfigArgumentMap<any>;
   resolve: (resolveParams: $Shape<ResolveParams<TSource, TContext, TArgs>>) => Promise<any> | any;
   name: string;
-  displayName: ?string;
-  kind: ?ResolverKinds;
-  description: ?string;
-  parent: ?Resolver<TSource, TContext, any>;
+  displayName: string | void;
+  kind: ResolverKinds | void;
+  description: string | void;
+  parent: Resolver<TSource, TContext, any> | void;
 
   constructor(
     opts: ResolverOpts<TSource, TContext, TArgs>,
@@ -167,9 +167,9 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
       throw new Error('For Resolver constructor the `opts.name` is required option.');
     }
     this.name = opts.name;
-    this.displayName = opts.displayName || null;
-    this.parent = opts.parent || null;
-    this.kind = opts.kind || null;
+    this.displayName = opts.displayName;
+    this.parent = opts.parent;
+    this.kind = opts.kind;
     this.description = opts.description || '';
 
     if (opts.type) {
@@ -182,9 +182,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
       this.resolve = opts.resolve;
     }
 
-    // Alive proper Flow type casting in autosuggestions for class with Generics
-    // it's required due using <TSource, TContext>
-    // and Class<> utility type in SchemaComposer
+    // alive proper Flow type casting in autosuggestions for class with Generics
     /* :: return this; */
   }
 
@@ -202,7 +200,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return fc.type;
   }
 
-  getTypeComposer(): ObjectTypeComposer<any, TContext> {
+  getTypeComposer(): ObjectTypeComposer<TSource, TContext> {
     const outputType = getNamedType(this.getType());
     if (!(outputType instanceof GraphQLObjectType)) {
       throw new Error(
@@ -251,7 +249,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return ac.type;
   }
 
-  getArgTC(argName: string): InputTypeComposer {
+  getArgTC(argName: string): InputTypeComposer<TContext> {
     const argType = getNamedType(this.getArgType(argName));
     if (!(argType instanceof GraphQLInputObjectType)) {
       throw new Error(
@@ -284,7 +282,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
 
   extendArg(
     argName: string,
-    partialArgConfig: ComposePartialArgumentConfigAsObject
+    partialArgConfig: $Shape<ComposeArgumentConfigAsObject>
   ): Resolver<TSource, TContext, TArgs> {
     let prevArgConfig;
     try {
@@ -308,7 +306,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return this;
   }
 
-  removeArg(argNameOrArray: string | Array<string>): Resolver<TSource, TContext, TArgs> {
+  removeArg(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     argNames.forEach(argName => {
       delete this.args[argName];
@@ -316,7 +314,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return this;
   }
 
-  removeOtherArgs(argNameOrArray: string | Array<string>): Resolver<TSource, TContext, TArgs> {
+  removeOtherArgs(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
     const keepArgNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     Object.keys(this.args).forEach(argName => {
       if (keepArgNames.indexOf(argName) === -1) {
@@ -380,7 +378,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return this.getArgType(argName) instanceof GraphQLNonNull;
   }
 
-  makeRequired(argNameOrArray: string | Array<string>): Resolver<TSource, TContext, TArgs> {
+  makeRequired(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     argNames.forEach(argName => {
       if (this.hasArg(argName)) {
@@ -400,7 +398,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return this;
   }
 
-  makeOptional(argNameOrArray: string | Array<string>): Resolver<TSource, TContext, TArgs> {
+  makeOptional(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     argNames.forEach(argName => {
       if (this.hasArg(argName)) {
@@ -498,7 +496,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     const resolver = this.wrap(null, { name: 'addSortArg' });
 
     // get sortETC or create new one
-    let sortETC: EnumTypeComposer;
+    let sortETC: EnumTypeComposer<TContext>;
     if (resolver.hasArg('sort')) {
       const sortConfig = resolver.getArgConfig('sort');
       if (sortConfig.type instanceof GraphQLEnumType) {
@@ -719,7 +717,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     };
   }
 
-  getKind(): ?ResolverKinds {
+  getKind(): ResolverKinds | void {
     return this.kind;
   }
 
@@ -738,12 +736,12 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return this.description;
   }
 
-  setDescription(description: string): Resolver<TSource, TContext, TArgs> {
+  setDescription(description: string | void): Resolver<TSource, TContext, TArgs> {
     this.description = description;
     return this;
   }
 
-  get(path: string | Array<string>): any {
+  get(path: string | string[]): any {
     return typeByPath(this, path);
   }
 
@@ -771,7 +769,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
   // Debug methods
   // -----------------------------------------------
 
-  getNestedName() {
+  getNestedName(): string {
     const name = this.displayName || this.name;
     if (this.parent) {
       return `${name}(${this.parent.getNestedName()})`;
@@ -779,7 +777,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return name;
   }
 
-  toString(colors: boolean = true) {
+  toString(colors: boolean = true): string {
     return util.inspect(this.toDebugStructure(false), { depth: 20, colors }).replace(/\\n/g, '\n');
   }
 

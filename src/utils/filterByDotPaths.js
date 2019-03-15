@@ -10,7 +10,7 @@ type FilterOpts = {
 
 type PathsFilter = string | string[];
 
-export default function filterByDotPaths(
+export function filterByDotPaths(
   obj: Object,
   pathsFilter: ?PathsFilter,
   opts?: FilterOpts

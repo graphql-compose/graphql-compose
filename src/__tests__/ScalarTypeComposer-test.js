@@ -10,7 +10,7 @@ beforeEach(() => {
 
 describe('ScalarTypeComposer', () => {
   let scalarType: GraphQLScalarType;
-  let stc: ScalarTypeComposer;
+  let stc: ScalarTypeComposer<any>;
 
   beforeEach(() => {
     scalarType = new GraphQLScalarType({

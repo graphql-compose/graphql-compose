@@ -40,7 +40,7 @@ export type GetRecordIdFn<TSource, TContext> = (
 ) => string;
 
 export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
-  _gqcInputTypeComposer?: InputTypeComposer;
+  _gqcInputTypeComposer?: InputTypeComposer<TContext>;
   _gqcResolvers?: Map<string, Resolver<TSource, TContext>>;
   _gqcGetRecordIdFn?: GetRecordIdFn<TSource, TContext>;
   _gqcRelations?: RelationThunkMap<TSource, TContext>;
@@ -93,16 +93,12 @@ export type ComposeFieldConfigAsObject<TSource, TContext, TArgs = ArgsMap> = {
   [key: string]: any;
 } & { $call?: void };
 
-export type ComposePartialFieldConfigAsObject<TSource, TContext, TArgs = ArgsMap> = Partial<
-  ComposeFieldConfigAsObject<TSource, TContext, TArgs>
->;
-
 // extended GraphQLOutputType
 export type ComposeOutputType<TSource, TContext> =
   | GraphQLOutputType
   | ObjectTypeComposer<TSource, TContext>
-  | EnumTypeComposer
-  | ScalarTypeComposer
+  | EnumTypeComposer<TContext>
+  | ScalarTypeComposer<TContext>
   | TypeAsString
   | Resolver<any, TContext, any>
   | InterfaceTypeComposer<TSource, TContext>
@@ -110,10 +106,11 @@ export type ComposeOutputType<TSource, TContext> =
   | Array<
       | GraphQLOutputType
       | ObjectTypeComposer<TSource, TContext>
-      | EnumTypeComposer
-      | ScalarTypeComposer
+      | EnumTypeComposer<TContext>
+      | ScalarTypeComposer<TContext>
       | TypeAsString
       | Resolver<any, TContext, any>
+      | InterfaceTypeComposer<TSource, TContext>
       | UnionTypeComposer<TSource, TContext>
     >;
 
@@ -124,15 +121,15 @@ export type ArgsMap = { [argName: string]: any };
 export type ComposeArgumentType =
   | GraphQLInputType
   | TypeAsString
-  | InputTypeComposer
-  | EnumTypeComposer
-  | ScalarTypeComposer
+  | InputTypeComposer<any>
+  | EnumTypeComposer<any>
+  | ScalarTypeComposer<any>
   | Array<
       | GraphQLInputType
       | TypeAsString
-      | InputTypeComposer
-      | EnumTypeComposer
-      | ScalarTypeComposer
+      | InputTypeComposer<any>
+      | EnumTypeComposer<any>
+      | ScalarTypeComposer<any>
     >;
 
 export type ComposeArgumentConfigAsObject = {
@@ -183,7 +180,7 @@ export type RelationOptsWithFieldConfig<
 };
 
 export type RelationArgsMapperFn<TSource, TContext, TArgs = ArgsMap> = (
-  source: any,
+  source: TSource,
   args: TArgs,
   context: TContext,
   info: GraphQLResolveInfo,
@@ -206,19 +203,23 @@ export type ObjectTypeComposerDefinition<TSource, TContext> =
   | GraphQLObjectType;
 
 export class ObjectTypeComposer<TSource = any, TContext = any> {
-  public static schemaComposer: SchemaComposer<any>;
   public schemaComposer: SchemaComposer<TContext>;
 
   protected gqType: GraphQLObjectTypeExtended<TSource, TContext>;
 
-  public constructor(gqType: GraphQLObjectType);
+  public constructor(
+    gqType: GraphQLObjectType,
+    schemaComposer: SchemaComposer<TContext>,
+  );
 
   public static create<TSrc = any, TCtx = any>(
     typeDef: ObjectTypeComposerDefinition<TSrc, TCtx>,
+    schemaComposer: SchemaComposer<TCtx>,
   ): ObjectTypeComposer<TSrc, TCtx>;
 
   public static createTemp<TSrc = any, TCtx = any>(
     typeDef: ObjectTypeComposerDefinition<TSrc, TCtx>,
+    schemaComposer?: SchemaComposer<TCtx>,
   ): ObjectTypeComposer<TSrc, TCtx>;
 
   // -----------------------------------------------
@@ -229,11 +230,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public getFieldNames(): string[];
 
-  public setFields(
-    fields:
-      | ComposeFieldConfigMap<TSource, TContext>
-      | GraphQLFieldConfigMap<TSource, TContext>,
-  ): this;
+  public setFields(fields: ComposeFieldConfigMap<TSource, TContext>): this;
 
   public hasField(fieldName: string): boolean;
 
@@ -250,7 +247,9 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   /**
    * Add new fields or replace existed (where field name may have dots)
    */
-  public addNestedFields(newFields: ComposeFieldConfigMap<any, TContext>): this;
+  public addNestedFields(
+    newFields: ComposeFieldConfigMap<TSource, TContext>,
+  ): this;
 
   public getField<TArgs = ArgsMap>(
     fieldName: string,
@@ -262,7 +261,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public extendField<TArgs = ArgsMap>(
     fieldName: string,
-    partialFieldConfig: ComposeFieldConfig<TSource, TContext, TArgs>,
+    partialFieldConfig: Partial<ComposeFieldConfig<TSource, TContext, TArgs>>,
   ): this;
 
   public reorderFields(names: string[]): this;
@@ -311,7 +310,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public setDescription(description: string): this;
 
-  public clone<TCloneSource = any>(
+  public clone<TCloneSource = TSource>(
     newTypeName: string,
   ): ObjectTypeComposer<TCloneSource, TContext>;
 
@@ -327,11 +326,11 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public hasInputTypeComposer(): boolean;
 
-  public setInputTypeComposer(itc: InputTypeComposer): this;
+  public setInputTypeComposer(itc: InputTypeComposer<TContext>): this;
 
-  public getInputTypeComposer(): InputTypeComposer;
+  public getInputTypeComposer(): InputTypeComposer<TContext>;
 
-  public getITC(): InputTypeComposer;
+  public getITC(): InputTypeComposer<TContext>;
 
   public removeInputTypeComposer(): this;
 
@@ -339,7 +338,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   // Resolver methods
   // -----------------------------------------------
 
-  public getResolvers(): Map<string, Resolver<any, TContext, ArgsMap>>;
+  public getResolvers(): Map<string, Resolver<any, TContext, any>>;
 
   public hasResolver(name: string): boolean;
 
@@ -447,11 +446,6 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   // Misc methods
   // -----------------------------------------------
 
-  public addRelation(
-    fieldName: string,
-    relationOpts: RelationOpts<any, TSource, TContext, ArgsMap>,
-  ): this;
-
   public addRelation<TRelationSource = any, TArgs = ArgsMap>(
     fieldName: string,
     relationOpts: RelationOpts<TRelationSource, TSource, TContext, TArgs>,
@@ -470,14 +464,9 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
    */
   public getRecordId(
     source: TSource,
-    args: ArgsMap,
-    context: TContext,
+    args?: ArgsMap,
+    context?: TContext,
   ): string | number;
 
   public get(path: string | string[]): any;
-
-  private _relationWithResolverToFC<TRelationSource, TArgs = any>(
-    opts: RelationOptsWithResolver<TRelationSource, TSource, TContext, TArgs>,
-    fieldName?: string,
-  ): ComposeFieldConfigAsObject<TRelationSource, TContext, TArgs>;
 }

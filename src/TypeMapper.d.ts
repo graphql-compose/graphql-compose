@@ -10,6 +10,7 @@ import {
   GraphQLType,
   GraphQLObjectType,
 } from 'graphql';
+import { SchemaComposer } from './SchemaComposer';
 import {
   ComposeInputFieldConfig,
   ComposeInputFieldConfigMap,
@@ -41,12 +42,13 @@ export type ComposeObjectType =
   | TypeDefinitionString
   | TypeAsString;
 
-declare class TypeMapper {
-  public basicScalars: Map<string, GraphQLNamedType>;
+declare class TypeMapper<TContext> {
+  public schemaComposer: SchemaComposer<TContext>;
+  protected basicScalars: Map<string, GraphQLNamedType>;
 
-  public constructor();
+  public constructor(schemaComposer: SchemaComposer<TContext>);
 
-  public get(name: string): GraphQLNamedType | null;
+  public get(name: string): GraphQLNamedType | void;
 
   public set(name: string, type: GraphQLNamedType): void;
 
@@ -56,13 +58,15 @@ declare class TypeMapper {
     str: TypeWrappedString | TypeNameString,
   ): GraphQLType | null;
 
-  public createType(str: TypeDefinitionString): GraphQLNamedType | null;
+  public createType(str: TypeDefinitionString): GraphQLNamedType | void;
 
-  public parseTypesFromString(str: string): TypeStorage<GraphQLNamedType>;
+  public parseTypesFromString(
+    str: string,
+  ): TypeStorage<string, GraphQLNamedType>;
 
   public parseTypesFromAst(
     astDocument: DocumentNode,
-  ): TypeStorage<GraphQLNamedType>;
+  ): TypeStorage<string, GraphQLNamedType>;
 
   public convertOutputType(composeType: ComposeObjectType): GraphQLObjectType;
 

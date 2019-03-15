@@ -37,7 +37,8 @@ export * from './utils/is';
 export * from './utils/graphqlVersion';
 export { default as toDottedObject } from './utils/toDottedObject';
 export { default as deepmerge } from './utils/deepmerge';
-export { default as filterByDotPaths } from './utils/filterByDotPaths';
+export { filterByDotPaths } from './utils/filterByDotPaths';
+export { pluralize } from './utils/pluralize';
 
 export type {
   GetRecordIdFn,

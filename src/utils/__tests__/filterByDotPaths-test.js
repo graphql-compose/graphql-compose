@@ -1,6 +1,7 @@
 /* @flow strict */
 
-import filterByDotPaths, {
+import {
+  filterByDotPaths,
   isPresentInDotFilter,
   hideComplexValue,
   hideField,

@@ -8,10 +8,10 @@ import {
   InputValueDefinitionNode,
 } from './graphql';
 import { Thunk, ObjMap, Extensions } from './utils/definitions';
-import { TypeAsString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
-import { EnumTypeComposer } from './EnumTypeComposer';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
+import { EnumTypeComposer } from './EnumTypeComposer';
+import { TypeAsString } from './TypeMapper';
 
 export type GraphQLInputObjectTypeExtended = GraphQLInputObjectType & {
   _gqcFields?: ComposeInputFieldConfigMap;
@@ -32,18 +32,18 @@ export type ComposeInputFieldConfigAsObject = {
   astNode?: InputValueDefinitionNode | null;
   extensions?: Extensions;
   [key: string]: any;
-} & { $call?: void };
+};
 
 export type ComposeInputType =
-  | InputTypeComposer
-  | EnumTypeComposer
-  | ScalarTypeComposer
+  | InputTypeComposer<any>
+  | EnumTypeComposer<any>
+  | ScalarTypeComposer<any>
   | GraphQLInputType
   | TypeAsString
   | Array<
-      | InputTypeComposer
-      | EnumTypeComposer
-      | ScalarTypeComposer
+      | InputTypeComposer<any>
+      | EnumTypeComposer<any>
+      | ScalarTypeComposer<any>
       | GraphQLInputType
       | TypeAsString
     >;
@@ -62,20 +62,25 @@ export type InputTypeComposerDefinition =
   | ComposeInputObjectTypeConfig
   | GraphQLInputObjectType;
 
-export class InputTypeComposer {
-  public static schemaComposer: SchemaComposer<any>;
-  public schemaComposer: SchemaComposer<any>;
+export class InputTypeComposer<TContext = any> {
+  public schemaComposer: SchemaComposer<TContext>;
 
-  public gqType: GraphQLInputObjectTypeExtended;
+  protected gqType: GraphQLInputObjectTypeExtended;
 
-  public static create(typeDef: InputTypeComposerDefinition): InputTypeComposer;
+  public constructor(
+    gqType: GraphQLInputObjectType,
+    schemaComposer: SchemaComposer<TContext>,
+  );
 
-  public static createTemp<TContext = any>(
+  public static create<TCtx = any>(
     typeDef: InputTypeComposerDefinition,
-    _sc?: SchemaComposer<TContext>
-  ): InputTypeComposer;
+    schemaComposer: SchemaComposer<TCtx>,
+  ): InputTypeComposer<TCtx>;
 
-  public constructor(gqType: GraphQLInputObjectType);
+  public static createTemp<TCtx = any>(
+    typeDef: InputTypeComposerDefinition,
+    schemaComposer?: SchemaComposer<TCtx>,
+  ): InputTypeComposer<TCtx>;
 
   // -----------------------------------------------
   // Field methods
@@ -102,13 +107,8 @@ export class InputTypeComposer {
   /**
    * Add new fields or replace existed (where field name may have dots)
    */
-  public addNestedFields(
-    newFields: ComposeInputFieldConfigMap,
-  ): InputTypeComposer;
+  public addNestedFields(newFields: ComposeInputFieldConfigMap): this;
 
-  /**
-   * Get fieldConfig by name
-   */
   public getField(fieldName: string): ComposeInputFieldConfig;
 
   public removeField(fieldNameOrArray: string | string[]): this;
@@ -117,7 +117,7 @@ export class InputTypeComposer {
 
   public extendField(
     fieldName: string,
-    parialFieldConfig: ComposeInputFieldConfig,
+    parialFieldConfig: Partial<ComposeInputFieldConfig>,
   ): this;
 
   public reorderFields(names: string[]): this;
@@ -131,7 +131,7 @@ export class InputTypeComposer {
 
   public getFieldType(fieldName: string): GraphQLInputType;
 
-  public getFieldTC(fieldName: string): InputTypeComposer;
+  public getFieldTC(fieldName: string): InputTypeComposer<TContext>;
 
   public makeFieldNonNull(fieldNameOrArray: string | string[]): this;
 
@@ -161,7 +161,7 @@ export class InputTypeComposer {
 
   public setDescription(description: string): this;
 
-  public clone(newTypeName: string): InputTypeComposer;
+  public clone(newTypeName: string): InputTypeComposer<TContext>;
 
   // -----------------------------------------------
   // Extensions methods

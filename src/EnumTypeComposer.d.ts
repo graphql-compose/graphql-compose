@@ -2,14 +2,13 @@
 /* eslint-disable no-use-before-define */
 
 import { GraphQLEnumType, GraphQLList, GraphQLNonNull } from './graphql';
-import { TypeMapper } from './TypeMapper';
 import {
   GraphQLEnumValueConfig,
   GraphQLEnumTypeConfig,
   GraphQLEnumValueConfigMap,
 } from './graphql';
-import { SchemaComposer } from './SchemaComposer';
 import { TypeAsString } from './TypeMapper';
+import { SchemaComposer } from './SchemaComposer';
 import { Extensions } from './utils/definitions';
 
 export type ComposeEnumTypeConfig = GraphQLEnumTypeConfig & {
@@ -25,19 +24,24 @@ export type GraphQLEnumTypeExtended = GraphQLEnumType & {
   _gqcExtensions?: Extensions;
 };
 
-export class EnumTypeComposer {
-  public static schemaComposer: SchemaComposer<any>;
-
-  public schemaComposer: SchemaComposer<any>;
+export class EnumTypeComposer<TContext = any> {
+  public schemaComposer: SchemaComposer<TContext>;
   protected gqType: GraphQLEnumTypeExtended;
 
-  public constructor(gqType: GraphQLEnumType);
+  public constructor(
+    gqType: GraphQLEnumType,
+    schemaComposer: SchemaComposer<TContext>,
+  );
 
-  public static create(typeDef: EnumTypeComposerDefinition): EnumTypeComposer;
-
-  public static createTemp(
+  public static create<TCtx = any>(
     typeDef: EnumTypeComposerDefinition,
-  ): EnumTypeComposer;
+    schemaComposer: SchemaComposer<TCtx>,
+  ): EnumTypeComposer<TCtx>;
+
+  public static createTemp<TCtx = any>(
+    typeDef: EnumTypeComposerDefinition,
+    schemaComposer?: SchemaComposer<TCtx>,
+  ): EnumTypeComposer<TCtx>;
 
   // -----------------------------------------------
   // Value methods
@@ -65,7 +69,7 @@ export class EnumTypeComposer {
 
   public extendField(
     name: string,
-    partialValueConfig: GraphQLEnumValueConfig,
+    partialValueConfig: Partial<GraphQLEnumValueConfig>,
   ): this;
 
   public deprecateFields(
@@ -110,5 +114,5 @@ export class EnumTypeComposer {
 
   public setDescription(description: string): this;
 
-  public clone(newTypeName: string): EnumTypeComposer;
+  public clone(newTypeName: string): EnumTypeComposer<TContext>;
 }

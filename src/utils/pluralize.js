@@ -55,7 +55,7 @@ const uncountables = [
   'media',
 ];
 
-function pluralize(str: string): string {
+export function pluralize(str: string): string {
   let found;
   // eslint-disable-next-line
   if (!~uncountables.indexOf(str.toLowerCase())) {
@@ -66,5 +66,3 @@ function pluralize(str: string): string {
   }
   return str;
 }
-
-export default pluralize;
