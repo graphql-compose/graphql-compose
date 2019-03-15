@@ -35,7 +35,7 @@ export function toInputObjectType(
 
   const inputTypeName = `${prefix}${tc.getTypeName()}${postfix}`;
 
-  const inputTypeComposer = tc.sc.createInputTC({
+  const inputTypeComposer = tc.schemaComposer.createInputTC({
     name: inputTypeName,
     fields: {},
   });
@@ -50,7 +50,7 @@ export function toInputObjectType(
       outputTypeName: tc.getTypeName(),
     };
     const fc = tc.getFieldConfig(fieldName);
-    const inputType = convertInputObjectField(fc.type, fieldOpts, tc.sc);
+    const inputType = convertInputObjectField(fc.type, fieldOpts, tc.schemaComposer);
     if (inputType) {
       inputFields[fieldName] = {
         type: inputType,

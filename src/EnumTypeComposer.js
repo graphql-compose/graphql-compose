@@ -30,24 +30,27 @@ export type GraphQLEnumTypeExtended = GraphQLEnumType & {
 
 export class EnumTypeComposer {
   gqType: GraphQLEnumTypeExtended;
-  sc: SchemaComposer<any>;
+  schemaComposer: SchemaComposer<any>;
 
-  static create(typeDef: EnumTypeComposerDefinition, sc: SchemaComposer<any>): EnumTypeComposer {
-    if (!(sc instanceof SchemaComposer)) {
+  static create(
+    typeDef: EnumTypeComposerDefinition,
+    schemaComposer: SchemaComposer<any>
+  ): EnumTypeComposer {
+    if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `EnumTypeComposer.create(typeDef, schemaComposer)`'
       );
     }
-    const etc = this.createTemp(typeDef, sc);
-    if (sc) sc.add(etc);
+    const etc = this.createTemp(typeDef, schemaComposer);
+    if (schemaComposer) schemaComposer.add(etc);
     return etc;
   }
 
   static createTemp(
     typeDef: EnumTypeComposerDefinition,
-    _sc?: SchemaComposer<any>
+    schemaComposer?: SchemaComposer<any>
   ): EnumTypeComposer {
-    const sc = _sc || new SchemaComposer();
+    const sc = schemaComposer || new SchemaComposer();
 
     let ETC;
 
@@ -87,13 +90,13 @@ export class EnumTypeComposer {
     return ETC;
   }
 
-  constructor(gqType: GraphQLEnumType, sc: SchemaComposer<any>) {
-    if (!(sc instanceof SchemaComposer)) {
+  constructor(gqType: GraphQLEnumType, schemaComposer: SchemaComposer<any>) {
+    if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `new EnumTypeComposer(GraphQLEnumType, SchemaComposer)`'
       );
     }
-    this.sc = sc;
+    this.schemaComposer = schemaComposer;
 
     if (!(gqType instanceof GraphQLEnumType)) {
       throw new Error('EnumTypeComposer accept only GraphQLEnumType in constructor');
@@ -353,7 +356,7 @@ export class EnumTypeComposer {
 
   setTypeName(name: string): EnumTypeComposer {
     this.gqType.name = name;
-    this.sc.add(this);
+    this.schemaComposer.add(this);
     return this;
   }
 
@@ -383,7 +386,7 @@ export class EnumTypeComposer {
         name: newTypeName,
         values: newValues,
       }),
-      this.sc
+      this.schemaComposer
     );
 
     cloned.setDescription(this.getDescription());
