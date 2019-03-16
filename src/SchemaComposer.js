@@ -4,15 +4,15 @@
 import deprecate from './utils/deprecate';
 import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
-import { ObjectTypeComposer, type ObjectTypeComposerDefinition } from './ObjectTypeComposer';
-import { InputTypeComposer, type InputTypeComposerDefinition } from './InputTypeComposer';
-import { ScalarTypeComposer, type ScalarTypeComposerDefinition } from './ScalarTypeComposer';
-import { EnumTypeComposer, type EnumTypeComposerDefinition } from './EnumTypeComposer';
+import { ObjectTypeComposer, type ObjectTypeComposeDefinition } from './ObjectTypeComposer';
+import { InputTypeComposer, type InputTypeComposeDefinition } from './InputTypeComposer';
+import { ScalarTypeComposer, type ScalarTypeComposeDefinition } from './ScalarTypeComposer';
+import { EnumTypeComposer, type EnumTypeComposeDefinition } from './EnumTypeComposer';
 import {
   InterfaceTypeComposer,
-  type InterfaceTypeComposerDefinition,
+  type InterfaceTypeComposeDefinition,
 } from './InterfaceTypeComposer';
-import { UnionTypeComposer, type UnionTypeComposerDefinition } from './UnionTypeComposer';
+import { UnionTypeComposer, type UnionTypeComposeDefinition } from './UnionTypeComposer';
 import { Resolver, type ResolverOpts } from './Resolver';
 import { isFunction } from './utils/is';
 import { inspect } from './utils/misc';
@@ -500,40 +500,38 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
 
   // alias for createObjectTC
   /* @deprecated 7.0.0 */
-  createTC(
-    typeDef: ObjectTypeComposerDefinition<any, TContext>
-  ): ObjectTypeComposer<any, TContext> {
+  createTC(typeDef: ObjectTypeComposeDefinition<any, TContext>): ObjectTypeComposer<any, TContext> {
     deprecate(`Use SchemaComposer.getOTC() method instead`);
     return this.createObjectTC(typeDef);
   }
 
   createObjectTC(
-    typeDef: ObjectTypeComposerDefinition<any, TContext>
+    typeDef: ObjectTypeComposeDefinition<any, TContext>
   ): ObjectTypeComposer<any, TContext> {
     return ObjectTypeComposer.create(typeDef, this);
   }
 
-  createInputTC(typeDef: InputTypeComposerDefinition): InputTypeComposer<TContext> {
+  createInputTC(typeDef: InputTypeComposeDefinition): InputTypeComposer<TContext> {
     return InputTypeComposer.create(typeDef, this);
   }
 
-  createEnumTC(typeDef: EnumTypeComposerDefinition): EnumTypeComposer<TContext> {
+  createEnumTC(typeDef: EnumTypeComposeDefinition): EnumTypeComposer<TContext> {
     return EnumTypeComposer.create(typeDef, this);
   }
 
   createInterfaceTC(
-    typeDef: InterfaceTypeComposerDefinition<any, TContext>
+    typeDef: InterfaceTypeComposeDefinition<any, TContext>
   ): InterfaceTypeComposer<any, TContext> {
     return InterfaceTypeComposer.create(typeDef, this);
   }
 
   createUnionTC(
-    typeDef: UnionTypeComposerDefinition<any, TContext>
+    typeDef: UnionTypeComposeDefinition<any, TContext>
   ): UnionTypeComposer<any, TContext> {
     return UnionTypeComposer.create(typeDef, this);
   }
 
-  createScalarTC(typeDef: ScalarTypeComposerDefinition): ScalarTypeComposer<TContext> {
+  createScalarTC(typeDef: ScalarTypeComposeDefinition): ScalarTypeComposer<TContext> {
     return ScalarTypeComposer.create(typeDef, this);
   }
 

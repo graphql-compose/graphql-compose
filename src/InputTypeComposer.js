@@ -8,7 +8,7 @@ import {
   getNamedType,
   isInputType,
 } from './graphql';
-import { resolveMaybeThunk, upperFirst } from './utils/misc';
+import { resolveMaybeThunk, upperFirst, inspect } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveInputConfigMapAsThunk, resolveInputConfigAsThunk } from './utils/configAsThunk';
 import { typeByPath } from './utils/typeByPath';
@@ -53,7 +53,7 @@ export type ComposeInputType =
   | ScalarTypeComposer<any>
   | GraphQLInputType
   | TypeAsString
-  | Array<ComposeInputType>;
+  | $ReadOnlyArray<ComposeInputType>;
 
 export function isComposeInputType(type: mixed): boolean %checks {
   return (
@@ -72,7 +72,7 @@ export type ComposeInputObjectTypeConfig = {
   extensions?: Extensions,
 };
 
-export type InputTypeComposerDefinition =
+export type InputTypeComposeDefinition =
   | TypeAsString
   | ComposeInputObjectTypeConfig
   | GraphQLInputObjectType;
@@ -82,7 +82,7 @@ export class InputTypeComposer<TContext> {
   schemaComposer: SchemaComposer<TContext>;
 
   static create<TCtx>(
-    typeDef: InputTypeComposerDefinition,
+    typeDef: InputTypeComposeDefinition,
     schemaComposer: SchemaComposer<TCtx>
   ): InputTypeComposer<TCtx> {
     if (!(schemaComposer instanceof SchemaComposer)) {
@@ -96,7 +96,7 @@ export class InputTypeComposer<TContext> {
   }
 
   static createTemp<TCtx>(
-    typeDef: InputTypeComposerDefinition,
+    typeDef: InputTypeComposeDefinition,
     schemaComposer?: SchemaComposer<TCtx>
   ): InputTypeComposer<TCtx> {
     const sc = schemaComposer || new SchemaComposer();
@@ -140,7 +140,9 @@ export class InputTypeComposer<TContext> {
       ITC.gqType._gqcExtensions = typeDef.extensions || {};
     } else {
       throw new Error(
-        'You should provide InputObjectConfig or string with type name to InputTypeComposer.create(opts)'
+        `You should provide InputObjectConfig or string with type name to InputTypeComposer.create(typeDef). Provided:\n${inspect(
+          typeDef
+        )}`
       );
     }
 

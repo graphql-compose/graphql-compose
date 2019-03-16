@@ -39,7 +39,7 @@ export type ComposeUnionTypeConfig<TSource, TContext> = {
   +extensions?: Extensions,
 };
 
-export type UnionTypeComposerDefinition<TSource, TContext> =
+export type UnionTypeComposeDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeUnionTypeConfig<TSource, TContext>;
 
@@ -50,7 +50,7 @@ export class UnionTypeComposer<TSource, TContext> {
   // Also supported `GraphQLUnionType` but in such case Flowtype force developers
   // to explicitly write annotations in their code. But it's bad.
   static create<TSrc, TCtx>(
-    typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
+    typeDef: UnionTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>
   ): UnionTypeComposer<TSrc, TCtx> {
     if (!(schemaComposer instanceof SchemaComposer)) {
@@ -64,7 +64,7 @@ export class UnionTypeComposer<TSource, TContext> {
   }
 
   static createTemp<TSrc, TCtx>(
-    typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
+    typeDef: UnionTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer?: SchemaComposer<TCtx>
   ): UnionTypeComposer<TSrc, TCtx> {
     const sc = schemaComposer || new SchemaComposer();
@@ -106,7 +106,9 @@ export class UnionTypeComposer<TSource, TContext> {
       UTC.gqType._gqcExtensions = typeDef.extensions || {};
     } else {
       throw new Error(
-        'You should provide GraphQLUnionTypeConfig or string with union name or SDL definition'
+        `You should provide GraphQLUnionTypeConfig or string with union name or SDL definition. Provided:\n${inspect(
+          typeDef
+        )}`
       );
     }
 

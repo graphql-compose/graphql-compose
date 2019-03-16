@@ -4,6 +4,7 @@
 import keyMap from 'graphql/jsutils/keyMap';
 import { GraphQLEnumType, GraphQLList, GraphQLNonNull } from './graphql';
 import { isObject, isString } from './utils/is';
+import { inspect } from './utils/misc';
 import type {
   GraphQLEnumValueConfig,
   GraphQLEnumTypeConfig,
@@ -19,7 +20,7 @@ export type ComposeEnumTypeConfig = GraphQLEnumTypeConfig & {
   +extensions?: Extensions,
 };
 
-export type EnumTypeComposerDefinition =
+export type EnumTypeComposeDefinition =
   | TypeAsString
   | $ReadOnly<ComposeEnumTypeConfig>
   | $ReadOnly<GraphQLEnumType>;
@@ -33,7 +34,7 @@ export class EnumTypeComposer<TContext> {
   schemaComposer: SchemaComposer<TContext>;
 
   static create<TCtx>(
-    typeDef: EnumTypeComposerDefinition,
+    typeDef: EnumTypeComposeDefinition,
     schemaComposer: SchemaComposer<TCtx>
   ): EnumTypeComposer<TCtx> {
     if (!(schemaComposer instanceof SchemaComposer)) {
@@ -47,7 +48,7 @@ export class EnumTypeComposer<TContext> {
   }
 
   static createTemp<TCtx>(
-    typeDef: EnumTypeComposerDefinition,
+    typeDef: EnumTypeComposeDefinition,
     schemaComposer?: SchemaComposer<TCtx>
   ): EnumTypeComposer<TCtx> {
     const sc = schemaComposer || new SchemaComposer();
@@ -84,7 +85,11 @@ export class EnumTypeComposer<TContext> {
       ETC = new EnumTypeComposer(type, sc);
       ETC.gqType._gqcExtensions = (typeDef: any).extensions || {};
     } else {
-      throw new Error('You should provide GraphQLEnumTypeConfig or string with enum name or SDL');
+      throw new Error(
+        `You should provide GraphQLEnumTypeConfig or string with enum name or SDL. Provided:\n${inspect(
+          typeDef
+        )}`
+      );
     }
 
     return ETC;

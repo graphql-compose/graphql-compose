@@ -19,7 +19,7 @@ export type ComposeScalarTypeConfig = GraphQLScalarTypeConfig<any, any> & {
   extensions?: Extensions;
 };
 
-export type ScalarTypeComposerDefinition =
+export type ScalarTypeComposeDefinition =
   | TypeAsString
   | ComposeScalarTypeConfig
   | GraphQLScalarType;
@@ -39,12 +39,12 @@ export class ScalarTypeComposer<TContext = any> {
   );
 
   public static create<TCtx = any>(
-    typeDef: ScalarTypeComposerDefinition,
+    typeDef: ScalarTypeComposeDefinition,
     schemaComposer: SchemaComposer<TCtx>,
   ): ScalarTypeComposer<TCtx>;
 
   public static createTemp<TCtx = any>(
-    typeDef: ScalarTypeComposerDefinition,
+    typeDef: ScalarTypeComposeDefinition,
     schemaComposer?: SchemaComposer<TCtx>,
   ): ScalarTypeComposer<TCtx>;
 

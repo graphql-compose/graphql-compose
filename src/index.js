@@ -59,6 +59,7 @@ export type {
   ArgsMap,
   RelationArgsMapperFn,
   RelationArgsMapper,
+  ObjectTypeComposeDefinition,
 } from './ObjectTypeComposer';
 
 export type {
@@ -67,7 +68,16 @@ export type {
   ComposeInputFieldConfigAsObject,
   ComposeInputFieldConfigMap,
   ComposeInputObjectTypeConfig,
+  InputTypeComposeDefinition,
 } from './InputTypeComposer';
+
+export type { ComposeScalarTypeConfig, ScalarTypeComposeDefinition } from './ScalarTypeComposer';
+export type { ComposeEnumTypeConfig, EnumTypeComposeDefinition } from './EnumTypeComposer';
+export type { ComposeUnionTypeConfig, UnionTypeComposeDefinition } from './UnionTypeComposer';
+export type {
+  ComposeInterfaceTypeConfig,
+  InterfaceTypeComposeDefinition,
+} from './InterfaceTypeComposer';
 
 export type {
   ResolveParams,

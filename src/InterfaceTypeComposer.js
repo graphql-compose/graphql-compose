@@ -65,7 +65,7 @@ export type ComposeInterfaceTypeConfig<TSource, TContext> = {
   +extensions?: Extensions,
 };
 
-export type InterfaceTypeComposerDefinition<TSource, TContext> =
+export type InterfaceTypeComposeDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeInterfaceTypeConfig<TSource, TContext>;
 
@@ -76,7 +76,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   // Also supported `GraphQLInterfaceType` but in such case Flowtype force developers
   // to explicitly write annotations in their code. But it's bad.
   static create<TSrc, TCtx>(
-    typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
+    typeDef: InterfaceTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>
   ): InterfaceTypeComposer<TSrc, TCtx> {
     if (!(schemaComposer instanceof SchemaComposer)) {
@@ -91,7 +91,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   static createTemp<TSrc, TCtx>(
-    typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
+    typeDef: InterfaceTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer?: SchemaComposer<TCtx>
   ): InterfaceTypeComposer<TSrc, TCtx> {
     const sc = schemaComposer || new SchemaComposer();
@@ -134,7 +134,9 @@ export class InterfaceTypeComposer<TSource, TContext> {
       IFTC.gqType._gqcExtensions = typeDef.extensions || {};
     } else {
       throw new Error(
-        'You should provide GraphQLInterfaceTypeConfig or string with interface name or SDL definition'
+        `You should provide GraphQLInterfaceTypeConfig or string with interface name or SDL definition. Provided:\n${inspect(
+          typeDef
+        )}`
       );
     }
 

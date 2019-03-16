@@ -12,12 +12,13 @@ import type {
 import type { TypeAsString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import type { Extensions } from './utils/definitions';
+import { inspect } from './utils/misc';
 
 export type ComposeScalarTypeConfig = GraphQLScalarTypeConfig<any, any> & {
   +extensions?: Extensions,
 };
 
-export type ScalarTypeComposerDefinition =
+export type ScalarTypeComposeDefinition =
   | TypeAsString
   | $ReadOnly<ComposeScalarTypeConfig>
   | $ReadOnly<GraphQLScalarType>;
@@ -31,7 +32,7 @@ export class ScalarTypeComposer<TContext> {
   schemaComposer: SchemaComposer<TContext>;
 
   static create<TCtx>(
-    typeDef: ScalarTypeComposerDefinition,
+    typeDef: ScalarTypeComposeDefinition,
     schemaComposer: SchemaComposer<TCtx>
   ): ScalarTypeComposer<TCtx> {
     if (!(schemaComposer instanceof SchemaComposer)) {
@@ -45,7 +46,7 @@ export class ScalarTypeComposer<TContext> {
   }
 
   static createTemp<TCtx>(
-    typeDef: ScalarTypeComposerDefinition,
+    typeDef: ScalarTypeComposeDefinition,
     schemaComposer?: SchemaComposer<TCtx>
   ): ScalarTypeComposer<TCtx> {
     const sc = schemaComposer || new SchemaComposer();
@@ -82,7 +83,9 @@ export class ScalarTypeComposer<TContext> {
       STC.gqType._gqcExtensions = (typeDef: any).extensions || {};
     } else {
       throw new Error(
-        'You should provide GraphQLScalarTypeConfig or string with scalar name or SDL'
+        `You should provide GraphQLScalarTypeConfig or string with scalar name or SDL. Provided:\n${inspect(
+          typeDef
+        )}`
       );
     }
 

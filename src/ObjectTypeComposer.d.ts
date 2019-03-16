@@ -197,7 +197,7 @@ export type RelationArgsMapper<TSource, TContext, TArgs = ArgsMap> = {
     | any[];
 };
 
-export type ObjectTypeComposerDefinition<TSource, TContext> =
+export type ObjectTypeComposeDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeObjectTypeConfig<TSource, TContext>
   | GraphQLObjectType;
@@ -213,12 +213,12 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   );
 
   public static create<TSrc = any, TCtx = any>(
-    typeDef: ObjectTypeComposerDefinition<TSrc, TCtx>,
+    typeDef: ObjectTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>,
   ): ObjectTypeComposer<TSrc, TCtx>;
 
   public static createTemp<TSrc = any, TCtx = any>(
-    typeDef: ObjectTypeComposerDefinition<TSrc, TCtx>,
+    typeDef: ObjectTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer?: SchemaComposer<TCtx>,
   ): ObjectTypeComposer<TSrc, TCtx>;
 

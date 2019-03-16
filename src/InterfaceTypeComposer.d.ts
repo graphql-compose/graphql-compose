@@ -52,7 +52,7 @@ export type ComposeInterfaceTypeConfig<TSource, TContext> = {
   extensions?: Extensions;
 };
 
-export type InterfaceTypeComposerDefinition<TSource, TContext> =
+export type InterfaceTypeComposeDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeInterfaceTypeConfig<TSource, TContext>;
 
@@ -67,12 +67,12 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   );
 
   public static create<TSrc = any, TCtx = any>(
-    typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
+    typeDef: InterfaceTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>,
   ): InterfaceTypeComposer<TSrc, TCtx>;
 
   public static createTemp<TSrc = any, TCtx = any>(
-    typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
+    typeDef: InterfaceTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer?: SchemaComposer<TCtx>,
   ): InterfaceTypeComposer<TSrc, TCtx>;
 

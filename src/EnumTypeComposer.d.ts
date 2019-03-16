@@ -15,7 +15,7 @@ export type ComposeEnumTypeConfig = GraphQLEnumTypeConfig & {
   extensions?: Extensions;
 };
 
-export type EnumTypeComposerDefinition =
+export type EnumTypeComposeDefinition =
   | TypeAsString
   | ComposeEnumTypeConfig
   | GraphQLEnumType;
@@ -34,12 +34,12 @@ export class EnumTypeComposer<TContext = any> {
   );
 
   public static create<TCtx = any>(
-    typeDef: EnumTypeComposerDefinition,
+    typeDef: EnumTypeComposeDefinition,
     schemaComposer: SchemaComposer<TCtx>,
   ): EnumTypeComposer<TCtx>;
 
   public static createTemp<TCtx = any>(
-    typeDef: EnumTypeComposerDefinition,
+    typeDef: EnumTypeComposeDefinition,
     schemaComposer?: SchemaComposer<TCtx>,
   ): EnumTypeComposer<TCtx>;
 

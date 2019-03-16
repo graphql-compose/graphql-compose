@@ -115,7 +115,7 @@ export type ComposeOutputType<TSource, TContext> =
   | Resolver<any, TContext, any>
   | InterfaceTypeComposer<TSource, TContext>
   | UnionTypeComposer<TSource, TContext>
-  | Array<ComposeOutputType<TSource, TContext>>;
+  | $ReadOnlyArray<ComposeOutputType<TSource, TContext>>;
 
 export function isComposeOutputType(type: mixed): boolean %checks {
   return (
@@ -138,7 +138,7 @@ export type ComposeArgumentType =
   | InputTypeComposer<any>
   | EnumTypeComposer<any>
   | ScalarTypeComposer<any>
-  | Array<ComposeArgumentType>;
+  | $ReadOnlyArray<ComposeArgumentType>;
 export type ComposeArgumentConfigAsObject = {
   +type: Thunk<ComposeArgumentType> | GraphQLInputType,
   +defaultValue?: mixed,
@@ -196,7 +196,7 @@ export type RelationArgsMapper<TSource, TContext, TArgs = ArgsMap> = {
     | any[],
 };
 
-export type ObjectTypeComposerDefinition<TSource, TContext> =
+export type ObjectTypeComposeDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeObjectTypeConfig<TSource, TContext>
   | GraphQLObjectType;
@@ -206,7 +206,7 @@ export class ObjectTypeComposer<TSource, TContext> {
   schemaComposer: SchemaComposer<TContext>;
 
   static create<TSrc, TCtx>(
-    typeDef: ObjectTypeComposerDefinition<TSrc, TCtx>,
+    typeDef: ObjectTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>
   ): ObjectTypeComposer<TSrc, TCtx> {
     if (!(schemaComposer instanceof SchemaComposer)) {
@@ -223,7 +223,7 @@ export class ObjectTypeComposer<TSource, TContext> {
   }
 
   static createTemp<TSrc, TCtx>(
-    typeDef: ObjectTypeComposerDefinition<TSrc, TCtx>,
+    typeDef: ObjectTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer?: SchemaComposer<TCtx>
   ): ObjectTypeComposer<TSrc, TCtx> {
     const sc = schemaComposer || new SchemaComposer();
@@ -265,7 +265,9 @@ export class ObjectTypeComposer<TSource, TContext> {
       TC.gqType._gqcExtensions = typeDef.extensions || {};
     } else {
       throw new Error(
-        'You should provide GraphQLObjectTypeConfig or string with type name to ObjectTypeComposer.create(opts)'
+        `You should provide GraphQLObjectTypeConfig or string with type name to ObjectTypeComposer.create(opts). Provided:\n${inspect(
+          typeDef
+        )}`
       );
     }
 

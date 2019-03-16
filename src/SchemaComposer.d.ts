@@ -7,28 +7,28 @@ import {
 } from 'graphql';
 import {
   ObjectTypeComposer,
-  ObjectTypeComposerDefinition,
+  ObjectTypeComposeDefinition,
   ArgsMap,
 } from './ObjectTypeComposer';
 import {
   InputTypeComposer,
-  InputTypeComposerDefinition,
+  InputTypeComposeDefinition,
 } from './InputTypeComposer';
 import {
   ScalarTypeComposer,
-  ScalarTypeComposerDefinition,
+  ScalarTypeComposeDefinition,
 } from './ScalarTypeComposer';
 import {
   EnumTypeComposer,
-  EnumTypeComposerDefinition,
+  EnumTypeComposeDefinition,
 } from './EnumTypeComposer';
 import {
   InterfaceTypeComposer,
-  InterfaceTypeComposerDefinition,
+  InterfaceTypeComposeDefinition,
 } from './InterfaceTypeComposer';
 import {
   UnionTypeComposer,
-  UnionTypeComposerDefinition,
+  UnionTypeComposeDefinition,
 } from './UnionTypeComposer';
 import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
@@ -150,27 +150,27 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
   ): void;
 
   public createObjectTC<TSource = any>(
-    typeDef: ObjectTypeComposerDefinition<TSource, TContext>,
+    typeDef: ObjectTypeComposeDefinition<TSource, TContext>,
   ): ObjectTypeComposer<TSource, TContext>;
 
   public createInputTC(
-    typeDef: InputTypeComposerDefinition,
+    typeDef: InputTypeComposeDefinition,
   ): InputTypeComposer<TContext>;
 
   public createEnumTC(
-    typeDef: EnumTypeComposerDefinition,
+    typeDef: EnumTypeComposeDefinition,
   ): EnumTypeComposer<TContext>;
 
   public createInterfaceTC<TSource = any>(
-    typeDef: InterfaceTypeComposerDefinition<TSource, TContext>,
+    typeDef: InterfaceTypeComposeDefinition<TSource, TContext>,
   ): InterfaceTypeComposer<TSource, TContext>;
 
   public createUnionTC<TSource = any>(
-    typeDef: UnionTypeComposerDefinition<TSource, TContext>,
+    typeDef: UnionTypeComposeDefinition<TSource, TContext>,
   ): UnionTypeComposer<TSource, TContext>;
 
   public createScalarTC(
-    typeDef: ScalarTypeComposerDefinition,
+    typeDef: ScalarTypeComposeDefinition,
   ): ScalarTypeComposer<TContext>;
 
   public createResolver<TSource = any, TArgs = ArgsMap>(

@@ -57,7 +57,7 @@ export type ComposeInputObjectTypeConfig = {
   extensions?: Extensions;
 };
 
-export type InputTypeComposerDefinition =
+export type InputTypeComposeDefinition =
   | TypeAsString
   | ComposeInputObjectTypeConfig
   | GraphQLInputObjectType;
@@ -73,12 +73,12 @@ export class InputTypeComposer<TContext = any> {
   );
 
   public static create<TCtx = any>(
-    typeDef: InputTypeComposerDefinition,
+    typeDef: InputTypeComposeDefinition,
     schemaComposer: SchemaComposer<TCtx>,
   ): InputTypeComposer<TCtx>;
 
   public static createTemp<TCtx = any>(
-    typeDef: InputTypeComposerDefinition,
+    typeDef: InputTypeComposeDefinition,
     schemaComposer?: SchemaComposer<TCtx>,
   ): InputTypeComposer<TCtx>;
 

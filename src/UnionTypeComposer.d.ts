@@ -47,7 +47,7 @@ export type ComposeUnionTypeConfig<TSource, TContext> = {
   extensions?: Extensions;
 };
 
-export type UnionTypeComposerDefinition<TSource, TContext> =
+export type UnionTypeComposeDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeUnionTypeConfig<TSource, TContext>;
 
@@ -62,12 +62,12 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   );
 
   public static create<TSrc = any, TCtx = any>(
-    typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
+    typeDef: UnionTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>,
   ): UnionTypeComposer<TSrc, TCtx>;
 
   public static createTemp<TSrc = any, TCtx = any>(
-    typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
+    typeDef: UnionTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer?: SchemaComposer<TCtx>,
   ): UnionTypeComposer<TSrc, TCtx>;
 
