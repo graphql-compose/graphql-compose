@@ -90,8 +90,8 @@ export type ResolverSortArgConfig<TSource, TContext, TArgs = ArgsMap> = {
   description?: string | null,
 };
 
-export type ResolverOpts<TSource, TContext, TArgs = ArgsMap> = {|
-  type?: ComposeOutputType<any, TContext>,
+export type ResolverOpts<TSource, TContext, TArgs = ArgsMap, TReturn = any> = {|
+  type?: ComposeOutputType<TReturn, TContext>,
   resolve?: ResolverRpCb<TSource, TContext, TArgs>,
   args?: ComposeFieldConfigArgumentMap<TArgs>,
   name?: string,
@@ -123,9 +123,9 @@ export type ResolverWrapArgsCb<TArgs = ArgsMap> = (
   prevArgs: GraphQLFieldConfigArgumentMap
 ) => ComposeFieldConfigArgumentMap<TArgs>;
 
-export type ResolverWrapTypeCb<TContext> = (
+export type ResolverWrapTypeCb<TContext, TReturn = any> = (
   prevType: GraphQLOutputType
-) => ComposeOutputType<any, TContext>;
+) => ComposeOutputType<TReturn, TContext>;
 
 export type ResolveDebugOpts = {
   showHidden?: boolean,
@@ -141,9 +141,9 @@ export type ResolverMiddleware<TSource, TContext, TArgs = ArgsMap> = (
   info: GraphQLResolveInfo
 ) => any;
 
-export class Resolver<TSource, TContext, TArgs = ArgsMap> {
+export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   schemaComposer: SchemaComposer<TContext>;
-  type: ComposeOutputType<TSource, TContext>;
+  type: ComposeOutputType<TReturn, TContext>;
   args: ComposeFieldConfigArgumentMap<any>;
   resolve: (resolveParams: $Shape<ResolveParams<TSource, TContext, TArgs>>) => Promise<any> | any;
   name: string;
@@ -211,9 +211,9 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap> {
     return new ObjectTypeComposer(outputType, this.schemaComposer);
   }
 
-  setType<TNewSource>(
-    composeType: ComposeOutputType<TNewSource, TContext>
-  ): Resolver<TNewSource, TContext, TArgs> {
+  setType<TNewReturn>(
+    composeType: ComposeOutputType<TNewReturn, TContext>
+  ): Resolver<TSource, TContext, TArgs, TNewReturn> {
     // check that `composeType` has correct data
     this.schemaComposer.typeMapper.convertOutputFieldConfig(composeType, 'setType', 'Resolver');
 

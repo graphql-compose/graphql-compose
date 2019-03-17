@@ -82,10 +82,10 @@ export type ComposeFieldConfigMap<TSource, TContext> = ObjMap<
 
 export type ComposeFieldConfig<TSource, TContext, TArgs = ArgsMap> =
   | ComposeFieldConfigAsObject<TSource, TContext, TArgs>
-  | ComposeOutputType<TSource, TContext>
+  | ComposeOutputType<any /* TReturn */, TContext>
   | (() =>
       | ComposeFieldConfigAsObject<TSource, TContext, TArgs>
-      | ComposeOutputType<TSource, TContext>);
+      | ComposeOutputType<any /* TReturn */, TContext>);
 
 // extended GraphQLFieldConfig
 export type GraphqlFieldConfigExtended<TSource, TContext> = GraphQLFieldConfig<
@@ -94,7 +94,7 @@ export type GraphqlFieldConfigExtended<TSource, TContext> = GraphQLFieldConfig<
 > & { projection?: any };
 
 export type ComposeFieldConfigAsObject<TSource, TContext, TArgs = ArgsMap> = {
-  +type: Thunk<ComposeOutputType<TSource, TContext>> | GraphQLOutputType,
+  +type: Thunk<ComposeOutputType<any /* TReturn */, TContext>> | GraphQLOutputType,
   +args?: ComposeFieldConfigArgumentMap<TArgs>,
   +resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>,
   +subscribe?: GraphQLFieldResolver<TSource, TContext>,
@@ -105,17 +105,18 @@ export type ComposeFieldConfigAsObject<TSource, TContext, TArgs = ArgsMap> = {
   +[key: string]: any,
 };
 
+// Output type should not have `TSource`. It should not affect on main Type source!
 // extended GraphQLOutputType
-export type ComposeOutputType<TSource, TContext> =
+export type ComposeOutputType<TReturn, TContext> =
   | GraphQLOutputType
-  | ObjectTypeComposer<TSource, TContext>
+  | ObjectTypeComposer<TReturn, TContext>
   | EnumTypeComposer<TContext>
   | ScalarTypeComposer<TContext>
   | TypeAsString
-  | Resolver<any, TContext, any>
-  | InterfaceTypeComposer<TSource, TContext>
-  | UnionTypeComposer<TSource, TContext>
-  | $ReadOnlyArray<ComposeOutputType<TSource, TContext>>;
+  | Resolver<TReturn, TContext, any>
+  | InterfaceTypeComposer<TReturn, TContext>
+  | UnionTypeComposer<TReturn, TContext>
+  | $ReadOnlyArray<ComposeOutputType<TReturn, TContext>>;
 
 export function isComposeOutputType(type: mixed): boolean %checks {
   return (

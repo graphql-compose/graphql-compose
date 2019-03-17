@@ -64,8 +64,8 @@ export type ResolverSortArgConfig<TSource, TContext, TArgs = ArgsMap> = {
   description?: string | null;
 };
 
-export type ResolverOpts<TSource, TContext, TArgs = ArgsMap> = {
-  type?: ComposeOutputType<any, TContext>;
+export type ResolverOpts<TSource, TContext, TArgs = ArgsMap, TReturn = any> = {
+  type?: ComposeOutputType<TReturn, TContext>;
   resolve?: ResolverRpCb<TSource, TContext, TArgs>;
   args?: ComposeFieldConfigArgumentMap<TArgs>;
   name?: string;
@@ -97,9 +97,9 @@ export type ResolverWrapArgsCb<TArgs = ArgsMap> = (
   prevArgs: GraphQLFieldConfigArgumentMap,
 ) => ComposeFieldConfigArgumentMap<TArgs>;
 
-export type ResolverWrapTypeCb<TContext> = (
+export type ResolverWrapTypeCb<TContext, TReturn = any> = (
   prevType: GraphQLOutputType,
-) => ComposeOutputType<any, TContext>;
+) => ComposeOutputType<TReturn, TContext>;
 
 export type ResolveDebugOpts = {
   showHidden?: boolean;
@@ -120,9 +120,14 @@ export type ResolverMiddleware<TSource, TContext, TArgs = ArgsMap> = (
   info: GraphQLResolveInfo,
 ) => any;
 
-export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap> {
+export class Resolver<
+  TSource = any,
+  TContext = any,
+  TArgs = ArgsMap,
+  TReturn = any
+> {
   public schemaComposer: SchemaComposer<TContext>;
-  public type: ComposeOutputType<TSource, TContext>;
+  public type: ComposeOutputType<TReturn, TContext>;
   public args: ComposeFieldConfigArgumentMap<any>;
   public resolve: (
     resolveParams: Partial<ResolveParams<TSource, TContext, TArgs>>,
@@ -146,9 +151,9 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap> {
 
   public getTypeComposer(): ObjectTypeComposer<TSource, TContext>;
 
-  public setType<TNewSource>(
-    gqType: ComposeOutputType<TNewSource, TContext>,
-  ): Resolver<TNewSource, TContext, TArgs>;
+  public setType<TNewReturn>(
+    gqType: ComposeOutputType<TNewReturn, TContext>,
+  ): Resolver<TSource, TContext, TArgs, TNewReturn>;
 
   // -----------------------------------------------
   // Args methods
