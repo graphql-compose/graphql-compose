@@ -278,6 +278,7 @@ describe('ObjectTypeComposer', () => {
           description: 'this is field #3',
           extensions: { second: true },
         });
+        // $FlowFixMe
         expect(tc.getFieldConfig('field3').extensions).toEqual({
           first: true,
           second: true,
