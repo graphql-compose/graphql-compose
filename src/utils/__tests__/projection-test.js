@@ -30,6 +30,15 @@ const Level1TC = schemaComposer.createObjectTC({
         field1a: { field2a: true },
       },
     },
+    withProjectionExtension: {
+      type: 'Int',
+      extensions: {
+        projection: {
+          field1b: true,
+          field1a: { field2a: true },
+        },
+      },
+    },
   },
 });
 const resolve = jest.fn(() => ({}));
@@ -152,6 +161,21 @@ describe('projection', () => {
       expect(getProjectionFromAST(info)).toEqual({
         field1a: { withProjection2: {}, field2b: true },
       });
+    });
+  });
+
+  it('extend by projection extension', async () => {
+    const info = await getResolveInfo(`
+        query {
+          field0 {
+            withProjectionExtension
+          }
+        }
+      `);
+    expect(getProjectionFromAST(info)).toEqual({
+      withProjectionExtension: {},
+      field1b: true,
+      field1a: { field2a: true },
     });
   });
 

@@ -124,6 +124,9 @@ export function extendByFieldProjection(
     if (!field) return;
 
     if (field.projection) proj = deepmerge(proj, field.projection);
+    if (field.extensions && field.extensions.projection) {
+      proj = deepmerge(proj, field.extensions.projection);
+    }
     proj[key] = extendByFieldProjection((field.type: any), proj[key]);
   });
 
