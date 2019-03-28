@@ -12,12 +12,12 @@ export type ProjectionType = {
 };
 
 export function getProjectionFromAST(
-  context: GraphQLResolveInfo,
+  info: GraphQLResolveInfo,
   fieldNode?: FieldNode | InlineFragmentNode | FragmentDefinitionNode,
 ): ProjectionType;
 
 export function getFlatProjectionFromAST(
-  context: GraphQLResolveInfo,
+  info: GraphQLResolveInfo,
   fieldNodes?: FieldNode | InlineFragmentNode | FragmentDefinitionNode,
 ): { [key: string]: boolean };
 
