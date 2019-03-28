@@ -276,7 +276,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   extendField(
     fieldName: string,
-    parialFieldConfig: $Shape<ComposeFieldConfigAsObject<TSource, TContext, any>>
+    partialFieldConfig: $Shape<ComposeFieldConfigAsObject<TSource, TContext, any>>
   ): InterfaceTypeComposer<TSource, TContext> {
     let prevFieldConfig;
     try {
@@ -289,7 +289,11 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
     this.setField(fieldName, {
       ...(prevFieldConfig: any),
-      ...parialFieldConfig,
+      ...partialFieldConfig,
+      extensions: {
+        ...(prevFieldConfig.extensions || {}),
+        ...(partialFieldConfig.extensions || {}),
+      },
     });
     return this;
   }
@@ -754,7 +758,9 @@ export class InterfaceTypeComposer<TSource, TContext> {
     fieldName: string,
     extensions: Extensions
   ): InterfaceTypeComposer<TSource, TContext> {
-    this.extendField(fieldName, {
+    const fieldConfig = this.getFieldConfig(fieldName);
+    this.setField(fieldName, {
+      ...fieldConfig,
       extensions,
     });
     return this;

@@ -249,6 +249,21 @@ describe('InterfaceTypeComposer', () => {
         expect(iftc.getFieldType('field3')).toBe(GraphQLInt);
       });
 
+      it('should extend field extensions', () => {
+        iftc.setField('field3', {
+          type: GraphQLString,
+          extensions: { first: true },
+        });
+        iftc.extendField('field3', {
+          description: 'this is field #3',
+          extensions: { second: true },
+        });
+        expect(iftc.getFieldConfig('field3').extensions).toEqual({
+          first: true,
+          second: true,
+        });
+      });
+
       it('should work with fieldConfig as string', () => {
         iftc.setField('field4', 'String');
         iftc.extendField('field4', {

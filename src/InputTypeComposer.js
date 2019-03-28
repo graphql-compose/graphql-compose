@@ -296,7 +296,7 @@ export class InputTypeComposer<TContext> {
 
   extendField(
     fieldName: string,
-    parialFieldConfig: $Shape<ComposeInputFieldConfigAsObject>
+    partialFieldConfig: $Shape<ComposeInputFieldConfigAsObject>
   ): InputTypeComposer<TContext> {
     let prevFieldConfig;
     try {
@@ -308,8 +308,12 @@ export class InputTypeComposer<TContext> {
     }
 
     this.setField(fieldName, {
-      ...prevFieldConfig,
-      ...parialFieldConfig,
+      ...(prevFieldConfig: any),
+      ...partialFieldConfig,
+      extensions: {
+        ...(prevFieldConfig.extensions || {}),
+        ...(partialFieldConfig.extensions || {}),
+      },
     });
     return this;
   }
@@ -524,7 +528,9 @@ export class InputTypeComposer<TContext> {
   }
 
   setFieldExtensions(fieldName: string, extensions: Extensions): InputTypeComposer<TContext> {
-    this.extendField(fieldName, {
+    const fieldConfig = this.getFieldConfig(fieldName);
+    this.setField(fieldName, {
+      ...fieldConfig,
       extensions,
     });
     return this;

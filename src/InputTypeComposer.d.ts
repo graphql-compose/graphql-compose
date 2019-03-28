@@ -117,7 +117,7 @@ export class InputTypeComposer<TContext = any> {
 
   public extendField(
     fieldName: string,
-    parialFieldConfig: Partial<ComposeInputFieldConfig>,
+    partialFieldConfig: Partial<ComposeInputFieldConfig>,
   ): this;
 
   public reorderFields(names: string[]): this;

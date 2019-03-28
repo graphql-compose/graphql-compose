@@ -205,6 +205,21 @@ describe('InputTypeComposer', () => {
         expect(itc.getFieldConfig('input3').type).toBe(GraphQLInt);
       });
 
+      it('should extend field extensions', () => {
+        itc.setField('input3', {
+          type: GraphQLString,
+          extensions: { first: true },
+        });
+        itc.extendField('input3', {
+          description: 'this is field #3',
+          extensions: { second: true },
+        });
+        expect(itc.getFieldConfig('input3').extensions).toEqual({
+          first: true,
+          second: true,
+        });
+      });
+
       it('should work with fieldConfig as string', () => {
         itc.setField('field4', 'String');
         itc.extendField('field4', {

@@ -448,6 +448,10 @@ export class ObjectTypeComposer<TSource, TContext> {
     this.setField(fieldName, {
       ...(prevFieldConfig: any),
       ...partialFieldConfig,
+      extensions: {
+        ...(prevFieldConfig.extensions || {}),
+        ...(partialFieldConfig.extensions || {}),
+      },
     });
     return this;
   }
@@ -968,7 +972,9 @@ export class ObjectTypeComposer<TSource, TContext> {
     fieldName: string,
     extensions: Extensions
   ): ObjectTypeComposer<TSource, TContext> {
-    this.extendField(fieldName, {
+    const fieldConfig = this.getFieldConfig(fieldName);
+    this.setField(fieldName, {
+      ...fieldConfig,
       extensions,
     });
     return this;
