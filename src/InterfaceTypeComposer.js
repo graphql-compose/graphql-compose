@@ -276,11 +276,11 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   extendField(
     fieldName: string,
-    parialFieldConfig: $Shape<ComposeFieldConfigAsObject<TSource, TContext, any>>
+    partialFieldConfig: $Shape<ComposeFieldConfigAsObject<TSource, TContext, any>>
   ): InterfaceTypeComposer<TSource, TContext> {
     let prevFieldConfig;
     try {
-      prevFieldConfig = this.getFieldConfig(fieldName);
+      prevFieldConfig = (this.getFieldConfig(fieldName): any);
     } catch (e) {
       throw new Error(
         `Cannot extend field '${fieldName}' from type '${this.getTypeName()}'. Field does not exist.`
@@ -288,8 +288,12 @@ export class InterfaceTypeComposer<TSource, TContext> {
     }
 
     this.setField(fieldName, {
-      ...(prevFieldConfig: any),
-      ...parialFieldConfig,
+      ...prevFieldConfig,
+      ...partialFieldConfig,
+      extensions: {
+        ...(prevFieldConfig.extensions || {}),
+        ...(partialFieldConfig.extensions || {}),
+      },
     });
     return this;
   }
@@ -754,9 +758,14 @@ export class InterfaceTypeComposer<TSource, TContext> {
     fieldName: string,
     extensions: Extensions
   ): InterfaceTypeComposer<TSource, TContext> {
-    this.extendField(fieldName, {
-      extensions,
-    });
+    const fieldConfig = this.getFieldConfig(fieldName);
+    this.setField(
+      fieldName,
+      ({
+        ...fieldConfig,
+        extensions,
+      }: any)
+    );
     return this;
   }
 

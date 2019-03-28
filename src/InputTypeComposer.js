@@ -296,11 +296,11 @@ export class InputTypeComposer<TContext> {
 
   extendField(
     fieldName: string,
-    parialFieldConfig: $Shape<ComposeInputFieldConfigAsObject>
+    partialFieldConfig: $Shape<ComposeInputFieldConfigAsObject>
   ): InputTypeComposer<TContext> {
     let prevFieldConfig;
     try {
-      prevFieldConfig = this.getFieldConfig(fieldName);
+      prevFieldConfig = (this.getFieldConfig(fieldName): any);
     } catch (e) {
       throw new Error(
         `Cannot extend field '${fieldName}' from input type '${this.getTypeName()}'. Field does not exist.`
@@ -309,7 +309,11 @@ export class InputTypeComposer<TContext> {
 
     this.setField(fieldName, {
       ...prevFieldConfig,
-      ...parialFieldConfig,
+      ...partialFieldConfig,
+      extensions: {
+        ...(prevFieldConfig.extensions || {}),
+        ...(partialFieldConfig.extensions || {}),
+      },
     });
     return this;
   }
@@ -524,7 +528,9 @@ export class InputTypeComposer<TContext> {
   }
 
   setFieldExtensions(fieldName: string, extensions: Extensions): InputTypeComposer<TContext> {
-    this.extendField(fieldName, {
+    const fieldConfig = this.getFieldConfig(fieldName);
+    this.setField(fieldName, {
+      ...fieldConfig,
       extensions,
     });
     return this;

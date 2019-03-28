@@ -269,6 +269,22 @@ describe('ObjectTypeComposer', () => {
         expect(tc.getFieldType('field3')).toBe(GraphQLInt);
       });
 
+      it('should extend field extensions', () => {
+        tc.setField('field3', {
+          type: GraphQLString,
+          extensions: { first: true },
+        });
+        tc.extendField('field3', {
+          description: 'this is field #3',
+          extensions: { second: true },
+        });
+        // $FlowFixMe
+        expect(tc.getFieldConfig('field3').extensions).toEqual({
+          first: true,
+          second: true,
+        });
+      });
+
       it('should work with fieldConfig as string', () => {
         tc.setField('field4', 'String');
         tc.extendField('field4', {
