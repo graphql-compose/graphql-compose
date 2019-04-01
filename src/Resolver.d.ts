@@ -120,6 +120,9 @@ export type ResolverMiddleware<TSource, TContext, TArgs = ArgsMap> = (
   info: GraphQLResolveInfo,
 ) => any;
 
+/**
+ * The most interesting class in `graphql-compose`. The main goal of `Resolver` is to keep available resolve methods for Type and use them for building relation with other types.
+ */
 export class Resolver<
   TSource = any,
   TContext = any,
@@ -143,9 +146,11 @@ export class Resolver<
     schemaComposer: SchemaComposer<TContext>,
   );
 
-  // -----------------------------------------------
-  // Output type methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Output type methods
+   * -----------------------------------------------
+   */
 
   public getType(): GraphQLOutputType;
 
@@ -155,9 +160,11 @@ export class Resolver<
     gqType: ComposeOutputType<TNewReturn, TContext>,
   ): Resolver<TSource, TContext, TArgs, TNewReturn>;
 
-  // -----------------------------------------------
-  // Args methods
-  // -----------------------------------------------
+  /**
+   *  -----------------------------------------------
+   * Args methods
+   * -----------------------------------------------
+   */
 
   public hasArg(argName: string): boolean;
 
@@ -208,9 +215,11 @@ export class Resolver<
     opts: ResolverSortArgConfig<TSource, TContext, TArgs>,
   ): Resolver<TSource, TContext, TArgs>;
 
-  // -----------------------------------------------
-  // Resolve methods
-  // -----------------------------------------------
+  /**
+   *  -----------------------------------------------
+   * Resolve methods
+   * -----------------------------------------------
+   */
 
   public getResolve(): ResolverRpCb<TSource, TContext, TArgs>;
 
@@ -218,10 +227,43 @@ export class Resolver<
     resolve: ResolverRpCb<TSource, TContext, TArgs>,
   ): Resolver<TSource, TContext, TArgs>;
 
-  // -----------------------------------------------
-  // Wrap methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Wrap methods
+   * -----------------------------------------------
+   */
 
+  /**
+   * You may construct a new resolver with wrapped logic:
+   *
+   * @example
+   *     const log = [];
+   *
+   *     const mw1 = async (resolve, source, args, context, info) => {
+   *       log.push('m1.before');
+   *       const res = await resolve(source, args, context, info);
+   *       log.push('m1.after');
+   *       return res;
+   *     };
+   *
+   *     const mw2 = async (resolve, source, args, context, info) => {
+   *       log.push('m2.before');
+   *       const res = await resolve(source, args, context, info);
+   *       log.push('m2.after');
+   *       return res;
+   *     };
+   *
+   *     const newResolver = Resolver.withMiddlewares([mw1, mw2]);
+   *     await newResolver.resolve({});
+   *
+   *     expect(log).toEqual([
+   *       'm1.before',
+   *       'm2.before',
+   *       'call resolve',
+   *       'm2.after',
+   *       'm1.after'
+   *     ]);
+   */
   public withMiddlewares(
     middlewares: Array<ResolverMiddleware<TSource, TContext, TArgs>>,
   ): Resolver<TSource, TContext, TArgs>;
@@ -251,9 +293,11 @@ export class Resolver<
     wrapperName?: string,
   ): Resolver<TSource, TContext, TArgs>;
 
-  // -----------------------------------------------
-  // Misc methods
-  // -----------------------------------------------
+  /**
+   *  -----------------------------------------------
+   * Misc methods
+   * -----------------------------------------------
+   */
 
   public getFieldConfig(opts?: {
     projection?: ProjectionType;
@@ -273,9 +317,11 @@ export class Resolver<
     opts?: ResolverOpts<TNewSource, TContext, TNewArgs>,
   ): Resolver<TNewSource, TContext, TNewArgs>;
 
-  // -----------------------------------------------
-  // Debug methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Debug methods
+   * -----------------------------------------------
+   */
 
   public getNestedName(): string;
 

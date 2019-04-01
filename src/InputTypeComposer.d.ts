@@ -72,19 +72,27 @@ export class InputTypeComposer<TContext = any> {
     schemaComposer: SchemaComposer<TContext>,
   );
 
+  /**
+   * Create `InputTypeComposer` with adding it by name to the `SchemaComposer`.
+   */
   public static create<TCtx = any>(
     typeDef: InputTypeComposeDefinition,
     schemaComposer: SchemaComposer<TCtx>,
   ): InputTypeComposer<TCtx>;
 
+  /**
+   * Create `InputTypeComposer` without adding it to the `SchemaComposer`. This method may be usefull in plugins, when you need to create type temporary.
+   */
   public static createTemp<TCtx = any>(
     typeDef: InputTypeComposeDefinition,
     schemaComposer?: SchemaComposer<TCtx>,
   ): InputTypeComposer<TCtx>;
 
-  // -----------------------------------------------
-  // Field methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Field methods
+   * -----------------------------------------------
+   */
 
   public getFields(): ComposeInputFieldConfigMap;
 
@@ -124,7 +132,9 @@ export class InputTypeComposer<TContext = any> {
 
   public isFieldNonNull(fieldName: string): boolean;
 
-  // alias for isFieldNonNull
+  /**
+   * An alias for `isFieldNonNull`
+   */
   public isRequired(fieldName: string): boolean;
 
   public getFieldConfig(fieldName: string): GraphQLInputFieldConfig;
@@ -135,17 +145,23 @@ export class InputTypeComposer<TContext = any> {
 
   public makeFieldNonNull(fieldNameOrArray: string | string[]): this;
 
-  // alias for makeFieldNonNull
+  /**
+   * An alias for `makeFieldNonNull`
+   */
   public makeRequired(fieldNameOrArray: string | string[]): this;
 
   public makeFieldNullable(fieldNameOrArray: string | string[]): this;
 
-  // alias for makeFieldNullable
+  /**
+   * An alias for `makeFieldNullable`
+   */
   public makeOptional(fieldNameOrArray: string | string[]): this;
 
-  // -----------------------------------------------
-  // Type methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Type methods
+   * -----------------------------------------------
+   */
 
   public getType(): GraphQLInputObjectType;
 
@@ -163,9 +179,11 @@ export class InputTypeComposer<TContext = any> {
 
   public clone(newTypeName: string): InputTypeComposer<TContext>;
 
-  // -----------------------------------------------
-  // Extensions methods
-  // -----------------------------------------------
+  /**
+   *  -----------------------------------------------
+   * Extensions methods
+   * -----------------------------------------------
+   */
 
   public getExtensions(): Extensions;
 
@@ -203,9 +221,10 @@ export class InputTypeComposer<TContext = any> {
 
   public removeFieldExtension(fieldName: string, extensionName: string): this;
 
-  // -----------------------------------------------
-  // Misc methods
-  // -----------------------------------------------
-
+  /**
+   *  -----------------------------------------------
+   * Misc methods
+   * -----------------------------------------------
+   */
   public get(path: string | string[]): any;
 }

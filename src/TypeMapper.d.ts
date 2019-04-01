@@ -29,19 +29,37 @@ import {
 } from './TypeMapper';
 import { TypeStorage } from './TypeStorage';
 
-export type TypeDefinitionString = string; // eg. type Name { field: Int }
-export type TypeWrappedString = string; // eg. Int, Int!, [Int]
-export type TypeNameString = string; // eg. Int, Float
+/**
+ * Eg. `type Name { field: Int }`
+ */
+export type TypeDefinitionString = string;
+
+/**
+ * Eg. `Int`, `Int!`, `[Int]`
+ */
+export type TypeWrappedString = string;
+
+/**
+ * Eg. `Int`, `Float`
+ */
+export type TypeNameString = string;
+
 export type TypeAsString =
   | TypeDefinitionString
   | TypeWrappedString
   | TypeNameString;
+
 export type ComposeObjectType =
   | ObjectTypeComposer<any, any>
   | GraphQLObjectType
   | TypeDefinitionString
   | TypeAsString;
 
+/**
+ * Type storage and type generator from `Schema Definition Language` (`SDL`).
+ * This is slightly rewritten [buildASTSchema](https://github.com/graphql/graphql-js/blob/master/src/utilities/buildASTSchema.js)
+ * utility from `graphql-js` that allows to create type from a string (SDL).
+ */
 declare class TypeMapper<TContext> {
   public schemaComposer: SchemaComposer<TContext>;
   protected basicScalars: Map<string, GraphQLNamedType>;

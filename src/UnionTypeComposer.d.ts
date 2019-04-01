@@ -51,6 +51,9 @@ export type UnionTypeComposeDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeUnionTypeConfig<TSource, TContext>;
 
+/**
+ * Class that helps to create `UnionTypeComposer`s and provide ability to modify them.
+ */
 export class UnionTypeComposer<TSource = any, TContext = any> {
   public schemaComposer: SchemaComposer<TContext>;
 
@@ -61,19 +64,27 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
     schemaComposer: SchemaComposer<TContext>,
   );
 
+  /**
+   * Create `UnionTypeComposer` with adding it by name to the `SchemaComposer`.
+   */
   public static create<TSrc = any, TCtx = any>(
     typeDef: UnionTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>,
   ): UnionTypeComposer<TSrc, TCtx>;
 
+  /**
+   * Create `UnionTypeComposer` without adding it to the `SchemaComposer`. This method may be usefull in plugins, when you need to create type temporary.
+   */
   public static createTemp<TSrc = any, TCtx = any>(
     typeDef: UnionTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer?: SchemaComposer<TCtx>,
   ): UnionTypeComposer<TSrc, TCtx>;
 
-  // -----------------------------------------------
-  // Union Types methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Union Types methods
+   * -----------------------------------------------
+   */
 
   public hasType(
     name: string | GraphQLObjectType | ObjectTypeComposer<any, TContext>,
@@ -93,9 +104,11 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   public removeOtherTypes(nameOrArray: string | string[]): this;
 
-  // -----------------------------------------------
-  // Type methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Type methods
+   * -----------------------------------------------
+   */
 
   public getType(): GraphQLUnionType;
 
@@ -113,9 +126,11 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   public clone(newTypeName: string): UnionTypeComposer<TSource, TContext>;
 
-  // -----------------------------------------------
-  // ResolveType methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * ResolveType methods
+   * -----------------------------------------------
+   */
 
   public getResolveType(): GraphQLTypeResolver<TSource, TContext> | null | void;
 
@@ -150,9 +165,11 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
     type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
   ): this;
 
-  // -----------------------------------------------
-  // Extensions methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Extensions methods
+   * -----------------------------------------------
+   */
 
   public getExtensions(): Extensions;
 
@@ -170,7 +187,9 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   public removeExtension(extensionName: string): this;
 
-  // -----------------------------------------------
-  // Misc methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Misc methods
+   * -----------------------------------------------
+   */
 }

@@ -40,7 +40,7 @@ type ExtraSchemaConfig = {
   astNode?: SchemaDefinitionNode | null,
 };
 
-type MustHaveTypes<TContext> =
+type AnyType<TContext> =
   | ObjectTypeComposer<any, TContext>
   | InputTypeComposer<TContext>
   | EnumTypeComposer<TContext>
@@ -68,7 +68,7 @@ const BUILT_IN_DIRECTIVES = [
 
 export class SchemaComposer<TContext> extends TypeStorage<any, any> {
   typeMapper: TypeMapper<TContext>;
-  _schemaMustHaveTypes: Array<MustHaveTypes<TContext>> = [];
+  _schemaMustHaveTypes: Array<AnyType<TContext>> = [];
   _directives: Array<GraphQLDirective> = BUILT_IN_DIRECTIVES;
 
   constructor(): SchemaComposer<TContext> {
@@ -156,7 +156,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     return new GraphQLSchema({ ...roots, ...extraConfig, types, directives });
   }
 
-  addSchemaMustHaveType(type: MustHaveTypes<TContext>): SchemaComposer<TContext> {
+  addSchemaMustHaveType(type: AnyType<TContext>): SchemaComposer<TContext> {
     this._schemaMustHaveTypes.push(type);
     return this;
   }
@@ -185,6 +185,108 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
         }
       }
     });
+  }
+
+  /**
+   * -----------------------------------------------
+   * Like graphql-tools methods
+   * -----------------------------------------------
+   */
+
+  addTypeDefs(typeDefs: string): TypeStorage<string, GraphQLNamedType> {
+    const types = this.typeMapper.parseTypesFromString(typeDefs);
+    types.forEach((type: any) => {
+      const name = type.name;
+      if (name !== 'Query' && name !== 'Mutation' && name !== 'Subscription') {
+        this.add((type: any));
+      }
+    });
+    if (types.has('Query')) {
+      this.Query.addFields(ObjectTypeComposer.create((types.get('Query'): any), this).getFields());
+    }
+    if (types.has('Mutation')) {
+      this.Mutation.addFields(
+        ObjectTypeComposer.create((types.get('Mutation'): any), this).getFields()
+      );
+    }
+    if (types.has('Subscription')) {
+      this.Subscription.addFields(
+        ObjectTypeComposer.create((types.get('Subscription'): any), this).getFields()
+      );
+    }
+    return types;
+  }
+
+  addResolveMethods(typesFieldsResolve: GraphQLToolsResolveMethods<TContext>): void {
+    const typeNames = Object.keys(typesFieldsResolve);
+    typeNames.forEach(typeName => {
+      if (this.get(typeName) instanceof GraphQLScalarType) {
+        const maybeScalar: any = typesFieldsResolve[typeName];
+        if (maybeScalar instanceof GraphQLScalarType) {
+          this.set(typeName, maybeScalar);
+          return;
+        }
+        if (typeof maybeScalar.name === 'string' && typeof maybeScalar.serialize === 'function') {
+          this.set(typeName, new GraphQLScalarType(maybeScalar));
+          return;
+        }
+      }
+      const tc = this.getOTC(typeName);
+      const fieldsResolve = typesFieldsResolve[typeName];
+      const fieldNames = Object.keys(fieldsResolve);
+      fieldNames.forEach(fieldName => {
+        tc.extendField(fieldName, {
+          resolve: fieldsResolve[fieldName],
+        });
+      });
+    });
+  }
+
+  /**
+   * -----------------------------------------------
+   * Type methods
+   * -----------------------------------------------
+   */
+
+  // alias for createObjectTC
+  /* @deprecated 7.0.0 */
+  createTC(typeDef: ObjectTypeComposeDefinition<any, TContext>): ObjectTypeComposer<any, TContext> {
+    deprecate(`Use SchemaComposer.getOTC() method instead`);
+    return this.createObjectTC(typeDef);
+  }
+
+  createObjectTC(
+    typeDef: ObjectTypeComposeDefinition<any, TContext>
+  ): ObjectTypeComposer<any, TContext> {
+    return ObjectTypeComposer.create(typeDef, this);
+  }
+
+  createInputTC(typeDef: InputTypeComposeDefinition): InputTypeComposer<TContext> {
+    return InputTypeComposer.create(typeDef, this);
+  }
+
+  createEnumTC(typeDef: EnumTypeComposeDefinition): EnumTypeComposer<TContext> {
+    return EnumTypeComposer.create(typeDef, this);
+  }
+
+  createInterfaceTC(
+    typeDef: InterfaceTypeComposeDefinition<any, TContext>
+  ): InterfaceTypeComposer<any, TContext> {
+    return InterfaceTypeComposer.create(typeDef, this);
+  }
+
+  createUnionTC(
+    typeDef: UnionTypeComposeDefinition<any, TContext>
+  ): UnionTypeComposer<any, TContext> {
+    return UnionTypeComposer.create(typeDef, this);
+  }
+
+  createScalarTC(typeDef: ScalarTypeComposeDefinition): ScalarTypeComposer<TContext> {
+    return ScalarTypeComposer.create(typeDef, this);
+  }
+
+  createResolver(opts: ResolverOpts<any, TContext>): Resolver<any, TContext> {
+    return new Resolver<any, TContext, any>(opts, this);
   }
 
   /* @deprecated 7.0.0 */
@@ -278,25 +380,6 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
       if (onCreate && isFunction(onCreate)) onCreate(stc);
       return stc;
     }
-  }
-
-  // disable redundant noise in console.logs
-  toString(): string {
-    return 'SchemaComposer';
-  }
-
-  toJSON() {
-    return 'SchemaComposer';
-  }
-
-  inspect() {
-    return 'SchemaComposer';
-  }
-
-  clear(): void {
-    super.clear();
-    this._schemaMustHaveTypes = [];
-    this._directives = BUILT_IN_DIRECTIVES;
   }
 
   /* @deprecated 7.0.0 */
@@ -405,14 +488,6 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     );
   }
 
-  add(typeOrSDL: mixed): ?string {
-    if (typeof typeOrSDL === 'string') {
-      return this.addAsComposer(typeOrSDL);
-    } else {
-      return super.add((typeOrSDL: any));
-    }
-  }
-
   addAsComposer(typeOrSDL: mixed): string {
     let type;
     if (typeof typeOrSDL === 'string') {
@@ -449,95 +524,31 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     throw new Error(`Cannot add as Composer type following value: ${inspect(type)}.`);
   }
 
-  addTypeDefs(typeDefs: string): TypeStorage<string, GraphQLNamedType> {
-    const types = this.typeMapper.parseTypesFromString(typeDefs);
-    types.forEach((type: any) => {
-      const name = type.name;
-      if (name !== 'Query' && name !== 'Mutation' && name !== 'Subscription') {
-        this.add((type: any));
-      }
-    });
-    if (types.has('Query')) {
-      this.Query.addFields(ObjectTypeComposer.create((types.get('Query'): any), this).getFields());
+  /**
+   * -----------------------------------------------
+   * Storage methods
+   * -----------------------------------------------
+   */
+
+  clear(): void {
+    super.clear();
+    this._schemaMustHaveTypes = [];
+    this._directives = BUILT_IN_DIRECTIVES;
+  }
+
+  add(typeOrSDL: mixed): ?string {
+    if (typeof typeOrSDL === 'string') {
+      return this.addAsComposer(typeOrSDL);
+    } else {
+      return super.add((typeOrSDL: any));
     }
-    if (types.has('Mutation')) {
-      this.Mutation.addFields(
-        ObjectTypeComposer.create((types.get('Mutation'): any), this).getFields()
-      );
-    }
-    if (types.has('Subscription')) {
-      this.Subscription.addFields(
-        ObjectTypeComposer.create((types.get('Subscription'): any), this).getFields()
-      );
-    }
-    return types;
   }
 
-  addResolveMethods(typesFieldsResolve: GraphQLToolsResolveMethods<TContext>): void {
-    const typeNames = Object.keys(typesFieldsResolve);
-    typeNames.forEach(typeName => {
-      if (this.get(typeName) instanceof GraphQLScalarType) {
-        const maybeScalar: any = typesFieldsResolve[typeName];
-        if (maybeScalar instanceof GraphQLScalarType) {
-          this.set(typeName, maybeScalar);
-          return;
-        }
-        if (typeof maybeScalar.name === 'string' && typeof maybeScalar.serialize === 'function') {
-          this.set(typeName, new GraphQLScalarType(maybeScalar));
-          return;
-        }
-      }
-      const tc = this.getOTC(typeName);
-      const fieldsResolve = typesFieldsResolve[typeName];
-      const fieldNames = Object.keys(fieldsResolve);
-      fieldNames.forEach(fieldName => {
-        tc.extendField(fieldName, {
-          resolve: fieldsResolve[fieldName],
-        });
-      });
-    });
-  }
-
-  // alias for createObjectTC
-  /* @deprecated 7.0.0 */
-  createTC(typeDef: ObjectTypeComposeDefinition<any, TContext>): ObjectTypeComposer<any, TContext> {
-    deprecate(`Use SchemaComposer.getOTC() method instead`);
-    return this.createObjectTC(typeDef);
-  }
-
-  createObjectTC(
-    typeDef: ObjectTypeComposeDefinition<any, TContext>
-  ): ObjectTypeComposer<any, TContext> {
-    return ObjectTypeComposer.create(typeDef, this);
-  }
-
-  createInputTC(typeDef: InputTypeComposeDefinition): InputTypeComposer<TContext> {
-    return InputTypeComposer.create(typeDef, this);
-  }
-
-  createEnumTC(typeDef: EnumTypeComposeDefinition): EnumTypeComposer<TContext> {
-    return EnumTypeComposer.create(typeDef, this);
-  }
-
-  createInterfaceTC(
-    typeDef: InterfaceTypeComposeDefinition<any, TContext>
-  ): InterfaceTypeComposer<any, TContext> {
-    return InterfaceTypeComposer.create(typeDef, this);
-  }
-
-  createUnionTC(
-    typeDef: UnionTypeComposeDefinition<any, TContext>
-  ): UnionTypeComposer<any, TContext> {
-    return UnionTypeComposer.create(typeDef, this);
-  }
-
-  createScalarTC(typeDef: ScalarTypeComposeDefinition): ScalarTypeComposer<TContext> {
-    return ScalarTypeComposer.create(typeDef, this);
-  }
-
-  createResolver(opts: ResolverOpts<any, TContext>): Resolver<any, TContext> {
-    return new Resolver<any, TContext, any>(opts, this);
-  }
+  /**
+   * -----------------------------------------------
+   * Directive methods
+   * -----------------------------------------------
+   */
 
   addDirective(directive: GraphQLDirective): SchemaComposer<TContext> {
     if (!(directive instanceof GraphQLDirective)) {
@@ -573,5 +584,24 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     }
 
     return false;
+  }
+
+  /**
+   * -----------------------------------------------
+   * Misc methods
+   * -----------------------------------------------
+   */
+
+  // disable redundant noise in console.logs
+  toString(): string {
+    return 'SchemaComposer';
+  }
+
+  toJSON() {
+    return 'SchemaComposer';
+  }
+
+  inspect() {
+    return 'SchemaComposer';
   }
 }

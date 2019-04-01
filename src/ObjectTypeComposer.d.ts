@@ -120,6 +120,7 @@ export type ComposeOutputType<TReturn, TContext> =
 export function isComposeOutputType(type: any): boolean;
 
 // Compose Args -----------------------------
+
 export type ArgsMap = { [argName: string]: any };
 export type ComposeArgumentType =
   | GraphQLInputType
@@ -152,6 +153,7 @@ export type ComposeFieldConfigArgumentMap<TArgs = ArgsMap> = {
 };
 
 // RELATION -----------------------------
+
 export type RelationThunkMap<TSource, TContext> = {
   [fieldName: string]: Thunk<RelationOpts<TSource, TContext, ArgsMap>>;
 };
@@ -205,6 +207,9 @@ export type ObjectTypeComposeDefinition<TSource, TContext> =
   | ComposeObjectTypeConfig<TSource, TContext>
   | GraphQLObjectType;
 
+/**
+ * Main class that gets `GraphQLObjectType` and provide ability to change them.
+ */
 export class ObjectTypeComposer<TSource = any, TContext = any> {
   public schemaComposer: SchemaComposer<TContext>;
 
@@ -215,19 +220,27 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     schemaComposer: SchemaComposer<TContext>,
   );
 
+  /**
+   * Create `ObjectTypeComposer` with adding it by name to the `SchemaComposer`.
+   */
   public static create<TSrc = any, TCtx = any>(
     typeDef: ObjectTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>,
   ): ObjectTypeComposer<TSrc, TCtx>;
 
+  /**
+   * Create `ObjectTypeComposer` without adding it to the `SchemaComposer`. This method may be usefull in plugins, when you need to create type temporary.
+   */
   public static createTemp<TSrc = any, TCtx = any>(
     typeDef: ObjectTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer?: SchemaComposer<TCtx>,
   ): ObjectTypeComposer<TSrc, TCtx>;
 
-  // -----------------------------------------------
-  // Field methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Field methods
+   * -----------------------------------------------
+   */
 
   public getFields(): ComposeFieldConfigMap<TSource, TContext>;
 
@@ -295,9 +308,11 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public getFieldArgType(fieldName: string, argName: string): GraphQLInputType;
 
-  // -----------------------------------------------
-  // Type methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Type methods
+   * -----------------------------------------------
+   */
 
   public getType(): GraphQLObjectType;
 
@@ -321,9 +336,11 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public setIsTypeOf(fn: GraphQLIsTypeOfFn<any, any> | null | void): this;
 
-  // -----------------------------------------------
-  // InputType methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * InputType methods
+   * -----------------------------------------------
+   */
 
   public getInputType(): GraphQLInputObjectType;
 
@@ -337,14 +354,37 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public removeInputTypeComposer(): this;
 
-  // -----------------------------------------------
-  // Resolver methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Resolver methods
+   * -----------------------------------------------
+   */
 
   public getResolvers(): Map<string, Resolver<any, TContext, any>>;
 
   public hasResolver(name: string): boolean;
 
+  /**
+   * Returns existed Resolver by name.
+   *
+   * Resolver may be additionally wrapped by middlewares. Eg:
+   *
+   * @example
+   *     async function authMiddleware(resolve, source, args, context, info) {
+   *       if (somehowCheckAuthInContext(context)) {
+   *         return resolve(source, args, context, info);
+   *       }
+   *       throw new Error('You must be authorized');
+   *     }
+   *
+   *     schemaComposer.Query.addFields({
+   *       userById: UserTC.getResolver('findById', [authMiddleware]),
+   *       userByIds: UserTC.getResolver('findByIds', [authMiddleware]),
+   *     });
+   *
+   * @param name
+   * @param middlewares type ResolverMiddleware = (resolve, source, args, context, info) => any;
+   */
   public getResolver<TResolverSource = any, TArgs = ArgsMap>(
     name: string,
     middlewares?: Array<ResolverMiddleware<TResolverSource, TContext, TArgs>>,
@@ -379,9 +419,11 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     cbNextRp: ResolverNextRpCb<TResolverSource, TContext, TArgs>,
   ): this;
 
-  // -----------------------------------------------
-  // Interface methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Interface methods
+   * -----------------------------------------------
+   */
 
   public getInterfaces(): Array<
     InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType
@@ -405,9 +447,11 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     interfaceObj: InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType,
   ): this;
 
-  // -----------------------------------------------
-  // Extensions methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Extensions methods
+   * -----------------------------------------------
+   */
 
   public getExtensions(): Extensions;
 
@@ -445,9 +489,11 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public removeFieldExtension(fieldName: string, extensionName: string): this;
 
-  // -----------------------------------------------
-  // Misc methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Misc methods
+   * -----------------------------------------------
+   */
 
   public addRelation<TRelationSource = any, TArgs = ArgsMap>(
     fieldName: string,

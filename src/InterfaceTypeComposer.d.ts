@@ -56,6 +56,9 @@ export type InterfaceTypeComposeDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeInterfaceTypeConfig<TSource, TContext>;
 
+/**
+ * Class that helps to create `GraphQLInterfaceType`s and provide ability to modify them.
+ */
 export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public sc: SchemaComposer<TContext>;
 
@@ -66,19 +69,27 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     schemaComposer: SchemaComposer<TContext>,
   );
 
+  /**
+   * Create `InterfaceTypeComposer` with adding it by name to the `SchemaComposer`.
+   */
   public static create<TSrc = any, TCtx = any>(
     typeDef: InterfaceTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>,
   ): InterfaceTypeComposer<TSrc, TCtx>;
 
+  /**
+   * Create `InterfaceTypeComposer` without adding it to the `SchemaComposer`. This method may be usefull in plugins, when you need to create type temporary.
+   */
   public static createTemp<TSrc = any, TCtx = any>(
     typeDef: InterfaceTypeComposeDefinition<TSrc, TCtx>,
     schemaComposer?: SchemaComposer<TCtx>,
   ): InterfaceTypeComposer<TSrc, TCtx>;
 
-  // -----------------------------------------------
-  // Field methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Field methods
+   * -----------------------------------------------
+   */
 
   public hasField(name: string): boolean;
 
@@ -137,9 +148,11 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public getFieldArgType(fieldName: string, argName: string): GraphQLInputType;
 
-  // -----------------------------------------------
-  // Type methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Type methods
+   * -----------------------------------------------
+   */
 
   public getType(): GraphQLInterfaceType;
 
@@ -157,9 +170,11 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public clone(newTypeName: string): this;
 
-  // -----------------------------------------------
-  // InputType methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * InputType methods
+   * -----------------------------------------------
+   */
 
   public getInputType(): GraphQLInputObjectType;
 
@@ -169,13 +184,18 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public getInputTypeComposer(): InputTypeComposer<TContext>;
 
+  /**
+   * An alias for `getInputTypeComposer`
+   */
   public getITC(): InputTypeComposer<TContext>;
 
   public removeInputTypeComposer(): this;
 
-  // -----------------------------------------------
-  // ResolveType methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * ResolveType methods
+   * -----------------------------------------------
+   */
 
   public getResolveType(): GraphQLTypeResolver<TSource, TContext> | null | void;
 
@@ -210,9 +230,11 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
   ): this;
 
-  // -----------------------------------------------
-  // Extensions methods
-  // -----------------------------------------------
+  /**
+   *  -----------------------------------------------
+   * Extensions methods
+   * -----------------------------------------------
+   */
 
   public getExtensions(): Extensions;
 
@@ -250,9 +272,11 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public removeFieldExtension(fieldName: string, extensionName: string): this;
 
-  // -----------------------------------------------
-  // Misc methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Misc methods
+   * -----------------------------------------------
+   */
 
   public get(path: string | string[]): any;
 }

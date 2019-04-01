@@ -28,6 +28,9 @@ export type GraphQLScalarTypeExtended = GraphQLScalarType & {
   _gqcExtensions?: Extensions;
 };
 
+/**
+ * `ScalarTypeComposer` is a class which helps to create and modify `GraphQLScalarType`.
+ */
 export class ScalarTypeComposer<TContext = any> {
   public schemaComposer: SchemaComposer<TContext>;
 
@@ -38,19 +41,27 @@ export class ScalarTypeComposer<TContext = any> {
     schemaComposer: SchemaComposer<TContext>,
   );
 
+  /**
+   * Create `ScalarTypeComposer` with adding it by name to the `SchemaComposer`. This type became avaliable in SDL by its name.
+   */
   public static create<TCtx = any>(
     typeDef: ScalarTypeComposeDefinition,
     schemaComposer: SchemaComposer<TCtx>,
   ): ScalarTypeComposer<TCtx>;
 
+  /**
+   * Create `ScalarTypeComposer` without adding it to the `SchemaComposer`. This method may be usefull in plugins, when you need to create type temporary.
+   */
   public static createTemp<TCtx = any>(
     typeDef: ScalarTypeComposeDefinition,
     schemaComposer?: SchemaComposer<TCtx>,
   ): ScalarTypeComposer<TCtx>;
 
-  // -----------------------------------------------
-  // Serialize methods
-  // -----------------------------------------------
+  /**
+   *  -----------------------------------------------
+   * Serialize methods
+   * -----------------------------------------------
+   */
 
   public setSerialize(fn: GraphQLScalarSerializer<any>): void;
 
@@ -64,9 +75,11 @@ export class ScalarTypeComposer<TContext = any> {
 
   public getParseLiteral(): GraphQLScalarLiteralParser<any>;
 
-  // -----------------------------------------------
-  // Type methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Type methods
+   * -----------------------------------------------
+   */
 
   public getType(): GraphQLScalarType;
 
@@ -84,9 +97,11 @@ export class ScalarTypeComposer<TContext = any> {
 
   public clone(newTypeName: string): ScalarTypeComposer<TContext>;
 
-  // -----------------------------------------------
-  // Extensions methods
-  // -----------------------------------------------
+  /**
+   *  -----------------------------------------------
+   * Extensions methods
+   * -----------------------------------------------
+   */
 
   public getExtensions(): Extensions;
 
