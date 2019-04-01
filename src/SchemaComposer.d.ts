@@ -215,6 +215,16 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     opts: ResolverOpts<TSource, TContext, TArgs>,
   ): Resolver<TSource, TContext, TArgs>;
 
+  public createTempTC(
+    typeOrSDL: any,
+  ):
+    | ObjectTypeComposer<any, TContext>
+    | InputTypeComposer<TContext>
+    | EnumTypeComposer<TContext>
+    | InterfaceTypeComposer<any, TContext>
+    | UnionTypeComposer<any, TContext>
+    | ScalarTypeComposer<TContext>;
+
   public getOrCreateOTC<TSource = any>(
     typeName: string,
     onCreate?: (tc: ObjectTypeComposer<TSource, TContext>) => any,

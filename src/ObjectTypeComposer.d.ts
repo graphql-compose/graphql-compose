@@ -290,7 +290,15 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public getFieldType(fieldName: string): GraphQLOutputType;
 
-  public getFieldTC(fieldName: string): ObjectTypeComposer<TSource, TContext>;
+  public getFieldTC(
+    fieldName: string,
+  ):
+    | ObjectTypeComposer<TSource, TContext>
+    | InputTypeComposer<TContext>
+    | EnumTypeComposer<TContext>
+    | InterfaceTypeComposer<TSource, TContext>
+    | UnionTypeComposer<TSource, TContext>
+    | ScalarTypeComposer<TContext>;
 
   public makeFieldNonNull(fieldNameOrArray: string | string[]): this;
 

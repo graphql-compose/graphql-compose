@@ -289,6 +289,48 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     return new Resolver<any, TContext, any>(opts, this);
   }
 
+  createTempTC(
+    typeOrSDL: mixed
+  ):
+    | ObjectTypeComposer<any, TContext>
+    | InputTypeComposer<TContext>
+    | EnumTypeComposer<TContext>
+    | InterfaceTypeComposer<any, TContext>
+    | UnionTypeComposer<any, TContext>
+    | ScalarTypeComposer<TContext> {
+    let type;
+    if (typeof typeOrSDL === 'string') {
+      type = this.typeMapper.createType(typeOrSDL);
+    } else {
+      type = typeOrSDL;
+    }
+
+    if (
+      type instanceof ObjectTypeComposer ||
+      type instanceof InputTypeComposer ||
+      type instanceof ScalarTypeComposer ||
+      type instanceof EnumTypeComposer ||
+      type instanceof InterfaceTypeComposer ||
+      type instanceof UnionTypeComposer
+    ) {
+      return type;
+    } else if (type instanceof GraphQLObjectType) {
+      return ObjectTypeComposer.createTemp(type, this);
+    } else if (type instanceof GraphQLInputObjectType) {
+      return InputTypeComposer.createTemp(type, this);
+    } else if (type instanceof GraphQLScalarType) {
+      return ScalarTypeComposer.createTemp(type, this);
+    } else if (type instanceof GraphQLEnumType) {
+      return EnumTypeComposer.createTemp(type, this);
+    } else if (type instanceof GraphQLInterfaceType) {
+      return InterfaceTypeComposer.createTemp(type, this);
+    } else if (type instanceof GraphQLUnionType) {
+      return UnionTypeComposer.createTemp(type, this);
+    }
+
+    throw new Error(`Cannot add as Composer type following value: ${inspect(type)}.`);
+  }
+
   /* @deprecated 7.0.0 */
   getOrCreateTC(
     typeName: string,
@@ -489,39 +531,9 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
   }
 
   addAsComposer(typeOrSDL: mixed): string {
-    let type;
-    if (typeof typeOrSDL === 'string') {
-      type = this.typeMapper.createType(typeOrSDL);
-    } else {
-      type = typeOrSDL;
-    }
-
-    if (
-      type instanceof ObjectTypeComposer ||
-      type instanceof InputTypeComposer ||
-      type instanceof ScalarTypeComposer ||
-      type instanceof EnumTypeComposer ||
-      type instanceof InterfaceTypeComposer ||
-      type instanceof UnionTypeComposer
-    ) {
-      const name = type.getTypeName();
-      this.set(name, type);
-      return name;
-    } else if (type instanceof GraphQLObjectType) {
-      return ObjectTypeComposer.create(type, this).getTypeName();
-    } else if (type instanceof GraphQLInputObjectType) {
-      return InputTypeComposer.create(type, this).getTypeName();
-    } else if (type instanceof GraphQLScalarType) {
-      return ScalarTypeComposer.create(type, this).getTypeName();
-    } else if (type instanceof GraphQLEnumType) {
-      return EnumTypeComposer.create(type, this).getTypeName();
-    } else if (type instanceof GraphQLInterfaceType) {
-      return InterfaceTypeComposer.create(type, this).getTypeName();
-    } else if (type instanceof GraphQLUnionType) {
-      return UnionTypeComposer.create(type, this).getTypeName();
-    }
-
-    throw new Error(`Cannot add as Composer type following value: ${inspect(type)}.`);
+    const composer = this.createTempTC(typeOrSDL);
+    this.set(composer.getTypeName(), composer);
+    return composer.getTypeName();
   }
 
   /**
