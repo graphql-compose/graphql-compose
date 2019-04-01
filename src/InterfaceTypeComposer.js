@@ -23,6 +23,9 @@ import type {
   GraphQLTypeResolver,
 } from './graphql';
 import type { InputTypeComposer } from './InputTypeComposer';
+import type { EnumTypeComposer } from './EnumTypeComposer';
+import type { UnionTypeComposer } from './UnionTypeComposer';
+import type { ScalarTypeComposer } from './ScalarTypeComposer';
 import type { TypeAsString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import type {
@@ -315,15 +318,17 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return this.getFieldConfig(fieldName).type;
   }
 
-  getFieldTC(fieldName: string): ObjectTypeComposer<any, TContext> {
+  getFieldTC(
+    fieldName: string
+  ):
+    | ObjectTypeComposer<TSource, TContext>
+    | InputTypeComposer<TContext>
+    | EnumTypeComposer<TContext>
+    | InterfaceTypeComposer<TSource, TContext>
+    | UnionTypeComposer<TSource, TContext>
+    | ScalarTypeComposer<TContext> {
     const fieldType = getNamedType(this.getFieldType(fieldName));
-    if (!(fieldType instanceof GraphQLObjectType)) {
-      throw new Error(
-        `Cannot get ObjectTypeComposer for field '${fieldName}' in type ${this.getTypeName()}. ` +
-          `This field should be ObjectType, but it has type '${fieldType.constructor.name}'`
-      );
-    }
-    return ObjectTypeComposer.createTemp(fieldType, this.schemaComposer);
+    return this.schemaComposer.createTempTC(fieldType);
   }
 
   makeFieldNonNull(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
