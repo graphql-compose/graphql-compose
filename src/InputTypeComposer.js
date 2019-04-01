@@ -255,7 +255,9 @@ export class InputTypeComposer<TContext> {
         } else {
           childTC = this.getFieldTC(name);
         }
-        childTC.addNestedFields({ [names.join('.')]: fc });
+        if (childTC instanceof InputTypeComposer) {
+          childTC.addNestedFields({ [names.join('.')]: fc });
+        }
       }
     });
 
@@ -353,15 +355,22 @@ export class InputTypeComposer<TContext> {
     return this.getFieldConfig(fieldName).type;
   }
 
-  getFieldTC(fieldName: string): InputTypeComposer<TContext> {
+  getFieldTC(
+    fieldName: string
+  ): InputTypeComposer<TContext> | EnumTypeComposer<TContext> | ScalarTypeComposer<TContext> {
     const fieldType = getNamedType(this.getFieldType(fieldName));
-    if (!(fieldType instanceof GraphQLInputObjectType)) {
+    const tc = this.schemaComposer.createTempTC(fieldType);
+    if (
+      tc instanceof InputTypeComposer ||
+      tc instanceof EnumTypeComposer ||
+      tc instanceof ScalarTypeComposer
+    ) {
+      return tc;
+    } else {
       throw new Error(
-        `Cannot get InputTypeComposer for field '${fieldName}' in type ${this.getTypeName()}. ` +
-          `This field should be InputObjectType, but it has type '${fieldType.constructor.name}'`
+        `Type ${this.getTypeName()} has invalid field ${fieldName} which is not of an input type.`
       );
     }
-    return InputTypeComposer.createTemp(fieldType, this.schemaComposer);
   }
 
   makeFieldNonNull(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {

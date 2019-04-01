@@ -10,6 +10,8 @@ import {
 } from '../graphql';
 import { schemaComposer } from '..';
 import { InputTypeComposer } from '../InputTypeComposer';
+import { ScalarTypeComposer } from '../ScalarTypeComposer';
+import { EnumTypeComposer } from '../EnumTypeComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
@@ -120,13 +122,16 @@ describe('InputTypeComposer', () => {
 
       expect(itc.getFieldType('fieldNested1')).toBeInstanceOf(GraphQLInputObjectType);
       const fieldTC = itc.getFieldTC('fieldNested1');
-      expect(fieldTC.getTypeName()).toBe('InputTypeFieldNested1');
-      expect(fieldTC.getFieldType('f1')).toBe(GraphQLString);
-      expect(fieldTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
-      expect((fieldTC.getFieldType('f2'): any).ofType).toBe(GraphQLBoolean);
+      expect(fieldTC).toBeInstanceOf(InputTypeComposer);
+      if (fieldTC instanceof InputTypeComposer) {
+        expect(fieldTC.getTypeName()).toBe('InputTypeFieldNested1');
+        expect(fieldTC.getFieldType('f1')).toBe(GraphQLString);
+        expect(fieldTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+        expect((fieldTC.getFieldType('f2'): any).ofType).toBe(GraphQLBoolean);
 
-      expect(itc.getFieldType('fieldNested2')).toBeInstanceOf(GraphQLList);
-      expect((itc.getFieldType('fieldNested2'): any).ofType).toBe(GraphQLInt);
+        expect(itc.getFieldType('fieldNested2')).toBeInstanceOf(GraphQLList);
+        expect((itc.getFieldType('fieldNested2'): any).ofType).toBe(GraphQLInt);
+      }
     });
 
     it('removeField()', () => {
@@ -453,28 +458,39 @@ describe('InputTypeComposer', () => {
     myITC.addFields({
       scalar: 'String',
       list: '[Int]',
-      obj: schemaComposer.createInputTC(`input ICustomObjInputType { name: String }`),
-      objArr: [schemaComposer.createInputTC(`input ICustomObjInputType2 { name: String }`)],
+      obj: schemaComposer.createInputTC(`input MyInputType { name: String }`),
+      objArr: [schemaComposer.createInputTC(`input MyInputType2 { name: String }`)],
+      enum: EnumTypeComposer.create(`enum MyEnumType { FOO BAR }`, schemaComposer),
     });
 
-    it('should return InputTypeComposer for object field', () => {
-      const objTC = myITC.getFieldTC('obj');
-      expect(objTC.getTypeName()).toBe('ICustomObjInputType');
+    it('should return TypeComposer for object field', () => {
+      const tco = myITC.getFieldTC('obj');
+      expect(tco).toBeInstanceOf(InputTypeComposer);
+      expect(tco.getTypeName()).toBe('MyInputType');
     });
 
-    it('should return InputTypeComposer for wrapped object field', () => {
-      const objTC = myITC.getFieldTC('objArr');
-      expect(objTC.getTypeName()).toBe('ICustomObjInputType2');
+    it('should return TypeComposer for wrapped object field', () => {
+      const tco = myITC.getFieldTC('objArr');
+      expect(tco).toBeInstanceOf(InputTypeComposer);
+      expect(tco.getTypeName()).toBe('MyInputType2');
     });
 
-    it('should throw error for non-object fields', () => {
-      expect(() => {
-        myITC.getFieldTC('scalar');
-      }).toThrow('field should be InputObjectType');
+    it('should return TypeComposer for scalar fields', () => {
+      const tco = myITC.getFieldTC('scalar');
+      expect(tco).toBeInstanceOf(ScalarTypeComposer);
+      expect(tco.getTypeName()).toBe('String');
+    });
 
-      expect(() => {
-        myITC.getFieldTC('list');
-      }).toThrow('field should be InputObjectType');
+    it('should return TypeComposer for scalar list fields', () => {
+      const tco = myITC.getFieldTC('list');
+      expect(tco).toBeInstanceOf(ScalarTypeComposer);
+      expect(tco.getTypeName()).toBe('Int');
+    });
+
+    it('should return TypeComposer for interface list fields', () => {
+      const tco = myITC.getFieldTC('enum');
+      expect(tco).toBeInstanceOf(EnumTypeComposer);
+      expect(tco.getTypeName()).toBe('MyEnumType');
     });
   });
 });

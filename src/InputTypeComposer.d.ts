@@ -131,7 +131,12 @@ export class InputTypeComposer<TContext = any> {
 
   public getFieldType(fieldName: string): GraphQLInputType;
 
-  public getFieldTC(fieldName: string): InputTypeComposer<TContext>;
+  public getFieldTC(
+    fieldName: string,
+  ):
+    | InputTypeComposer<TContext>
+    | EnumTypeComposer<TContext>
+    | ScalarTypeComposer<TContext>;
 
   public makeFieldNonNull(fieldNameOrArray: string | string[]): this;
 

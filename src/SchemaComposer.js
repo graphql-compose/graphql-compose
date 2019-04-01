@@ -413,7 +413,15 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     }
   }
 
-  addAsComposer(typeOrSDL: mixed): string {
+  createTempTC(
+    typeOrSDL: mixed
+  ):
+    | ObjectTypeComposer<any, TContext>
+    | InputTypeComposer<TContext>
+    | EnumTypeComposer<TContext>
+    | InterfaceTypeComposer<any, TContext>
+    | UnionTypeComposer<any, TContext>
+    | ScalarTypeComposer<TContext> {
     let type;
     if (typeof typeOrSDL === 'string') {
       type = this.typeMapper.createType(typeOrSDL);
@@ -429,24 +437,28 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
       type instanceof InterfaceTypeComposer ||
       type instanceof UnionTypeComposer
     ) {
-      const name = type.getTypeName();
-      this.set(name, type);
-      return name;
+      return type;
     } else if (type instanceof GraphQLObjectType) {
-      return ObjectTypeComposer.create(type, this).getTypeName();
+      return ObjectTypeComposer.createTemp(type, this);
     } else if (type instanceof GraphQLInputObjectType) {
-      return InputTypeComposer.create(type, this).getTypeName();
+      return InputTypeComposer.createTemp(type, this);
     } else if (type instanceof GraphQLScalarType) {
-      return ScalarTypeComposer.create(type, this).getTypeName();
+      return ScalarTypeComposer.createTemp(type, this);
     } else if (type instanceof GraphQLEnumType) {
-      return EnumTypeComposer.create(type, this).getTypeName();
+      return EnumTypeComposer.createTemp(type, this);
     } else if (type instanceof GraphQLInterfaceType) {
-      return InterfaceTypeComposer.create(type, this).getTypeName();
+      return InterfaceTypeComposer.createTemp(type, this);
     } else if (type instanceof GraphQLUnionType) {
-      return UnionTypeComposer.create(type, this).getTypeName();
+      return UnionTypeComposer.createTemp(type, this);
     }
 
     throw new Error(`Cannot add as Composer type following value: ${inspect(type)}.`);
+  }
+
+  addAsComposer(typeOrSDL: mixed): string {
+    const composer = this.createTempTC(typeOrSDL);
+    this.set(composer.getTypeName(), composer);
+    return composer.getTypeName();
   }
 
   addTypeDefs(typeDefs: string): TypeStorage<string, GraphQLNamedType> {

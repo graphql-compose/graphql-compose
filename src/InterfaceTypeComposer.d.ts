@@ -20,6 +20,9 @@ import {
   ComposeFieldConfigAsObject,
   ObjectTypeComposer,
 } from './ObjectTypeComposer';
+import { EnumTypeComposer } from './EnumTypeComposer';
+import { UnionTypeComposer } from './UnionTypeComposer';
+import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { TypeAsString } from './TypeMapper';
 import { Thunk, MaybePromise, Extensions } from './utils/definitions';
 
@@ -119,7 +122,15 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public getFieldType(fieldName: string): GraphQLOutputType;
 
-  public getFieldTC(fieldName: string): ObjectTypeComposer<any, TContext>;
+  public getFieldTC(
+    fieldName: string,
+  ):
+    | ObjectTypeComposer<TSource, TContext>
+    | InputTypeComposer<TContext>
+    | EnumTypeComposer<TContext>
+    | InterfaceTypeComposer<TSource, TContext>
+    | UnionTypeComposer<TSource, TContext>
+    | ScalarTypeComposer<TContext>;
 
   public makeFieldNonNull(fieldNameOrArray: string | string[]): this;
 

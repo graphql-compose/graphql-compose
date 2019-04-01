@@ -390,7 +390,9 @@ export class ObjectTypeComposer<TSource, TContext> {
         } else {
           childTC = this.getFieldTC(name);
         }
-        childTC.addNestedFields({ [names.join('.')]: fc });
+        if (childTC instanceof ObjectTypeComposer) {
+          childTC.addNestedFields({ [names.join('.')]: fc });
+        }
       }
     });
 
@@ -486,15 +488,17 @@ export class ObjectTypeComposer<TSource, TContext> {
     return this.getFieldConfig(fieldName).type;
   }
 
-  getFieldTC(fieldName: string): ObjectTypeComposer<TSource, TContext> {
+  getFieldTC(
+    fieldName: string
+  ):
+    | ObjectTypeComposer<TSource, TContext>
+    | InputTypeComposer<TContext>
+    | EnumTypeComposer<TContext>
+    | InterfaceTypeComposer<TSource, TContext>
+    | UnionTypeComposer<TSource, TContext>
+    | ScalarTypeComposer<TContext> {
     const fieldType = getNamedType(this.getFieldType(fieldName));
-    if (!(fieldType instanceof GraphQLObjectType)) {
-      throw new Error(
-        `Cannot get ObjectTypeComposer for field '${fieldName}' in type ${this.getTypeName()}. ` +
-          `This field should be ObjectType, but it has type '${fieldType.constructor.name}'`
-      );
-    }
-    return ObjectTypeComposer.createTemp(fieldType, this.schemaComposer);
+    return this.schemaComposer.createTempTC(fieldType);
   }
 
   makeFieldNonNull(fieldNameOrArray: string | string[]): ObjectTypeComposer<TSource, TContext> {

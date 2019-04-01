@@ -17,6 +17,9 @@ import { Resolver } from '../Resolver';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
+import { ScalarTypeComposer } from '../ScalarTypeComposer';
+import { EnumTypeComposer } from '../EnumTypeComposer';
+import { UnionTypeComposer } from '../UnionTypeComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
@@ -160,13 +163,16 @@ describe('ObjectTypeComposer', () => {
 
       expect(tc.getFieldType('fieldNested1')).toBeInstanceOf(GraphQLObjectType);
       const fieldTC = tc.getFieldTC('fieldNested1');
-      expect(fieldTC.getTypeName()).toBe('ReadableFieldNested1');
-      expect(fieldTC.getFieldType('f1')).toBe(GraphQLString);
-      expect(fieldTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
-      expect((fieldTC.getFieldType('f2'): any).ofType).toBe(GraphQLBoolean);
+      expect(fieldTC).toBeInstanceOf(ObjectTypeComposer);
+      if (fieldTC instanceof ObjectTypeComposer) {
+        expect(fieldTC.getTypeName()).toBe('ReadableFieldNested1');
+        expect(fieldTC.getFieldType('f1')).toBe(GraphQLString);
+        expect(fieldTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
+        expect((fieldTC.getFieldType('f2'): any).ofType).toBe(GraphQLBoolean);
 
-      expect(tc.getFieldType('fieldNested2')).toBeInstanceOf(GraphQLList);
-      expect((tc.getFieldType('fieldNested2'): any).ofType).toBe(GraphQLInt);
+        expect(tc.getFieldType('fieldNested2')).toBeInstanceOf(GraphQLList);
+        expect((tc.getFieldType('fieldNested2'): any).ofType).toBe(GraphQLInt);
+      }
     });
 
     describe('removeField()', () => {
@@ -962,26 +968,57 @@ describe('ObjectTypeComposer', () => {
       list: '[Int]',
       obj: ObjectTypeComposer.create(`type MyCustomObjType { name: String }`, schemaComposer),
       objArr: [ObjectTypeComposer.create(`type MyCustomObjType2 { name: String }`, schemaComposer)],
+      iface: InterfaceTypeComposer.create(
+        `interface MyInterfaceType { field: String }`,
+        schemaComposer
+      ),
+      enum: EnumTypeComposer.create(`enum MyEnumType { FOO BAR }`, schemaComposer),
+      union: UnionTypeComposer.create(
+        `union MyUnionType = MyCustomObjType | MyCustomObjType2`,
+        schemaComposer
+      ),
     });
 
-    it('should return ObjectTypeComposer for object field', () => {
-      const objTC = myTC.getFieldTC('obj');
-      expect(objTC.getTypeName()).toBe('MyCustomObjType');
+    it('should return TypeComposer for object field', () => {
+      const tco = myTC.getFieldTC('obj');
+      expect(tco).toBeInstanceOf(ObjectTypeComposer);
+      expect(tco.getTypeName()).toBe('MyCustomObjType');
     });
 
-    it('should return ObjectTypeComposer for wrapped object field', () => {
-      const objTC = myTC.getFieldTC('objArr');
-      expect(objTC.getTypeName()).toBe('MyCustomObjType2');
+    it('should return TypeComposer for wrapped object field', () => {
+      const tco = myTC.getFieldTC('objArr');
+      expect(tco).toBeInstanceOf(ObjectTypeComposer);
+      expect(tco.getTypeName()).toBe('MyCustomObjType2');
     });
 
-    it('should throw error for non-object fields', () => {
-      expect(() => {
-        myTC.getFieldTC('scalar');
-      }).toThrow('field should be ObjectType');
+    it('should return TypeComposer for scalar fields', () => {
+      const tco = myTC.getFieldTC('scalar');
+      expect(tco).toBeInstanceOf(ScalarTypeComposer);
+      expect(tco.getTypeName()).toBe('String');
+    });
 
-      expect(() => {
-        myTC.getFieldTC('list');
-      }).toThrow('field should be ObjectType');
+    it('should return TypeComposer for scalar list fields', () => {
+      const tco = myTC.getFieldTC('list');
+      expect(tco).toBeInstanceOf(ScalarTypeComposer);
+      expect(tco.getTypeName()).toBe('Int');
+    });
+
+    it('should return TypeComposer for enum fields', () => {
+      const tco = myTC.getFieldTC('enum');
+      expect(tco).toBeInstanceOf(EnumTypeComposer);
+      expect(tco.getTypeName()).toBe('MyEnumType');
+    });
+
+    it('should return TypeComposer for interface list fields', () => {
+      const tco = myTC.getFieldTC('iface');
+      expect(tco).toBeInstanceOf(InterfaceTypeComposer);
+      expect(tco.getTypeName()).toBe('MyInterfaceType');
+    });
+
+    it('should return TypeComposer for union list fields', () => {
+      const tco = myTC.getFieldTC('union');
+      expect(tco).toBeInstanceOf(UnionTypeComposer);
+      expect(tco.getTypeName()).toBe('MyUnionType');
     });
   });
 
