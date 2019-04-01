@@ -127,14 +127,14 @@ PersonTC.wrapResolverResolve<Person>('findMany', next => rp => {
 // Fields
 // No Overloads created for fields
 // ****************************
-PersonTC.getFieldTC('deep') // <----- no matter what type you provide here, it should not affect on rp.source below
+(PersonTC.getFieldTC('deep') as ObjectTypeComposer) // <----- no matter what type you provide here, it should not affect on rp.source below
   .getResolver('findOne')
   .wrapResolve<DeepOptions>(next => rp => {
     rp.source.deep1 = 'string';
     rp.context.uid = 'string'; // passes
   });
 
-PersonTC.getFieldTC('deep') // <-------------- this case should not have errors
+(PersonTC.getFieldTC('deep') as ObjectTypeComposer) // <-------------- this case should not have errors
   .getResolver('findOne')
   .wrapResolve(next => rp => {
     // no checking of rp.source as it is any, but we check context as it is inherited

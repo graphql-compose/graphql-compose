@@ -141,6 +141,16 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
 
   public add(typeOrSDL: any): string | null;
 
+  public createTempTC(
+    typeOrSDL: any,
+  ):
+    | ObjectTypeComposer<any, TContext>
+    | InputTypeComposer<TContext>
+    | EnumTypeComposer<TContext>
+    | InterfaceTypeComposer<any, TContext>
+    | UnionTypeComposer<any, TContext>
+    | ScalarTypeComposer<TContext>;
+
   public addAsComposer(typeOrSDL: any): string;
 
   public addTypeDefs(typeDefs: string): TypeStorage<string, GraphQLNamedType>;
