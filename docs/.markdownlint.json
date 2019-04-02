@@ -1,0 +1,12 @@
+{
+  "line-length": false,
+  "no-trailing-punctuation": {
+    "punctuation": ",;"
+  },
+  "no-inline-html": false,
+  "ol-prefix": false,
+  "first-line-h1": false,
+  "first-header-h1": false,
+  "first-heading-h1": false,
+  "no-emphasis-as-header": false
+}
