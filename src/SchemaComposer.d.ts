@@ -215,6 +215,9 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     opts: ResolverOpts<TSource, TContext, TArgs>,
   ): Resolver<TSource, TContext, TArgs>;
 
+  /**
+   * Creates TypeComposer from SDL without adding it to the type storage.
+   */
   public createTempTC(
     typeOrSDL: any,
   ):
