@@ -21,6 +21,10 @@ describe('Extensions', () => {
           fields: {
             id: 'ID!',
             name: 'String',
+            nonExistingType: 'Bar',
+            thunkedField: () => ({
+              type: 'String',
+            }),
           },
         },
         sc
@@ -35,6 +39,10 @@ describe('Extensions', () => {
           fields: {
             id: 'ID!',
             name: 'String',
+            nonExistingType: 'Bar',
+            thunkedField: () => ({
+              type: 'String',
+            }),
           },
         },
         sc
@@ -49,6 +57,10 @@ describe('Extensions', () => {
           fields: {
             id: 'ID!',
             name: 'String',
+            nonExistingType: 'Bar',
+            thunkedField: () => ({
+              type: 'String',
+            }),
           },
           extensions: { tags: ['generated'] },
         },
@@ -69,13 +81,23 @@ describe('Extensions', () => {
                 noFilter: true,
               },
             },
+            nonExistingType: {
+              type: 'Bar',
+              extensions: {
+                noFilter: true,
+              },
+            },
+            thunkedField: () => ({
+              type: 'String',
+              extensions: {
+                noFilter: true,
+              },
+            }),
           },
         },
         sc
       );
-      expect(tc.getFieldExtensions('name')).toEqual({
-        noFilter: true,
-      });
+      testFieldExtensionsInitializers(tc);
     });
   });
 
@@ -87,6 +109,10 @@ describe('Extensions', () => {
           fields: {
             id: 'ID!',
             name: 'String',
+            nonExistingType: 'Bar',
+            thunkedField: () => ({
+              type: 'String',
+            }),
           },
         },
         sc
@@ -101,6 +127,10 @@ describe('Extensions', () => {
           fields: {
             id: 'ID!',
             name: 'String',
+            nonExistingType: 'Bar',
+            thunkedField: () => ({
+              type: 'String',
+            }),
           },
         },
         sc
@@ -115,6 +145,10 @@ describe('Extensions', () => {
           fields: {
             id: 'ID!',
             name: 'String',
+            nonExistingType: 'Bar',
+            thunkedField: () => ({
+              type: 'String',
+            }),
           },
           extensions: { tags: ['generated'] },
         },
@@ -135,13 +169,23 @@ describe('Extensions', () => {
                 noFilter: true,
               },
             },
+            nonExistingType: {
+              type: 'Bar',
+              extensions: {
+                noFilter: true,
+              },
+            },
+            thunkedField: () => ({
+              type: 'String',
+              extensions: {
+                noFilter: true,
+              },
+            }),
           },
         },
         sc
       );
-      expect(tc.getFieldExtensions('name')).toEqual({
-        noFilter: true,
-      });
+      testFieldExtensionsInitializers(tc);
     });
   });
 
@@ -153,6 +197,10 @@ describe('Extensions', () => {
           fields: {
             id: 'ID!',
             name: 'String',
+            nonExistingType: 'Bar',
+            thunkedField: () => ({
+              type: 'String',
+            }),
           },
         },
         sc
@@ -167,6 +215,10 @@ describe('Extensions', () => {
           fields: {
             id: 'ID!',
             name: 'String',
+            nonExistingType: 'Bar',
+            thunkedField: () => ({
+              type: 'String',
+            }),
           },
         },
         sc
@@ -182,6 +234,10 @@ describe('Extensions', () => {
             id: 'ID!',
             name: 'String',
           },
+          nonExistingType: 'Bar',
+          thunkedField: () => ({
+            type: 'String',
+          }),
           extensions: { tags: ['generated'] },
         },
         sc
@@ -201,13 +257,23 @@ describe('Extensions', () => {
                 noFilter: true,
               },
             },
+            nonExistingType: {
+              type: 'Bar',
+              extensions: {
+                noFilter: true,
+              },
+            },
+            thunkedField: () => ({
+              type: 'String',
+              extensions: {
+                noFilter: true,
+              },
+            }),
           },
         },
         sc
       );
-      expect(tc.getFieldExtensions('name')).toEqual({
-        noFilter: true,
-      });
+      testFieldExtensionsInitializers(tc);
     });
   });
 
@@ -361,50 +427,64 @@ describe('Extensions', () => {
   }
 
   function testFieldExtensions(instance) {
-    expect(instance.getFieldExtensions('id')).toEqual({});
-    instance.setFieldExtensions('id', {
-      tags: ['generated'],
-      source: 'inference',
+    ['id', 'name', 'nonExistingType', 'thunkedField'].forEach(fieldName => {
+      expect(instance.getFieldExtensions(fieldName)).toEqual({});
+      instance.setFieldExtensions(fieldName, {
+        tags: ['generated'],
+        source: 'inference',
+      });
+      expect(instance.getFieldExtensions(fieldName)).toEqual({
+        tags: ['generated'],
+        source: 'inference',
+      });
+      instance.extendFieldExtensions(fieldName, {
+        source: 'user',
+        originalName: 'foo',
+      });
+      expect(instance.getFieldExtensions(fieldName)).toEqual({
+        tags: ['generated'],
+        source: 'user',
+        originalName: 'foo',
+      });
+      expect(instance.getFieldExtension(fieldName, 'source')).toEqual('user');
+      expect(instance.hasFieldExtension(fieldName, 'source')).toEqual(true);
+      expect(instance.hasFieldExtension(fieldName, 'nonExistant')).toEqual(false);
+      instance.setFieldExtension(fieldName, 'source', 'inference');
+      expect(instance.getFieldExtensions(fieldName)).toEqual({
+        tags: ['generated'],
+        source: 'inference',
+        originalName: 'foo',
+      });
+      expect(instance.getFieldExtension(fieldName, 'source')).toEqual('inference');
+      instance.removeFieldExtension(fieldName, 'originalName');
+      expect(instance.getFieldExtensions(fieldName)).toEqual({
+        tags: ['generated'],
+        source: 'inference',
+      });
+      instance.clearFieldExtensions(fieldName);
+      expect(instance.getFieldExtensions(fieldName)).toEqual({});
+      expect(instance.hasFieldExtension(fieldName, 'source')).toEqual(false);
+      instance.setFieldExtensions(fieldName, {
+        tags: ['generated'],
+        source: 'inference',
+      });
+      expect(instance.getFieldExtensions(fieldName)).toEqual({
+        tags: ['generated'],
+        source: 'inference',
+      });
+      instance.clearFieldExtensions(fieldName);
     });
-    expect(instance.getFieldExtensions('id')).toEqual({
-      tags: ['generated'],
-      source: 'inference',
+  }
+
+  function testFieldExtensionsInitializers(instance) {
+    expect(instance.getFieldExtensions('name')).toEqual({
+      noFilter: true,
     });
-    instance.extendFieldExtensions('id', {
-      source: 'user',
-      originalName: 'foo',
+    expect(instance.getFieldExtensions('nonExistingType')).toEqual({
+      noFilter: true,
     });
-    expect(instance.getFieldExtensions('id')).toEqual({
-      tags: ['generated'],
-      source: 'user',
-      originalName: 'foo',
+    expect(instance.getFieldExtensions('thunkedField')).toEqual({
+      noFilter: true,
     });
-    expect(instance.getFieldExtension('id', 'source')).toEqual('user');
-    expect(instance.hasFieldExtension('id', 'source')).toEqual(true);
-    expect(instance.hasFieldExtension('id', 'nonExistant')).toEqual(false);
-    instance.setFieldExtension('id', 'source', 'inference');
-    expect(instance.getFieldExtensions('id')).toEqual({
-      tags: ['generated'],
-      source: 'inference',
-      originalName: 'foo',
-    });
-    expect(instance.getFieldExtension('id', 'source')).toEqual('inference');
-    instance.removeFieldExtension('id', 'originalName');
-    expect(instance.getFieldExtensions('id')).toEqual({
-      tags: ['generated'],
-      source: 'inference',
-    });
-    instance.clearFieldExtensions('id');
-    expect(instance.getFieldExtensions('id')).toEqual({});
-    expect(instance.hasFieldExtension('id', 'source')).toEqual(false);
-    instance.setFieldExtensions('id', {
-      tags: ['generated'],
-      source: 'inference',
-    });
-    expect(instance.getFieldExtensions('id')).toEqual({
-      tags: ['generated'],
-      source: 'inference',
-    });
-    instance.clearFieldExtensions('id');
   }
 });

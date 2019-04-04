@@ -32,7 +32,6 @@ import type {
   ComposeFieldConfigMap,
   ComposeFieldConfig,
   ComposeFieldConfigAsObject,
-  ComposeObjectTypeConfig,
 } from './ObjectTypeComposer';
 import type { Thunk, Extensions, MaybePromise } from './utils/definitions';
 import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './utils/configAsThunk';
@@ -746,14 +745,19 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   getFieldExtensions(fieldName: string): Extensions {
-    const field = this.getField(fieldName);
+    let field = this.getField(fieldName);
+    if (isFunction(field)) {
+      field = field();
+    }
+
     if (
       isObject(field) &&
       !isFunction(field) &&
       !Array.isArray(field) &&
-      !isComposeOutputType(field)
+      !isComposeOutputType(field) &&
+      !(field instanceof GraphQLList || field instanceof GraphQLNonNull)
     ) {
-      return (field: ComposeObjectTypeConfig<any, any>).extensions || {};
+      return (field: ComposeFieldConfigAsObject<any, any, any>).extensions || {};
     } else {
       return {};
     }
@@ -763,14 +767,38 @@ export class InterfaceTypeComposer<TSource, TContext> {
     fieldName: string,
     extensions: Extensions
   ): InterfaceTypeComposer<TSource, TContext> {
-    const fieldConfig = this.getFieldConfig(fieldName);
-    this.setField(
-      fieldName,
-      ({
-        ...fieldConfig,
+    let field = this.getField(fieldName);
+
+    if (isFunction(field)) {
+      field = field();
+    }
+
+    // This mess makes flow happy
+    if (
+      !isFunction(field) &&
+      (isString(field) ||
+        Array.isArray(field) ||
+        field instanceof GraphQLList ||
+        field instanceof GraphQLNonNull ||
+        isComposeOutputType(field))
+    ) {
+      field = {
+        type: field,
+      };
+
+      this.setField(fieldName, {
+        ...(field: ComposeFieldConfigAsObject<any, any, any>),
         extensions,
-      }: any)
-    );
+      });
+    } else if (typeof field !== 'function') {
+      this.setField(fieldName, {
+        ...(field: ComposeFieldConfigAsObject<any, any, any>),
+        extensions,
+      });
+    } else {
+      throw new Error(`Can not set extension on a thunk for ${this.getTypeName()}.{fieldName}`);
+    }
+
     return this;
   }
 

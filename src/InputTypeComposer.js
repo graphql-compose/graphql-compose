@@ -519,7 +519,11 @@ export class InputTypeComposer<TContext> {
   }
 
   getFieldExtensions(fieldName: string): Extensions {
-    const field = this.getField(fieldName);
+    let field = this.getField(fieldName);
+    if (isFunction(field)) {
+      field = field();
+    }
+
     if (
       isObject(field) &&
       !isFunction(field) &&
@@ -530,16 +534,35 @@ export class InputTypeComposer<TContext> {
       !(field instanceof GraphQLList) &&
       !(field instanceof GraphQLNonNull)
     ) {
-      return (field: ComposeInputObjectTypeConfig).extensions || {};
+      return (field: ComposeInputFieldConfigAsObject).extensions || {};
     } else {
       return {};
     }
   }
 
   setFieldExtensions(fieldName: string, extensions: Extensions): InputTypeComposer<TContext> {
-    const fieldConfig = this.getFieldConfig(fieldName);
+    let field = this.getField(fieldName);
+
+    if (isFunction(field)) {
+      field = field();
+    }
+
+    if (
+      isString(field) ||
+      Array.isArray(field) ||
+      isComposeInputType(field) ||
+      // Flow is misbehaving so I have to add this
+      // it should be handled by the above isComposeInputType, but somehow is not
+      field instanceof GraphQLList ||
+      field instanceof GraphQLNonNull
+    ) {
+      field = {
+        type: field,
+      };
+    }
+
     this.setField(fieldName, {
-      ...fieldConfig,
+      ...field,
       extensions,
     });
     return this;
