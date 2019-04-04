@@ -21,6 +21,7 @@ import type {
   InputValueDefinitionNode,
   EnumTypeDefinitionNode,
   InputObjectTypeDefinitionNode,
+  DefinitionNode,
 } from 'graphql/language/ast';
 import { inspect } from './utils/misc';
 import find from './utils/polyfills/find';
@@ -181,7 +182,7 @@ export class TypeMapper<TContext> {
 
   getWrapped(str: TypeWrappedString | TypeNameString): GraphQLType | void {
     const typeAST: TypeNode = parseType(str);
-    return typeFromAST(typeAST, this.schemaComposer);
+    return this.typeFromAST(typeAST);
   }
 
   createType(str: TypeDefinitionString): AnyComposeType<TContext> | void {
@@ -198,7 +199,7 @@ export class TypeMapper<TContext> {
       );
     }
 
-    const types = parseTypes(astDocument, this.schemaComposer);
+    const types = this.parseTypes(astDocument);
 
     const type = types[0];
 
@@ -228,7 +229,7 @@ export class TypeMapper<TContext> {
       throw new Error('You should provide correct SDL syntax.');
     }
 
-    const types = parseTypes(astDocument, this.schemaComposer);
+    const types = this.parseTypes(astDocument);
     const typeStorage = new TypeStorage();
     types.forEach(type => {
       typeStorage.set(type.getTypeName(), type);
@@ -677,185 +678,166 @@ export class TypeMapper<TContext> {
 
     return fields;
   }
-}
 
-// /////////////////////////////////////////////////////////////////////////////
-// From GraphQL-js particles
-// /////////////////////////////////////////////////////////////////////////////
-function parseTypes<TContext>(
-  astDocument: DocumentNode,
-  schema: SchemaComposer<any>
-): Array<AnyComposeType<TContext>> {
-  const types = [];
-  for (let i = 0; i < astDocument.definitions.length; i++) {
-    const def = astDocument.definitions[i];
-    const type = makeSchemaDef(def, schema);
-    if (type) {
-      types[i] = type;
-    }
-  }
-  return types;
-}
-
-function typeFromAST(inputTypeAST: TypeNode, schema: SchemaComposer<any>): GraphQLType | void {
-  let innerType;
-  if (inputTypeAST.kind === Kind.LIST_TYPE) {
-    innerType = typeFromAST(inputTypeAST.type, schema);
-    return innerType && new GraphQLList(innerType);
-  }
-  if (inputTypeAST.kind === Kind.NON_NULL_TYPE) {
-    innerType = typeFromAST(inputTypeAST.type, schema);
-    return innerType && new GraphQLNonNull(((innerType: any): GraphQLNullableType));
-  }
-  invariant(inputTypeAST.kind === Kind.NAMED_TYPE, 'Must be a named type.');
-  return schema.typeMapper.get(inputTypeAST.name.value);
-}
-
-function typeDefNamed(typeName: string, schema: SchemaComposer<any>): GraphQLNamedType {
-  const type = schema.typeMapper.get(typeName);
-  if (type && isNamedType(type)) {
-    return type;
-  } else if (type) {
-    return type.getType();
-  }
-  if (typeName === 'Query') {
-    return schema.Query.getType();
-  }
-  if (typeName === 'Mutation') {
-    return schema.Mutation.getType();
-  }
-  if (typeName === 'Subscription') {
-    return schema.Subscription.getType();
-  }
-  throw new Error(`Cannot find type with name '${typeName}' in SchemaComposer.`);
-}
-
-function makeSchemaDef(def, schema: SchemaComposer<any>): AnyComposeType<any> | null {
-  if (!def) {
-    throw new Error('def must be defined');
-  }
-
-  switch (def.kind) {
-    case Kind.OBJECT_TYPE_DEFINITION:
-      return makeTypeDef(def, schema);
-    case Kind.INTERFACE_TYPE_DEFINITION:
-      return makeInterfaceDef(def, schema);
-    case Kind.ENUM_TYPE_DEFINITION:
-      return makeEnumDef(def, schema);
-    case Kind.UNION_TYPE_DEFINITION:
-      return makeUnionDef(def, schema);
-    case Kind.SCALAR_TYPE_DEFINITION:
-      return makeScalarDef(def, schema);
-    case Kind.SCHEMA_DEFINITION:
-      checkSchemaDef(def);
-      return null;
-    case Kind.DIRECTIVE_DEFINITION: {
-      const directive = makeDirectiveDef(def, schema);
-      if (directive) schema.addDirective(directive);
-      return null;
-    }
-    case Kind.INPUT_OBJECT_TYPE_DEFINITION:
-      return makeInputObjectDef(def, schema);
-    default:
-      throw new Error(`Type kind "${def.kind}" not supported.`);
-  }
-}
-
-function getInputDefaultValue(value: InputValueDefinitionNode, type: GraphQLInputType): mixed {
-  // check getDirectiveValues become avaliable from 0.10.2
-  if (Array.isArray(value.directives) && getDirectiveValues) {
-    const vars = getDirectiveValues(DefaultDirective, value);
-    if (vars && vars.hasOwnProperty('value')) return vars.value;
-  }
-  return valueFromAST(value.defaultValue, type);
-}
-
-function makeArguments(
-  values: ?$ReadOnlyArray<InputValueDefinitionNode>,
-  schema: SchemaComposer<any>
-): ComposeFieldConfigArgumentMap<any> {
-  if (!values) {
-    return {};
-  }
-  const result = {};
-  values.forEach(value => {
-    const key = value.name.value;
-    let val;
-    const typeName = getNamedTypeAST(value.type).name.value;
-    const type = produceType(value.type, schema);
-    if (value.defaultValue) {
-      const typeDef = typeDefNamed(typeName, schema);
-      val = () => {
-        const wrappedType = buildWrappedTypeDef(typeDef, value.type);
-        if (isInputType(wrappedType)) {
-          return {
-            type,
-            description: getDescription(value),
-            defaultValue: getInputDefaultValue(value, ((wrappedType: any): GraphQLInputType)),
-          };
-        } else {
-          throw new Error('Non-input type as an argument.');
-        }
-      };
-    } else {
-      val = {
-        type,
-        description: getDescription(value),
-      };
-    }
-    result[key] = val;
-  });
-  return result;
-}
-
-function makeFieldDefMap(
-  def: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode,
-  schema: SchemaComposer<any>
-): ComposeFieldConfigMap<any, any> {
-  if (!def.fields) return {};
-  return keyValMap(
-    def.fields,
-    field => field.name.value,
-    field => ({
-      type: produceType(field.type, schema),
-      description: getDescription(field),
-      args: makeArguments(field.arguments, schema),
-      deprecationReason: getDeprecationReason(field.directives),
-      astNode: field,
-    })
-  );
-}
-
-function makeInputFieldDef(
-  def: InputObjectTypeDefinitionNode,
-  schema: SchemaComposer<any>
-): ComposeInputFieldConfigMap {
-  if (!def.fields) return {};
-  return keyValMap(
-    def.fields,
-    field => field.name.value,
-    field => {
-      let defaultValue;
-      if (Array.isArray(field.directives) && getDirectiveValues) {
-        const vars = getDirectiveValues(DefaultDirective, field);
-        if (vars && vars.hasOwnProperty('value')) {
-          defaultValue = vars.value;
-        }
+  parseTypes(astDocument: DocumentNode): Array<AnyComposeType<TContext>> {
+    const types = [];
+    for (let i = 0; i < astDocument.definitions.length; i++) {
+      const def = astDocument.definitions[i];
+      const type = this.makeSchemaDef(def);
+      if (type) {
+        types[i] = type;
       }
-      return {
-        type: produceType(field.type, schema),
-        description: getDescription(field),
-        deprecationReason: getDeprecationReason(field.directives),
-        defaultValue,
-        astNode: field,
-      };
     }
-  );
-}
+    return types;
+  }
 
-function makeEnumDef(def: EnumTypeDefinitionNode, schema: SchemaComposer<any>) {
-  const enumType = EnumTypeComposer.createTemp(
-    {
+  typeFromAST(inputTypeAST: TypeNode): GraphQLType | void {
+    let innerType;
+    if (inputTypeAST.kind === Kind.LIST_TYPE) {
+      innerType = this.typeFromAST(inputTypeAST.type);
+      return innerType && new GraphQLList(innerType);
+    }
+    if (inputTypeAST.kind === Kind.NON_NULL_TYPE) {
+      innerType = this.typeFromAST(inputTypeAST.type);
+      return innerType && new GraphQLNonNull(((innerType: any): GraphQLNullableType));
+    }
+    invariant(inputTypeAST.kind === Kind.NAMED_TYPE, 'Must be a named type.');
+    return this.get(inputTypeAST.name.value);
+  }
+
+  typeDefNamed(typeName: string): GraphQLNamedType {
+    const type = this.get(typeName);
+    if (type && isNamedType(type)) {
+      return type;
+    } else if (type) {
+      return type.getType();
+    }
+    if (typeName === 'Query') {
+      return this.schemaComposer.Query.getType();
+    }
+    if (typeName === 'Mutation') {
+      return this.schemaComposer.Mutation.getType();
+    }
+    if (typeName === 'Subscription') {
+      return this.schemaComposer.Subscription.getType();
+    }
+    throw new Error(`Cannot find type with name '${typeName}' in SchemaComposer.`);
+  }
+
+  makeSchemaDef(def: DefinitionNode): AnyComposeType<any> | null {
+    if (!def) {
+      throw new Error('def must be defined');
+    }
+
+    switch (def.kind) {
+      case Kind.OBJECT_TYPE_DEFINITION:
+        return this.makeTypeDef(def);
+      case Kind.INTERFACE_TYPE_DEFINITION:
+        return this.makeInterfaceDef(def);
+      case Kind.ENUM_TYPE_DEFINITION:
+        return this.makeEnumDef(def);
+      case Kind.UNION_TYPE_DEFINITION:
+        return this.makeUnionDef(def);
+      case Kind.SCALAR_TYPE_DEFINITION:
+        return this.makeScalarDef(def);
+      case Kind.SCHEMA_DEFINITION:
+        this.checkSchemaDef(def);
+        return null;
+      case Kind.DIRECTIVE_DEFINITION: {
+        const directive = this.makeDirectiveDef(def);
+        if (directive) this.schemaComposer.addDirective(directive);
+        return null;
+      }
+      case Kind.INPUT_OBJECT_TYPE_DEFINITION:
+        return this.makeInputObjectDef(def);
+      default:
+        throw new Error(`Type kind "${def.kind}" not supported.`);
+    }
+  }
+
+  makeArguments(
+    values: ?$ReadOnlyArray<InputValueDefinitionNode>
+  ): ComposeFieldConfigArgumentMap<any> {
+    if (!values) {
+      return {};
+    }
+    const result = {};
+    values.forEach(value => {
+      const key = value.name.value;
+      let val;
+      const typeName = this.getNamedTypeAST(value.type).name.value;
+      const type = this.produceType(value.type);
+      if (value.defaultValue) {
+        const typeDef = this.typeDefNamed(typeName);
+        val = () => {
+          const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
+          if (isInputType(wrappedType)) {
+            return {
+              type,
+              description: getDescription(value),
+              defaultValue: this.getInputDefaultValue(
+                value,
+                ((wrappedType: any): GraphQLInputType)
+              ),
+            };
+          } else {
+            throw new Error('Non-input type as an argument.');
+          }
+        };
+      } else {
+        val = {
+          type,
+          description: getDescription(value),
+        };
+      }
+      result[key] = val;
+    });
+    return result;
+  }
+
+  makeFieldDefMap(
+    def: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode
+  ): ComposeFieldConfigMap<any, any> {
+    if (!def.fields) return {};
+    return keyValMap(
+      def.fields,
+      field => field.name.value,
+      field => ({
+        type: this.produceType(field.type),
+        description: getDescription(field),
+        args: this.makeArguments(field.arguments),
+        deprecationReason: this.getDeprecationReason(field.directives),
+        astNode: field,
+      })
+    );
+  }
+
+  makeInputFieldDef(def: InputObjectTypeDefinitionNode): ComposeInputFieldConfigMap {
+    if (!def.fields) return {};
+    return keyValMap(
+      def.fields,
+      field => field.name.value,
+      field => {
+        let defaultValue;
+        if (Array.isArray(field.directives) && getDirectiveValues) {
+          const vars = getDirectiveValues(DefaultDirective, field);
+          if (vars && vars.hasOwnProperty('value')) {
+            defaultValue = vars.value;
+          }
+        }
+        return {
+          type: this.produceType(field.type),
+          description: getDescription(field),
+          deprecationReason: this.getDeprecationReason(field.directives),
+          defaultValue,
+          astNode: field,
+        };
+      }
+    );
+  }
+
+  makeEnumDef(def: EnumTypeDefinitionNode) {
+    const enumType = this.schemaComposer.createEnumTC({
       name: def.name.value,
       description: getDescription(def),
       values: !def.values
@@ -865,185 +847,175 @@ function makeEnumDef(def: EnumTypeDefinitionNode, schema: SchemaComposer<any>) {
             enumValue => enumValue.name.value,
             enumValue => ({
               description: getDescription(enumValue),
-              deprecationReason: getDeprecationReason(enumValue.directives),
+              deprecationReason: this.getDeprecationReason(enumValue.directives),
             })
           ),
       astNode: def,
-    },
-    schema
-  );
+    });
 
-  return enumType;
-}
+    return enumType;
+  }
 
-function makeInputObjectDef(def: InputObjectTypeDefinitionNode, schema: SchemaComposer<any>) {
-  return InputTypeComposer.createTemp(
-    {
+  makeInputObjectDef(def: InputObjectTypeDefinitionNode) {
+    return this.schemaComposer.createInputTC({
       name: def.name.value,
       description: getDescription(def),
-      fields: makeInputFieldDef(def, schema),
+      fields: this.makeInputFieldDef(def),
       astNode: def,
-    },
-    schema
-  );
-}
+    });
+  }
 
-function makeDirectiveDef(
-  def: DirectiveDefinitionNode,
-  schema: SchemaComposer<any>
-): GraphQLDirective {
-  const locations = def.locations.map(({ value }) => (value: any));
-  const args = {};
-  (def.arguments || []).forEach(value => {
-    const key = value.name.value;
-    let val;
-    const typeName = getNamedTypeAST(value.type).name.value;
-    const typeDef = typeDefNamed(typeName, schema);
-    const wrappedType = buildWrappedTypeDef(typeDef, value.type);
-    if (isInputType(wrappedType)) {
-      val = {
-        type: wrappedType,
-        description: getDescription(value),
-        defaultValue: getInputDefaultValue(value, ((wrappedType: any): GraphQLInputType)),
-      };
-    } else {
-      throw new Error('Non-input type as an argument.');
-    }
-    args[key] = val;
-  });
+  makeDirectiveDef(def: DirectiveDefinitionNode): GraphQLDirective {
+    const locations = def.locations.map(({ value }) => (value: any));
+    const args = {};
+    (def.arguments || []).forEach(value => {
+      const key = value.name.value;
+      let val;
+      const typeName = this.getNamedTypeAST(value.type).name.value;
+      const typeDef = this.typeDefNamed(typeName);
+      const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
+      if (isInputType(wrappedType)) {
+        val = {
+          type: wrappedType,
+          description: getDescription(value),
+          defaultValue: this.getInputDefaultValue(value, ((wrappedType: any): GraphQLInputType)),
+        };
+      } else {
+        throw new Error('Non-input type as an argument.');
+      }
+      args[key] = val;
+    });
 
-  return new GraphQLDirective({
-    name: def.name.value,
-    description: getDescription(def),
-    locations,
-    args,
-    astNode: def,
-  });
-}
+    return new GraphQLDirective({
+      name: def.name.value,
+      description: getDescription(def),
+      locations,
+      args,
+      astNode: def,
+    });
+  }
 
-function makeScalarDef(def: ScalarTypeDefinitionNode, schema: SchemaComposer<any>) {
-  return ScalarTypeComposer.createTemp(
-    {
+  makeScalarDef(def: ScalarTypeDefinitionNode) {
+    return this.schemaComposer.createScalarTC({
       name: def.name.value,
       description: getDescription(def),
       serialize: v => v,
       astNode: def,
-    },
-    schema
-  );
-}
+    });
+  }
 
-function checkSchemaDef(def: SchemaDefinitionNode) {
-  const validNames = {
-    query: 'Query',
-    mutation: 'Mutation',
-    subscription: 'Subscription',
-  };
+  makeImplementedInterfaces(def: ObjectTypeDefinitionNode) {
+    return (def.interfaces || []).map(iface => {
+      const name = this.getNamedTypeAST(iface).name.value;
+      return this.schemaComposer.getIFTC(name).getType();
+    });
+  }
 
-  def.operationTypes.forEach(d => {
-    if (d.operation) {
-      const validTypeName = validNames[d.operation];
-      const actualTypeName = d.type.name.value;
-      if (actualTypeName !== validTypeName) {
-        throw new Error(
-          `Incorrect type name '${actualTypeName}' for '${
-            d.operation
-          }'. The valid definition is "schema { ${d.operation}: ${validTypeName} }"`
-        );
-      }
+  makeTypeDef(def: ObjectTypeDefinitionNode) {
+    return this.schemaComposer.createObjectTC({
+      name: def.name.value,
+      description: getDescription(def),
+      fields: this.makeFieldDefMap(def),
+      interfaces: () => this.makeImplementedInterfaces(def),
+      astNode: def,
+    });
+  }
+
+  makeInterfaceDef(def: InterfaceTypeDefinitionNode) {
+    return this.schemaComposer.createInterfaceTC({
+      name: def.name.value,
+      description: getDescription(def),
+      fields: this.makeFieldDefMap(def),
+      astNode: def,
+    });
+  }
+
+  makeUnionDef(def: UnionTypeDefinitionNode) {
+    const types: ?$ReadOnlyArray<NamedTypeNode> = def.types;
+    return this.schemaComposer.createUnionTC({
+      name: def.name.value,
+      description: getDescription(def),
+      types: (types || []).map(ref => this.getNamedTypeAST(ref).name.value),
+      astNode: def,
+    });
+  }
+
+  getInputDefaultValue(value: InputValueDefinitionNode, type: GraphQLInputType): mixed {
+    // check getDirectiveValues become avaliable from 0.10.2
+    if (Array.isArray(value.directives) && getDirectiveValues) {
+      const vars = getDirectiveValues(DefaultDirective, value);
+      if (vars && vars.hasOwnProperty('value')) return vars.value;
     }
-  });
-}
-
-function getNamedTypeAST(typeAST: TypeNode): NamedTypeNode {
-  let namedType = typeAST;
-  while (namedType.kind === Kind.LIST_TYPE || namedType.kind === Kind.NON_NULL_TYPE) {
-    namedType = namedType.type;
+    return valueFromAST(value.defaultValue, type);
   }
-  return namedType;
-}
 
-function buildWrappedType(innerType: string | GraphQLType, inputTypeAST: TypeNode): string {
-  if (inputTypeAST.kind === Kind.LIST_TYPE) {
-    const wrappedType = buildWrappedType(innerType, inputTypeAST.type);
-    return `[${wrappedType}]`;
+  checkSchemaDef(def: SchemaDefinitionNode) {
+    const validNames = {
+      query: 'Query',
+      mutation: 'Mutation',
+      subscription: 'Subscription',
+    };
+
+    def.operationTypes.forEach(d => {
+      if (d.operation) {
+        const validTypeName = validNames[d.operation];
+        const actualTypeName = d.type.name.value;
+        if (actualTypeName !== validTypeName) {
+          throw new Error(
+            `Incorrect type name '${actualTypeName}' for '${
+              d.operation
+            }'. The valid definition is "schema { ${d.operation}: ${validTypeName} }"`
+          );
+        }
+      }
+    });
   }
-  if (inputTypeAST.kind === Kind.NON_NULL_TYPE) {
-    const wrappedType = buildWrappedType(innerType, inputTypeAST.type);
-    return `${wrappedType}!`;
+
+  getNamedTypeAST(typeAST: TypeNode): NamedTypeNode {
+    let namedType = typeAST;
+    while (namedType.kind === Kind.LIST_TYPE || namedType.kind === Kind.NON_NULL_TYPE) {
+      namedType = namedType.type;
+    }
+    return namedType;
   }
-  return innerType.toString();
-}
 
-function buildWrappedTypeDef(innerType: GraphQLType, inputTypeAST: TypeNode): GraphQLType {
-  if (inputTypeAST.kind === Kind.LIST_TYPE) {
-    return new GraphQLList(buildWrappedTypeDef(innerType, inputTypeAST.type));
+  buildWrappedType(innerType: string | GraphQLType, inputTypeAST: TypeNode): string {
+    if (inputTypeAST.kind === Kind.LIST_TYPE) {
+      const wrappedType = this.buildWrappedType(innerType, inputTypeAST.type);
+      return `[${wrappedType}]`;
+    }
+    if (inputTypeAST.kind === Kind.NON_NULL_TYPE) {
+      const wrappedType = this.buildWrappedType(innerType, inputTypeAST.type);
+      return `${wrappedType}!`;
+    }
+    return innerType.toString();
   }
-  if (inputTypeAST.kind === Kind.NON_NULL_TYPE) {
-    const wrappedType = buildWrappedTypeDef(innerType, inputTypeAST.type);
-    invariant(!(wrappedType instanceof GraphQLNonNull), 'No nesting nonnull.');
-    return new GraphQLNonNull(wrappedType);
+
+  buildWrappedTypeDef(innerType: GraphQLType, inputTypeAST: TypeNode): GraphQLType {
+    if (inputTypeAST.kind === Kind.LIST_TYPE) {
+      return new GraphQLList(this.buildWrappedTypeDef(innerType, inputTypeAST.type));
+    }
+    if (inputTypeAST.kind === Kind.NON_NULL_TYPE) {
+      const wrappedType = this.buildWrappedTypeDef(innerType, inputTypeAST.type);
+      invariant(!(wrappedType instanceof GraphQLNonNull), 'No nesting nonnull.');
+      return new GraphQLNonNull(wrappedType);
+    }
+    return innerType;
   }
-  return innerType;
-}
 
-function produceType(typeAST: TypeNode, schema: SchemaComposer<any>): string {
-  const typeName = getNamedTypeAST(typeAST).name.value;
-  return buildWrappedType(typeName, typeAST);
-}
-
-function makeImplementedInterfaces(def: ObjectTypeDefinitionNode, schema: SchemaComposer<any>) {
-  return (def.interfaces || []).map(iface => {
-    const name = getNamedTypeAST(iface).name.value;
-    return schema.getIFTC(name).getType();
-  });
-}
-
-function makeTypeDef(def: ObjectTypeDefinitionNode, schema: SchemaComposer<any>) {
-  return ObjectTypeComposer.createTemp(
-    {
-      name: def.name.value,
-      description: getDescription(def),
-      fields: makeFieldDefMap(def, schema),
-      interfaces: () => makeImplementedInterfaces(def, schema),
-      astNode: def,
-    },
-    schema
-  );
-}
-
-function makeInterfaceDef(def: InterfaceTypeDefinitionNode, schema: SchemaComposer<any>) {
-  return InterfaceTypeComposer.createTemp(
-    {
-      name: def.name.value,
-      description: getDescription(def),
-      fields: makeFieldDefMap(def, schema),
-      astNode: def,
-    },
-    schema
-  );
-}
-
-function makeUnionDef(def: UnionTypeDefinitionNode, schema: SchemaComposer<any>) {
-  const types: ?$ReadOnlyArray<NamedTypeNode> = def.types;
-  return UnionTypeComposer.createTemp(
-    {
-      name: def.name.value,
-      description: getDescription(def),
-      types: (types || []).map(ref => getNamedTypeAST(ref).name.value),
-      astNode: def,
-    },
-    schema
-  );
-}
-
-function getDeprecationReason(directives: ?$ReadOnlyArray<DirectiveNode>): ?string {
-  const deprecatedAST =
-    directives &&
-    find(directives, directive => directive.name.value === GraphQLDeprecatedDirective.name);
-  if (!deprecatedAST) {
-    return;
+  produceType(typeAST: TypeNode): string {
+    const typeName = this.getNamedTypeAST(typeAST).name.value;
+    return this.buildWrappedType(typeName, typeAST);
   }
-  const { reason } = getArgumentValues(GraphQLDeprecatedDirective, deprecatedAST);
-  return (reason: any); // eslint-disable-line
+
+  getDeprecationReason(directives: ?$ReadOnlyArray<DirectiveNode>): ?string {
+    const deprecatedAST =
+      directives &&
+      find(directives, directive => directive.name.value === GraphQLDeprecatedDirective.name);
+    if (!deprecatedAST) {
+      return;
+    }
+    const { reason } = getArgumentValues(GraphQLDeprecatedDirective, deprecatedAST);
+    return (reason: any); // eslint-disable-line
+  }
 }

@@ -789,17 +789,17 @@ describe('SchemaComposer', () => {
       expect(sc.get('Post')).toBeInstanceOf(ObjectTypeComposer);
 
       // Post type should be the same instance
-      const Post = sc.getTC('Post').getType();
+      const Post = sc.getOTC('Post').getType();
       const PostInAuthor = sc
-        .getTC('Author')
+        .getOTC('Author')
         .getFieldTC('posts')
         .getType();
       expect(Post).toBe(PostInAuthor);
 
       // Author type should be the same instance
-      const Author = sc.getTC('Author').getType();
+      const Author = sc.getOTC('Author').getType();
       const AuthorInPost = sc
-        .getTC('Post')
+        .getOTC('Post')
         .getFieldTC('author')
         .getType();
       expect(Author).toBe(AuthorInPost);
