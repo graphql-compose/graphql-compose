@@ -495,12 +495,27 @@ describe('ObjectTypeComposer', () => {
             },
             f2: 'Type2!',
           },
+          interfaces: [
+            `interface IFace { f1: Type1 }`,
+            schemaComposer.createInterfaceTC({ name: 'IFace2', fields: { f1: 'Type1' } }),
+          ],
         },
         schemaComposer
       );
       expect(myTC).toBeInstanceOf(ObjectTypeComposer);
       expect(myTC.getField('f1')).toEqual({ type: 'Type1' });
       expect(myTC.getField('f2')).toEqual('Type2!');
+      expect(myTC.hasInterface('IFace')).toBeTruthy();
+      expect(myTC.hasInterface('IFace2')).toBeTruthy();
+
+      schemaComposer.createObjectTC(`type Type1 { a: Int }`);
+      schemaComposer.createObjectTC(`type Type2 { a: Int }`);
+
+      const graphqlType = myTC.getType();
+      expect(graphqlType).toBeInstanceOf(GraphQLObjectType);
+      const graphqlIFaces = graphqlType.getInterfaces();
+      expect(graphqlIFaces[0]).toBeInstanceOf(GraphQLInterfaceType);
+      expect(graphqlIFaces[1]).toBeInstanceOf(GraphQLInterfaceType);
     });
 
     it('should create TC by GraphQLObjectTypeConfig with fields as Thunk', () => {

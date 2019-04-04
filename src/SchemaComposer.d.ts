@@ -21,6 +21,14 @@ type ExtraSchemaConfig = {
   astNode?: SchemaDefinitionNode | null;
 };
 
+type AnyComposeType<TContext> =
+  | ObjectTypeComposer<any, TContext>
+  | InputTypeComposer<TContext>
+  | EnumTypeComposer<TContext>
+  | InterfaceTypeComposer<any, TContext>
+  | UnionTypeComposer<any, TContext>
+  | ScalarTypeComposer<TContext>;
+
 type AnyType<TContext> =
   | ObjectTypeComposer<any, TContext>
   | InputTypeComposer<TContext>

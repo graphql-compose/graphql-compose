@@ -26,7 +26,7 @@ import type { InputTypeComposer } from './InputTypeComposer';
 import type { EnumTypeComposer } from './EnumTypeComposer';
 import type { UnionTypeComposer } from './UnionTypeComposer';
 import type { ScalarTypeComposer } from './ScalarTypeComposer';
-import type { TypeAsString } from './TypeMapper';
+import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import type {
   ComposeFieldConfigMap,
@@ -70,6 +70,12 @@ export type ComposeInterfaceTypeConfig<TSource, TContext> = {
 export type InterfaceTypeComposeDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeInterfaceTypeConfig<TSource, TContext>;
+
+export type ComposeInterfaceType =
+  | InterfaceTypeComposer<any, any>
+  | GraphQLInterfaceType
+  | TypeDefinitionString
+  | TypeAsString;
 
 export class InterfaceTypeComposer<TSource, TContext> {
   gqType: GraphQLInterfaceTypeExtended<TSource, TContext>;

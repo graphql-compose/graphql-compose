@@ -19,7 +19,7 @@ import {
 import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
-import { InterfaceTypeComposer } from './InterfaceTypeComposer';
+import { InterfaceTypeComposer, ComposeInterfaceType } from './InterfaceTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
 import {
   Resolver,
@@ -29,7 +29,7 @@ import {
   ResolverMiddleware,
 } from './Resolver';
 import { SchemaComposer } from './SchemaComposer';
-import { TypeAsString } from './TypeMapper';
+import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { ObjMap, Thunk, Extensions } from './utils/definitions';
 import { ProjectionType } from './utils/projection';
 
@@ -45,14 +45,14 @@ export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
   _gqcGetRecordIdFn?: GetRecordIdFn<TSource, TContext>;
   _gqcRelations?: RelationThunkMap<TSource, TContext>;
   _gqcFields?: ComposeFieldConfigMap<TSource, TContext>;
-  _gqcInterfaces?: Array<GraphQLInterfaceType | InterfaceTypeComposer<any, TContext>>;
+  _gqcInterfaces?: ComposeInterfaceType[];
   _gqcExtensions?: Extensions;
   description: string | null;
 };
 
 export type ComposeObjectTypeConfig<TSource, TContext> = {
   name: string;
-  interfaces?: Thunk<GraphQLInterfaceType[] | null>;
+  interfaces?: Thunk<ComposeInterfaceType[] | null>;
   fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>;
   isTypeOf?: GraphQLIsTypeOfFn<TSource, TContext> | null;
   description?: string | null;
@@ -197,6 +197,12 @@ export type ObjectTypeComposeDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeObjectTypeConfig<TSource, TContext>
   | GraphQLObjectType;
+
+export type ComposeObjectType =
+  | ObjectTypeComposer<any, any>
+  | GraphQLObjectType
+  | TypeDefinitionString
+  | TypeAsString;
 
 /**
  * Main class that gets `GraphQLObjectType` and provide ability to change them.
@@ -413,11 +419,9 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
    * -----------------------------------------------
    */
 
-  public getInterfaces(): Array<InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType>;
+  public getInterfaces(): ComposeInterfaceType[];
 
-  public setInterfaces(
-    interfaces: Array<InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType>
-  ): this;
+  public setInterfaces(interfaces: Array<ComposeInterfaceType | GraphQLInterfaceType>): this;
 
   public hasInterface(
     iface: string | InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType

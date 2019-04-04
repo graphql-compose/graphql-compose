@@ -72,12 +72,12 @@ import type {
   ComposeArgumentConfig,
   ComposeFieldConfigArgumentMap,
 } from './ObjectTypeComposer';
-import { ObjectTypeComposer } from './ObjectTypeComposer';
+import { ObjectTypeComposer, type ComposeObjectType } from './ObjectTypeComposer';
 import type { SchemaComposer, AnyComposeType, AnyType } from './SchemaComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
-import { InterfaceTypeComposer } from './InterfaceTypeComposer';
+import { InterfaceTypeComposer, type ComposeInterfaceType } from './InterfaceTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
 import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
@@ -89,11 +89,6 @@ export type TypeDefinitionString = string; // eg type Name { field: Int }
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]
 export type TypeNameString = string; // eg. Int, Float
 export type TypeAsString = TypeDefinitionString | TypeWrappedString | TypeNameString;
-export type ComposeObjectType =
-  | ObjectTypeComposer<any, any>
-  | GraphQLObjectType
-  | TypeDefinitionString
-  | TypeAsString;
 
 // solve Flow reqursion limit, do not import from graphql.js
 function isOutputType(type: any): boolean {
@@ -123,6 +118,7 @@ const RegexpOutputTypeDefinition = /type\s[^{]+\{[^}]+\}/im;
 const RegexpInputTypeDefinition = /input\s[^{]+\{[^}]+\}/im;
 const RegexpEnumTypeDefinition = /enum\s[^{]+\{[^}]+\}/im;
 const RegexpScalarTypeDefinition = /scalar\s/im;
+const RegexpInterfaceTypeDefinition = /interface\s/im;
 
 export class TypeMapper<TContext> {
   schemaComposer: SchemaComposer<TContext>;
@@ -677,6 +673,40 @@ export class TypeMapper<TContext> {
     });
 
     return fields;
+  }
+
+  /**
+   * -----------------------------------------------
+   * Internal methods
+   * -----------------------------------------------
+   */
+
+  convertInterfaceType(composeType: ComposeInterfaceType): GraphQLInterfaceType {
+    if (this.schemaComposer.hasInstance(composeType, InterfaceTypeComposer)) {
+      return this.schemaComposer.getIFTC(composeType).getType();
+    } else if (typeof composeType === 'string') {
+      const type = RegexpInterfaceTypeDefinition.test(composeType)
+        ? this.createGraphQLType(composeType)
+        : this.getWrapped(composeType);
+
+      if (!type) {
+        throw new Error(`Cannot convert to InterfaceType the following string: '${composeType}'`);
+      }
+
+      if (!(type instanceof GraphQLInterfaceType)) {
+        throw new Error(`Cannot convert to InterfaceType the following object: '${inspect(type)}'`);
+      }
+
+      return type;
+    } else if (composeType instanceof GraphQLInterfaceType) {
+      return composeType;
+    } else if (composeType instanceof InterfaceTypeComposer) {
+      return composeType.getType();
+    }
+
+    throw new Error(
+      `Cannot convert to InterfaceType the following object: '${inspect(composeType)}'`
+    );
   }
 
   parseTypes(astDocument: DocumentNode): Array<AnyComposeType<TContext>> {

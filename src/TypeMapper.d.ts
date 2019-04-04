@@ -10,7 +10,7 @@ import {
   GraphQLType,
   GraphQLObjectType,
 } from 'graphql';
-import { SchemaComposer } from './SchemaComposer';
+import { SchemaComposer, AnyComposeType, AnyType } from './SchemaComposer';
 import { ComposeInputFieldConfig, ComposeInputFieldConfigMap } from './InputTypeComposer';
 import {
   ObjectTypeComposer,
@@ -18,6 +18,7 @@ import {
   ComposeFieldConfig,
   ComposeFieldConfigArgumentMap,
   ComposeFieldConfigMap,
+  ComposeObjectType,
 } from './ObjectTypeComposer';
 import { TypeDefinitionString, TypeNameString, TypeWrappedString } from './TypeMapper';
 import { TypeStorage } from './TypeStorage';
@@ -39,12 +40,6 @@ export type TypeNameString = string;
 
 export type TypeAsString = TypeDefinitionString | TypeWrappedString | TypeNameString;
 
-export type ComposeObjectType =
-  | ObjectTypeComposer<any, any>
-  | GraphQLObjectType
-  | TypeDefinitionString
-  | TypeAsString;
-
 /**
  * Type storage and type generator from `Schema Definition Language` (`SDL`).
  * This is slightly rewritten [buildASTSchema](https://github.com/graphql/graphql-js/blob/master/src/utilities/buildASTSchema.js)
@@ -58,15 +53,17 @@ declare class TypeMapper<TContext> {
 
   public get(name: string): GraphQLNamedType | void;
 
-  public set(name: string, type: GraphQLNamedType): void;
+  public set(name: string, type: AnyType<any>): void;
 
   public has(name: string): boolean;
 
   public getWrapped(str: TypeWrappedString | TypeNameString): GraphQLType | null;
 
-  public createType(str: TypeDefinitionString): GraphQLNamedType | void;
+  public createType(str: TypeDefinitionString): AnyComposeType<TContext> | void;
 
-  public parseTypesFromString(str: string): TypeStorage<string, GraphQLNamedType>;
+  public createGraphQLType(str: TypeDefinitionString): GraphQLType | void;
+
+  public parseTypesFromString(str: string): TypeStorage<string, AnyComposeType<TContext>>;
 
   public parseTypesFromAst(astDocument: DocumentNode): TypeStorage<string, GraphQLNamedType>;
 
@@ -108,4 +105,10 @@ declare class TypeMapper<TContext> {
     composeFields: ComposeInputFieldConfigMap,
     typeName?: string
   ): GraphQLInputFieldConfigMap;
+
+  /**
+   * -----------------------------------------------
+   * Internal methods
+   * -----------------------------------------------
+   */
 }

@@ -5,9 +5,9 @@
 import { GraphQLUnionType, GraphQLObjectType, GraphQLList, GraphQLNonNull } from './graphql';
 import { isObject, isString, isFunction } from './utils/is';
 import { inspect } from './utils/misc';
-import { ObjectTypeComposer } from './ObjectTypeComposer';
+import { ObjectTypeComposer, type ComposeObjectType } from './ObjectTypeComposer';
 import type { GraphQLResolveInfo, GraphQLTypeResolver } from './graphql';
-import type { TypeAsString, ComposeObjectType } from './TypeMapper';
+import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import type { Thunk, Extensions, MaybePromise } from './utils/definitions';
 import { resolveTypeArrayAsThunk } from './utils/configAsThunk';
@@ -42,6 +42,12 @@ export type ComposeUnionTypeConfig<TSource, TContext> = {
 export type UnionTypeComposeDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeUnionTypeConfig<TSource, TContext>;
+
+export type ComposeUnionType =
+  | UnionTypeComposer<any, any>
+  | GraphQLUnionType
+  | TypeDefinitionString
+  | TypeAsString;
 
 export class UnionTypeComposer<TSource, TContext> {
   gqType: GraphQLUnionTypeExtended<TSource, TContext>;

@@ -23,7 +23,7 @@ import {
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
-import { TypeAsString } from './TypeMapper';
+import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { Thunk, MaybePromise, Extensions } from './utils/definitions';
 
 export type GraphQLInterfaceTypeExtended<TSource, TContext> = GraphQLInterfaceType & {
@@ -55,6 +55,12 @@ export type ComposeInterfaceTypeConfig<TSource, TContext> = {
 export type InterfaceTypeComposeDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeInterfaceTypeConfig<TSource, TContext>;
+
+export type ComposeInterfaceType =
+  | InterfaceTypeComposer<any, any>
+  | GraphQLInterfaceType
+  | TypeDefinitionString
+  | TypeAsString;
 
 /**
  * Class that helps to create `GraphQLInterfaceType`s and provide ability to modify them.

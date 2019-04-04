@@ -26,8 +26,8 @@ import type {
 import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
-import type { TypeAsString } from './TypeMapper';
-import { InterfaceTypeComposer } from './InterfaceTypeComposer';
+import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
+import { InterfaceTypeComposer, type ComposeInterfaceType } from './InterfaceTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
 import {
   Resolver,
@@ -39,7 +39,11 @@ import {
 import { SchemaComposer } from './SchemaComposer';
 import { resolveMaybeThunk, upperFirst, inspect } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
-import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './utils/configAsThunk';
+import {
+  resolveOutputConfigMapAsThunk,
+  resolveOutputConfigAsThunk,
+  resolveInterfaceArrayAsThunk,
+} from './utils/configAsThunk';
 import { defineFieldMap, defineFieldMapToConfig } from './utils/configToDefine';
 import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath } from './utils/typeByPath';
@@ -60,14 +64,14 @@ export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
   _gqcGetRecordIdFn?: GetRecordIdFn<TSource, TContext>,
   _gqcRelations?: RelationThunkMap<TSource, TContext>,
   _gqcFields?: ComposeFieldConfigMap<TSource, TContext>,
-  _gqcInterfaces?: Array<GraphQLInterfaceType | InterfaceTypeComposer<any, TContext>>,
+  _gqcInterfaces?: Array<ComposeInterfaceType>,
   _gqcExtensions?: Extensions,
   description?: ?string,
 };
 
 export type ComposeObjectTypeConfig<TSource, TContext> = {
   +name: string,
-  +interfaces?: Thunk<GraphQLInterfaceType[] | null>,
+  +interfaces?: Thunk<Array<ComposeInterfaceType> | null>,
   +fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>,
   +isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>,
   +description?: string | null,
@@ -202,6 +206,12 @@ export type ObjectTypeComposeDefinition<TSource, TContext> =
   | ComposeObjectTypeConfig<TSource, TContext>
   | GraphQLObjectType;
 
+export type ComposeObjectType =
+  | ObjectTypeComposer<any, any>
+  | GraphQLObjectType
+  | TypeDefinitionString
+  | TypeAsString;
+
 export class ObjectTypeComposer<TSource, TContext> {
   gqType: GraphQLObjectTypeExtended<TSource, TContext>;
   schemaComposer: SchemaComposer<TContext>;
@@ -254,14 +264,20 @@ export class ObjectTypeComposer<TSource, TContext> {
       TC = new ObjectTypeComposer(typeDef, sc);
     } else if (isObject(typeDef)) {
       const fields = typeDef.fields;
+      const interfaces = typeDef.interfaces;
       const type = new GraphQLObjectType({
         ...(typeDef: any),
         fields: isFunction(fields)
           ? () => resolveOutputConfigMapAsThunk(sc, (fields(): any), typeDef.name)
           : () => ({}),
+        interfaces: isFunction(interfaces)
+          ? () => resolveInterfaceArrayAsThunk(sc, (interfaces: any), typeDef.name)
+          : [],
       });
       TC = new ObjectTypeComposer(type, sc);
       if (isObject(fields)) TC.addFields(fields);
+      if (Array.isArray(interfaces)) TC.setInterfaces(interfaces);
+
       TC.gqType._gqcExtensions = typeDef.extensions || {};
     } else {
       throw new Error(
@@ -832,7 +848,7 @@ export class ObjectTypeComposer<TSource, TContext> {
   // Interface methods
   // -----------------------------------------------
 
-  getInterfaces(): Array<GraphQLInterfaceType | InterfaceTypeComposer<any, TContext>> {
+  getInterfaces(): Array<ComposeInterfaceType> {
     if (!this.gqType._gqcInterfaces) {
       let interfaces: any;
       if (graphqlVersion >= 14) {
@@ -840,26 +856,23 @@ export class ObjectTypeComposer<TSource, TContext> {
       } else {
         interfaces = (this.gqType: any)._typeConfig.interfaces;
       }
-      this.gqType._gqcInterfaces = (resolveMaybeThunk(interfaces) || []: any);
+      this.gqType._gqcInterfaces = (resolveInterfaceArrayAsThunk(
+        this.schemaComposer,
+        interfaces,
+        this.getTypeName()
+      ) || []: any);
     }
 
     return this.gqType._gqcInterfaces;
   }
 
   setInterfaces(
-    interfaces: Array<InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType>
+    interfaces: $ReadOnlyArray<ComposeInterfaceType | GraphQLInterfaceType>
   ): ObjectTypeComposer<TSource, TContext> {
-    this.gqType._gqcInterfaces = interfaces;
+    this.gqType._gqcInterfaces = [...interfaces];
     const interfacesThunk = () => {
       return interfaces.map(iface => {
-        if (iface instanceof GraphQLInterfaceType) {
-          return iface;
-        } else if (iface instanceof InterfaceTypeComposer) {
-          return iface.getType();
-        }
-        throw new Error(
-          `For type ${this.getTypeName()} you provide incorrect interface object ${inspect(iface)}`
-        );
+        return this.schemaComposer.typeMapper.convertInterfaceType(iface);
       });
     };
 

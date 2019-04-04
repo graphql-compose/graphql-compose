@@ -17,9 +17,10 @@ import { SchemaComposer } from './SchemaComposer';
 import {
   ComposeFieldConfig,
   ComposeFieldConfigMap,
+  ComposeObjectType,
   ObjectTypeComposer,
 } from './ObjectTypeComposer';
-import { TypeAsString, ComposeObjectType } from './TypeMapper';
+import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { Thunk, Extensions, MaybePromise } from './utils/definitions';
 
 export type GraphQLUnionTypeExtended<TSource, TContext> = GraphQLUnionType & {
@@ -50,6 +51,12 @@ export type ComposeUnionTypeConfig<TSource, TContext> = {
 export type UnionTypeComposeDefinition<TSource, TContext> =
   | TypeAsString
   | ComposeUnionTypeConfig<TSource, TContext>;
+
+export type ComposeUnionType =
+  | UnionTypeComposer<any, any>
+  | GraphQLUnionType
+  | TypeDefinitionString
+  | TypeAsString;
 
 /**
  * Class that helps to create `UnionTypeComposer`s and provide ability to modify them.

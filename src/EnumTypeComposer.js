@@ -12,7 +12,7 @@ import type {
 } from './graphql';
 import { defineEnumValues, defineEnumValuesToConfig } from './utils/configToDefine';
 import { graphqlVersion } from './utils/graphqlVersion';
-import type { TypeAsString } from './TypeMapper';
+import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import type { Extensions } from './utils/definitions';
 
@@ -24,6 +24,12 @@ export type EnumTypeComposeDefinition =
   | TypeAsString
   | $ReadOnly<ComposeEnumTypeConfig>
   | $ReadOnly<GraphQLEnumType>;
+
+export type ComposeEnumType =
+  | EnumTypeComposer<any>
+  | GraphQLEnumType
+  | TypeDefinitionString
+  | TypeAsString;
 
 export type GraphQLEnumTypeExtended = GraphQLEnumType & {
   _gqcExtensions?: Extensions,
