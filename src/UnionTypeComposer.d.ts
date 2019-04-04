@@ -36,7 +36,7 @@ export type UnionTypeResolversMap<TSource, TContext> = Map<
 export type UnionTypeResolverCheckFn<TSource, TContext> = (
   value: TSource,
   context: TContext,
-  info: GraphQLResolveInfo,
+  info: GraphQLResolveInfo
 ) => MaybePromise<boolean | null | void>;
 
 export type ComposeUnionTypeConfig<TSource, TContext> = {
@@ -59,17 +59,14 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   protected gqType: GraphQLUnionTypeExtended<TSource, TContext>;
 
-  public constructor(
-    gqType: GraphQLUnionType,
-    schemaComposer: SchemaComposer<TContext>,
-  );
+  public constructor(gqType: GraphQLUnionType, schemaComposer: SchemaComposer<TContext>);
 
   /**
    * Create `UnionTypeComposer` with adding it by name to the `SchemaComposer`.
    */
   public static create<TSrc = any, TCtx = any>(
     typeDef: UnionTypeComposeDefinition<TSrc, TCtx>,
-    schemaComposer: SchemaComposer<TCtx>,
+    schemaComposer: SchemaComposer<TCtx>
   ): UnionTypeComposer<TSrc, TCtx>;
 
   /**
@@ -77,7 +74,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
    */
   public static createTemp<TSrc = any, TCtx = any>(
     typeDef: UnionTypeComposeDefinition<TSrc, TCtx>,
-    schemaComposer?: SchemaComposer<TCtx>,
+    schemaComposer?: SchemaComposer<TCtx>
   ): UnionTypeComposer<TSrc, TCtx>;
 
   /**
@@ -86,9 +83,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
    * -----------------------------------------------
    */
 
-  public hasType(
-    name: string | GraphQLObjectType | ObjectTypeComposer<any, TContext>,
-  ): boolean;
+  public hasType(name: string | GraphQLObjectType | ObjectTypeComposer<any, TContext>): boolean;
 
   public getTypes(): ComposeObjectType[];
 
@@ -134,36 +129,28 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   public getResolveType(): GraphQLTypeResolver<TSource, TContext> | null | void;
 
-  public setResolveType(
-    fn: GraphQLTypeResolver<TSource, TContext> | null | void,
-  ): this;
+  public setResolveType(fn: GraphQLTypeResolver<TSource, TContext> | null | void): this;
 
-  public hasTypeResolver(
-    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
-  ): boolean;
+  public hasTypeResolver(type: ObjectTypeComposer<any, TContext> | GraphQLObjectType): boolean;
 
   public getTypeResolvers(): UnionTypeResolversMap<TSource, TContext>;
 
   public getTypeResolverCheckFn(
-    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType
   ): UnionTypeResolverCheckFn<any, TContext>;
 
   public getTypeResolverNames(): string[];
 
   public getTypeResolverTypes(): GraphQLObjectType[];
 
-  public setTypeResolvers(
-    typeResolversMap: UnionTypeResolversMap<TSource, TContext>,
-  ): this;
+  public setTypeResolvers(typeResolversMap: UnionTypeResolversMap<TSource, TContext>): this;
 
   public addTypeResolver(
     type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
-    checkFn: UnionTypeResolverCheckFn<TSource, TContext>,
+    checkFn: UnionTypeResolverCheckFn<TSource, TContext>
   ): this;
 
-  public removeTypeResolver(
-    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
-  ): this;
+  public removeTypeResolver(type: ObjectTypeComposer<any, TContext> | GraphQLObjectType): this;
 
   /**
    * -----------------------------------------------

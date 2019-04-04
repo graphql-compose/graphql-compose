@@ -5,31 +5,12 @@ import {
   SchemaDefinitionNode,
   GraphQLResolveInfo,
 } from 'graphql';
-import {
-  ObjectTypeComposer,
-  ObjectTypeComposeDefinition,
-  ArgsMap,
-} from './ObjectTypeComposer';
-import {
-  InputTypeComposer,
-  InputTypeComposeDefinition,
-} from './InputTypeComposer';
-import {
-  ScalarTypeComposer,
-  ScalarTypeComposeDefinition,
-} from './ScalarTypeComposer';
-import {
-  EnumTypeComposer,
-  EnumTypeComposeDefinition,
-} from './EnumTypeComposer';
-import {
-  InterfaceTypeComposer,
-  InterfaceTypeComposeDefinition,
-} from './InterfaceTypeComposer';
-import {
-  UnionTypeComposer,
-  UnionTypeComposeDefinition,
-} from './UnionTypeComposer';
+import { ObjectTypeComposer, ObjectTypeComposeDefinition, ArgsMap } from './ObjectTypeComposer';
+import { InputTypeComposer, InputTypeComposeDefinition } from './InputTypeComposer';
+import { ScalarTypeComposer, ScalarTypeComposeDefinition } from './ScalarTypeComposer';
+import { EnumTypeComposer, EnumTypeComposeDefinition } from './EnumTypeComposer';
+import { InterfaceTypeComposer, InterfaceTypeComposeDefinition } from './InterfaceTypeComposer';
+import { UnionTypeComposer, UnionTypeComposeDefinition } from './UnionTypeComposer';
 import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
 import { Resolver, ResolverOpts } from './Resolver';
@@ -55,7 +36,7 @@ type GraphQLToolsResolveMethods<TContext> = {
       source: any,
       args: {},
       context: TContext,
-      info: GraphQLResolveInfo,
+      info: GraphQLResolveInfo
     ) => any;
   };
 };
@@ -112,10 +93,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
    * Deeply traverse fields in Query, Mutation, Subscription & sub-objects
    * where will be removed all fields with empty object types (without sub-fields).
    */
-  public removeEmptyTypes(
-    tc: ObjectTypeComposer<any, TContext>,
-    passedTypes: Set<string>,
-  ): void;
+  public removeEmptyTypes(tc: ObjectTypeComposer<any, TContext>, passedTypes: Set<string>): void;
 
   /**
    * -----------------------------------------------
@@ -177,9 +155,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
    * @description
    * More details can be found in [issue #142](https://github.com/graphql-compose/graphql-compose/issues/142).
    */
-  public addResolveMethods(
-    typesFieldsResolve: GraphQLToolsResolveMethods<TContext>,
-  ): void;
+  public addResolveMethods(typesFieldsResolve: GraphQLToolsResolveMethods<TContext>): void;
 
   /**
    * -----------------------------------------------
@@ -188,38 +164,32 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
    */
 
   public createObjectTC<TSource = any>(
-    typeDef: ObjectTypeComposeDefinition<TSource, TContext>,
+    typeDef: ObjectTypeComposeDefinition<TSource, TContext>
   ): ObjectTypeComposer<TSource, TContext>;
 
-  public createInputTC(
-    typeDef: InputTypeComposeDefinition,
-  ): InputTypeComposer<TContext>;
+  public createInputTC(typeDef: InputTypeComposeDefinition): InputTypeComposer<TContext>;
 
-  public createEnumTC(
-    typeDef: EnumTypeComposeDefinition,
-  ): EnumTypeComposer<TContext>;
+  public createEnumTC(typeDef: EnumTypeComposeDefinition): EnumTypeComposer<TContext>;
 
   public createInterfaceTC<TSource = any>(
-    typeDef: InterfaceTypeComposeDefinition<TSource, TContext>,
+    typeDef: InterfaceTypeComposeDefinition<TSource, TContext>
   ): InterfaceTypeComposer<TSource, TContext>;
 
   public createUnionTC<TSource = any>(
-    typeDef: UnionTypeComposeDefinition<TSource, TContext>,
+    typeDef: UnionTypeComposeDefinition<TSource, TContext>
   ): UnionTypeComposer<TSource, TContext>;
 
-  public createScalarTC(
-    typeDef: ScalarTypeComposeDefinition,
-  ): ScalarTypeComposer<TContext>;
+  public createScalarTC(typeDef: ScalarTypeComposeDefinition): ScalarTypeComposer<TContext>;
 
   public createResolver<TSource = any, TArgs = ArgsMap>(
-    opts: ResolverOpts<TSource, TContext, TArgs>,
+    opts: ResolverOpts<TSource, TContext, TArgs>
   ): Resolver<TSource, TContext, TArgs>;
 
   /**
    * Creates TypeComposer from SDL without adding it to the type storage.
    */
   public createTempTC(
-    typeOrSDL: any,
+    typeOrSDL: any
   ):
     | ObjectTypeComposer<any, TContext>
     | InputTypeComposer<TContext>
@@ -230,54 +200,48 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
 
   public getOrCreateOTC<TSource = any>(
     typeName: string,
-    onCreate?: (tc: ObjectTypeComposer<TSource, TContext>) => any,
+    onCreate?: (tc: ObjectTypeComposer<TSource, TContext>) => any
   ): ObjectTypeComposer<TSource, TContext>;
 
   public getOrCreateITC(
     typeName: string,
-    onCreate?: (itc: InputTypeComposer<TContext>) => any,
+    onCreate?: (itc: InputTypeComposer<TContext>) => any
   ): InputTypeComposer<TContext>;
 
   public getOrCreateETC(
     typeName: string,
-    onCreate?: (etc: EnumTypeComposer<TContext>) => any,
+    onCreate?: (etc: EnumTypeComposer<TContext>) => any
   ): EnumTypeComposer<TContext>;
 
   public getOrCreateIFTC<TSource = any>(
     typeName: string,
-    onCreate?: (iftc: InterfaceTypeComposer<TSource, TContext>) => any,
+    onCreate?: (iftc: InterfaceTypeComposer<TSource, TContext>) => any
   ): InterfaceTypeComposer<TSource, TContext>;
 
   public getOrCreateUTC<TSource = any>(
     typeName: string,
-    onCreate?: (utc: UnionTypeComposer<TSource, TContext>) => any,
+    onCreate?: (utc: UnionTypeComposer<TSource, TContext>) => any
   ): UnionTypeComposer<TSource, TContext>;
 
   public getOrCreateSTC(
     typeName: string,
-    onCreate?: (stc: ScalarTypeComposer<TContext>) => any,
+    onCreate?: (stc: ScalarTypeComposer<TContext>) => any
   ): ScalarTypeComposer<TContext>;
 
-  public getOTC<TSource = any>(
-    typeName: any,
-  ): ObjectTypeComposer<TSource, TContext>;
+  public getOTC<TSource = any>(typeName: any): ObjectTypeComposer<TSource, TContext>;
 
   public getITC(typeName: any): InputTypeComposer<TContext>;
 
   public getETC(typeName: any): EnumTypeComposer<TContext>;
 
-  public getIFTC<TSource = any>(
-    typeName: any,
-  ): InterfaceTypeComposer<TSource, TContext>;
+  public getIFTC<TSource = any>(typeName: any): InterfaceTypeComposer<TSource, TContext>;
 
-  public getUTC<TSource = any>(
-    typeName: any,
-  ): UnionTypeComposer<TSource, TContext>;
+  public getUTC<TSource = any>(typeName: any): UnionTypeComposer<TSource, TContext>;
 
   public getSTC(typeName: any): ScalarTypeComposer<TContext>;
 
   public getAnyTC(
-    typeName: any,
+    typeName: any
   ):
     | ObjectTypeComposer<any, TContext>
     | InputTypeComposer<TContext>
@@ -301,12 +265,8 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
   public entries(): Iterator<[any, AnyType<TContext>]>;
 
   public forEach(
-    callbackfn: (
-      value: AnyType<TContext>,
-      index: any,
-      map: Map<any, AnyType<TContext>>,
-    ) => any,
-    thisArg?: any,
+    callbackfn: (value: AnyType<TContext>, index: any, map: Map<any, AnyType<TContext>>) => any,
+    thisArg?: any
   ): void;
 
   public get(key: any): AnyType<TContext>;
@@ -325,7 +285,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
 
   public getOrSet(
     key: any,
-    typeOrThunk: AnyType<TContext> | (() => AnyType<TContext>),
+    typeOrThunk: AnyType<TContext> | (() => AnyType<TContext>)
   ): AnyType<TContext>;
 
   /**

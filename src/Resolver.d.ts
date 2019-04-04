@@ -34,7 +34,7 @@ export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 export type ResolverFilterArgFn<TSource, TContext, TArgs = ArgsMap> = (
   query: any,
   value: any,
-  resolveParams: ResolveParams<TSource, TContext, TArgs>,
+  resolveParams: ResolveParams<TSource, TContext, TArgs>
 ) => any;
 
 export type ResolverFilterArgConfig<TSource, TContext, TArgs = ArgsMap> = {
@@ -47,7 +47,7 @@ export type ResolverFilterArgConfig<TSource, TContext, TArgs = ArgsMap> = {
 };
 
 export type ResolverSortArgFn<TSource, TContext, TArgs = ArgsMap> = (
-  resolveParams: ResolveParams<TSource, TContext, TArgs>,
+  resolveParams: ResolveParams<TSource, TContext, TArgs>
 ) => any;
 
 export type ResolverSortArgConfig<TSource, TContext, TArgs = ArgsMap> = {
@@ -83,22 +83,22 @@ export type ResolverWrapCb<
   TPrevArgs = ArgsMap
 > = (
   newResolver: Resolver<TNewSource, TContext, TNewArgs>,
-  prevResolver: Resolver<TPrevSource, TContext, TPrevArgs>,
+  prevResolver: Resolver<TPrevSource, TContext, TPrevArgs>
 ) => Resolver<TNewSource, TContext, TNewArgs>;
 
 export type ResolverRpCb<TSource, TContext, TArgs = ArgsMap> = (
-  resolveParams: ResolveParams<TSource, TContext, TArgs>,
+  resolveParams: ResolveParams<TSource, TContext, TArgs>
 ) => Promise<any> | any;
 export type ResolverNextRpCb<TSource, TContext, TArgs = ArgsMap> = (
-  next: ResolverRpCb<TSource, TContext, TArgs>,
+  next: ResolverRpCb<TSource, TContext, TArgs>
 ) => ResolverRpCb<TSource, TContext, TArgs>;
 
 export type ResolverWrapArgsCb<TArgs = ArgsMap> = (
-  prevArgs: GraphQLFieldConfigArgumentMap,
+  prevArgs: GraphQLFieldConfigArgumentMap
 ) => ComposeFieldConfigArgumentMap<TArgs>;
 
 export type ResolverWrapTypeCb<TContext, TReturn = any> = (
-  prevType: GraphQLOutputType,
+  prevType: GraphQLOutputType
 ) => ComposeOutputType<TReturn, TContext>;
 
 export type ResolveDebugOpts = {
@@ -108,32 +108,22 @@ export type ResolveDebugOpts = {
 };
 
 export type ResolverMiddleware<TSource, TContext, TArgs = ArgsMap> = (
-  resolve: (
-    source: TSource,
-    args: TArgs,
-    context: TContext,
-    info: GraphQLResolveInfo,
-  ) => any,
+  resolve: (source: TSource, args: TArgs, context: TContext, info: GraphQLResolveInfo) => any,
   source: TSource,
   args: TArgs,
   context: TContext,
-  info: GraphQLResolveInfo,
+  info: GraphQLResolveInfo
 ) => any;
 
 /**
  * The most interesting class in `graphql-compose`. The main goal of `Resolver` is to keep available resolve methods for Type and use them for building relation with other types.
  */
-export class Resolver<
-  TSource = any,
-  TContext = any,
-  TArgs = ArgsMap,
-  TReturn = any
-> {
+export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = any> {
   public schemaComposer: SchemaComposer<TContext>;
   public type: ComposeOutputType<TReturn, TContext>;
   public args: ComposeFieldConfigArgumentMap<any>;
   public resolve: (
-    resolveParams: Partial<ResolveParams<TSource, TContext, TArgs>>,
+    resolveParams: Partial<ResolveParams<TSource, TContext, TArgs>>
   ) => Promise<any> | any;
   public name: string;
   public displayName: string | void;
@@ -143,7 +133,7 @@ export class Resolver<
 
   constructor(
     opts: ResolverOpts<TSource, TContext, TArgs>,
-    schemaComposer: SchemaComposer<TContext>,
+    schemaComposer: SchemaComposer<TContext>
   );
 
   /**
@@ -157,7 +147,7 @@ export class Resolver<
   public getTypeComposer(): ObjectTypeComposer<TSource, TContext>;
 
   public setType<TNewReturn>(
-    gqType: ComposeOutputType<TNewReturn, TContext>,
+    gqType: ComposeOutputType<TNewReturn, TContext>
   ): Resolver<TSource, TContext, TArgs, TNewReturn>;
 
   /**
@@ -181,15 +171,12 @@ export class Resolver<
   public getArgNames(): string[];
 
   public setArgs<TNewArgs>(
-    args: ComposeFieldConfigArgumentMap<TNewArgs>,
+    args: ComposeFieldConfigArgumentMap<TNewArgs>
   ): Resolver<TSource, TContext, TNewArgs>;
 
   public setArg(argName: string, argConfig: ComposeArgumentConfig): this;
 
-  public extendArg(
-    argName: string,
-    partialArgConfig: Partial<ComposeArgumentConfigAsObject>,
-  ): this;
+  public extendArg(argName: string, partialArgConfig: Partial<ComposeArgumentConfigAsObject>): this;
 
   public addArgs(newArgs: ComposeFieldConfigArgumentMap<TArgs>): this;
 
@@ -208,11 +195,11 @@ export class Resolver<
   public makeOptional(argNameOrArray: string | string[]): this;
 
   public addFilterArg(
-    opts: ResolverFilterArgConfig<TSource, TContext, TArgs>,
+    opts: ResolverFilterArgConfig<TSource, TContext, TArgs>
   ): Resolver<TSource, TContext, TArgs>;
 
   public addSortArg(
-    opts: ResolverSortArgConfig<TSource, TContext, TArgs>,
+    opts: ResolverSortArgConfig<TSource, TContext, TArgs>
   ): Resolver<TSource, TContext, TArgs>;
 
   /**
@@ -224,7 +211,7 @@ export class Resolver<
   public getResolve(): ResolverRpCb<TSource, TContext, TArgs>;
 
   public setResolve(
-    resolve: ResolverRpCb<TSource, TContext, TArgs>,
+    resolve: ResolverRpCb<TSource, TContext, TArgs>
   ): Resolver<TSource, TContext, TArgs>;
 
   /**
@@ -265,32 +252,32 @@ export class Resolver<
    *     ]);
    */
   public withMiddlewares(
-    middlewares: Array<ResolverMiddleware<TSource, TContext, TArgs>>,
+    middlewares: Array<ResolverMiddleware<TSource, TContext, TArgs>>
   ): Resolver<TSource, TContext, TArgs>;
 
   public wrap<TNewSource = TSource, TNewArgs = TArgs>(
     cb?: ResolverWrapCb<TNewSource, TSource, TContext, TNewArgs, TArgs>,
-    newResolverOpts?: ResolverOpts<TNewSource, TContext, TArgs>,
+    newResolverOpts?: ResolverOpts<TNewSource, TContext, TArgs>
   ): Resolver<TNewSource, TContext, TNewArgs>;
 
   public wrapResolve<TCSource = TSource, TCArgs = TArgs>(
     cb: ResolverNextRpCb<TCSource, TContext, TCArgs>,
-    wrapperName?: string,
+    wrapperName?: string
   ): Resolver<TCSource, TContext, TCArgs>;
 
   public wrapArgs<TCArgs = TArgs>(
     cb: ResolverWrapArgsCb<TCArgs>,
-    wrapperName?: string,
+    wrapperName?: string
   ): Resolver<TSource, TContext, TCArgs>;
 
   public wrapCloneArg<TCArgs = TArgs>(
     argName: string,
-    newTypeName: string,
+    newTypeName: string
   ): Resolver<TSource, TContext, TCArgs>;
 
   public wrapType(
     cb: ResolverWrapTypeCb<TContext>,
-    wrapperName?: string,
+    wrapperName?: string
   ): Resolver<TSource, TContext, TArgs>;
 
   /**
@@ -314,7 +301,7 @@ export class Resolver<
   public get(path: string | string[]): any;
 
   public clone<TNewSource = TSource, TNewArgs = TArgs>(
-    opts?: ResolverOpts<TNewSource, TContext, TNewArgs>,
+    opts?: ResolverOpts<TNewSource, TContext, TNewArgs>
   ): Resolver<TNewSource, TContext, TNewArgs>;
 
   /**
@@ -335,12 +322,12 @@ export class Resolver<
 
   public debugParams(
     filterPaths: (string | string[]) | null,
-    opts?: ResolveDebugOpts,
+    opts?: ResolveDebugOpts
   ): Resolver<TSource, TContext, TArgs>;
 
   public debugPayload(
     filterPaths: (string | string[]) | null,
-    opts?: ResolveDebugOpts,
+    opts?: ResolveDebugOpts
   ): Resolver<TSource, TContext, TArgs>;
 
   public debug(
@@ -348,6 +335,6 @@ export class Resolver<
       params?: string | string[];
       payload?: string | string[];
     },
-    opts?: ResolveDebugOpts,
+    opts?: ResolveDebugOpts
   ): Resolver<TSource, TContext, TArgs>;
 }

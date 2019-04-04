@@ -12,10 +12,11 @@
     "prettier": [
       true,
       {
-        "semi": true,
         "singleQuote": true,
-        "trailingComma": "all",
-        "bracketSpacing": true,
+        "tabWidth": 2,
+        "useTabs": false,
+        "printWidth": 100,
+        "trailingComma": "es5",
         "parser": "typescript"
       }
     ],

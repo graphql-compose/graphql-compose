@@ -36,7 +36,7 @@ import { ProjectionType } from './utils/projection';
 export type GetRecordIdFn<TSource, TContext> = (
   source: TSource,
   args: any,
-  context: TContext,
+  context: TContext
 ) => string;
 
 export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
@@ -45,9 +45,7 @@ export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
   _gqcGetRecordIdFn?: GetRecordIdFn<TSource, TContext>;
   _gqcRelations?: RelationThunkMap<TSource, TContext>;
   _gqcFields?: ComposeFieldConfigMap<TSource, TContext>;
-  _gqcInterfaces?: Array<
-    GraphQLInterfaceType | InterfaceTypeComposer<any, TContext>
-  >;
+  _gqcInterfaces?: Array<GraphQLInterfaceType | InterfaceTypeComposer<any, TContext>>;
   _gqcExtensions?: Extensions;
   description: string | null;
 };
@@ -82,9 +80,7 @@ export type GraphqlFieldConfigExtended<TSource, TContext> = GraphQLFieldConfig<
 > & { projection?: any };
 
 export type ComposeFieldConfigAsObject<TSource, TContext, TArgs = ArgsMap> = {
-  type:
-    | Thunk<ComposeOutputType<any /* TReturn */, TContext>>
-    | GraphQLOutputType;
+  type: Thunk<ComposeOutputType<any /* TReturn */, TContext>> | GraphQLOutputType;
   args?: ComposeFieldConfigArgumentMap<TArgs>;
   resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>;
   subscribe?: GraphQLFieldResolver<TSource, TContext>;
@@ -162,12 +158,7 @@ export type RelationOpts<TRelationSource, TSource, TContext, TArgs = ArgsMap> =
   | RelationOptsWithResolver<TRelationSource, TSource, TContext, TArgs>
   | RelationOptsWithFieldConfig<TSource, TContext, TArgs>;
 
-export type RelationOptsWithResolver<
-  TRelationSource,
-  TSource,
-  TContext,
-  TArgs = ArgsMap
-> = {
+export type RelationOptsWithResolver<TRelationSource, TSource, TContext, TArgs = ArgsMap> = {
   resolver: Thunk<Resolver<TRelationSource, TContext, TArgs>>;
   prepareArgs?: RelationArgsMapper<TSource, TContext, TArgs>;
   projection?: Partial<ProjectionType>;
@@ -188,7 +179,7 @@ export type RelationArgsMapperFn<TSource, TContext, TArgs = ArgsMap> = (
   source: TSource,
   args: TArgs,
   context: TContext,
-  info: GraphQLResolveInfo,
+  info: GraphQLResolveInfo
 ) => any;
 
 export type RelationArgsMapper<TSource, TContext, TArgs = ArgsMap> = {
@@ -215,17 +206,14 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   protected gqType: GraphQLObjectTypeExtended<TSource, TContext>;
 
-  public constructor(
-    gqType: GraphQLObjectType,
-    schemaComposer: SchemaComposer<TContext>,
-  );
+  public constructor(gqType: GraphQLObjectType, schemaComposer: SchemaComposer<TContext>);
 
   /**
    * Create `ObjectTypeComposer` with adding it by name to the `SchemaComposer`.
    */
   public static create<TSrc = any, TCtx = any>(
     typeDef: ObjectTypeComposeDefinition<TSrc, TCtx>,
-    schemaComposer: SchemaComposer<TCtx>,
+    schemaComposer: SchemaComposer<TCtx>
   ): ObjectTypeComposer<TSrc, TCtx>;
 
   /**
@@ -233,7 +221,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
    */
   public static createTemp<TSrc = any, TCtx = any>(
     typeDef: ObjectTypeComposeDefinition<TSrc, TCtx>,
-    schemaComposer?: SchemaComposer<TCtx>,
+    schemaComposer?: SchemaComposer<TCtx>
   ): ObjectTypeComposer<TSrc, TCtx>;
 
   /**
@@ -252,7 +240,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public setField<TArgs = ArgsMap>(
     fieldName: string,
-    fieldConfig: ComposeFieldConfig<TSource, TContext, TArgs>,
+    fieldConfig: ComposeFieldConfig<TSource, TContext, TArgs>
   ): this;
 
   /**
@@ -263,13 +251,9 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   /**
    * Add new fields or replace existed (where field name may have dots)
    */
-  public addNestedFields(
-    newFields: ComposeFieldConfigMap<TSource, TContext>,
-  ): this;
+  public addNestedFields(newFields: ComposeFieldConfigMap<TSource, TContext>): this;
 
-  public getField<TArgs = ArgsMap>(
-    fieldName: string,
-  ): ComposeFieldConfig<TSource, TContext, TArgs>;
+  public getField<TArgs = ArgsMap>(fieldName: string): ComposeFieldConfig<TSource, TContext, TArgs>;
 
   public removeField(fieldNameOrArray: string | string[]): this;
 
@@ -277,21 +261,19 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public extendField<TArgs = ArgsMap>(
     fieldName: string,
-    partialFieldConfig: Partial<ComposeFieldConfig<TSource, TContext, TArgs>>,
+    partialFieldConfig: Partial<ComposeFieldConfig<TSource, TContext, TArgs>>
   ): this;
 
   public reorderFields(names: string[]): this;
 
   public isFieldNonNull(fieldName: string): boolean;
 
-  public getFieldConfig(
-    fieldName: string,
-  ): GraphQLFieldConfig<TSource, TContext>;
+  public getFieldConfig(fieldName: string): GraphQLFieldConfig<TSource, TContext>;
 
   public getFieldType(fieldName: string): GraphQLOutputType;
 
   public getFieldTC(
-    fieldName: string,
+    fieldName: string
   ):
     | ObjectTypeComposer<TSource, TContext>
     | InputTypeComposer<TContext>
@@ -304,9 +286,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public makeFieldNullable(fieldNameOrArray: string | string[]): this;
 
-  public deprecateFields(
-    fields: { [fieldName: string]: string } | string[] | string,
-  ): this;
+  public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
 
   public getFieldArgs(fieldName: string): GraphQLFieldConfigArgumentMap;
 
@@ -337,7 +317,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   public setDescription(description: string): this;
 
   public clone<TCloneSource = TSource>(
-    newTypeName: string,
+    newTypeName: string
   ): ObjectTypeComposer<TCloneSource, TContext>;
 
   public getIsTypeOf(): GraphQLIsTypeOfFn<TSource, TContext> | null | void;
@@ -395,36 +375,36 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
    */
   public getResolver<TResolverSource = any, TArgs = ArgsMap>(
     name: string,
-    middlewares?: Array<ResolverMiddleware<TResolverSource, TContext, TArgs>>,
+    middlewares?: Array<ResolverMiddleware<TResolverSource, TContext, TArgs>>
   ): Resolver<TResolverSource, TContext, TArgs>;
 
   public setResolver<TResolverSource = any, TArgs = ArgsMap>(
     name: string,
-    resolver: Resolver<TResolverSource, TContext, TArgs>,
+    resolver: Resolver<TResolverSource, TContext, TArgs>
   ): this;
 
   public addResolver<TResolverSource = any, TArgs = ArgsMap>(
     resolver:
       | Resolver<TResolverSource, TContext, TArgs>
-      | ResolverOpts<TResolverSource, TContext, TArgs>,
+      | ResolverOpts<TResolverSource, TContext, TArgs>
   ): this;
 
   public removeResolver(resolverName: string): this;
 
   public wrapResolver<TResolverSource = any, TArgs = ArgsMap>(
     resolverName: string,
-    cbResolver: ResolverWrapCb<TResolverSource, TSource, TContext, TArgs>,
+    cbResolver: ResolverWrapCb<TResolverSource, TSource, TContext, TArgs>
   ): this;
 
   public wrapResolverAs<TResolverSource = any, TArgs = ArgsMap>(
     resolverName: string,
     fromResolverName: string,
-    cbResolver: ResolverWrapCb<TResolverSource, TSource, TContext, TArgs>,
+    cbResolver: ResolverWrapCb<TResolverSource, TSource, TContext, TArgs>
   ): this;
 
   public wrapResolverResolve<TResolverSource = any, TArgs = ArgsMap>(
     resolverName: string,
-    cbNextRp: ResolverNextRpCb<TResolverSource, TContext, TArgs>,
+    cbNextRp: ResolverNextRpCb<TResolverSource, TContext, TArgs>
   ): this;
 
   /**
@@ -433,26 +413,22 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
    * -----------------------------------------------
    */
 
-  public getInterfaces(): Array<
-    InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType
-  >;
+  public getInterfaces(): Array<InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType>;
 
   public setInterfaces(
-    interfaces: Array<
-      InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType
-    >,
+    interfaces: Array<InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType>
   ): this;
 
   public hasInterface(
-    iface: string | InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType,
+    iface: string | InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType
   ): boolean;
 
   public addInterface(
-    interfaceObj: InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType,
+    interfaceObj: InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType
   ): this;
 
   public removeInterface(
-    interfaceObj: InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType,
+    interfaceObj: InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType
   ): this;
 
   /**
@@ -489,11 +465,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public hasFieldExtension(fieldName: string, extensionName: string): boolean;
 
-  public setFieldExtension(
-    fieldName: string,
-    extensionName: string,
-    value: any,
-  ): this;
+  public setFieldExtension(fieldName: string, extensionName: string, value: any): this;
 
   public removeFieldExtension(fieldName: string, extensionName: string): this;
 
@@ -505,7 +477,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public addRelation<TRelationSource = any, TArgs = ArgsMap>(
     fieldName: string,
-    relationOpts: RelationOpts<TRelationSource, TSource, TContext, TArgs>,
+    relationOpts: RelationOpts<TRelationSource, TSource, TContext, TArgs>
   ): this;
 
   public getRelations(): RelationThunkMap<any, TContext>;
@@ -519,11 +491,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   /**
    * Get function that returns record id, from provided object.
    */
-  public getRecordId(
-    source: TSource,
-    args?: ArgsMap,
-    context?: TContext,
-  ): string | number;
+  public getRecordId(source: TSource, args?: ArgsMap, context?: TContext): string | number;
 
   public get(path: string | string[]): any;
 }

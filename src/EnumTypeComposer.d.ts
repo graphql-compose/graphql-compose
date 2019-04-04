@@ -15,10 +15,7 @@ export type ComposeEnumTypeConfig = GraphQLEnumTypeConfig & {
   extensions?: Extensions;
 };
 
-export type EnumTypeComposeDefinition =
-  | TypeAsString
-  | ComposeEnumTypeConfig
-  | GraphQLEnumType;
+export type EnumTypeComposeDefinition = TypeAsString | ComposeEnumTypeConfig | GraphQLEnumType;
 
 export type GraphQLEnumTypeExtended = GraphQLEnumType & {
   _gqcExtensions?: Extensions;
@@ -31,17 +28,14 @@ export class EnumTypeComposer<TContext = any> {
   public schemaComposer: SchemaComposer<TContext>;
   protected gqType: GraphQLEnumTypeExtended;
 
-  public constructor(
-    gqType: GraphQLEnumType,
-    schemaComposer: SchemaComposer<TContext>,
-  );
+  public constructor(gqType: GraphQLEnumType, schemaComposer: SchemaComposer<TContext>);
 
   /**
    * Create `EnumTypeComposer` with adding it by name to the `SchemaComposer`. This type became avaliable in SDL by its name.
    */
   public static create<TCtx = any>(
     typeDef: EnumTypeComposeDefinition,
-    schemaComposer: SchemaComposer<TCtx>,
+    schemaComposer: SchemaComposer<TCtx>
   ): EnumTypeComposer<TCtx>;
 
   /**
@@ -49,7 +43,7 @@ export class EnumTypeComposer<TContext = any> {
    */
   public static createTemp<TCtx = any>(
     typeDef: EnumTypeComposeDefinition,
-    schemaComposer?: SchemaComposer<TCtx>,
+    schemaComposer?: SchemaComposer<TCtx>
   ): EnumTypeComposer<TCtx>;
 
   /**
@@ -93,17 +87,12 @@ export class EnumTypeComposer<TContext = any> {
 
   public reorderFields(names: string[]): this;
 
-  public extendField(
-    name: string,
-    partialValueConfig: Partial<GraphQLEnumValueConfig>,
-  ): this;
+  public extendField(name: string, partialValueConfig: Partial<GraphQLEnumValueConfig>): this;
 
   /**
    * Mark value or map of values as deprecated
    */
-  public deprecateFields(
-    fields: { [fieldName: string]: string } | string[] | string,
-  ): this;
+  public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
 
   /**
    * -----------------------------------------------

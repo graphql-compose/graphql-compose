@@ -36,17 +36,14 @@ export class ScalarTypeComposer<TContext = any> {
 
   protected gqType: GraphQLScalarTypeExtended;
 
-  public constructor(
-    gqType: GraphQLScalarType,
-    schemaComposer: SchemaComposer<TContext>,
-  );
+  public constructor(gqType: GraphQLScalarType, schemaComposer: SchemaComposer<TContext>);
 
   /**
    * Create `ScalarTypeComposer` with adding it by name to the `SchemaComposer`. This type became avaliable in SDL by its name.
    */
   public static create<TCtx = any>(
     typeDef: ScalarTypeComposeDefinition,
-    schemaComposer: SchemaComposer<TCtx>,
+    schemaComposer: SchemaComposer<TCtx>
   ): ScalarTypeComposer<TCtx>;
 
   /**
@@ -54,7 +51,7 @@ export class ScalarTypeComposer<TContext = any> {
    */
   public static createTemp<TCtx = any>(
     typeDef: ScalarTypeComposeDefinition,
-    schemaComposer?: SchemaComposer<TCtx>,
+    schemaComposer?: SchemaComposer<TCtx>
   ): ScalarTypeComposer<TCtx>;
 
   /**

@@ -20,18 +20,14 @@
       "objects": "always-multiline",
       "imports": "always-multiline",
       "exports": "always-multiline",
-      "functions": "ignore",
+      "functions": "ignore"
     }],
-    "prettier/prettier": ["error", {
-      "printWidth": 100,
-      "singleQuote": true,
-      "trailingComma": "es5",
-    }],
+    "prettier/prettier": ["error"],
     "import/prefer-default-export": 0,
     "arrow-parens": 0,
     "no-use-before-define": ["error", { "functions": false }],
     "prefer-destructuring": 0,
-    "lines-between-class-members": ["error", "always", { exceptAfterSingleLine: true }],
+    "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
     "no-else-return": 0
   },
   "env": {

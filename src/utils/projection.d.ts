@@ -13,15 +13,15 @@ export type ProjectionType = {
 
 export function getProjectionFromAST(
   info: GraphQLResolveInfo,
-  fieldNode?: FieldNode | InlineFragmentNode | FragmentDefinitionNode,
+  fieldNode?: FieldNode | InlineFragmentNode | FragmentDefinitionNode
 ): ProjectionType;
 
 export function getFlatProjectionFromAST(
   info: GraphQLResolveInfo,
-  fieldNodes?: FieldNode | InlineFragmentNode | FragmentDefinitionNode,
+  fieldNodes?: FieldNode | InlineFragmentNode | FragmentDefinitionNode
 ): { [key: string]: boolean };
 
 export function extendByFieldProjection(
   returnType: GraphQLOutputType,
-  projection: ProjectionType,
+  projection: ProjectionType
 ): ProjectionType;

@@ -67,17 +67,14 @@ export class InputTypeComposer<TContext = any> {
 
   protected gqType: GraphQLInputObjectTypeExtended;
 
-  public constructor(
-    gqType: GraphQLInputObjectType,
-    schemaComposer: SchemaComposer<TContext>,
-  );
+  public constructor(gqType: GraphQLInputObjectType, schemaComposer: SchemaComposer<TContext>);
 
   /**
    * Create `InputTypeComposer` with adding it by name to the `SchemaComposer`.
    */
   public static create<TCtx = any>(
     typeDef: InputTypeComposeDefinition,
-    schemaComposer: SchemaComposer<TCtx>,
+    schemaComposer: SchemaComposer<TCtx>
   ): InputTypeComposer<TCtx>;
 
   /**
@@ -85,7 +82,7 @@ export class InputTypeComposer<TContext = any> {
    */
   public static createTemp<TCtx = any>(
     typeDef: InputTypeComposeDefinition,
-    schemaComposer?: SchemaComposer<TCtx>,
+    schemaComposer?: SchemaComposer<TCtx>
   ): InputTypeComposer<TCtx>;
 
   /**
@@ -102,10 +99,7 @@ export class InputTypeComposer<TContext = any> {
 
   public setFields(fields: ComposeInputFieldConfigMap): this;
 
-  public setField(
-    fieldName: string,
-    fieldConfig: ComposeInputFieldConfig,
-  ): this;
+  public setField(fieldName: string, fieldConfig: ComposeInputFieldConfig): this;
 
   /**
    * Add new fields or replace existed in a GraphQL type
@@ -123,10 +117,7 @@ export class InputTypeComposer<TContext = any> {
 
   public removeOtherFields(fieldNameOrArray: string | string[]): this;
 
-  public extendField(
-    fieldName: string,
-    partialFieldConfig: Partial<ComposeInputFieldConfig>,
-  ): this;
+  public extendField(fieldName: string, partialFieldConfig: Partial<ComposeInputFieldConfig>): this;
 
   public reorderFields(names: string[]): this;
 
@@ -142,11 +133,8 @@ export class InputTypeComposer<TContext = any> {
   public getFieldType(fieldName: string): GraphQLInputType;
 
   public getFieldTC(
-    fieldName: string,
-  ):
-    | InputTypeComposer<TContext>
-    | EnumTypeComposer<TContext>
-    | ScalarTypeComposer<TContext>;
+    fieldName: string
+  ): InputTypeComposer<TContext> | EnumTypeComposer<TContext> | ScalarTypeComposer<TContext>;
 
   public makeFieldNonNull(fieldNameOrArray: string | string[]): this;
 
@@ -218,11 +206,7 @@ export class InputTypeComposer<TContext = any> {
 
   public hasFieldExtension(fieldName: string, extensionName: string): boolean;
 
-  public setFieldExtension(
-    fieldName: string,
-    extensionName: string,
-    value: any,
-  ): this;
+  public setFieldExtension(fieldName: string, extensionName: string, value: any): this;
 
   public removeFieldExtension(fieldName: string, extensionName: string): this;
 
