@@ -746,7 +746,11 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   getFieldExtensions(fieldName: string): Extensions {
-    const field = this.getField(fieldName);
+    let field = this.getField(fieldName);
+    if (isFunction(field)) {
+      field = resolveOutputConfigAsThunk(this.schemaComposer, field, fieldName, this.getTypeName());
+    }
+
     if (
       isObject(field) &&
       !isFunction(field) &&
@@ -763,14 +767,18 @@ export class InterfaceTypeComposer<TSource, TContext> {
     fieldName: string,
     extensions: Extensions
   ): InterfaceTypeComposer<TSource, TContext> {
-    const fieldConfig = this.getFieldConfig(fieldName);
-    this.setField(
-      fieldName,
-      ({
-        ...fieldConfig,
-        extensions,
-      }: any)
-    );
+    let field = this.getField(fieldName);
+    if (isComposeOutputType(field)) {
+      field = {
+        type: field,
+      };
+    } else if (isFunction(field)) {
+      field = resolveOutputConfigAsThunk(this.schemaComposer, field, fieldName, this.getTypeName());
+    }
+    this.setField(fieldName, {
+      ...field,
+      extensions,
+    });
     return this;
   }
 

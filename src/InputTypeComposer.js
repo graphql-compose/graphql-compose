@@ -519,7 +519,11 @@ export class InputTypeComposer<TContext> {
   }
 
   getFieldExtensions(fieldName: string): Extensions {
-    const field = this.getField(fieldName);
+    let field = this.getField(fieldName);
+    if (isFunction(field)) {
+      field = resolveInputConfigAsThunk(this.schemaComposer, field, fieldName, this.getTypeName());
+    }
+
     if (
       isObject(field) &&
       !isFunction(field) &&
@@ -537,9 +541,16 @@ export class InputTypeComposer<TContext> {
   }
 
   setFieldExtensions(fieldName: string, extensions: Extensions): InputTypeComposer<TContext> {
-    const fieldConfig = this.getFieldConfig(fieldName);
+    let field = this.getField(fieldName);
+    if (isComposeInputType(field)) {
+      field = {
+        type: field,
+      };
+    } else if (isFunction(field)) {
+      field = resolveInputConfigAsThunk(this.schemaComposer, field, fieldName, this.getTypeName());
+    }
     this.setField(fieldName, {
-      ...fieldConfig,
+      ...field,
       extensions,
     });
     return this;
