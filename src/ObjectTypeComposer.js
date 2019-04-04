@@ -8,7 +8,7 @@ import {
   GraphQLInputObjectType,
   getNamedType,
   GraphQLInterfaceType,
-  isType,
+  isOutputType,
 } from './graphql';
 import type {
   GraphQLFieldConfig,
@@ -25,7 +25,7 @@ import type {
 } from './graphql';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
-import type { InputTypeComposer } from './InputTypeComposer';
+import { InputTypeComposer } from './InputTypeComposer';
 import type { TypeAsString } from './TypeMapper';
 import { InterfaceTypeComposer } from './InterfaceTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
@@ -120,14 +120,14 @@ export type ComposeOutputType<TReturn, TContext> =
 
 export function isComposeOutputType(type: mixed): boolean %checks {
   return (
-    isType(type) ||
+    isOutputType(type) ||
     (Array.isArray(type) && isComposeOutputType(type[0])) ||
-    type instanceof Resolver ||
     type instanceof ObjectTypeComposer ||
     type instanceof InterfaceTypeComposer ||
     type instanceof EnumTypeComposer ||
     type instanceof UnionTypeComposer ||
-    type instanceof ScalarTypeComposer
+    type instanceof ScalarTypeComposer ||
+    type instanceof Resolver
   );
 }
 
@@ -961,16 +961,17 @@ export class ObjectTypeComposer<TSource, TContext> {
   getFieldExtensions(fieldName: string): Extensions {
     let field = this.getField(fieldName);
     if (isFunction(field)) {
-      field = resolveOutputConfigAsThunk(this.schemaComposer, field, fieldName, this.getTypeName());
+      field = field();
     }
 
     if (
       isObject(field) &&
       !isFunction(field) &&
       !Array.isArray(field) &&
-      !isComposeOutputType(field)
+      !isComposeOutputType(field) &&
+      !(field instanceof GraphQLList || field instanceof GraphQLNonNull)
     ) {
-      return (field: ComposeObjectTypeConfig<any, any>).extensions || {};
+      return (field: ComposeFieldConfigAsObject<any, any, any>).extensions || {};
     } else {
       return {};
     }
@@ -981,17 +982,37 @@ export class ObjectTypeComposer<TSource, TContext> {
     extensions: Extensions
   ): ObjectTypeComposer<TSource, TContext> {
     let field = this.getField(fieldName);
-    if (isComposeOutputType(field)) {
+
+    if (isFunction(field)) {
+      field = field();
+    }
+
+    // This mess makes flow happy
+    if (
+      !isFunction(field) &&
+      (isString(field) ||
+        Array.isArray(field) ||
+        field instanceof GraphQLList ||
+        field instanceof GraphQLNonNull ||
+        isComposeOutputType(field))
+    ) {
       field = {
         type: field,
       };
-    } else if (isFunction(field)) {
-      field = resolveOutputConfigAsThunk(this.schemaComposer, field, fieldName, this.getTypeName());
+
+      this.setField(fieldName, {
+        ...(field: ComposeFieldConfigAsObject<any, any, any>),
+        extensions,
+      });
+    } else if (typeof field !== 'function') {
+      this.setField(fieldName, {
+        ...(field: ComposeFieldConfigAsObject<any, any, any>),
+        extensions,
+      });
+    } else {
+      throw new Error(`Can not set extension on a thunk for ${this.getTypeName()}.{fieldName}`);
     }
-    this.setField(fieldName, {
-      ...field,
-      extensions,
-    });
+
     return this;
   }
 
