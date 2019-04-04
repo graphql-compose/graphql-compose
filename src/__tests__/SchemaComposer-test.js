@@ -759,7 +759,7 @@ describe('SchemaComposer', () => {
         }
         scalar MyInt
         enum Sort {
-          ASC 
+          ASC
           DESC
         }
         interface PersonI {
@@ -767,11 +767,11 @@ describe('SchemaComposer', () => {
         }
       `);
 
-      expect(sc.get('Author')).toBeInstanceOf(GraphQLObjectType);
-      expect(sc.get('AuthorInput')).toBeInstanceOf(GraphQLInputObjectType);
-      expect(sc.get('MyInt')).toBeInstanceOf(GraphQLScalarType);
-      expect(sc.get('Sort')).toBeInstanceOf(GraphQLEnumType);
-      expect(sc.get('PersonI')).toBeInstanceOf(GraphQLInterfaceType);
+      expect(sc.get('Author')).toBeInstanceOf(ObjectTypeComposer);
+      expect(sc.get('AuthorInput')).toBeInstanceOf(InputTypeComposer);
+      expect(sc.get('MyInt')).toBeInstanceOf(ScalarTypeComposer);
+      expect(sc.get('Sort')).toBeInstanceOf(EnumTypeComposer);
+      expect(sc.get('PersonI')).toBeInstanceOf(InterfaceTypeComposer);
     });
 
     it('should parse cross referenced types from SDL', () => {
@@ -785,19 +785,21 @@ describe('SchemaComposer', () => {
         }
       `);
 
-      expect(sc.get('Author')).toBeInstanceOf(GraphQLObjectType);
-      expect(sc.get('Post')).toBeInstanceOf(GraphQLObjectType);
+      expect(sc.get('Author')).toBeInstanceOf(ObjectTypeComposer);
+      expect(sc.get('Post')).toBeInstanceOf(ObjectTypeComposer);
 
       // Post type should be the same instance
-      const Post = sc.get('Post');
-      const PostInAuthor = ObjectTypeComposer.createTemp((sc.get('Author'): any))
+      const Post = sc.getTC('Post').getType();
+      const PostInAuthor = sc
+        .getTC('Author')
         .getFieldTC('posts')
         .getType();
       expect(Post).toBe(PostInAuthor);
 
       // Author type should be the same instance
-      const Author = sc.get('Author');
-      const AuthorInPost = ObjectTypeComposer.createTemp((sc.get('Post'): any))
+      const Author = sc.getTC('Author').getType();
+      const AuthorInPost = sc
+        .getTC('Post')
         .getFieldTC('author')
         .getType();
       expect(Author).toBe(AuthorInPost);
@@ -854,7 +856,7 @@ describe('SchemaComposer', () => {
         schema {
           query: Query
         }
-        
+
         type Post {
           id: Int!
           title: String

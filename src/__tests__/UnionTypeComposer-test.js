@@ -50,12 +50,12 @@ describe('UnionTypeComposer', () => {
       expect(myUTC.getTypeName()).toBe('TestTypeTpl');
 
       // when types A & B are not defined getTypes() throw an error
-      expect(() => myUTC.getTypes()).toThrowError("Cannot find type with name 'A'");
+      expect(() => myUTC.getType().getTypes()).toThrowError('Cannot resolve types for TestTypeTpl');
 
       // when types A & B defined, getTypes() returns them
       ObjectTypeComposer.create('type A { a: Int }', sc);
       ObjectTypeComposer.create('type B { b: Int }', sc);
-      const types = myUTC.getTypes();
+      const types = myUTC.getType().getTypes();
       expect(types).toHaveLength(2);
       expect(types[0]).toBeInstanceOf(GraphQLObjectType);
       expect(types[1]).toBeInstanceOf(GraphQLObjectType);

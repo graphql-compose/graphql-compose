@@ -67,14 +67,13 @@ export class EnumTypeComposer<TContext> {
           sc
         );
       } else {
-        const type = sc.typeMapper.createType(typeName);
-        if (!(type instanceof GraphQLEnumType)) {
+        ETC = sc.typeMapper.createType(typeName);
+        if (!(ETC instanceof EnumTypeComposer)) {
           throw new Error(
             'You should provide correct GraphQLEnumType type definition.' +
               'Eg. `enum MyType { KEY1 KEY2 KEY3 }`'
           );
         }
-        ETC = new EnumTypeComposer(type, sc);
       }
     } else if (typeDef instanceof GraphQLEnumType) {
       ETC = new EnumTypeComposer(typeDef, sc);

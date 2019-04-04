@@ -40,7 +40,15 @@ type ExtraSchemaConfig = {
   astNode?: SchemaDefinitionNode | null,
 };
 
-type AnyType<TContext> =
+export type AnyComposeType<TContext> =
+  | ObjectTypeComposer<any, TContext>
+  | InputTypeComposer<TContext>
+  | EnumTypeComposer<TContext>
+  | InterfaceTypeComposer<any, TContext>
+  | UnionTypeComposer<any, TContext>
+  | ScalarTypeComposer<TContext>;
+
+export type AnyType<TContext> =
   | ObjectTypeComposer<any, TContext>
   | InputTypeComposer<TContext>
   | EnumTypeComposer<TContext>
@@ -193,26 +201,34 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
    * -----------------------------------------------
    */
 
-  addTypeDefs(typeDefs: string): TypeStorage<string, GraphQLNamedType> {
+  addTypeDefs(typeDefs: string): TypeStorage<string, AnyComposeType<any>> {
     const types = this.typeMapper.parseTypesFromString(typeDefs);
-    types.forEach((type: any) => {
-      const name = type.name;
+    types.forEach((type: AnyComposeType<any>) => {
+      const name = type.getTypeName();
       if (name !== 'Query' && name !== 'Mutation' && name !== 'Subscription') {
-        this.add((type: any));
+        this.add(type);
       }
     });
     if (types.has('Query')) {
-      this.Query.addFields(ObjectTypeComposer.create((types.get('Query'): any), this).getFields());
+      const tc = types.get('Query');
+      if (!(tc instanceof ObjectTypeComposer)) {
+        throw new Error(`Type Query in typedefs isn't an Object Type.`);
+      }
+      this.Query.addFields(tc.getFields());
     }
     if (types.has('Mutation')) {
-      this.Mutation.addFields(
-        ObjectTypeComposer.create((types.get('Mutation'): any), this).getFields()
-      );
+      const tc = types.get('Mutation');
+      if (!(tc instanceof ObjectTypeComposer)) {
+        throw new Error(`Type Mutation in typedefs isn't an Object Type.`);
+      }
+      this.Mutation.addFields(tc.getFields());
     }
     if (types.has('Subscription')) {
-      this.Subscription.addFields(
-        ObjectTypeComposer.create((types.get('Subscription'): any), this).getFields()
-      );
+      const tc = types.get('Subscription');
+      if (!(tc instanceof ObjectTypeComposer)) {
+        throw new Error(`Type Subscription in typedefs isn't an Object Type.`);
+      }
+      this.Subscription.addFields(tc.getFields());
     }
     return types;
   }
@@ -220,7 +236,11 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
   addResolveMethods(typesFieldsResolve: GraphQLToolsResolveMethods<TContext>): void {
     const typeNames = Object.keys(typesFieldsResolve);
     typeNames.forEach(typeName => {
-      if (this.get(typeName) instanceof GraphQLScalarType) {
+      let type = this.get(typeName);
+      if (type instanceof ScalarTypeComposer) {
+        type = type.getType();
+      }
+      if (type instanceof GraphQLScalarType) {
         const maybeScalar: any = typesFieldsResolve[typeName];
         if (maybeScalar instanceof GraphQLScalarType) {
           this.set(typeName, maybeScalar);
@@ -500,7 +520,9 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     | UnionTypeComposer<any, TContext>
     | ScalarTypeComposer<TContext> {
     const type = this.get(typeName);
-    if (
+    if (type == null) {
+      throw new Error(`Cannot find type with name ${typeName}`);
+    } else if (
       type instanceof ObjectTypeComposer ||
       type instanceof InputTypeComposer ||
       type instanceof ScalarTypeComposer ||
