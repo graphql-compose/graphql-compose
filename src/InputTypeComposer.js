@@ -115,14 +115,13 @@ export class InputTypeComposer<TContext> {
           sc
         );
       } else {
-        const type = sc.typeMapper.createType(typeName);
-        if (!(type instanceof GraphQLInputObjectType)) {
+        ITC = sc.typeMapper.createType(typeName);
+        if (!(ITC instanceof InputTypeComposer)) {
           throw new Error(
             'You should provide correct GraphQLInputObjectType type definition.' +
               'Eg. `input MyInputType { name: String! }`'
           );
         }
-        ITC = new InputTypeComposer(type, sc);
       }
     } else if (typeDef instanceof GraphQLInputObjectType) {
       ITC = new InputTypeComposer(typeDef, sc);

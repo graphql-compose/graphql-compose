@@ -82,14 +82,13 @@ export class UnionTypeComposer<TSource, TContext> {
           sc
         );
       } else {
-        const type = sc.typeMapper.createType(typeName);
-        if (!(type instanceof GraphQLUnionType)) {
+        UTC = sc.typeMapper.createType(typeName);
+        if (!(UTC instanceof UnionTypeComposer)) {
           throw new Error(
             'You should provide correct GraphQLUnionType type definition.' +
               'Eg. `union MyType = Photo | Person`'
           );
         }
-        UTC = new UnionTypeComposer(type, sc);
       }
     } else if (typeDef instanceof GraphQLUnionType) {
       UTC = new UnionTypeComposer(typeDef, sc);

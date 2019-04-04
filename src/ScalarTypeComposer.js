@@ -65,13 +65,12 @@ export class ScalarTypeComposer<TContext> {
           sc
         );
       } else {
-        const type = sc.typeMapper.createType(typeName);
-        if (!(type instanceof GraphQLScalarType)) {
+        STC = sc.typeMapper.createType(typeName);
+        if (!(STC instanceof ScalarTypeComposer)) {
           throw new Error(
             'You should provide correct GraphQLScalarType type definition. Eg. `scalar UInt`'
           );
         }
-        STC = new ScalarTypeComposer(type, sc);
       }
     } else if (typeDef instanceof GraphQLScalarType) {
       STC = new ScalarTypeComposer(typeDef, sc);

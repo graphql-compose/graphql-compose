@@ -112,14 +112,13 @@ export class InterfaceTypeComposer<TSource, TContext> {
           sc
         );
       } else {
-        const type = sc.typeMapper.createType(typeName);
-        if (!(type instanceof GraphQLInterfaceType)) {
+        IFTC = sc.typeMapper.createType(typeName);
+        if (!(IFTC instanceof InterfaceTypeComposer)) {
           throw new Error(
             'You should provide correct GraphQLInterfaceType type definition.' +
               'Eg. `interface MyType { id: ID!, name: String! }`'
           );
         }
-        IFTC = new InterfaceTypeComposer(type, sc);
       }
     } else if (typeDef instanceof GraphQLInterfaceType) {
       IFTC = new InterfaceTypeComposer(typeDef, sc);

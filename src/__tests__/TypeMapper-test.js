@@ -13,7 +13,6 @@ import {
   GraphQLEnumType,
   GraphQLScalarType,
   GraphQLInterfaceType,
-  GraphQLUnionType,
 } from '../graphql';
 import { schemaComposer as sc } from '..';
 import { graphqlVersion } from '../utils/graphqlVersion';
@@ -25,6 +24,7 @@ import { InputTypeComposer } from '../InputTypeComposer';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
+import { UnionTypeComposer } from '../UnionTypeComposer';
 import { Resolver } from '../Resolver';
 import { TypeMapper } from '../TypeMapper';
 
@@ -81,7 +81,7 @@ describe('TypeMapper', () => {
   });
 
   it('should create object type from template string', () => {
-    const type: GraphQLObjectType = (typeMapper.createType(
+    const tc = (typeMapper.createType(
       graphqlVersion < 12
         ? `
           type IntRange {
@@ -101,6 +101,7 @@ describe('TypeMapper', () => {
         `
     ): any);
 
+    const type = tc.getType();
     expect(type).toBeInstanceOf(GraphQLObjectType);
     expect(typeMapper.get('IntRange')).toBe(type);
 
@@ -114,7 +115,7 @@ describe('TypeMapper', () => {
   });
 
   it('should create input object type from template string', () => {
-    const type: GraphQLInputObjectType = (typeMapper.createType(
+    const tc = (typeMapper.createType(
       `
       input InputIntRange {
         min: Int @default(value: 0)
@@ -122,6 +123,7 @@ describe('TypeMapper', () => {
       }
     `
     ): any);
+    const type = tc.getType();
 
     expect(type).toBeInstanceOf(GraphQLInputObjectType);
     expect(typeMapper.get('InputIntRange')).toBe(type);
@@ -129,12 +131,12 @@ describe('TypeMapper', () => {
     const IntRangeTC: any = new InputTypeComposer(type, sc);
     expect(IntRangeTC.getTypeName()).toBe('InputIntRange');
     expect(IntRangeTC.getField('min').defaultValue).toBe(0);
-    expect(IntRangeTC.getField('min').type).toBe(GraphQLInt);
-    expect(IntRangeTC.getField('max').type).toBeInstanceOf(GraphQLNonNull);
+    expect(IntRangeTC.getField('min').type).toBe('Int');
+    expect(IntRangeTC.getField('max').type).toBe('Int!');
   });
 
   it('should create interface type from template string', () => {
-    const type: GraphQLInterfaceType = (typeMapper.createType(
+    const tc = (typeMapper.createType(
       graphqlVersion < 12
         ? `
           interface IntRangeInterface {
@@ -153,6 +155,8 @@ describe('TypeMapper', () => {
           }
         `
     ): any);
+
+    const type = tc.getType();
 
     expect(type).toBeInstanceOf(GraphQLInterfaceType);
     expect(typeMapper.get('IntRangeInterface')).toBe(type);
@@ -880,9 +884,9 @@ describe('TypeMapper', () => {
       const ts = typeMapper.parseTypesFromString(gql);
       expect(Array.from(ts.keys())).toEqual(['User', 'Article', 'Record']);
 
-      expect(ts.get('User')).toBeInstanceOf(GraphQLObjectType);
-      expect(ts.get('Article')).toBeInstanceOf(GraphQLObjectType);
-      expect(ts.get('Record')).toBeInstanceOf(GraphQLInputObjectType);
+      expect(ts.get('User').getType()).toBeInstanceOf(GraphQLObjectType);
+      expect(ts.get('Article').getType()).toBeInstanceOf(GraphQLObjectType);
+      expect(ts.get('Record').getType()).toBeInstanceOf(GraphQLInputObjectType);
     });
 
     it('parseTypesFromString() should strictly accept `schema` definition', () => {
@@ -910,18 +914,18 @@ describe('TypeMapper', () => {
 
     it('parseTypesFromString() should strictly accept `scalar` definition', () => {
       const ts = typeMapper.parseTypesFromString(`scalar MyScalar`);
-      expect(ts.get('MyScalar')).toBeInstanceOf(GraphQLScalarType);
+      expect(ts.get('MyScalar').getType()).toBeInstanceOf(GraphQLScalarType);
     });
 
     it('parseTypesFromString() should accept `union` definition', () => {
       const ts = typeMapper.parseTypesFromString(`
         union TypeAB = TypeA | TypeB
         type TypeA { f1: Int }
-        type TypeB { f2: Int } 
+        type TypeB { f2: Int }
       `);
 
-      const TypeAB: GraphQLUnionType = (ts.get('TypeAB'): any);
-      expect(TypeAB).toBeInstanceOf(GraphQLUnionType);
+      const TypeAB = (ts.get('TypeAB'): any);
+      expect(TypeAB).toBeInstanceOf(UnionTypeComposer);
 
       const types = TypeAB.getTypes();
       expect(types).toHaveLength(2);
@@ -930,13 +934,11 @@ describe('TypeMapper', () => {
 
   describe('createType()', () => {
     it('should return same type for the same TypeDefinitionString', () => {
-      const t1 = typeMapper.createType('type SameType { a: Int }');
-      const t2 = typeMapper.createType('type SameType { a: Int }');
+      const t1: any = typeMapper.createType('type SameType { a: Int }');
+      const t2: any = typeMapper.createType('type SameType { a: Int }');
       expect(t1).toBe(t2);
-
-      const tc = ObjectTypeComposer.create((t1: any), sc);
-      expect(tc.getTypeName()).toBe('SameType');
-      expect(tc.getFieldType('a')).toBe(GraphQLInt);
+      expect(t1.getTypeName()).toBe('SameType');
+      expect(t1.getFieldType('a')).toBe(GraphQLInt);
     });
   });
 });

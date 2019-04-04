@@ -242,14 +242,13 @@ export class ObjectTypeComposer<TSource, TContext> {
           sc
         );
       } else {
-        const type = sc.typeMapper.createType(typeName);
-        if (!(type instanceof GraphQLObjectType)) {
+        TC = sc.typeMapper.createType(typeName);
+        if (!(TC instanceof ObjectTypeComposer)) {
           throw new Error(
             'You should provide correct GraphQLObjectType type definition.' +
               'Eg. `type MyType { name: String }`'
           );
         }
-        TC = new ObjectTypeComposer(type, sc);
       }
     } else if (typeDef instanceof GraphQLObjectType) {
       TC = new ObjectTypeComposer(typeDef, sc);
