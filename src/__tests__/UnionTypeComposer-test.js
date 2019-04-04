@@ -61,20 +61,20 @@ describe('UnionTypeComposer', () => {
       expect(types[1]).toBeInstanceOf(GraphQLObjectType);
     });
 
-    it('should create UTC by UnionTypeConfig', () => {
+    it('should create UTC by UnionTypeConfig with unexisted types', () => {
       const myUTC = UnionTypeComposer.create(
         {
           name: 'TestType',
-          types: () => [`type AA { a: Int }`, `BB`],
+          types: [`type AA { a: Int }`, `BB`],
         },
         sc
       );
       expect(myUTC).toBeInstanceOf(UnionTypeComposer);
-      ObjectTypeComposer.create(`type BB { b: Int }`, sc);
+      expect(myUTC.getTypeNames()).toEqual(['AA', 'BB']);
       const types = myUTC.getTypes();
       expect(types).toHaveLength(2);
-      expect(types[0]).toBeInstanceOf(GraphQLObjectType);
-      expect(types[1]).toBeInstanceOf(GraphQLObjectType);
+      expect(types[0]).toBe(`type AA { a: Int }`);
+      expect(types[1]).toBe(`BB`);
     });
 
     it('should create UTC by GraphQLUnionType', () => {

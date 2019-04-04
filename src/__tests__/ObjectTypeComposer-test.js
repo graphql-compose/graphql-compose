@@ -448,7 +448,7 @@ describe('ObjectTypeComposer', () => {
       expect(myTC.getFields()).toEqual({});
     });
 
-    it('should create TC by type template string', () => {
+    it('should create TC by SDL', () => {
       const myTC = ObjectTypeComposer.create(
         `
         type TestTypeTpl {
@@ -483,6 +483,24 @@ describe('ObjectTypeComposer', () => {
       expect(myTC.getFieldType('f1')).toBe(GraphQLString);
       expect(myTC.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
       expect((myTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
+    });
+
+    it('should create TC by ComposeObjectTypeConfig with unexisted types', () => {
+      const myTC = ObjectTypeComposer.create(
+        {
+          name: 'TestType',
+          fields: {
+            f1: {
+              type: 'Type1',
+            },
+            f2: 'Type2!',
+          },
+        },
+        schemaComposer
+      );
+      expect(myTC).toBeInstanceOf(ObjectTypeComposer);
+      expect(myTC.getField('f1')).toEqual({ type: 'Type1' });
+      expect(myTC.getField('f2')).toEqual('Type2!');
     });
 
     it('should create TC by GraphQLObjectTypeConfig with fields as Thunk', () => {

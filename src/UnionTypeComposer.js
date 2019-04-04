@@ -151,7 +151,7 @@ export class UnionTypeComposer<TSource, TContext> {
       const types = this.gqType.getTypes();
       const m: Map<string, ComposeObjectType> = new Map();
       types.forEach(type => {
-        m.set(type.name, type);
+        m.set(getComposeTypeName(type), type);
       });
       this.gqType._gqcTypeMap = m;
 
