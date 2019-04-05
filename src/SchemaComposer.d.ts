@@ -4,6 +4,7 @@ import {
   GraphQLDirective,
   SchemaDefinitionNode,
   GraphQLResolveInfo,
+  GraphQLType,
 } from 'graphql';
 import { ObjectTypeComposer, ObjectTypeComposeDefinition, ArgsMap } from './ObjectTypeComposer';
 import { InputTypeComposer, InputTypeComposeDefinition } from './InputTypeComposer';
@@ -249,7 +250,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
   public getSTC(typeName: any): ScalarTypeComposer<TContext>;
 
   public getAnyTC(
-    typeName: any
+    typeName: string | AnyType<any> | GraphQLType
   ):
     | ObjectTypeComposer<any, TContext>
     | InputTypeComposer<TContext>

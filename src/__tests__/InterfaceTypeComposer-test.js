@@ -377,7 +377,7 @@ describe('InterfaceTypeComposer', () => {
       expect(myIFTC.getField('f1')).toEqual({
         type: 'Type1',
       });
-      expect(myIFTC.getField('f2')).toEqual('Type2!');
+      expect(myIFTC.getField('f2')).toEqual({ type: 'Type2!' });
     });
 
     it('should create TC by GraphQLInterfaceTypeConfig with fields as Thunk', () => {
@@ -458,8 +458,8 @@ describe('InterfaceTypeComposer', () => {
         schemaComposer
       );
 
-      expect(myIFTC.get('field1')).toBe(GraphQLString);
-      expect(myIFTC.get('field1.@arg1')).toBe(GraphQLInt);
+      expect(myIFTC.get('field1').getType()).toBe(GraphQLString);
+      expect(myIFTC.get('field1.@arg1').getType()).toBe(GraphQLInt);
     });
   });
 

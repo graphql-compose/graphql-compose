@@ -259,7 +259,9 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
    */
   public addNestedFields(newFields: ComposeFieldConfigMap<TSource, TContext>): this;
 
-  public getField<TArgs = ArgsMap>(fieldName: string): ComposeFieldConfig<TSource, TContext, TArgs>;
+  public getField<TArgs = ArgsMap>(
+    fieldName: string
+  ): ComposeFieldConfigAsObject<TSource, TContext, TArgs>;
 
   public removeField(fieldNameOrArray: string | string[]): this;
 
@@ -294,11 +296,11 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
 
-  public getFieldArgs(fieldName: string): GraphQLFieldConfigArgumentMap;
+  public getFieldArgs<TArgs = ArgsMap>(fieldName: string): ComposeFieldConfigArgumentMap<TArgs>;
 
   public hasFieldArg(fieldName: string, argName: string): boolean;
 
-  public getFieldArg(fieldName: string, argName: string): GraphQLArgumentConfig;
+  public getFieldArg(fieldName: string, argName: string): ComposeArgumentConfigAsObject;
 
   public getFieldArgType(fieldName: string, argName: string): GraphQLInputType;
 

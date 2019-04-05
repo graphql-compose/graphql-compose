@@ -263,16 +263,23 @@ export class InputTypeComposer<TContext> {
     return this;
   }
 
-  getField(fieldName: string): ComposeInputFieldConfig {
+  getField(fieldName: string): ComposeInputFieldConfigAsObject {
     const fields = this.getFields();
+    let field = fields[fieldName];
 
-    if (!fields[fieldName]) {
+    if (!field) {
       throw new Error(
-        `Cannot get field '${fieldName}' from input type '${this.getTypeName()}'. Field does not exist.`
+        `Cannot get field '${fieldName}' from input  type '${this.getTypeName()}'. Field does not exist.`
       );
     }
 
-    return fields[fieldName];
+    if (isFunction(field)) field = field();
+
+    if (typeof field === 'string' || isComposeInputType(field) || Array.isArray(field)) {
+      return { type: (field: any) };
+    }
+
+    return (field: any);
   }
 
   removeField(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
@@ -518,52 +525,13 @@ export class InputTypeComposer<TContext> {
   }
 
   getFieldExtensions(fieldName: string): Extensions {
-    let field = this.getField(fieldName);
-    if (isFunction(field)) {
-      field = field();
-    }
-
-    if (
-      isObject(field) &&
-      !isFunction(field) &&
-      !Array.isArray(field) &&
-      !isComposeInputType(field) &&
-      // Flow is misbehaving so I have to add this
-      // it should be handled by the above isComposeInputType, but somehow is not
-      !(field instanceof GraphQLList) &&
-      !(field instanceof GraphQLNonNull)
-    ) {
-      return (field: ComposeInputFieldConfigAsObject).extensions || {};
-    } else {
-      return {};
-    }
+    const field = this.getField(fieldName);
+    return field.extensions || {};
   }
 
   setFieldExtensions(fieldName: string, extensions: Extensions): InputTypeComposer<TContext> {
-    let field = this.getField(fieldName);
-
-    if (isFunction(field)) {
-      field = field();
-    }
-
-    if (
-      isString(field) ||
-      Array.isArray(field) ||
-      isComposeInputType(field) ||
-      // Flow is misbehaving so I have to add this
-      // it should be handled by the above isComposeInputType, but somehow is not
-      field instanceof GraphQLList ||
-      field instanceof GraphQLNonNull
-    ) {
-      field = {
-        type: field,
-      };
-    }
-
-    this.setField(fieldName, {
-      ...field,
-      extensions,
-    });
+    const field = this.getField(fieldName);
+    this.setField(fieldName, { ...field, extensions });
     return this;
   }
 

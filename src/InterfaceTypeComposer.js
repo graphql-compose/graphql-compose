@@ -193,16 +193,23 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return this.gqType._gqcFields;
   }
 
-  getField(name: string): ComposeFieldConfig<TSource, TContext> {
-    const values = this.getFields();
+  getField(fieldName: string): ComposeFieldConfigAsObject<TSource, TContext> {
+    const fields = this.getFields();
+    let field = fields[fieldName];
 
-    if (!values[name]) {
+    if (!field) {
       throw new Error(
-        `Cannot get field '${name}' from interface type '${this.getTypeName()}'. Field does not exist.`
+        `Cannot get field '${fieldName}' from type '${this.getTypeName()}'. Field does not exist.`
       );
     }
 
-    return values[name];
+    if (isFunction(field)) field = field();
+
+    if (typeof field === 'string' || isComposeOutputType(field) || Array.isArray(field)) {
+      return { type: (field: any) };
+    }
+
+    return (field: any);
   }
 
   getFieldNames(): string[] {
@@ -750,60 +757,16 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   getFieldExtensions(fieldName: string): Extensions {
-    let field = this.getField(fieldName);
-    if (isFunction(field)) {
-      field = field();
-    }
-
-    if (
-      isObject(field) &&
-      !isFunction(field) &&
-      !Array.isArray(field) &&
-      !isComposeOutputType(field) &&
-      !(field instanceof GraphQLList || field instanceof GraphQLNonNull)
-    ) {
-      return (field: ComposeFieldConfigAsObject<any, any, any>).extensions || {};
-    } else {
-      return {};
-    }
+    const field = this.getField(fieldName);
+    return field.extensions || {};
   }
 
   setFieldExtensions(
     fieldName: string,
     extensions: Extensions
   ): InterfaceTypeComposer<TSource, TContext> {
-    let field = this.getField(fieldName);
-
-    if (isFunction(field)) {
-      field = field();
-    }
-
-    // This mess makes flow happy
-    if (
-      !isFunction(field) &&
-      (isString(field) ||
-        Array.isArray(field) ||
-        field instanceof GraphQLList ||
-        field instanceof GraphQLNonNull ||
-        isComposeOutputType(field))
-    ) {
-      field = {
-        type: field,
-      };
-
-      this.setField(fieldName, {
-        ...(field: ComposeFieldConfigAsObject<any, any, any>),
-        extensions,
-      });
-    } else if (typeof field !== 'function') {
-      this.setField(fieldName, {
-        ...(field: ComposeFieldConfigAsObject<any, any, any>),
-        extensions,
-      });
-    } else {
-      throw new Error(`Can not set extension on a thunk for ${this.getTypeName()}.{fieldName}`);
-    }
-
+    const field = this.getField(fieldName);
+    this.setField(fieldName, { ...field, extensions });
     return this;
   }
 

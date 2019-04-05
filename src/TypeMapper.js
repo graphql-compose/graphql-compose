@@ -128,39 +128,30 @@ export class TypeMapper<TContext> {
       throw new Error('TypeMapper must have SchemaComposer instance.');
     }
     this.schemaComposer = schemaComposer;
+    this.initScalars();
 
     // alive proper Flow type casting in autosuggestions for class with Generics
     /* :: return this; */
   }
 
-  basicScalars: Map<string, GraphQLNamedType> = new Map([
-    // graphql basic types
-    ['String', GraphQLString],
-    ['Float', GraphQLFloat],
-    ['Int', GraphQLInt],
-    ['Boolean', GraphQLBoolean],
-    ['ID', GraphQLID],
-  ]);
+  initScalars() {
+    const scalars = [
+      ['String', GraphQLString],
+      ['Float', GraphQLFloat],
+      ['Int', GraphQLInt],
+      ['Boolean', GraphQLBoolean],
+      ['ID', GraphQLID],
+      ['JSON', GraphQLJSON],
+      ['Json', GraphQLJSON],
+      ['Date', GraphQLDate],
+      ['Buffer', GraphQLBuffer],
+    ];
+    scalars.forEach(([name, type]) => {
+      this.schemaComposer.set(name, type);
+    });
+  }
 
   get(name: string): GraphQLNamedType | void {
-    const basicScalar = this.basicScalars.get(name);
-    if (basicScalar) return basicScalar;
-
-    if (!this.schemaComposer.has(name)) {
-      if (name === 'JSON' || name === 'Json') {
-        this.schemaComposer.set(name, GraphQLJSON);
-        return GraphQLJSON;
-      } else if (name === 'Date') {
-        this.schemaComposer.set(name, GraphQLDate);
-        return GraphQLDate;
-      } else if (name === 'Buffer') {
-        this.schemaComposer.set(name, GraphQLBuffer);
-        return GraphQLBuffer;
-      } else {
-        return undefined;
-      }
-    }
-
     const schemaType = this.schemaComposer.get(name);
     if (isNamedType(schemaType) || isScalarType(schemaType)) {
       return schemaType;
@@ -209,6 +200,16 @@ export class TypeMapper<TContext> {
     return undefined;
   }
 
+  isTypeDefinitionString(str: string): boolean {
+    return (
+      RegexpOutputTypeDefinition.test(str) ||
+      RegexpInputTypeDefinition.test(str) ||
+      RegexpEnumTypeDefinition.test(str) ||
+      RegexpScalarTypeDefinition.test(str) ||
+      RegexpInterfaceTypeDefinition.test(str)
+    );
+  }
+
   createGraphQLType(str: TypeDefinitionString): GraphQLType | void {
     const type = this.createType(str);
     if (type) {
@@ -237,7 +238,7 @@ export class TypeMapper<TContext> {
     if (this.schemaComposer.hasInstance(composeType, ObjectTypeComposer)) {
       return this.schemaComposer.getOTC(composeType).getType();
     } else if (typeof composeType === 'string') {
-      const type = RegexpOutputTypeDefinition.test(composeType)
+      const type = this.isTypeDefinitionString(composeType)
         ? this.createGraphQLType(composeType)
         : this.getWrapped(composeType);
 
@@ -331,12 +332,9 @@ export class TypeMapper<TContext> {
           );
         }
       } else {
-        const type =
-          RegexpOutputTypeDefinition.test(composeType) ||
-          RegexpEnumTypeDefinition.test(composeType) ||
-          RegexpScalarTypeDefinition.test(composeType)
-            ? this.createGraphQLType(composeType)
-            : this.getWrapped(composeType);
+        const type = this.isTypeDefinitionString(composeType)
+          ? this.createGraphQLType(composeType)
+          : this.getWrapped(composeType);
 
         if (!type) {
           throw new Error(
@@ -480,12 +478,9 @@ export class TypeMapper<TContext> {
           );
         }
       } else {
-        const type =
-          RegexpInputTypeDefinition.test(composeType) ||
-          RegexpEnumTypeDefinition.test(composeType) ||
-          RegexpScalarTypeDefinition.test(composeType)
-            ? this.createGraphQLType(composeType)
-            : this.getWrapped(composeType);
+        const type = this.isTypeDefinitionString(composeType)
+          ? this.createGraphQLType(composeType)
+          : this.getWrapped(composeType);
 
         if (!type) {
           throw new Error(
@@ -623,12 +618,9 @@ export class TypeMapper<TContext> {
           );
         }
       } else {
-        const type =
-          RegexpInputTypeDefinition.test(composeType) ||
-          RegexpEnumTypeDefinition.test(composeType) ||
-          RegexpScalarTypeDefinition.test(composeType)
-            ? this.createGraphQLType(composeType)
-            : this.getWrapped(composeType);
+        const type = this.isTypeDefinitionString(composeType)
+          ? this.createGraphQLType(composeType)
+          : this.getWrapped(composeType);
 
         if (!type) {
           throw new Error(

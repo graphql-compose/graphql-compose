@@ -29,6 +29,9 @@ import {
   GraphQLIncludeDirective,
   GraphQLDeprecatedDirective,
   GraphQLScalarType,
+  GraphQLNonNull,
+  GraphQLList,
+  type GraphQLType,
   type GraphQLNamedType,
   type SchemaDefinitionNode,
   type GraphQLResolveInfo,
@@ -511,7 +514,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
   }
 
   getAnyTC(
-    typeName: any
+    typeOrName: string | AnyType<any> | GraphQLType
   ):
     | ObjectTypeComposer<any, TContext>
     | InputTypeComposer<TContext>
@@ -519,9 +522,15 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     | InterfaceTypeComposer<any, TContext>
     | UnionTypeComposer<any, TContext>
     | ScalarTypeComposer<TContext> {
-    const type = this.get(typeName);
+    let type;
+    if (typeof typeOrName === 'string') {
+      type = this.get(typeOrName);
+    } else {
+      type = typeOrName;
+    }
+
     if (type == null) {
-      throw new Error(`Cannot find type with name ${typeName}`);
+      throw new Error(`Cannot find type with name ${(typeOrName: any)}`);
     } else if (
       type instanceof ObjectTypeComposer ||
       type instanceof InputTypeComposer ||
@@ -531,7 +540,13 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
       type instanceof UnionTypeComposer
     ) {
       return type;
-    } else if (type instanceof GraphQLObjectType) {
+    }
+
+    while (type instanceof GraphQLList || type instanceof GraphQLNonNull) {
+      type = type.ofType;
+    }
+
+    if (type instanceof GraphQLObjectType) {
       return ObjectTypeComposer.create(type, this);
     } else if (type instanceof GraphQLInputObjectType) {
       return InputTypeComposer.create(type, this);
@@ -547,7 +562,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
 
     throw new Error(
       `Type with name ${inspect(
-        typeName
+        typeOrName
       )} cannot be obtained as any Composer helper. Put something strange?`
     );
   }
@@ -568,6 +583,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
     super.clear();
     this._schemaMustHaveTypes = [];
     this._directives = BUILT_IN_DIRECTIVES;
+    this.typeMapper.initScalars();
   }
 
   add(typeOrSDL: mixed): ?string {

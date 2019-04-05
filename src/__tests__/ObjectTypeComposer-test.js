@@ -238,7 +238,7 @@ describe('ObjectTypeComposer', () => {
       it('getFieldArgs()', () => {
         const args = tc.getFieldArgs('field1');
         expect(Object.keys(args)).toEqual(['arg1', 'arg2']);
-        expect(args.arg1.type).toBe(GraphQLInt);
+        expect(args.arg1).toBe('Int');
         expect(tc.getFieldArgType('field1', 'arg1')).toBe(GraphQLInt);
         expect(() => tc.getFieldArgs('unexistedField')).toThrow();
       });
@@ -504,7 +504,7 @@ describe('ObjectTypeComposer', () => {
       );
       expect(myTC).toBeInstanceOf(ObjectTypeComposer);
       expect(myTC.getField('f1')).toEqual({ type: 'Type1' });
-      expect(myTC.getField('f2')).toEqual('Type2!');
+      expect(myTC.getField('f2')).toEqual({ type: 'Type2!' });
       expect(myTC.hasInterface('IFace')).toBeTruthy();
       expect(myTC.hasInterface('IFace2')).toBeTruthy();
 
@@ -610,8 +610,8 @@ describe('ObjectTypeComposer', () => {
         schemaComposer
       );
 
-      expect(myTC.get('field1')).toBe(GraphQLString);
-      expect(myTC.get('field1.@arg1')).toBe(GraphQLInt);
+      expect(myTC.get('field1').getType()).toBe(GraphQLString);
+      expect(myTC.get('field1.@arg1').getType()).toBe(GraphQLInt);
     });
   });
 

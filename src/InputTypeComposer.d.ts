@@ -111,7 +111,7 @@ export class InputTypeComposer<TContext = any> {
    */
   public addNestedFields(newFields: ComposeInputFieldConfigMap): this;
 
-  public getField(fieldName: string): ComposeInputFieldConfig;
+  public getField(fieldName: string): ComposeInputFieldConfigAsObject;
 
   public removeField(fieldNameOrArray: string | string[]): this;
 

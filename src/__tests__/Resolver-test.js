@@ -698,8 +698,8 @@ describe('Resolver', () => {
       schemaComposer
     );
 
-    expect(rsv.get('lat')).toBe(GraphQLFloat);
-    expect(rsv.get('@distance')).toBe(GraphQLInt);
+    expect(rsv.get('lat').getType()).toBe(GraphQLFloat);
+    expect(rsv.get('@distance').getType()).toBe(GraphQLInt);
   });
 
   describe('addSortArg', () => {

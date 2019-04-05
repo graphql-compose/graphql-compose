@@ -98,7 +98,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public getFields(): ComposeFieldConfigMap<TSource, TContext>;
 
-  public getField(name: string): ComposeFieldConfig<TSource, TContext>;
+  public getField(name: string): ComposeFieldConfigAsObject<TSource, TContext>;
 
   public getFieldNames(): string[];
 

@@ -21,6 +21,8 @@ import {
   GraphQLIncludeDirective,
   GraphQLDeprecatedDirective,
   GraphQLScalarType,
+  GraphQLNonNull,
+  GraphQLList,
 } from '../graphql';
 
 describe('SchemaComposer', () => {
@@ -565,6 +567,12 @@ describe('SchemaComposer', () => {
       );
       expect(sc.getAnyTC('Union2')).toBeInstanceOf(UnionTypeComposer);
     });
+
+    it('should unwrap graphql List and NonNull', () => {
+      const sc = new SchemaComposer();
+      const tc = sc.getAnyTC(new GraphQLNonNull(new GraphQLList(GraphQLString)));
+      expect(tc).toBeInstanceOf(ScalarTypeComposer);
+    });
   });
 
   describe('add()', () => {
@@ -899,7 +907,7 @@ describe('SchemaComposer', () => {
         }),
       });
       expect(sc.get('Date')).toBeInstanceOf(GraphQLScalarType);
-      expect(Array.from(sc.types.keys())).toEqual(['Date']);
+      expect(Array.from(sc.types.keys())).toContain('Date');
     });
 
     it('should add scalar types as configs', () => {
@@ -917,7 +925,7 @@ describe('SchemaComposer', () => {
         }: any),
       });
       expect(sc.get('Date')).toBeInstanceOf(GraphQLScalarType);
-      expect(Array.from(sc.types.keys())).toEqual(['Date']);
+      expect(Array.from(sc.types.keys())).toContain('Date');
     });
   });
 
@@ -1049,7 +1057,10 @@ describe('SchemaComposer', () => {
       removeDefaultDirectives(sc);
       sc.addDirective(d1);
       expect(sc.getDirectives()).toHaveLength(1);
+      expect(sc.has('String')).toBeTruthy();
       sc.clear();
+      expect(sc.has('String')).toBeTruthy();
+      expect(sc.has('Int')).toBeTruthy();
       expect(sc.hasDirective('@skip')).toBe(true);
       expect(sc.hasDirective('@include')).toBe(true);
       expect(sc.hasDirective('@deprecated')).toBe(true);

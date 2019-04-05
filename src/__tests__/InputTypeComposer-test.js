@@ -394,7 +394,7 @@ describe('InputTypeComposer', () => {
       expect(itc1.getField('f1')).toEqual({
         type: 'Type1',
       });
-      expect(itc1.getField('f2')).toEqual('Type2!');
+      expect(itc1.getField('f2')).toEqual({ type: 'Type2!' });
     });
 
     it('should create ITC by GraphQLObjectTypeConfig with fields as Thunk', () => {
@@ -452,7 +452,7 @@ describe('InputTypeComposer', () => {
       schemaComposer
     );
 
-    expect(itc1.get('field1')).toBe(GraphQLString);
+    expect(itc1.get('field1').getType()).toBe(GraphQLString);
   });
 
   it('should have chainable methods', () => {
