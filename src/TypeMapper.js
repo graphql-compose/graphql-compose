@@ -323,8 +323,13 @@ export class TypeMapper<TContext> {
         );
       }
 
-      if (this.schemaComposer.hasInstance(composeType, ObjectTypeComposer)) {
-        fieldConfig.type = this.schemaComposer.getOTC(composeType).getType();
+      if (this.schemaComposer.has(composeType)) {
+        fieldConfig.type = (this.schemaComposer.getAnyTC(composeType).getType(): any);
+        if (!isOutputType(fieldConfig.type)) {
+          throw new Error(
+            `${typeName}.${fieldName} cannot convert to OutputType the following type: '${fieldConfig.type.toString()}'`
+          );
+        }
       } else {
         const type =
           RegexpOutputTypeDefinition.test(composeType) ||
@@ -467,8 +472,13 @@ export class TypeMapper<TContext> {
         );
       }
 
-      if (this.schemaComposer.hasInstance(composeType, InputTypeComposer)) {
-        argConfig.type = this.schemaComposer.getITC(composeType).getType();
+      if (this.schemaComposer.has(composeType)) {
+        argConfig.type = (this.schemaComposer.getAnyTC(composeType).getType(): any);
+        if (!isInputType(argConfig.type)) {
+          throw new Error(
+            `${typeName}.${fieldName}@${argName} cannot convert to InputType the following type: '${argConfig.type.toString()}'`
+          );
+        }
       } else {
         const type =
           RegexpInputTypeDefinition.test(composeType) ||
@@ -605,8 +615,13 @@ export class TypeMapper<TContext> {
         );
       }
 
-      if (this.schemaComposer.hasInstance(composeType, InputTypeComposer)) {
-        fieldConfig.type = this.schemaComposer.getITC(composeType).getType();
+      if (this.schemaComposer.has(composeType)) {
+        fieldConfig.type = (this.schemaComposer.getAnyTC(composeType).getType(): any);
+        if (!isInputType(fieldConfig.type)) {
+          throw new Error(
+            `${typeName}.${fieldName} cannot convert to InputType the following type: '${fieldConfig.type.toString()}'`
+          );
+        }
       } else {
         const type =
           RegexpInputTypeDefinition.test(composeType) ||
