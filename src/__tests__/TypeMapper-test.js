@@ -226,11 +226,45 @@ describe('TypeMapper', () => {
         expect(fc.type.ofType).toBe(GraphQLString);
       });
 
-      it('should accept type as string', () => {
+      it('should accept type as string to scalar', () => {
         const fc = typeMapper.convertOutputFieldConfig({
           type: 'String',
         });
         expect(fc.type).toBe(GraphQLString);
+      });
+
+      it('should accept type as string to object type', () => {
+        ObjectTypeComposer.create('type Foo { id: ID! }', sc);
+        const fc = typeMapper.convertOutputFieldConfig({
+          type: 'Foo',
+        });
+        expect(fc.type).toBe(sc.getAnyTC('Foo').getType());
+      });
+
+      it('should accept type as string to enum type', () => {
+        EnumTypeComposer.create('enum Foo { A B }', sc);
+        const fc = typeMapper.convertOutputFieldConfig({
+          type: 'Foo',
+        });
+        expect(fc.type).toBe(sc.getAnyTC('Foo').getType());
+      });
+
+      it('should accept type as string to interface type', () => {
+        InterfaceTypeComposer.create('interface Foo { id: ID! }', sc);
+        const fc = typeMapper.convertOutputFieldConfig({
+          type: 'Foo',
+        });
+        expect(fc.type).toBe(sc.getAnyTC('Foo').getType());
+      });
+
+      it('should accept type as string to union type', () => {
+        ObjectTypeComposer.create('type A { id: ID! }', sc);
+        ObjectTypeComposer.create('type B { id: ID! }', sc);
+        UnionTypeComposer.create('union Foo = A | B', sc);
+        const fc = typeMapper.convertOutputFieldConfig({
+          type: 'Foo',
+        });
+        expect(fc.type).toBe(sc.getAnyTC('Foo').getType());
       });
 
       it('should create field config from type as string', () => {
@@ -497,11 +531,27 @@ describe('TypeMapper', () => {
       expect(ic.type.ofType).toBe(GraphQLString);
     });
 
-    it('should accept type name as string', () => {
+    it('should accept type as string to Scalar', () => {
       const ic = typeMapper.convertInputFieldConfig({
         type: 'String',
       });
       expect(ic.type).toBe(GraphQLString);
+    });
+
+    it('should accept type as string to Enum', () => {
+      EnumTypeComposer.create('enum Foo { A B}', sc);
+      const ic = typeMapper.convertInputFieldConfig({
+        type: 'Foo',
+      });
+      expect(ic.type).toBe(sc.get('Foo').getType());
+    });
+
+    it('should accept type as string to Input Object', () => {
+      InputTypeComposer.create('input Foo { id: Sting }', sc);
+      const ic = typeMapper.convertInputFieldConfig({
+        type: 'Foo',
+      });
+      expect(ic.type).toBe(sc.get('Foo').getType());
     });
 
     it('should create field config from type name as string', () => {
@@ -704,11 +754,27 @@ describe('TypeMapper', () => {
       expect(ac.type.ofType).toBe(GraphQLString);
     });
 
-    it('should accept type name as string', () => {
+    it('should accept type as string to Scalar', () => {
       const ac = typeMapper.convertArgConfig({
         type: 'String',
       });
       expect(ac.type).toBe(GraphQLString);
+    });
+
+    it('should accept type as string to Enum', () => {
+      EnumTypeComposer.create('enum Foo { A B}', sc);
+      const ac = typeMapper.convertArgConfig({
+        type: 'Foo',
+      });
+      expect(ac.type).toBe(sc.get('Foo').getType());
+    });
+
+    it('should accept type as string to Input Object', () => {
+      InputTypeComposer.create('input Foo { id: Sting }', sc);
+      const ac = typeMapper.convertArgConfig({
+        type: 'Foo',
+      });
+      expect(ac.type).toBe(sc.get('Foo').getType());
     });
 
     it('should create arg config from GraphQL Schema Language', () => {
