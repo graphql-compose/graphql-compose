@@ -309,6 +309,8 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
 
   public getDirectives(): GraphQLDirective[];
 
+  public getDirective(name: string): GraphQLDirective;
+
   public hasDirective(directive: string | GraphQLDirective): boolean;
 
   /**

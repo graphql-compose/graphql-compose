@@ -1007,4 +1007,100 @@ describe('TypeMapper', () => {
       expect(t1.getFieldType('a')).toBe(GraphQLInt);
     });
   });
+
+  describe('parse types directives to extensions', () => {
+    it('ObjectType', () => {
+      const tc: ObjectTypeComposer<any, any> = (typeMapper.createType(`
+        type My1 @typeDirective(a: false) { 
+          a: Int @default(value: 1)
+          b: Float @unexisted(q: 1, w: true, e: "s")
+          c: String @me @they @me
+          d(arg: Int = 15 @darg(v: 2) @darg2(w: "3")): Int @ddd
+        }`): any);
+
+      expect(tc).toBeInstanceOf(ObjectTypeComposer);
+      expect(tc.getExtensions()).toEqual({
+        directives: [{ args: { a: false }, name: 'typeDirective' }],
+      });
+
+      expect(tc.getFieldExtensions('a')).toEqual({
+        directives: [{ args: { value: 1 }, name: 'default' }],
+      });
+      expect(tc.getFieldExtensions('b')).toEqual({
+        directives: [{ args: { e: 's', q: 1, w: true }, name: 'unexisted' }],
+      });
+      expect(tc.getFieldExtensions('c')).toEqual({
+        directives: [
+          { args: {}, name: 'me' },
+          { args: {}, name: 'they' },
+          { args: {}, name: 'me' },
+        ],
+      });
+      expect(tc.getFieldArgExtensions('d', 'arg')).toEqual({
+        directives: [{ args: { v: 2 }, name: 'darg' }, { args: { w: '3' }, name: 'darg2' }],
+      });
+      expect(tc.getFieldExtensions('d')).toEqual({ directives: [{ args: {}, name: 'ddd' }] });
+    });
+
+    it('InterfaceType', () => {
+      const tc: InterfaceTypeComposer<any, any> = (typeMapper.createType(`
+        interface My1 @typeDirective(a: false) { 
+          a: Int @default(value: 1)
+          b: Float @unexisted(q: 1, w: true, e: "s")
+          c: String @me @they @me
+          d(arg: Int = 15 @darg(v: 2) @darg2(w: "3")): Int @ddd
+        }`): any);
+
+      expect(tc).toBeInstanceOf(InterfaceTypeComposer);
+      expect(tc.getExtensions()).toEqual({
+        directives: [{ args: { a: false }, name: 'typeDirective' }],
+      });
+
+      expect(tc.getFieldExtensions('a')).toEqual({
+        directives: [{ args: { value: 1 }, name: 'default' }],
+      });
+      expect(tc.getFieldExtensions('b')).toEqual({
+        directives: [{ args: { e: 's', q: 1, w: true }, name: 'unexisted' }],
+      });
+      expect(tc.getFieldExtensions('c')).toEqual({
+        directives: [
+          { args: {}, name: 'me' },
+          { args: {}, name: 'they' },
+          { args: {}, name: 'me' },
+        ],
+      });
+      expect(tc.getFieldArgExtensions('d', 'arg')).toEqual({
+        directives: [{ args: { v: 2 }, name: 'darg' }, { args: { w: '3' }, name: 'darg2' }],
+      });
+      expect(tc.getFieldExtensions('d')).toEqual({ directives: [{ args: {}, name: 'ddd' }] });
+    });
+
+    it('InputType', () => {
+      const tc: InputTypeComposer<any> = (typeMapper.createType(`
+        input My1 @typeDirective(a: false) { 
+          a: Int @default(value: 1)
+          b: Float @unexisted(q: 1, w: true, e: "s")
+          c: String @me @they @me
+        }`): any);
+
+      expect(tc).toBeInstanceOf(InputTypeComposer);
+      expect(tc.getExtensions()).toEqual({
+        directives: [{ args: { a: false }, name: 'typeDirective' }],
+      });
+
+      expect(tc.getFieldExtensions('a')).toEqual({
+        directives: [{ args: { value: 1 }, name: 'default' }],
+      });
+      expect(tc.getFieldExtensions('b')).toEqual({
+        directives: [{ args: { e: 's', q: 1, w: true }, name: 'unexisted' }],
+      });
+      expect(tc.getFieldExtensions('c')).toEqual({
+        directives: [
+          { args: {}, name: 'me' },
+          { args: {}, name: 'they' },
+          { args: {}, name: 'me' },
+        ],
+      });
+    });
+  });
 });

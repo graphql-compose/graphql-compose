@@ -1,6 +1,6 @@
 /* @flow strict */
 
-import { SchemaComposer } from '..';
+import { SchemaComposer, BUILT_IN_DIRECTIVES } from '../SchemaComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
@@ -17,9 +17,6 @@ import {
   GraphQLUnionType,
   GraphQLDirective,
   DirectiveLocation,
-  GraphQLSkipDirective,
-  GraphQLIncludeDirective,
-  GraphQLDeprecatedDirective,
   GraphQLScalarType,
   GraphQLNonNull,
   GraphQLList,
@@ -1003,17 +1000,16 @@ describe('SchemaComposer', () => {
     });
 
     function removeDefaultDirectives(sc) {
-      sc.removeDirective(GraphQLSkipDirective);
-      sc.removeDirective(GraphQLIncludeDirective);
-      sc.removeDirective(GraphQLDeprecatedDirective);
+      BUILT_IN_DIRECTIVES.forEach(d => sc.removeDirective(d));
     }
 
     it('has default directives', () => {
       const sc = new SchemaComposer();
-      expect(sc.hasDirective('@skip')).toBe(true);
-      expect(sc.hasDirective('@include')).toBe(true);
-      expect(sc.hasDirective('@deprecated')).toBe(true);
-      expect(sc.getDirectives()).toHaveLength(3);
+      expect(sc.hasDirective('@skip')).toBeTruthy();
+      expect(sc.hasDirective('@include')).toBeTruthy();
+      expect(sc.hasDirective('@deprecated')).toBeTruthy();
+      expect(sc.hasDirective('@default')).toBeTruthy();
+      expect(sc.getDirectives()).toHaveLength(4);
     });
 
     it('addDirective()', () => {
@@ -1064,7 +1060,8 @@ describe('SchemaComposer', () => {
       expect(sc.hasDirective('@skip')).toBe(true);
       expect(sc.hasDirective('@include')).toBe(true);
       expect(sc.hasDirective('@deprecated')).toBe(true);
-      expect(sc.getDirectives()).toHaveLength(3);
+      expect(sc.hasDirective('@default')).toBe(true);
+      expect(sc.getDirectives()).toHaveLength(4);
     });
 
     it('hasDirective()', () => {

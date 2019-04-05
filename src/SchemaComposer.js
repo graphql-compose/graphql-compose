@@ -36,6 +36,7 @@ import {
   type SchemaDefinitionNode,
   type GraphQLResolveInfo,
 } from './graphql';
+import DefaultDirective from './directive/default';
 
 type ExtraSchemaConfig = {
   types?: GraphQLNamedType[] | null,
@@ -71,10 +72,11 @@ type GraphQLToolsResolveMethods<TContext> = {
   },
 };
 
-const BUILT_IN_DIRECTIVES = [
+export const BUILT_IN_DIRECTIVES = [
   GraphQLSkipDirective,
   GraphQLIncludeDirective,
   GraphQLDeprecatedDirective,
+  DefaultDirective,
 ];
 
 export class SchemaComposer<TContext> extends TypeStorage<any, any> {
@@ -621,6 +623,22 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
 
   getDirectives(): Array<GraphQLDirective> {
     return this._directives;
+  }
+
+  /**
+   * This method used in TypeMapper and for fast parsing
+   */
+  _getDirective(name: string): ?GraphQLDirective {
+    const directives = this.getDirectives();
+    return directives.find(d => d.name === name);
+  }
+
+  getDirective(name: string): GraphQLDirective {
+    const directive = this._getDirective(name);
+    if (!directive) {
+      throw new Error(`Directive instance with name ${name} does not exists.`);
+    }
+    return directive;
   }
 
   hasDirective(directive: string | GraphQLDirective): boolean {

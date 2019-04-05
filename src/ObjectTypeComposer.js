@@ -69,13 +69,13 @@ export type GraphQLObjectTypeExtended<TSource, TContext> = GraphQLObjectType & {
 };
 
 export type ComposeObjectTypeConfig<TSource, TContext> = {
-  +name: string,
-  +interfaces?: Thunk<Array<ComposeInterfaceType> | null>,
-  +fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>,
-  +isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>,
-  +description?: string | null,
-  +isIntrospection?: boolean,
-  +extensions?: Extensions,
+  name: string,
+  interfaces?: Thunk<Array<ComposeInterfaceType> | null>,
+  fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>,
+  isTypeOf?: ?GraphQLIsTypeOfFn<TSource, TContext>,
+  description?: string | null,
+  isIntrospection?: boolean,
+  extensions?: Extensions,
 };
 
 // extended GraphQLFieldConfigMap
@@ -97,15 +97,15 @@ export type GraphqlFieldConfigExtended<TSource, TContext> = GraphQLFieldConfig<
 > & { projection?: any };
 
 export type ComposeFieldConfigAsObject<TSource, TContext, TArgs = ArgsMap> = {
-  +type: Thunk<ComposeOutputType<any /* TReturn */, TContext>> | GraphQLOutputType,
-  +args?: ComposeFieldConfigArgumentMap<TArgs>,
-  +resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>,
-  +subscribe?: GraphQLFieldResolver<TSource, TContext>,
-  +deprecationReason?: ?string,
-  +description?: ?string,
-  +astNode?: FieldDefinitionNode | null,
-  +extensions?: Extensions,
-  +[key: string]: any,
+  type: Thunk<ComposeOutputType<any /* TReturn */, TContext>> | GraphQLOutputType,
+  args?: ComposeFieldConfigArgumentMap<TArgs>,
+  resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>,
+  subscribe?: GraphQLFieldResolver<TSource, TContext>,
+  deprecationReason?: ?string,
+  description?: ?string,
+  astNode?: FieldDefinitionNode | null,
+  extensions?: Extensions,
+  [key: string]: any,
 };
 
 // Output type should not have `TSource`. It should not affect on main Type source!
@@ -144,12 +144,12 @@ export type ComposeArgumentType =
   | ScalarTypeComposer<any>
   | $ReadOnlyArray<ComposeArgumentType>;
 export type ComposeArgumentConfigAsObject = {
-  +type: Thunk<ComposeArgumentType> | GraphQLInputType,
-  +defaultValue?: mixed,
-  +description?: string | null,
-  +astNode?: InputValueDefinitionNode | null,
-  +extensions?: Extensions,
-  +[key: string]: any,
+  type: Thunk<ComposeArgumentType> | GraphQLInputType,
+  defaultValue?: mixed,
+  description?: string | null,
+  astNode?: InputValueDefinitionNode | null,
+  extensions?: Extensions,
+  [key: string]: any,
 };
 
 export type ComposeArgumentConfig =

@@ -71,19 +71,21 @@ import type {
   ComposeFieldConfig,
   ComposeArgumentConfig,
   ComposeFieldConfigArgumentMap,
+  ComposeObjectType,
+  ComposeFieldConfigAsObject,
+  ComposeArgumentConfigAsObject,
 } from './ObjectTypeComposer';
-import { ObjectTypeComposer, type ComposeObjectType } from './ObjectTypeComposer';
+import { ObjectTypeComposer } from './ObjectTypeComposer';
 import type { SchemaComposer, AnyComposeType, AnyType } from './SchemaComposer';
-import { InputTypeComposer } from './InputTypeComposer';
+import { InputTypeComposer, type ComposeInputFieldConfigAsObject } from './InputTypeComposer';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { InterfaceTypeComposer, type ComposeInterfaceType } from './InterfaceTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
 import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
-import type { Thunk } from './utils/definitions';
+import type { Thunk, ExtensionsDirective } from './utils/definitions';
 import { isFunction, isObject } from './utils/is';
-import DefaultDirective from './directive/default';
 
 export type TypeDefinitionString = string; // eg type Name { field: Int }
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]
@@ -804,30 +806,38 @@ export class TypeMapper<TContext> {
       let val;
       const typeName = this.getNamedTypeAST(value.type).name.value;
       const type = this.produceType(value.type);
+
+      const ac: ComposeArgumentConfigAsObject = {
+        type,
+        description: getDescription(value),
+      };
+
+      if (value.directives) {
+        const directives = this.parseDirectives(value.directives);
+        if (directives) {
+          ac.extensions = { directives };
+
+          const data = directives.find(d => d.name === 'default');
+          if (data) {
+            ac.defaultValue = data.args.value;
+          }
+        }
+      }
+
       if (value.defaultValue) {
         const typeDef = this.typeDefNamed(typeName);
-        val = () => {
-          const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
-          if (isInputType(wrappedType)) {
-            return {
-              type,
-              description: getDescription(value),
-              defaultValue: this.getInputDefaultValue(
-                value,
-                ((wrappedType: any): GraphQLInputType)
-              ),
-            };
-          } else {
-            throw new Error('Non-input type as an argument.');
-          }
-        };
-      } else {
-        val = {
-          type,
-          description: getDescription(value),
-        };
+        const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
+        if (isInputType(wrappedType)) {
+          ac.defaultValue = valueFromAST(
+            value.defaultValue,
+            ((wrappedType: any): GraphQLInputType)
+          );
+        } else {
+          throw new Error('Non-input type as an argument.');
+        }
       }
-      result[key] = val;
+
+      result[key] = ac;
     });
     return result;
   }
@@ -839,13 +849,24 @@ export class TypeMapper<TContext> {
     return keyValMap(
       def.fields,
       field => field.name.value,
-      field => ({
-        type: this.produceType(field.type),
-        description: getDescription(field),
-        args: this.makeArguments(field.arguments),
-        deprecationReason: this.getDeprecationReason(field.directives),
-        astNode: field,
-      })
+      field => {
+        const fc: ComposeFieldConfigAsObject<any, any, any> = {
+          type: this.produceType(field.type),
+          description: getDescription(field),
+          args: this.makeArguments(field.arguments),
+          deprecationReason: this.getDeprecationReason(field.directives),
+          astNode: field,
+        };
+
+        if (field.directives) {
+          const directives = this.parseDirectives(field.directives);
+          if (directives) {
+            fc.extensions = { directives };
+          }
+        }
+
+        return fc;
+      }
     );
   }
 
@@ -855,26 +876,32 @@ export class TypeMapper<TContext> {
       def.fields,
       field => field.name.value,
       field => {
-        let defaultValue;
-        if (Array.isArray(field.directives) && getDirectiveValues) {
-          const vars = getDirectiveValues(DefaultDirective, field);
-          if (vars && vars.hasOwnProperty('value')) {
-            defaultValue = vars.value;
-          }
-        }
-        return {
+        const fc: ComposeInputFieldConfigAsObject = {
           type: this.produceType(field.type),
           description: getDescription(field),
           deprecationReason: this.getDeprecationReason(field.directives),
-          defaultValue,
           astNode: field,
         };
+
+        if (field.directives) {
+          const directives = this.parseDirectives(field.directives);
+          if (directives) {
+            fc.extensions = { directives };
+
+            const data = directives.find(d => d.name === 'default');
+            if (data) {
+              fc.defaultValue = data.args.value;
+            }
+          }
+        }
+
+        return fc;
       }
     );
   }
 
   makeEnumDef(def: EnumTypeDefinitionNode) {
-    const enumType = this.schemaComposer.createEnumTC({
+    const tc = this.schemaComposer.createEnumTC({
       name: def.name.value,
       description: getDescription(def),
       values: !def.values
@@ -890,16 +917,24 @@ export class TypeMapper<TContext> {
       astNode: def,
     });
 
-    return enumType;
+    if (def.directives) {
+      tc.setExtension('directives', this.parseDirectives(def.directives));
+    }
+    return tc;
   }
 
   makeInputObjectDef(def: InputObjectTypeDefinitionNode) {
-    return this.schemaComposer.createInputTC({
+    const tc = this.schemaComposer.createInputTC({
       name: def.name.value,
       description: getDescription(def),
       fields: this.makeInputFieldDef(def),
       astNode: def,
     });
+
+    if (def.directives) {
+      tc.setExtension('directives', this.parseDirectives(def.directives));
+    }
+    return tc;
   }
 
   makeDirectiveDef(def: DirectiveDefinitionNode): GraphQLDirective {
@@ -912,11 +947,7 @@ export class TypeMapper<TContext> {
       const typeDef = this.typeDefNamed(typeName);
       const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
       if (isInputType(wrappedType)) {
-        val = {
-          type: wrappedType,
-          description: getDescription(value),
-          defaultValue: this.getInputDefaultValue(value, ((wrappedType: any): GraphQLInputType)),
-        };
+        val = { type: wrappedType, description: getDescription(value) };
       } else {
         throw new Error('Non-input type as an argument.');
       }
@@ -933,12 +964,16 @@ export class TypeMapper<TContext> {
   }
 
   makeScalarDef(def: ScalarTypeDefinitionNode) {
-    return this.schemaComposer.createScalarTC({
+    const tc = this.schemaComposer.createScalarTC({
       name: def.name.value,
       description: getDescription(def),
       serialize: v => v,
       astNode: def,
     });
+    if (def.directives) {
+      tc.setExtension('directives', this.parseDirectives(def.directives));
+    }
+    return tc;
   }
 
   makeImplementedInterfaces(def: ObjectTypeDefinitionNode) {
@@ -949,41 +984,44 @@ export class TypeMapper<TContext> {
   }
 
   makeTypeDef(def: ObjectTypeDefinitionNode) {
-    return this.schemaComposer.createObjectTC({
+    const tc = this.schemaComposer.createObjectTC({
       name: def.name.value,
       description: getDescription(def),
       fields: this.makeFieldDefMap(def),
       interfaces: () => this.makeImplementedInterfaces(def),
       astNode: def,
     });
+    if (def.directives) {
+      tc.setExtension('directives', this.parseDirectives(def.directives));
+    }
+    return tc;
   }
 
   makeInterfaceDef(def: InterfaceTypeDefinitionNode) {
-    return this.schemaComposer.createInterfaceTC({
+    const tc = this.schemaComposer.createInterfaceTC({
       name: def.name.value,
       description: getDescription(def),
       fields: this.makeFieldDefMap(def),
       astNode: def,
     });
+    if (def.directives) {
+      tc.setExtension('directives', this.parseDirectives(def.directives));
+    }
+    return tc;
   }
 
   makeUnionDef(def: UnionTypeDefinitionNode) {
     const types: ?$ReadOnlyArray<NamedTypeNode> = def.types;
-    return this.schemaComposer.createUnionTC({
+    const tc = this.schemaComposer.createUnionTC({
       name: def.name.value,
       description: getDescription(def),
       types: (types || []).map(ref => this.getNamedTypeAST(ref).name.value),
       astNode: def,
     });
-  }
-
-  getInputDefaultValue(value: InputValueDefinitionNode, type: GraphQLInputType): mixed {
-    // check getDirectiveValues become avaliable from 0.10.2
-    if (Array.isArray(value.directives) && getDirectiveValues) {
-      const vars = getDirectiveValues(DefaultDirective, value);
-      if (vars && vars.hasOwnProperty('value')) return vars.value;
+    if (def.directives) {
+      tc.setExtension('directives', this.parseDirectives(def.directives));
     }
-    return valueFromAST(value.defaultValue, type);
+    return tc;
   }
 
   checkSchemaDef(def: SchemaDefinitionNode) {
@@ -1054,5 +1092,22 @@ export class TypeMapper<TContext> {
     }
     const { reason } = getArgumentValues(GraphQLDeprecatedDirective, deprecatedAST);
     return (reason: any); // eslint-disable-line
+  }
+
+  parseDirectives(directives: $ReadOnlyArray<DirectiveNode>): Array<ExtensionsDirective> {
+    const result = [];
+    directives.forEach(directive => {
+      const name = directive.name.value;
+      const directiveDef = this.schemaComposer._getDirective(name);
+      const args = directiveDef
+        ? getArgumentValues(directiveDef, directive)
+        : (keyValMap(
+            directive.arguments || [],
+            arg => arg.name.value,
+            arg => GraphQLJSON.parseLiteral(arg.value)
+          ): any);
+      result.push({ name, args });
+    });
+    return result;
   }
 }
