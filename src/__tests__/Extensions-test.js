@@ -99,6 +99,69 @@ describe('Extensions', () => {
       );
       testFieldExtensionsInitializers(tc);
     });
+
+    it('has field arg Extensions methods', () => {
+      const tc = ObjectTypeComposer.create(
+        {
+          name: 'Foo',
+          fields: {
+            fieldWithArgs: {
+              type: 'String!',
+              args: {
+                argId: 'ID!',
+                argName: {
+                  type: 'String',
+                },
+                argNonExistingType: {
+                  type: 'Bar',
+                },
+                argThunked: {
+                  type: () => 'Bar',
+                },
+              },
+            },
+          },
+        },
+        sc
+      );
+      testFieldArgExtensions(tc, 'fieldWithArgs');
+    });
+
+    it('has fieldArg extension initializers', () => {
+      const tc = ObjectTypeComposer.create(
+        {
+          name: 'Foo',
+          fields: {
+            fieldWithArgs: {
+              type: 'String',
+              args: {
+                argId: 'ID!',
+                argName: {
+                  type: 'String',
+                  extensions: {
+                    noFilter: true,
+                  },
+                },
+                argNonExistingType: {
+                  type: 'Bar',
+                  extensions: {
+                    noFilter: true,
+                  },
+                },
+                argThunked: {
+                  type: () => 'Bar',
+                  extensions: {
+                    noFilter: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        sc
+      );
+      testFieldArgExtensionsInitializers(tc);
+    });
   });
 
   describe('InputTypeComposer', () => {
@@ -274,6 +337,69 @@ describe('Extensions', () => {
         sc
       );
       testFieldExtensionsInitializers(tc);
+    });
+
+    it('has field arg Extensions methods', () => {
+      const tc = InterfaceTypeComposer.create(
+        {
+          name: 'Foo',
+          fields: {
+            fieldWithArgs: {
+              type: 'String!',
+              args: {
+                argId: 'ID!',
+                argName: {
+                  type: 'String',
+                },
+                argNonExistingType: {
+                  type: 'Bar',
+                },
+                argThunked: {
+                  type: () => 'Bar',
+                },
+              },
+            },
+          },
+        },
+        sc
+      );
+      testFieldArgExtensions(tc, 'fieldWithArgs');
+    });
+
+    it('has fieldArg extension initializers', () => {
+      const tc = InterfaceTypeComposer.create(
+        {
+          name: 'Foo',
+          fields: {
+            fieldWithArgs: {
+              type: 'String',
+              args: {
+                argId: 'ID!',
+                argName: {
+                  type: 'String',
+                  extensions: {
+                    noFilter: true,
+                  },
+                },
+                argNonExistingType: {
+                  type: 'Bar',
+                  extensions: {
+                    noFilter: true,
+                  },
+                },
+                argThunked: {
+                  type: () => 'Bar',
+                  extensions: {
+                    noFilter: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        sc
+      );
+      testFieldArgExtensionsInitializers(tc);
     });
   });
 
@@ -485,6 +611,68 @@ describe('Extensions', () => {
     });
     expect(instance.getFieldExtensions('thunkedField')).toEqual({
       noFilter: true,
+    });
+  }
+
+  function testFieldArgExtensionsInitializers(instance) {
+    expect(instance.getFieldArgExtensions('fieldWithArgs', 'argName')).toEqual({
+      noFilter: true,
+    });
+    expect(instance.getFieldArgExtensions('fieldWithArgs', 'argNonExistingType')).toEqual({
+      noFilter: true,
+    });
+    expect(instance.getFieldArgExtensions('fieldWithArgs', 'argThunked')).toEqual({
+      noFilter: true,
+    });
+  }
+
+  function testFieldArgExtensions(instance, fieldName) {
+    ['argId', 'argName', 'argNonExistingType', 'argThunked'].forEach(argName => {
+      expect(instance.getFieldArgExtensions(fieldName, argName)).toEqual({});
+      instance.setFieldArgExtensions(fieldName, argName, {
+        tags: ['generated'],
+        source: 'inference',
+      });
+      expect(instance.getFieldArgExtensions(fieldName, argName)).toEqual({
+        tags: ['generated'],
+        source: 'inference',
+      });
+      instance.extendFieldArgExtensions(fieldName, argName, {
+        source: 'user',
+        originalName: 'foo',
+      });
+      expect(instance.getFieldArgExtensions(fieldName, argName)).toEqual({
+        tags: ['generated'],
+        source: 'user',
+        originalName: 'foo',
+      });
+      expect(instance.getFieldArgExtension(fieldName, argName, 'source')).toEqual('user');
+      expect(instance.hasFieldArgExtension(fieldName, argName, 'source')).toEqual(true);
+      expect(instance.hasFieldArgExtension(fieldName, argName, 'nonExistant')).toEqual(false);
+      instance.setFieldArgExtension(fieldName, argName, 'source', 'inference');
+      expect(instance.getFieldArgExtensions(fieldName, argName)).toEqual({
+        tags: ['generated'],
+        source: 'inference',
+        originalName: 'foo',
+      });
+      expect(instance.getFieldArgExtension(fieldName, argName, 'source')).toEqual('inference');
+      instance.removeFieldArgExtension(fieldName, argName, 'originalName');
+      expect(instance.getFieldArgExtensions(fieldName, argName)).toEqual({
+        tags: ['generated'],
+        source: 'inference',
+      });
+      instance.clearFieldArgExtensions(fieldName, argName);
+      expect(instance.getFieldArgExtensions(fieldName, argName)).toEqual({});
+      expect(instance.hasFieldArgExtension(fieldName, argName, 'source')).toEqual(false);
+      instance.setFieldArgExtensions(fieldName, argName, {
+        tags: ['generated'],
+        source: 'inference',
+      });
+      expect(instance.getFieldArgExtensions(fieldName, argName)).toEqual({
+        tags: ['generated'],
+        source: 'inference',
+      });
+      instance.clearFieldArgExtensions(fieldName, argName);
     });
   }
 });

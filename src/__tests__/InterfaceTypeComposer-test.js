@@ -216,7 +216,7 @@ describe('InterfaceTypeComposer', () => {
       it('getFieldArgs()', () => {
         const args = iftc.getFieldArgs('field1');
         expect(Object.keys(args)).toEqual(['arg1', 'arg2']);
-        expect(args.arg1.type).toBe(GraphQLInt);
+        expect(args.arg1).toBe('Int');
         expect(iftc.getFieldArgType('field1', 'arg1')).toBe(GraphQLInt);
         expect(() => iftc.getFieldArgs('unexistedField')).toThrow();
       });
@@ -224,7 +224,7 @@ describe('InterfaceTypeComposer', () => {
       it('hasFieldArg()', () => {
         expect(iftc.hasFieldArg('field1', 'arg1')).toBeTruthy();
         expect(iftc.hasFieldArg('field1', 'arg222')).toBeFalsy();
-        expect(() => iftc.hasFieldArg('unexistedField', 'arg1')).toThrow();
+        expect(iftc.hasFieldArg('unexistedField', 'arg1')).toBeFalsy();
       });
 
       it('getFieldArg()', () => {
@@ -232,7 +232,7 @@ describe('InterfaceTypeComposer', () => {
         expect(() => iftc.getFieldArg('field1', 'arg222')).toThrow(
           /Cannot get arg.*Argument does not exist/
         );
-        expect(() => iftc.hasFieldArg('unexistedField', 'arg1')).toThrow();
+        expect(iftc.hasFieldArg('unexistedField', 'arg1')).toBeFalsy();
       });
     });
 

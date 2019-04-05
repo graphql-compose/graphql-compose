@@ -137,6 +137,7 @@ export type ComposeArgumentConfigAsObject = {
   defaultValue?: any;
   description?: string | null;
   astNode?: InputValueDefinitionNode | null;
+  extensions?: Extensions;
 } & { $call?: void };
 
 export type ComposeArgumentConfig =
@@ -303,6 +304,12 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   public getFieldArg(fieldName: string, argName: string): ComposeArgumentConfigAsObject;
 
   public getFieldArgType(fieldName: string, argName: string): GraphQLInputType;
+
+  public setFieldArgs(fieldName: string, args: ComposeFieldConfigArgumentMap<any>): this;
+
+  public addFieldArgs(fieldName: string, newArgs: ComposeFieldConfigMap<TSource, TContext>): this;
+
+  public setFieldArg(fieldName: string, argName: string, argConfig: ComposeArgumentConfig): this;
 
   /**
    * -----------------------------------------------
@@ -474,6 +481,27 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   public setFieldExtension(fieldName: string, extensionName: string, value: any): this;
 
   public removeFieldExtension(fieldName: string, extensionName: string): this;
+
+  public getFieldArgExtensions(fieldName: string, argName: string): Extensions;
+
+  public setFieldArgExtensions(fieldName: string, argName: string, extensions: Extensions): this;
+
+  public extendFieldArgExtensions(fieldName: string, argName: string, extensions: Extensions): this;
+
+  public clearFieldArgExtensions(fieldName: string, argName: string): this;
+
+  public getFieldArgExtension(fieldName: string, argName: string, extensionName: string): any;
+
+  public hasFieldArgExtension(fieldName: string, argName: string, extensionName: string): boolean;
+
+  public setFieldArgExtension(
+    fieldName: string,
+    argName: string,
+    extensionName: string,
+    value: any
+  ): this;
+
+  public removeFieldArgExtension(fieldName: string, argName: string, extensionName: string): this;
 
   /**
    * -----------------------------------------------

@@ -17,8 +17,6 @@ import type {
   GraphQLOutputType,
   GraphQLInputObjectType,
   GraphQLInputType,
-  GraphQLFieldConfigArgumentMap,
-  GraphQLArgumentConfig,
   GraphQLResolveInfo,
   GraphQLTypeResolver,
 } from './graphql';
@@ -32,9 +30,17 @@ import type {
   ComposeFieldConfigMap,
   ComposeFieldConfig,
   ComposeFieldConfigAsObject,
+  ComposeArgumentConfig,
+  ComposeArgumentConfigAsObject,
+  ComposeFieldConfigArgumentMap,
+  ArgsMap,
 } from './ObjectTypeComposer';
 import type { Thunk, Extensions, MaybePromise } from './utils/definitions';
-import { resolveOutputConfigMapAsThunk, resolveOutputConfigAsThunk } from './utils/configAsThunk';
+import {
+  resolveOutputConfigMapAsThunk,
+  resolveOutputConfigAsThunk,
+  resolveArgConfigAsThunk,
+} from './utils/configAsThunk';
 import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath } from './utils/typeByPath';
 import { getGraphQLType } from './utils/typeHelpers';
@@ -403,9 +409,9 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return this;
   }
 
-  getFieldArgs(fieldName: string): GraphQLFieldConfigArgumentMap {
+  getFieldArgs(fieldName: string): ComposeFieldConfigArgumentMap<ArgsMap> {
     try {
-      const fc = this.getFieldConfig(fieldName);
+      const fc = this.getField(fieldName);
       return fc.args || {};
     } catch (e) {
       throw new Error(
@@ -415,25 +421,70 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   hasFieldArg(fieldName: string, argName: string): boolean {
-    const fieldArgs = this.getFieldArgs(fieldName);
-    return !!fieldArgs[argName];
+    try {
+      const fieldArgs = this.getFieldArgs(fieldName);
+      return !!fieldArgs[argName];
+    } catch (e) {
+      return false;
+    }
   }
 
-  getFieldArg(fieldName: string, argName: string): GraphQLArgumentConfig {
+  getFieldArg(fieldName: string, argName: string): ComposeArgumentConfigAsObject {
     const fieldArgs = this.getFieldArgs(fieldName);
+    let arg = fieldArgs[argName];
 
-    if (!fieldArgs[argName]) {
+    if (!arg) {
       throw new Error(
         `Cannot get arg '${argName}' from type.field '${this.getTypeName()}.${fieldName}'. Argument does not exist.`
       );
     }
 
-    return fieldArgs[argName];
+    if (isFunction(arg)) arg = arg();
+
+    if (typeof arg === 'string' || isComposeOutputType(arg) || Array.isArray(arg)) {
+      return { type: (arg: any) };
+    }
+
+    return (arg: any);
   }
 
   getFieldArgType(fieldName: string, argName: string): GraphQLInputType {
     const ac = this.getFieldArg(fieldName, argName);
-    return ac.type;
+    const graphqlAC = resolveArgConfigAsThunk(
+      this.schemaComposer,
+      ac,
+      argName,
+      fieldName,
+      this.getTypeName()
+    );
+    return graphqlAC.type;
+  }
+
+  setFieldArgs(
+    fieldName: string,
+    args: ComposeFieldConfigArgumentMap<any>
+  ): InterfaceTypeComposer<TSource, TContext> {
+    const field = { ...this.getField(fieldName) };
+    field.args = args;
+    this.setField(fieldName, field);
+    return this;
+  }
+
+  addFieldArgs(
+    fieldName: string,
+    newArgs: ComposeFieldConfigMap<TSource, TContext>
+  ): InterfaceTypeComposer<TSource, TContext> {
+    this.setFieldArgs(fieldName, { ...this.getFieldArgs(fieldName), ...newArgs });
+    return this;
+  }
+
+  setFieldArg(
+    fieldName: string,
+    argName: string,
+    argConfig: ComposeArgumentConfig
+  ): InterfaceTypeComposer<TSource, TContext> {
+    this.addFieldArgs(fieldName, { [argName]: argConfig });
+    return this;
   }
 
   // -----------------------------------------------
@@ -815,6 +866,75 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const extensions = { ...this.getFieldExtensions(fieldName) };
     delete extensions[extensionName];
     this.setFieldExtensions(fieldName, extensions);
+    return this;
+  }
+
+  getFieldArgExtensions(fieldName: string, argName: string): Extensions {
+    const ac = this.getFieldArg(fieldName, argName);
+    return ac.extensions || {};
+  }
+
+  setFieldArgExtensions(
+    fieldName: string,
+    argName: string,
+    extensions: Extensions
+  ): InterfaceTypeComposer<TSource, TContext> {
+    const ac = this.getFieldArg(fieldName, argName);
+    this.setFieldArg(fieldName, argName, { ...ac, extensions });
+    return this;
+  }
+
+  extendFieldArgExtensions(
+    fieldName: string,
+    argName: string,
+    extensions: Extensions
+  ): InterfaceTypeComposer<TSource, TContext> {
+    const current = this.getFieldArgExtensions(fieldName, argName);
+    this.setFieldArgExtensions(fieldName, argName, {
+      ...current,
+      ...extensions,
+    });
+    return this;
+  }
+
+  clearFieldArgExtensions(
+    fieldName: string,
+    argName: string
+  ): InterfaceTypeComposer<TSource, TContext> {
+    this.setFieldArgExtensions(fieldName, argName, {});
+    return this;
+  }
+
+  getFieldArgExtension(fieldName: string, argName: string, extensionName: string): ?any {
+    const extensions = this.getFieldArgExtensions(fieldName, argName);
+    return extensions[extensionName];
+  }
+
+  hasFieldArgExtension(fieldName: string, argName: string, extensionName: string): boolean {
+    const extensions = this.getFieldArgExtensions(fieldName, argName);
+    return extensionName in extensions;
+  }
+
+  setFieldArgExtension(
+    fieldName: string,
+    argName: string,
+    extensionName: string,
+    value: any
+  ): InterfaceTypeComposer<TSource, TContext> {
+    this.extendFieldArgExtensions(fieldName, argName, {
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeFieldArgExtension(
+    fieldName: string,
+    argName: string,
+    extensionName: string
+  ): InterfaceTypeComposer<TSource, TContext> {
+    const extensions = { ...this.getFieldArgExtensions(fieldName, argName) };
+    delete extensions[extensionName];
+    this.setFieldArgExtensions(fieldName, argName, extensions);
     return this;
   }
 

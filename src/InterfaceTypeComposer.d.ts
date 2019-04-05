@@ -19,6 +19,10 @@ import {
   ComposeFieldConfigMap,
   ComposeFieldConfigAsObject,
   ObjectTypeComposer,
+  ComposeArgumentConfig,
+  ComposeArgumentConfigAsObject,
+  ComposeFieldConfigArgumentMap,
+  ArgsMap,
 } from './ObjectTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
@@ -144,13 +148,19 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
 
-  public getFieldArgs(fieldName: string): GraphQLFieldConfigArgumentMap;
+  public getFieldArgs<TArgs = ArgsMap>(fieldName: string): ComposeFieldConfigArgumentMap<TArgs>;
 
   public hasFieldArg(fieldName: string, argName: string): boolean;
 
-  public getFieldArg(fieldName: string, argName: string): GraphQLArgumentConfig;
+  public getFieldArg(fieldName: string, argName: string): ComposeArgumentConfigAsObject;
 
   public getFieldArgType(fieldName: string, argName: string): GraphQLInputType;
+
+  public setFieldArgs(fieldName: string, args: ComposeFieldConfigArgumentMap<any>): this;
+
+  public addFieldArgs(fieldName: string, newArgs: ComposeFieldConfigMap<TSource, TContext>): this;
+
+  public setFieldArg(fieldName: string, argName: string, argConfig: ComposeArgumentConfig): this;
 
   /**
    * -----------------------------------------------
@@ -263,6 +273,27 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public setFieldExtension(fieldName: string, extensionName: string, value: any): this;
 
   public removeFieldExtension(fieldName: string, extensionName: string): this;
+
+  public getFieldArgExtensions(fieldName: string, argName: string): Extensions;
+
+  public setFieldArgExtensions(fieldName: string, argName: string, extensions: Extensions): this;
+
+  public extendFieldArgExtensions(fieldName: string, argName: string, extensions: Extensions): this;
+
+  public clearFieldArgExtensions(fieldName: string, argName: string): this;
+
+  public getFieldArgExtension(fieldName: string, argName: string, extensionName: string): any;
+
+  public hasFieldArgExtension(fieldName: string, argName: string, extensionName: string): boolean;
+
+  public setFieldArgExtension(
+    fieldName: string,
+    argName: string,
+    extensionName: string,
+    value: any
+  ): this;
+
+  public removeFieldArgExtension(fieldName: string, argName: string, extensionName: string): this;
 
   /**
    * -----------------------------------------------

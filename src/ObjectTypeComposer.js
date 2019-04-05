@@ -148,6 +148,7 @@ export type ComposeArgumentConfigAsObject = {
   +defaultValue?: mixed,
   +description?: string | null,
   +astNode?: InputValueDefinitionNode | null,
+  +extensions?: Extensions,
   +[key: string]: any,
 };
 
@@ -636,6 +637,33 @@ export class ObjectTypeComposer<TSource, TContext> {
     return graphqlAC.type;
   }
 
+  setFieldArgs(
+    fieldName: string,
+    args: ComposeFieldConfigArgumentMap<any>
+  ): ObjectTypeComposer<TSource, TContext> {
+    const field = { ...this.getField(fieldName) };
+    field.args = args;
+    this.setField(fieldName, field);
+    return this;
+  }
+
+  addFieldArgs(
+    fieldName: string,
+    newArgs: ComposeFieldConfigMap<TSource, TContext>
+  ): ObjectTypeComposer<TSource, TContext> {
+    this.setFieldArgs(fieldName, { ...this.getFieldArgs(fieldName), ...newArgs });
+    return this;
+  }
+
+  setFieldArg(
+    fieldName: string,
+    argName: string,
+    argConfig: ComposeArgumentConfig
+  ): ObjectTypeComposer<TSource, TContext> {
+    this.addFieldArgs(fieldName, { [argName]: argConfig });
+    return this;
+  }
+
   // -----------------------------------------------
   // Type methods
   // -----------------------------------------------
@@ -1049,6 +1077,75 @@ export class ObjectTypeComposer<TSource, TContext> {
     const extensions = { ...this.getFieldExtensions(fieldName) };
     delete extensions[extensionName];
     this.setFieldExtensions(fieldName, extensions);
+    return this;
+  }
+
+  getFieldArgExtensions(fieldName: string, argName: string): Extensions {
+    const ac = this.getFieldArg(fieldName, argName);
+    return ac.extensions || {};
+  }
+
+  setFieldArgExtensions(
+    fieldName: string,
+    argName: string,
+    extensions: Extensions
+  ): ObjectTypeComposer<TSource, TContext> {
+    const ac = this.getFieldArg(fieldName, argName);
+    this.setFieldArg(fieldName, argName, { ...ac, extensions });
+    return this;
+  }
+
+  extendFieldArgExtensions(
+    fieldName: string,
+    argName: string,
+    extensions: Extensions
+  ): ObjectTypeComposer<TSource, TContext> {
+    const current = this.getFieldArgExtensions(fieldName, argName);
+    this.setFieldArgExtensions(fieldName, argName, {
+      ...current,
+      ...extensions,
+    });
+    return this;
+  }
+
+  clearFieldArgExtensions(
+    fieldName: string,
+    argName: string
+  ): ObjectTypeComposer<TSource, TContext> {
+    this.setFieldArgExtensions(fieldName, argName, {});
+    return this;
+  }
+
+  getFieldArgExtension(fieldName: string, argName: string, extensionName: string): ?any {
+    const extensions = this.getFieldArgExtensions(fieldName, argName);
+    return extensions[extensionName];
+  }
+
+  hasFieldArgExtension(fieldName: string, argName: string, extensionName: string): boolean {
+    const extensions = this.getFieldArgExtensions(fieldName, argName);
+    return extensionName in extensions;
+  }
+
+  setFieldArgExtension(
+    fieldName: string,
+    argName: string,
+    extensionName: string,
+    value: any
+  ): ObjectTypeComposer<TSource, TContext> {
+    this.extendFieldArgExtensions(fieldName, argName, {
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeFieldArgExtension(
+    fieldName: string,
+    argName: string,
+    extensionName: string
+  ): ObjectTypeComposer<TSource, TContext> {
+    const extensions = { ...this.getFieldArgExtensions(fieldName, argName) };
+    delete extensions[extensionName];
+    this.setFieldArgExtensions(fieldName, argName, extensions);
     return this;
   }
 
