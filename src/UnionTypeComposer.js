@@ -9,7 +9,13 @@ import { ObjectTypeComposer, type ComposeObjectType } from './ObjectTypeComposer
 import type { GraphQLResolveInfo, GraphQLTypeResolver } from './graphql';
 import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
-import type { Thunk, Extensions, MaybePromise } from './utils/definitions';
+import type {
+  Thunk,
+  Extensions,
+  MaybePromise,
+  ExtensionsDirective,
+  DirectiveArgs,
+} from './utils/definitions';
 import { resolveTypeArrayAsThunk } from './utils/configAsThunk';
 import { getGraphQLType, getComposeTypeName } from './utils/typeHelpers';
 import { graphqlVersion } from './utils/graphqlVersion';
@@ -490,6 +496,34 @@ export class UnionTypeComposer<TSource, TContext> {
     delete extensions[extensionName];
     this.setExtensions(extensions);
     return this;
+  }
+
+  // -----------------------------------------------
+  // Directive methods
+  // -----------------------------------------------
+
+  getDirectives(): Array<ExtensionsDirective> {
+    const directives = this.getExtension('directives');
+    if (Array.isArray(directives)) {
+      return directives;
+    }
+    return [];
+  }
+
+  getDirectiveNames(): string[] {
+    return this.getDirectives().map(d => d.name);
+  }
+
+  getDirectiveByName(directiveName: string): ?DirectiveArgs {
+    const directive = this.getDirectives().find(d => d.name === directiveName);
+    if (!directive) return undefined;
+    return directive.args;
+  }
+
+  getDirectiveById(idx: number): ?DirectiveArgs {
+    const directive = this.getDirectives()[idx];
+    if (!directive) return undefined;
+    return directive.args;
   }
 
   // -----------------------------------------------

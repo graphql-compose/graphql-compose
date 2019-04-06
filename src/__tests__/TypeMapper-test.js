@@ -1069,6 +1069,8 @@ describe('TypeMapper', () => {
           { args: {}, name: 'me' },
         ],
       });
+
+      expect(tc.getFieldArg('d', 'arg').defaultValue).toBe(15);
       expect(tc.getFieldArgExtensions('d', 'arg')).toEqual({
         directives: [{ args: { v: 2 }, name: 'darg' }, { args: { w: '3' }, name: 'darg2' }],
       });

@@ -7,7 +7,7 @@ import {
   GraphQLInputType,
   InputValueDefinitionNode,
 } from './graphql';
-import { Thunk, ObjMap, Extensions } from './utils/definitions';
+import { Thunk, ObjMap, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 import { SchemaComposer } from './SchemaComposer';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
@@ -173,7 +173,7 @@ export class InputTypeComposer<TContext = any> {
   public clone(newTypeName: string): InputTypeComposer<TContext>;
 
   /**
-   *  -----------------------------------------------
+   * -----------------------------------------------
    * Extensions methods
    * -----------------------------------------------
    */
@@ -209,6 +209,35 @@ export class InputTypeComposer<TContext = any> {
   public setFieldExtension(fieldName: string, extensionName: string, value: any): this;
 
   public removeFieldExtension(fieldName: string, extensionName: string): this;
+
+  /**
+   * -----------------------------------------------
+   * Directive methods
+   *
+   * Directive methods are usefull if you declare your schemas via SDL.
+   * Users who actively use `graphql-tools` can open new abilities for writing
+   * your own directive handlers.
+   *
+   * If you create your schemas via config objects, then probably you
+   * no need in `directives`. Instead directives better to use `extensions`.
+   * -----------------------------------------------
+   */
+
+  public getDirectives(): ExtensionsDirective[];
+
+  public getDirectiveNames(): string[];
+
+  public getDirectiveByName(directiveName: string): DirectiveArgs | void;
+
+  public getDirectiveById(idx: number): DirectiveArgs | void;
+
+  public getFieldDirectives(fieldName: string): ExtensionsDirective[];
+
+  public getFieldDirectiveNames(fieldName: string): string[];
+
+  public getFieldDirectiveByName(fieldName: string, directiveName: string): DirectiveArgs | void;
+
+  public getFieldDirectiveById(fieldName: string, idx: number): DirectiveArgs | void;
 
   /**
    *  -----------------------------------------------

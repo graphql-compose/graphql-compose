@@ -48,7 +48,13 @@ import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath } from './utils/typeByPath';
 import { getComposeTypeName } from './utils/typeHelpers';
 import type { ProjectionType } from './utils/projection';
-import type { ObjMap, Thunk, Extensions } from './utils/definitions';
+import type {
+  ObjMap,
+  Thunk,
+  Extensions,
+  ExtensionsDirective,
+  DirectiveArgs,
+} from './utils/definitions';
 import { graphqlVersion } from './utils/graphqlVersion';
 
 export type GetRecordIdFn<TSource, TContext> = (
@@ -1147,6 +1153,88 @@ export class ObjectTypeComposer<TSource, TContext> {
     delete extensions[extensionName];
     this.setFieldArgExtensions(fieldName, argName, extensions);
     return this;
+  }
+
+  // -----------------------------------------------
+  // Directive methods
+  // -----------------------------------------------
+
+  getDirectives(): Array<ExtensionsDirective> {
+    const directives = this.getExtension('directives');
+    if (Array.isArray(directives)) {
+      return directives;
+    }
+    return [];
+  }
+
+  getDirectiveNames(): string[] {
+    return this.getDirectives().map(d => d.name);
+  }
+
+  getDirectiveByName(directiveName: string): ?DirectiveArgs {
+    const directive = this.getDirectives().find(d => d.name === directiveName);
+    if (!directive) return undefined;
+    return directive.args;
+  }
+
+  getDirectiveById(idx: number): ?DirectiveArgs {
+    const directive = this.getDirectives()[idx];
+    if (!directive) return undefined;
+    return directive.args;
+  }
+
+  getFieldDirectives(fieldName: string): Array<ExtensionsDirective> {
+    const directives = this.getFieldExtension(fieldName, 'directives');
+    if (Array.isArray(directives)) {
+      return directives;
+    }
+    return [];
+  }
+
+  getFieldDirectiveNames(fieldName: string): string[] {
+    return this.getFieldDirectives(fieldName).map(d => d.name);
+  }
+
+  getFieldDirectiveByName(fieldName: string, directiveName: string): ?DirectiveArgs {
+    const directive = this.getFieldDirectives(fieldName).find(d => d.name === directiveName);
+    if (!directive) return undefined;
+    return directive.args;
+  }
+
+  getFieldDirectiveById(fieldName: string, idx: number): ?DirectiveArgs {
+    const directive = this.getFieldDirectives(fieldName)[idx];
+    if (!directive) return undefined;
+    return directive.args;
+  }
+
+  getFieldArgDirectives(fieldName: string, argName: string): Array<ExtensionsDirective> {
+    const directives = this.getFieldArgExtension(fieldName, argName, 'directives');
+    if (Array.isArray(directives)) {
+      return directives;
+    }
+    return [];
+  }
+
+  getFieldArgDirectiveNames(fieldName: string, argName: string): string[] {
+    return this.getFieldArgDirectives(fieldName, argName).map(d => d.name);
+  }
+
+  getFieldArgDirectiveByName(
+    fieldName: string,
+    argName: string,
+    directiveName: string
+  ): ?DirectiveArgs {
+    const directive = this.getFieldArgDirectives(fieldName, argName).find(
+      d => d.name === directiveName
+    );
+    if (!directive) return undefined;
+    return directive.args;
+  }
+
+  getFieldArgDirectiveById(fieldName: string, argName: string, idx: number): ?DirectiveArgs {
+    const directive = this.getFieldArgDirectives(fieldName, argName)[idx];
+    if (!directive) return undefined;
+    return directive.args;
   }
 
   // -----------------------------------------------

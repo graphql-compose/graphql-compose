@@ -6,14 +6,28 @@ import {
   GraphQLEnumValueConfig,
   GraphQLEnumTypeConfig,
   GraphQLEnumValueConfigMap,
+  EnumValueDefinitionNode,
 } from './graphql';
 import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
-import { Extensions } from './utils/definitions';
+import { ObjMap, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 
-export type ComposeEnumTypeConfig = GraphQLEnumTypeConfig & {
+export type ComposeEnumTypeConfig = {
+  name: string;
+  values?: ComposeEnumValueConfigMap;
+  description?: string | null;
   extensions?: Extensions;
 };
+
+export type ComposeEnumValueConfig = {
+  value?: any /* T */;
+  deprecationReason?: string | null;
+  description?: string | null;
+  astNode?: EnumValueDefinitionNode | null;
+  extensions?: Extensions;
+};
+
+export type ComposeEnumValueConfigMap = ObjMap<ComposeEnumValueConfig>;
 
 export type EnumTypeComposeDefinition = TypeAsString | ComposeEnumTypeConfig | GraphQLEnumType;
 
@@ -63,23 +77,23 @@ export class EnumTypeComposer<TContext = any> {
    */
   public hasField(name: string): boolean;
 
-  public getFields(): GraphQLEnumValueConfigMap;
+  public getFields(): ComposeEnumValueConfigMap;
 
-  public getField(name: string): GraphQLEnumValueConfig;
+  public getField(name: string): ComposeEnumValueConfig;
 
   public getFieldNames(): string[];
 
   /**
    * Completely replace all values in the type with a new set.
    */
-  public setFields(values: GraphQLEnumValueConfigMap): this;
+  public setFields(values: ComposeEnumValueConfigMap): this;
 
-  public setField(name: string, valueConfig: GraphQLEnumValueConfig): this;
+  public setField(name: string, valueConfig: ComposeEnumValueConfig): this;
 
   /**
    * Add new fields or replace existed, other fields keep untouched.
    */
-  public addFields(newValues: GraphQLEnumValueConfigMap): this;
+  public addFields(newValues: ComposeEnumValueConfigMap): this;
 
   /**
    * Remove one value by its name, or by array of field names.
@@ -93,12 +107,34 @@ export class EnumTypeComposer<TContext = any> {
 
   public reorderFields(names: string[]): this;
 
-  public extendField(name: string, partialValueConfig: Partial<GraphQLEnumValueConfig>): this;
+  public extendField(name: string, partialValueConfig: Partial<ComposeEnumValueConfig>): this;
 
   /**
    * Mark value or map of values as deprecated
    */
   public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
+
+  /**
+   * -----------------------------------------------
+   * Type methods
+   * -----------------------------------------------
+   */
+
+  public getType(): GraphQLEnumType;
+
+  public getTypePlural(): GraphQLList<GraphQLEnumType>;
+
+  public getTypeNonNull(): GraphQLNonNull<GraphQLEnumType>;
+
+  public getTypeName(): string;
+
+  public setTypeName(name: string): this;
+
+  public getDescription(): string;
+
+  public setDescription(description: string): this;
+
+  public clone(newTypeName: string): EnumTypeComposer<TContext>;
 
   /**
    * -----------------------------------------------
@@ -122,24 +158,41 @@ export class EnumTypeComposer<TContext = any> {
 
   public removeExtension(extensionName: string): this;
 
+  public getFieldExtensions(fieldName: string): Extensions;
+
+  public setFieldExtensions(fieldName: string, extensions: Extensions): this;
+
+  public extendFieldExtensions(fieldName: string, extensions: Extensions): this;
+
+  public clearFieldExtensions(fieldName: string): this;
+
+  public getFieldExtension(fieldName: string, extensionName: string): any;
+
+  public hasFieldExtension(fieldName: string, extensionName: string): boolean;
+
+  public setFieldExtension(fieldName: string, extensionName: string, value: any): this;
+
+  public removeFieldExtension(fieldName: string, extensionName: string): this;
+
   /**
    * -----------------------------------------------
-   * Type methods
+   * Directive methods
    * -----------------------------------------------
    */
-  public getType(): GraphQLEnumType;
 
-  public getTypePlural(): GraphQLList<GraphQLEnumType>;
+  public getDirectives(): ExtensionsDirective[];
 
-  public getTypeNonNull(): GraphQLNonNull<GraphQLEnumType>;
+  public getDirectiveNames(): string[];
 
-  public getTypeName(): string;
+  public getDirectiveByName(directiveName: string): DirectiveArgs | void;
 
-  public setTypeName(name: string): this;
+  public getDirectiveById(idx: number): DirectiveArgs | void;
 
-  public getDescription(): string;
+  public getFieldDirectives(fieldName: string): ExtensionsDirective[];
 
-  public setDescription(description: string): this;
+  public getFieldDirectiveNames(fieldName: string): string[];
 
-  public clone(newTypeName: string): EnumTypeComposer<TContext>;
+  public getFieldDirectiveByName(fieldName: string, directiveName: string): DirectiveArgs | void;
+
+  public getFieldDirectiveById(fieldName: string, idx: number): DirectiveArgs | void;
 }

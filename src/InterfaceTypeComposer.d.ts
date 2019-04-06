@@ -28,7 +28,13 @@ import { EnumTypeComposer } from './EnumTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { TypeAsString, TypeDefinitionString } from './TypeMapper';
-import { Thunk, MaybePromise, Extensions } from './utils/definitions';
+import {
+  Thunk,
+  MaybePromise,
+  Extensions,
+  ExtensionsDirective,
+  DirectiveArgs,
+} from './utils/definitions';
 
 export type GraphQLInterfaceTypeExtended<TSource, TContext> = GraphQLInterfaceType & {
   _gqcFields?: ComposeFieldConfigMap<TSource, TContext>;
@@ -294,6 +300,44 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public removeFieldArgExtension(fieldName: string, argName: string, extensionName: string): this;
+
+  /**
+   * -----------------------------------------------
+   * Directive methods
+   * -----------------------------------------------
+   */
+
+  public getDirectives(): ExtensionsDirective[];
+
+  public getDirectiveNames(): string[];
+
+  public getDirectiveByName(directiveName: string): DirectiveArgs | void;
+
+  public getDirectiveById(idx: number): DirectiveArgs | void;
+
+  public getFieldDirectives(fieldName: string): ExtensionsDirective[];
+
+  public getFieldDirectiveNames(fieldName: string): string[];
+
+  public getFieldDirectiveByName(fieldName: string, directiveName: string): DirectiveArgs | void;
+
+  public getFieldDirectiveById(fieldName: string, idx: number): DirectiveArgs | void;
+
+  public getFieldArgDirectives(fieldName: string, argName: string): ExtensionsDirective[];
+
+  public getFieldArgDirectiveNames(fieldName: string, argName: string): string[];
+
+  public getFieldArgDirectiveByName(
+    fieldName: string,
+    argName: string,
+    directiveName: string
+  ): DirectiveArgs | void;
+
+  public getFieldArgDirectiveById(
+    fieldName: string,
+    argName: string,
+    idx: number
+  ): DirectiveArgs | void;
 
   /**
    * -----------------------------------------------

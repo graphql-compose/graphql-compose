@@ -5,20 +5,29 @@ import keyMap from 'graphql/jsutils/keyMap';
 import { GraphQLEnumType, GraphQLList, GraphQLNonNull } from './graphql';
 import { isObject, isString } from './utils/is';
 import { inspect } from './utils/misc';
-import type {
-  GraphQLEnumValueConfig,
-  GraphQLEnumTypeConfig,
-  GraphQLEnumValueConfigMap,
-} from './graphql';
+import type { EnumValueDefinitionNode } from './graphql';
 import { defineEnumValues, defineEnumValuesToConfig } from './utils/configToDefine';
 import { graphqlVersion } from './utils/graphqlVersion';
 import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
-import type { Extensions } from './utils/definitions';
+import type { ObjMap, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 
-export type ComposeEnumTypeConfig = GraphQLEnumTypeConfig & {
-  +extensions?: Extensions,
+export type ComposeEnumTypeConfig = {
+  name: string,
+  values?: ComposeEnumValueConfigMap,
+  description?: ?string,
+  extensions?: Extensions,
 };
+
+export type ComposeEnumValueConfig = {
+  value?: any /* T */,
+  deprecationReason?: ?string,
+  description?: ?string,
+  astNode?: ?EnumValueDefinitionNode,
+  extensions?: Extensions,
+};
+
+export type ComposeEnumValueConfigMap = ObjMap<ComposeEnumValueConfig>;
 
 export type EnumTypeComposeDefinition =
   | TypeAsString
@@ -27,12 +36,13 @@ export type EnumTypeComposeDefinition =
 
 export type ComposeEnumType =
   | EnumTypeComposer<any>
-  | GraphQLEnumType
   | TypeDefinitionString
+  | GraphQLEnumType
   | TypeAsString;
 
 export type GraphQLEnumTypeExtended = GraphQLEnumType & {
   _gqcExtensions?: Extensions,
+  _gqcFields?: ComposeEnumValueConfigMap,
 };
 
 export class EnumTypeComposer<TContext> {
@@ -88,6 +98,7 @@ export class EnumTypeComposer<TContext> {
         ...(typeDef: any),
       });
       ETC = new EnumTypeComposer(type, sc);
+      ETC.setFields((typeDef: any).values || {});
       ETC.gqType._gqcExtensions = (typeDef: any).extensions || {};
     } else {
       throw new Error(
@@ -139,16 +150,20 @@ export class EnumTypeComposer<TContext> {
     }
   }
 
-  getFields(): GraphQLEnumValueConfigMap {
-    if (graphqlVersion >= 14) {
-      return defineEnumValuesToConfig(this.gqType._values);
-    } else {
-      this._fixEnumBelowV13();
-      return (this.gqType: any)._getNameLookup();
+  getFields(): ComposeEnumValueConfigMap {
+    if (!this.gqType._gqcFields) {
+      if (graphqlVersion >= 14) {
+        this.gqType._gqcFields = (defineEnumValuesToConfig(this.gqType._values): any);
+      } else {
+        this._fixEnumBelowV13();
+        this.gqType._gqcFields = (this.gqType: any)._getNameLookup();
+      }
     }
+
+    return this.gqType._gqcFields;
   }
 
-  getField(name: string): GraphQLEnumValueConfig {
+  getField(name: string): ComposeEnumValueConfig {
     const values = this.getFields();
 
     if (!values[name]) {
@@ -168,9 +183,22 @@ export class EnumTypeComposer<TContext> {
    * Completely replace all values in GraphQL enum type
    * WARNING: this method rewrite an internal GraphQL instance properties.
    */
-  setFields(values: GraphQLEnumValueConfigMap): EnumTypeComposer<TContext> {
+  setFields(values: ComposeEnumValueConfigMap): EnumTypeComposer<TContext> {
+    const preparedValues = {};
+    Object.keys(values).forEach(valueName => {
+      const value = values[valueName];
+      preparedValues[valueName] = {
+        value: value.hasOwnProperty('value') ? value.value : valueName,
+        description: value.description,
+        deprecationReason: value.deprecationReason,
+        extensions: value.extensions || {},
+        astNode: value.astNode,
+      };
+    });
+    this.gqType._gqcFields = preparedValues;
+
     if (graphqlVersion >= 14) {
-      this.gqType._values = defineEnumValues(this.gqType, values);
+      this.gqType._values = defineEnumValues(this.gqType, (values: any));
       this.gqType._valueLookup = new Map(
         this.gqType._values.map(enumValue => [enumValue.value, enumValue])
       );
@@ -196,15 +224,15 @@ export class EnumTypeComposer<TContext> {
     return this;
   }
 
-  setField(name: string, valueConfig: GraphQLEnumValueConfig): EnumTypeComposer<TContext> {
-    this.addFields({ [name]: valueConfig });
+  setField(name: string, valueConfig: $Shape<ComposeEnumValueConfig>): EnumTypeComposer<TContext> {
+    this.addFields({ [name]: { value: name, ...valueConfig } });
     return this;
   }
 
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  addFields(newValues: GraphQLEnumValueConfigMap): EnumTypeComposer<TContext> {
+  addFields(newValues: ComposeEnumValueConfigMap): EnumTypeComposer<TContext> {
     this.setFields({ ...this.getFields(), ...newValues });
     return this;
   }
@@ -244,7 +272,7 @@ export class EnumTypeComposer<TContext> {
 
   extendField(
     name: string,
-    partialValueConfig: $Shape<GraphQLEnumValueConfig>
+    partialValueConfig: $Shape<ComposeEnumValueConfig>
   ): EnumTypeComposer<TContext> {
     let prevValueConfig;
     try {
@@ -255,7 +283,7 @@ export class EnumTypeComposer<TContext> {
       );
     }
 
-    const valueConfig: GraphQLEnumValueConfig = {
+    const valueConfig: ComposeEnumValueConfig = {
       ...(prevValueConfig: any),
       ...(partialValueConfig: any),
     };
@@ -295,61 +323,6 @@ export class EnumTypeComposer<TContext> {
       });
     }
 
-    return this;
-  }
-
-  // -----------------------------------------------
-  // Extensions methods
-  // -----------------------------------------------
-
-  getExtensions(): Extensions {
-    if (!this.gqType._gqcExtensions) {
-      return {};
-    } else {
-      return this.gqType._gqcExtensions;
-    }
-  }
-
-  setExtensions(extensions: Extensions): EnumTypeComposer<TContext> {
-    this.gqType._gqcExtensions = extensions;
-    return this;
-  }
-
-  extendExtensions(extensions: Extensions): EnumTypeComposer<TContext> {
-    const current = this.getExtensions();
-    this.setExtensions({
-      ...current,
-      ...extensions,
-    });
-    return this;
-  }
-
-  clearExtensions(): EnumTypeComposer<TContext> {
-    this.setExtensions({});
-    return this;
-  }
-
-  getExtension(extensionName: string): ?any {
-    const extensions = this.getExtensions();
-    return extensions[extensionName];
-  }
-
-  hasExtension(extensionName: string): boolean {
-    const extensions = this.getExtensions();
-    return extensionName in extensions;
-  }
-
-  setExtension(extensionName: string, value: any): EnumTypeComposer<TContext> {
-    this.extendExtensions({
-      [extensionName]: value,
-    });
-    return this;
-  }
-
-  removeExtension(extensionName: string): EnumTypeComposer<TContext> {
-    const extensions = { ...this.getExtensions() };
-    delete extensions[extensionName];
-    this.setExtensions(extensions);
     return this;
   }
 
@@ -411,5 +384,165 @@ export class EnumTypeComposer<TContext> {
     cloned.setDescription(this.getDescription());
 
     return cloned;
+  }
+
+  // -----------------------------------------------
+  // Extensions methods
+  // -----------------------------------------------
+
+  getExtensions(): Extensions {
+    if (!this.gqType._gqcExtensions) {
+      return {};
+    } else {
+      return this.gqType._gqcExtensions;
+    }
+  }
+
+  setExtensions(extensions: Extensions): EnumTypeComposer<TContext> {
+    this.gqType._gqcExtensions = extensions;
+    return this;
+  }
+
+  extendExtensions(extensions: Extensions): EnumTypeComposer<TContext> {
+    const current = this.getExtensions();
+    this.setExtensions({
+      ...current,
+      ...extensions,
+    });
+    return this;
+  }
+
+  clearExtensions(): EnumTypeComposer<TContext> {
+    this.setExtensions({});
+    return this;
+  }
+
+  getExtension(extensionName: string): ?any {
+    const extensions = this.getExtensions();
+    return extensions[extensionName];
+  }
+
+  hasExtension(extensionName: string): boolean {
+    const extensions = this.getExtensions();
+    return extensionName in extensions;
+  }
+
+  setExtension(extensionName: string, value: any): EnumTypeComposer<TContext> {
+    this.extendExtensions({
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeExtension(extensionName: string): EnumTypeComposer<TContext> {
+    const extensions = { ...this.getExtensions() };
+    delete extensions[extensionName];
+    this.setExtensions(extensions);
+    return this;
+  }
+
+  getFieldExtensions(fieldName: string): Extensions {
+    const field = this.getField(fieldName);
+    return field.extensions || {};
+  }
+
+  setFieldExtensions(fieldName: string, extensions: Extensions): EnumTypeComposer<TContext> {
+    const field = this.getField(fieldName);
+    this.setField(fieldName, { ...field, extensions });
+    return this;
+  }
+
+  extendFieldExtensions(fieldName: string, extensions: Extensions): EnumTypeComposer<TContext> {
+    const current = this.getFieldExtensions(fieldName);
+    this.setFieldExtensions(fieldName, {
+      ...current,
+      ...extensions,
+    });
+    return this;
+  }
+
+  clearFieldExtensions(fieldName: string): EnumTypeComposer<TContext> {
+    this.setFieldExtensions(fieldName, {});
+    return this;
+  }
+
+  getFieldExtension(fieldName: string, extensionName: string): ?any {
+    const extensions = this.getFieldExtensions(fieldName);
+    return extensions[extensionName];
+  }
+
+  hasFieldExtension(fieldName: string, extensionName: string): boolean {
+    const extensions = this.getFieldExtensions(fieldName);
+    return extensionName in extensions;
+  }
+
+  setFieldExtension(
+    fieldName: string,
+    extensionName: string,
+    value: any
+  ): EnumTypeComposer<TContext> {
+    this.extendFieldExtensions(fieldName, {
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeFieldExtension(fieldName: string, extensionName: string): EnumTypeComposer<TContext> {
+    const extensions = { ...this.getFieldExtensions(fieldName) };
+    delete extensions[extensionName];
+    this.setFieldExtensions(fieldName, extensions);
+    return this;
+  }
+
+  // -----------------------------------------------
+  // Directive methods
+  // -----------------------------------------------
+
+  getDirectives(): Array<ExtensionsDirective> {
+    const directives = this.getExtension('directives');
+    if (Array.isArray(directives)) {
+      return directives;
+    }
+    return [];
+  }
+
+  getDirectiveNames(): string[] {
+    return this.getDirectives().map(d => d.name);
+  }
+
+  getDirectiveByName(directiveName: string): ?DirectiveArgs {
+    const directive = this.getDirectives().find(d => d.name === directiveName);
+    if (!directive) return undefined;
+    return directive.args;
+  }
+
+  getDirectiveById(idx: number): ?DirectiveArgs {
+    const directive = this.getDirectives()[idx];
+    if (!directive) return undefined;
+    return directive.args;
+  }
+
+  getFieldDirectives(fieldName: string): Array<ExtensionsDirective> {
+    const directives = this.getFieldExtension(fieldName, 'directives');
+    if (Array.isArray(directives)) {
+      return directives;
+    }
+    return [];
+  }
+
+  getFieldDirectiveNames(fieldName: string): string[] {
+    return this.getFieldDirectives(fieldName).map(d => d.name);
+  }
+
+  getFieldDirectiveByName(fieldName: string, directiveName: string): ?DirectiveArgs {
+    const directive = this.getFieldDirectives(fieldName).find(d => d.name === directiveName);
+    if (!directive) return undefined;
+    return directive.args;
+  }
+
+  getFieldDirectiveById(fieldName: string, idx: number): ?DirectiveArgs {
+    const directive = this.getFieldDirectives(fieldName)[idx];
+    if (!directive) return undefined;
+    return directive.args;
   }
 }

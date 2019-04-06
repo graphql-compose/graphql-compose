@@ -79,7 +79,7 @@ import { ObjectTypeComposer } from './ObjectTypeComposer';
 import type { SchemaComposer, AnyComposeType, AnyType } from './SchemaComposer';
 import { InputTypeComposer, type ComposeInputFieldConfigAsObject } from './InputTypeComposer';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
-import { EnumTypeComposer } from './EnumTypeComposer';
+import { EnumTypeComposer, type ComposeEnumValueConfig } from './EnumTypeComposer';
 import { InterfaceTypeComposer, type ComposeInterfaceType } from './InterfaceTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
 import { Resolver } from './Resolver';
@@ -909,10 +909,21 @@ export class TypeMapper<TContext> {
         : keyValMap(
             def.values,
             enumValue => enumValue.name.value,
-            enumValue => ({
-              description: getDescription(enumValue),
-              deprecationReason: this.getDeprecationReason(enumValue.directives),
-            })
+            enumValue => {
+              const ec: ComposeEnumValueConfig = {
+                description: getDescription(enumValue),
+                deprecationReason: this.getDeprecationReason(enumValue.directives),
+              };
+
+              if (enumValue.directives) {
+                const directives = this.parseDirectives(enumValue.directives);
+                if (directives) {
+                  ec.extensions = { directives };
+                }
+              }
+
+              return ec;
+            }
           ),
       astNode: def,
     });

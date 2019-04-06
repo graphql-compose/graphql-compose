@@ -12,7 +12,13 @@ import { resolveMaybeThunk, upperFirst, inspect } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
 import { resolveInputConfigMapAsThunk, resolveInputConfigAsThunk } from './utils/configAsThunk';
 import { typeByPath } from './utils/typeByPath';
-import type { Thunk, ObjMap, Extensions } from './utils/definitions';
+import type {
+  Thunk,
+  ObjMap,
+  Extensions,
+  ExtensionsDirective,
+  DirectiveArgs,
+} from './utils/definitions';
 import { SchemaComposer } from './SchemaComposer';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
@@ -575,6 +581,58 @@ export class InputTypeComposer<TContext> {
     delete extensions[extensionName];
     this.setFieldExtensions(fieldName, extensions);
     return this;
+  }
+
+  // -----------------------------------------------
+  // Directive methods
+  // -----------------------------------------------
+
+  getDirectives(): Array<ExtensionsDirective> {
+    const directives = this.getExtension('directives');
+    if (Array.isArray(directives)) {
+      return directives;
+    }
+    return [];
+  }
+
+  getDirectiveNames(): string[] {
+    return this.getDirectives().map(d => d.name);
+  }
+
+  getDirectiveByName(directiveName: string): ?DirectiveArgs {
+    const directive = this.getDirectives().find(d => d.name === directiveName);
+    if (!directive) return undefined;
+    return directive.args;
+  }
+
+  getDirectiveById(idx: number): ?DirectiveArgs {
+    const directive = this.getDirectives()[idx];
+    if (!directive) return undefined;
+    return directive.args;
+  }
+
+  getFieldDirectives(fieldName: string): Array<ExtensionsDirective> {
+    const directives = this.getFieldExtension(fieldName, 'directives');
+    if (Array.isArray(directives)) {
+      return directives;
+    }
+    return [];
+  }
+
+  getFieldDirectiveNames(fieldName: string): string[] {
+    return this.getFieldDirectives(fieldName).map(d => d.name);
+  }
+
+  getFieldDirectiveByName(fieldName: string, directiveName: string): ?DirectiveArgs {
+    const directive = this.getFieldDirectives(fieldName).find(d => d.name === directiveName);
+    if (!directive) return undefined;
+    return directive.args;
+  }
+
+  getFieldDirectiveById(fieldName: string, idx: number): ?DirectiveArgs {
+    const directive = this.getFieldDirectives(fieldName)[idx];
+    if (!directive) return undefined;
+    return directive.args;
   }
 
   // -----------------------------------------------

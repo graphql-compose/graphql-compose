@@ -1142,4 +1142,65 @@ describe('ObjectTypeComposer', () => {
       expect(itc1).not.toBe(itc2);
     });
   });
+
+  describe('directive methods', () => {
+    it('type level directive methods', () => {
+      const tc1 = schemaComposer.createObjectTC(`
+        type My1 @d0(a: false) @d1(b: "3") @d0(a: true) { 
+          field: Int
+        }`);
+      expect(tc1.getDirectives()).toEqual([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      expect(tc1.getDirectiveNames()).toEqual(['d0', 'd1', 'd0']);
+      expect(tc1.getDirectiveByName('d0')).toEqual({ a: false });
+      expect(tc1.getDirectiveById(0)).toEqual({ a: false });
+      expect(tc1.getDirectiveByName('d1')).toEqual({ b: '3' });
+      expect(tc1.getDirectiveById(1)).toEqual({ b: '3' });
+      expect(tc1.getDirectiveByName('d2')).toEqual(undefined);
+      expect(tc1.getDirectiveById(333)).toEqual(undefined);
+    });
+
+    it('field level directive methods', () => {
+      const tc1 = schemaComposer.createObjectTC(`
+        type My1 { 
+          field: Int @f0(a: false) @f1(b: "3") @f0(a: true)
+        }`);
+      expect(tc1.getFieldDirectives('field')).toEqual([
+        { args: { a: false }, name: 'f0' },
+        { args: { b: '3' }, name: 'f1' },
+        { args: { a: true }, name: 'f0' },
+      ]);
+      expect(tc1.getFieldDirectiveNames('field')).toEqual(['f0', 'f1', 'f0']);
+      expect(tc1.getFieldDirectiveByName('field', 'f0')).toEqual({ a: false });
+      expect(tc1.getFieldDirectiveById('field', 0)).toEqual({ a: false });
+      expect(tc1.getFieldDirectiveByName('field', 'f1')).toEqual({ b: '3' });
+      expect(tc1.getFieldDirectiveById('field', 1)).toEqual({ b: '3' });
+      expect(tc1.getFieldDirectiveByName('field', 'f2')).toEqual(undefined);
+      expect(tc1.getFieldDirectiveById('field', 333)).toEqual(undefined);
+    });
+
+    it('arg level directive methods', () => {
+      const tc1 = schemaComposer.createObjectTC(`
+        type My1 { 
+          field(
+            arg: Int @a0(a: false) @a1(b: "3") @a0(a: true)
+          ): Int
+        }`);
+      expect(tc1.getFieldArgDirectives('field', 'arg')).toEqual([
+        { args: { a: false }, name: 'a0' },
+        { args: { b: '3' }, name: 'a1' },
+        { args: { a: true }, name: 'a0' },
+      ]);
+      expect(tc1.getFieldArgDirectiveNames('field', 'arg')).toEqual(['a0', 'a1', 'a0']);
+      expect(tc1.getFieldArgDirectiveByName('field', 'arg', 'a0')).toEqual({ a: false });
+      expect(tc1.getFieldArgDirectiveById('field', 'arg', 0)).toEqual({ a: false });
+      expect(tc1.getFieldArgDirectiveByName('field', 'arg', 'a1')).toEqual({ b: '3' });
+      expect(tc1.getFieldArgDirectiveById('field', 'arg', 1)).toEqual({ b: '3' });
+      expect(tc1.getFieldArgDirectiveByName('field', 'arg', 'a2')).toEqual(undefined);
+      expect(tc1.getFieldArgDirectiveById('field', 'arg', 333)).toEqual(undefined);
+    });
+  });
 });

@@ -30,7 +30,7 @@ import {
 } from './Resolver';
 import { SchemaComposer } from './SchemaComposer';
 import { TypeAsString, TypeDefinitionString } from './TypeMapper';
-import { ObjMap, Thunk, Extensions } from './utils/definitions';
+import { ObjMap, Thunk, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 import { ProjectionType } from './utils/projection';
 
 export type GetRecordIdFn<TSource, TContext> = (
@@ -502,6 +502,51 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public removeFieldArgExtension(fieldName: string, argName: string, extensionName: string): this;
+
+  /**
+   * -----------------------------------------------
+   * Directive methods
+   *
+   * Directive methods are usefull if you declare your schemas via SDL.
+   * Users who actively use `graphql-tools` can open new abilities for writing
+   * your own directive handlers.
+   *
+   * If you create your schemas via config objects, then probably you
+   * no need in `directives`. Instead directives better to use `extensions`.
+   * -----------------------------------------------
+   */
+
+  public getDirectives(): ExtensionsDirective[];
+
+  public getDirectiveNames(): string[];
+
+  public getDirectiveByName(directiveName: string): DirectiveArgs | void;
+
+  public getDirectiveById(idx: number): DirectiveArgs | void;
+
+  public getFieldDirectives(fieldName: string): ExtensionsDirective[];
+
+  public getFieldDirectiveNames(fieldName: string): string[];
+
+  public getFieldDirectiveByName(fieldName: string, directiveName: string): DirectiveArgs | void;
+
+  public getFieldDirectiveById(fieldName: string, idx: number): DirectiveArgs | void;
+
+  public getFieldArgDirectives(fieldName: string, argName: string): ExtensionsDirective[];
+
+  public getFieldArgDirectiveNames(fieldName: string, argName: string): string[];
+
+  public getFieldArgDirectiveByName(
+    fieldName: string,
+    argName: string,
+    directiveName: string
+  ): DirectiveArgs | void;
+
+  public getFieldArgDirectiveById(
+    fieldName: string,
+    argName: string,
+    idx: number
+  ): DirectiveArgs | void;
 
   /**
    * -----------------------------------------------

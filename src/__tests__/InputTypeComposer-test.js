@@ -510,4 +510,44 @@ describe('InputTypeComposer', () => {
       expect(tco.getTypeName()).toBe('MyEnumType');
     });
   });
+
+  describe('directive methods', () => {
+    it('type level directive methods', () => {
+      const tc1 = schemaComposer.createInputTC(`
+        input My1 @d0(a: false) @d1(b: "3") @d0(a: true) { 
+          field: Int
+        }`);
+      expect(tc1.getDirectives()).toEqual([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      expect(tc1.getDirectiveNames()).toEqual(['d0', 'd1', 'd0']);
+      expect(tc1.getDirectiveByName('d0')).toEqual({ a: false });
+      expect(tc1.getDirectiveById(0)).toEqual({ a: false });
+      expect(tc1.getDirectiveByName('d1')).toEqual({ b: '3' });
+      expect(tc1.getDirectiveById(1)).toEqual({ b: '3' });
+      expect(tc1.getDirectiveByName('d2')).toEqual(undefined);
+      expect(tc1.getDirectiveById(333)).toEqual(undefined);
+    });
+
+    it('field level directive methods', () => {
+      const tc1 = schemaComposer.createInputTC(`
+        input My1 { 
+          field: Int @f0(a: false) @f1(b: "3") @f0(a: true)
+        }`);
+      expect(tc1.getFieldDirectives('field')).toEqual([
+        { args: { a: false }, name: 'f0' },
+        { args: { b: '3' }, name: 'f1' },
+        { args: { a: true }, name: 'f0' },
+      ]);
+      expect(tc1.getFieldDirectiveNames('field')).toEqual(['f0', 'f1', 'f0']);
+      expect(tc1.getFieldDirectiveByName('field', 'f0')).toEqual({ a: false });
+      expect(tc1.getFieldDirectiveById('field', 0)).toEqual({ a: false });
+      expect(tc1.getFieldDirectiveByName('field', 'f1')).toEqual({ b: '3' });
+      expect(tc1.getFieldDirectiveById('field', 1)).toEqual({ b: '3' });
+      expect(tc1.getFieldDirectiveByName('field', 'f2')).toEqual(undefined);
+      expect(tc1.getFieldDirectiveById('field', 333)).toEqual(undefined);
+    });
+  });
 });

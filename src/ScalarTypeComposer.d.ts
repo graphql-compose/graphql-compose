@@ -13,7 +13,7 @@ import {
 import { TypeMapper } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import { TypeAsString } from './TypeMapper';
-import { Extensions } from './utils/definitions';
+import { Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 
 export type ComposeScalarTypeConfig = GraphQLScalarTypeConfig<any, any> & {
   extensions?: Extensions;
@@ -115,4 +115,18 @@ export class ScalarTypeComposer<TContext = any> {
   public setExtension(extensionName: string, value: any): this;
 
   public removeExtension(extensionName: string): this;
+
+  /**
+   * -----------------------------------------------
+   * Directive methods
+   * -----------------------------------------------
+   */
+
+  public getDirectives(): ExtensionsDirective[];
+
+  public getDirectiveNames(): string[];
+
+  public getDirectiveByName(directiveName: string): DirectiveArgs | void;
+
+  public getDirectiveById(idx: number): DirectiveArgs | void;
 }

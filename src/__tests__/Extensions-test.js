@@ -423,14 +423,16 @@ describe('Extensions', () => {
         {
           name: 'Foo',
           values: {
-            FOO: { value: 'FOO' },
-            BAR: { value: 'BAR' },
+            FOO: { value: 'FOO', extensions: { tags: ['a'] } },
+            BAR: { value: 'BAR', extensions: { tags: ['b'] } },
           },
           extensions: { tags: ['generated'] },
         },
         sc
       );
       expect(tc.getExtensions()).toEqual({ tags: ['generated'] });
+      expect(tc.getFieldExtensions('FOO')).toEqual({ tags: ['a'] });
+      expect(tc.getFieldExtensions('BAR')).toEqual({ tags: ['b'] });
     });
   });
 

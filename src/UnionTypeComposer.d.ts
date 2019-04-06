@@ -21,7 +21,13 @@ import {
   ObjectTypeComposer,
 } from './ObjectTypeComposer';
 import { TypeAsString, TypeDefinitionString } from './TypeMapper';
-import { Thunk, Extensions, MaybePromise } from './utils/definitions';
+import {
+  Thunk,
+  Extensions,
+  MaybePromise,
+  ExtensionsDirective,
+  DirectiveArgs,
+} from './utils/definitions';
 
 export type GraphQLUnionTypeExtended<TSource, TContext> = GraphQLUnionType & {
   _gqcTypeMap: Map<string, ComposeObjectType>;
@@ -180,6 +186,20 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   public setExtension(extensionName: string, value: any): this;
 
   public removeExtension(extensionName: string): this;
+
+  /**
+   * -----------------------------------------------
+   * Directive methods
+   * -----------------------------------------------
+   */
+
+  public getDirectives(): ExtensionsDirective[];
+
+  public getDirectiveNames(): string[];
+
+  public getDirectiveByName(directiveName: string): DirectiveArgs | void;
+
+  public getDirectiveById(idx: number): DirectiveArgs | void;
 
   /**
    * -----------------------------------------------

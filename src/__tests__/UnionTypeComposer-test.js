@@ -465,4 +465,24 @@ describe('UnionTypeComposer', () => {
       });
     });
   });
+
+  describe('directive methods', () => {
+    it('type level directive methods', () => {
+      const tc1 = sc.createUnionTC(`
+        union My1 @d0(a: false) @d1(b: "3") @d0(a: true) = My2 | My3 
+      `);
+      expect(tc1.getDirectives()).toEqual([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      expect(tc1.getDirectiveNames()).toEqual(['d0', 'd1', 'd0']);
+      expect(tc1.getDirectiveByName('d0')).toEqual({ a: false });
+      expect(tc1.getDirectiveById(0)).toEqual({ a: false });
+      expect(tc1.getDirectiveByName('d1')).toEqual({ b: '3' });
+      expect(tc1.getDirectiveById(1)).toEqual({ b: '3' });
+      expect(tc1.getDirectiveByName('d2')).toEqual(undefined);
+      expect(tc1.getDirectiveById(333)).toEqual(undefined);
+    });
+  });
 });

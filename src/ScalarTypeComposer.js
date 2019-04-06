@@ -11,7 +11,7 @@ import type {
 } from './graphql';
 import type { TypeAsString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
-import type { Extensions } from './utils/definitions';
+import type { Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 import { inspect } from './utils/misc';
 
 export type ComposeScalarTypeConfig = GraphQLScalarTypeConfig<any, any> & {
@@ -247,5 +247,33 @@ export class ScalarTypeComposer<TContext> {
     delete extensions[extensionName];
     this.setExtensions(extensions);
     return this;
+  }
+
+  // -----------------------------------------------
+  // Directive methods
+  // -----------------------------------------------
+
+  getDirectives(): Array<ExtensionsDirective> {
+    const directives = this.getExtension('directives');
+    if (Array.isArray(directives)) {
+      return directives;
+    }
+    return [];
+  }
+
+  getDirectiveNames(): string[] {
+    return this.getDirectives().map(d => d.name);
+  }
+
+  getDirectiveByName(directiveName: string): ?DirectiveArgs {
+    const directive = this.getDirectives().find(d => d.name === directiveName);
+    if (!directive) return undefined;
+    return directive.args;
+  }
+
+  getDirectiveById(idx: number): ?DirectiveArgs {
+    const directive = this.getDirectives()[idx];
+    if (!directive) return undefined;
+    return directive.args;
   }
 }
