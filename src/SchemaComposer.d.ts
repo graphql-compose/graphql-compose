@@ -195,7 +195,21 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
   ): Resolver<TSource, TContext, TArgs>;
 
   /**
-   * Creates TypeComposer from SDL without adding it to the type storage.
+   * Creates or return existed TypeComposer from SDL or object.
+   * If you call this method again with same params should be returned the same TypeComposer instance.
+   */
+  public createTC(
+    typeOrSDL: any
+  ):
+    | ObjectTypeComposer<any, TContext>
+    | InputTypeComposer<TContext>
+    | EnumTypeComposer<TContext>
+    | InterfaceTypeComposer<any, TContext>
+    | UnionTypeComposer<any, TContext>
+    | ScalarTypeComposer<TContext>;
+
+  /**
+   * Creates TypeComposer from SDL or object without adding it to the type storage.
    */
   public createTempTC(
     typeOrSDL: any

@@ -1076,4 +1076,26 @@ describe('SchemaComposer', () => {
       expect(sc.hasDirective('myDirective2')).toBeFalsy();
     });
   });
+
+  describe('createTC()', () => {
+    it('should Create ObjectTC', () => {
+      const sc = new SchemaComposer();
+      const tc = sc.createTC(`type MyType { a: Int }`);
+      expect(tc).toBeInstanceOf(ObjectTypeComposer);
+      expect(sc.has('MyType')).toBeTruthy();
+      // schoul return the same type composer instance
+      expect(sc.get('MyType')).toBe(tc);
+      expect(sc.createTC(`type MyType { a: Int }`)).toBe(tc);
+    });
+
+    it('should Create InputObjectTC', () => {
+      const sc = new SchemaComposer();
+      const tc = sc.createTC(`input MyTypeInput { a: Int }`);
+      expect(tc).toBeInstanceOf(InputTypeComposer);
+      expect(sc.has('MyTypeInput')).toBeTruthy();
+      // schoul return the same type composer instance
+      expect(sc.get('MyTypeInput')).toBe(tc);
+      expect(sc.createTC(`input MyTypeInput { a: Int }`)).toBe(tc);
+    });
+  });
 });

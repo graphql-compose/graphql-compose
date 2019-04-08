@@ -273,13 +273,6 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
    * -----------------------------------------------
    */
 
-  // alias for createObjectTC
-  /* @deprecated 7.0.0 */
-  createTC(typeDef: ObjectTypeComposeDefinition<any, TContext>): ObjectTypeComposer<any, TContext> {
-    deprecate(`Use SchemaComposer.getOTC() method instead`);
-    return this.createObjectTC(typeDef);
-  }
-
   createObjectTC(
     typeDef: ObjectTypeComposeDefinition<any, TContext>
   ): ObjectTypeComposer<any, TContext> {
@@ -312,6 +305,24 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
 
   createResolver(opts: ResolverOpts<any, TContext>): Resolver<any, TContext> {
     return new Resolver<any, TContext, any>(opts, this);
+  }
+
+  createTC(
+    typeOrSDL: mixed
+  ):
+    | ObjectTypeComposer<any, TContext>
+    | InputTypeComposer<TContext>
+    | EnumTypeComposer<TContext>
+    | InterfaceTypeComposer<any, TContext>
+    | UnionTypeComposer<any, TContext>
+    | ScalarTypeComposer<TContext> {
+    if (this.has(typeOrSDL)) {
+      return this.get(typeOrSDL);
+    }
+    const tc = this.createTempTC(typeOrSDL);
+    this.set(tc.getTypeName(), tc);
+    this.set(typeOrSDL, tc);
+    return tc;
   }
 
   createTempTC(
@@ -353,7 +364,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
       return UnionTypeComposer.createTemp(type, this);
     }
 
-    throw new Error(`Cannot add as Composer type following value: ${inspect(type)}.`);
+    throw new Error(`Cannot create as TypeComposer the following value: ${inspect(type)}.`);
   }
 
   /* @deprecated 7.0.0 */
