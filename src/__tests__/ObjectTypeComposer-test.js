@@ -256,6 +256,24 @@ describe('ObjectTypeComposer', () => {
         );
         expect(tc.hasFieldArg('unexistedField', 'arg1')).toBeFalsy();
       });
+
+      it('getFieldArgTC()', () => {
+        tc.setField('fieldWithArgs', {
+          type: 'Int',
+          args: {
+            scalarArg: '[Int]',
+            complexArg: `input SomeInput { a: Int, b: Int }`,
+          },
+        });
+        expect(tc.getFieldArgTC('fieldWithArgs', 'scalarArg')).toBeInstanceOf(ScalarTypeComposer);
+        const argTC = tc.getFieldArgTC('fieldWithArgs', 'complexArg');
+        expect(argTC).toBeInstanceOf(InputTypeComposer);
+        // should return the same TC instance
+        expect(tc.getFieldArgITC('fieldWithArgs', 'complexArg')).toBe(argTC);
+        expect(() => tc.getFieldArgITC('fieldWithArgs', 'scalarArg')).toThrow(
+          'must be InputTypeComposer'
+        );
+      });
     });
 
     describe('extendField()', () => {
@@ -1022,12 +1040,16 @@ describe('ObjectTypeComposer', () => {
       const tco = myTC.getFieldTC('objArr');
       expect(tco).toBeInstanceOf(ObjectTypeComposer);
       expect(tco.getTypeName()).toBe('MyCustomObjType2');
+      // schould return the same TypeComposer instance
+      const tco2 = myTC.getFieldOTC('objArr');
+      expect(tco).toBe(tco2);
     });
 
     it('should return TypeComposer for scalar fields', () => {
       const tco = myTC.getFieldTC('scalar');
       expect(tco).toBeInstanceOf(ScalarTypeComposer);
       expect(tco.getTypeName()).toBe('String');
+      expect(() => myTC.getFieldOTC('scalar')).toThrow('must be ObjectTypeComposer');
     });
 
     it('should return TypeComposer for scalar list fields', () => {
