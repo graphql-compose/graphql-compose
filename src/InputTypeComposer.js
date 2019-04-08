@@ -371,7 +371,7 @@ export class InputTypeComposer<TContext> {
     fieldName: string
   ): InputTypeComposer<TContext> | EnumTypeComposer<TContext> | ScalarTypeComposer<TContext> {
     const fieldType = getNamedType(this.getFieldType(fieldName));
-    const tc = this.schemaComposer.createTempTC(fieldType);
+    const tc = this.schemaComposer.createTC(fieldType);
     if (
       tc instanceof InputTypeComposer ||
       tc instanceof EnumTypeComposer ||
@@ -383,6 +383,22 @@ export class InputTypeComposer<TContext> {
         `Type ${this.getTypeName()} has invalid field ${fieldName} which is not of an input type.`
       );
     }
+  }
+
+  /**
+   * Alias for `getFieldTC()` but returns statically checked InputTypeComposer.
+   * If field have other type then error will be thrown.
+   */
+  getFieldITC(fieldName: string): InputTypeComposer<TContext> {
+    const tc = this.getFieldTC(fieldName);
+    if (!(tc instanceof InputTypeComposer)) {
+      throw new Error(
+        `${this.getTypeName()}.getFieldITC('${fieldName}') must be InputTypeComposer, but recieved ${
+          tc.constructor.name
+        }. Maybe you need to use 'getFieldTC()' method which returns any type composer?`
+      );
+    }
+    return tc;
   }
 
   makeFieldNonNull(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {

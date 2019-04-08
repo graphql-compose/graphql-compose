@@ -490,6 +490,9 @@ describe('InputTypeComposer', () => {
       const tco = myITC.getFieldTC('objArr');
       expect(tco).toBeInstanceOf(InputTypeComposer);
       expect(tco.getTypeName()).toBe('MyInputType2');
+      // schould return the same TypeComposer instance
+      const tco2 = myITC.getFieldITC('objArr');
+      expect(tco).toBe(tco2);
     });
 
     it('should return TypeComposer for scalar fields', () => {

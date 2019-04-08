@@ -136,6 +136,12 @@ export class InputTypeComposer<TContext = any> {
     fieldName: string
   ): InputTypeComposer<TContext> | EnumTypeComposer<TContext> | ScalarTypeComposer<TContext>;
 
+  /**
+   * Alias for `getFieldTC()` but returns statically checked InputTypeComposer.
+   * If field have other type then error will be thrown.
+   */
+  public getFieldITC(fieldName: string): InputTypeComposer<TContext>;
+
   public makeFieldNonNull(fieldNameOrArray: string | string[]): this;
 
   /**
