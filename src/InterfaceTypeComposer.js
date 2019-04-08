@@ -20,9 +20,9 @@ import type {
   GraphQLResolveInfo,
   GraphQLTypeResolver,
 } from './graphql';
-import type { InputTypeComposer } from './InputTypeComposer';
+import { InputTypeComposer } from './InputTypeComposer';
 import type { EnumTypeComposer } from './EnumTypeComposer';
-import type { UnionTypeComposer } from './UnionTypeComposer';
+import { UnionTypeComposer } from './UnionTypeComposer';
 import type { ScalarTypeComposer } from './ScalarTypeComposer';
 import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
@@ -345,13 +345,34 @@ export class InterfaceTypeComposer<TSource, TContext> {
     fieldName: string
   ):
     | ObjectTypeComposer<TSource, TContext>
-    | InputTypeComposer<TContext>
     | EnumTypeComposer<TContext>
     | InterfaceTypeComposer<TSource, TContext>
     | UnionTypeComposer<TSource, TContext>
     | ScalarTypeComposer<TContext> {
     const fieldType = getNamedType(this.getFieldType(fieldName));
-    return this.schemaComposer.createTempTC(fieldType);
+    const tc = this.schemaComposer.createTC(fieldType);
+    if (tc instanceof InputTypeComposer) {
+      throw new Error(
+        `${this.getTypeName()}.getFieldTC('${fieldName}') returns InputTypeComposer. It's very strange cause fields may have only Output types (Scalar, Object, Enum, Union, Interface).`
+      );
+    }
+    return tc;
+  }
+
+  /**
+   * Alias for `getFieldTC()` but returns statically checked ObjectTypeComposer.
+   * If field have other type then error will be thrown.
+   */
+  getFieldOTC(fieldName: string): ObjectTypeComposer<TSource, TContext> {
+    const tc = this.getFieldTC(fieldName);
+    if (!(tc instanceof ObjectTypeComposer)) {
+      throw new Error(
+        `${this.getTypeName()}.getFieldOTC('${fieldName}') must be ObjectTypeComposer, but recieved ${
+          tc.constructor.name
+        }. Maybe you need to use 'getFieldTC()' method which returns any type composer?`
+      );
+    }
+    return tc;
   }
 
   makeFieldNonNull(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
@@ -464,6 +485,42 @@ export class InterfaceTypeComposer<TSource, TContext> {
       this.getTypeName()
     );
     return graphqlAC.type;
+  }
+
+  getFieldArgTC(
+    fieldName: string,
+    argName: string
+  ): InputTypeComposer<TContext> | EnumTypeComposer<TContext> | ScalarTypeComposer<TContext> {
+    const fieldType = getNamedType(this.getFieldArgType(fieldName, argName));
+    const tc = this.schemaComposer.createTC(fieldType);
+    if (
+      tc instanceof ObjectTypeComposer ||
+      tc instanceof InterfaceTypeComposer ||
+      tc instanceof UnionTypeComposer
+    ) {
+      throw new Error(
+        `${this.getTypeName()}.getFieldArgTC('${fieldName}', '${argName}') returns ${
+          tc.constructor.name
+        }. It's very strange cause args may have only Input types (Scalar, InputObject, Enum).`
+      );
+    }
+    return tc;
+  }
+
+  /**
+   * Alias for `getFieldArgTC()` but returns statically checked InputTypeComposer.
+   * If field have other type then error will be thrown.
+   */
+  getFieldArgITC(fieldName: string, argName: string): InputTypeComposer<TContext> {
+    const tc = this.getFieldArgTC(fieldName, argName);
+    if (!(tc instanceof InputTypeComposer)) {
+      throw new Error(
+        `${this.getTypeName()}.getFieldArgITC('${fieldName}', '${argName}') must be InputTypeComposer, but recieved ${
+          tc.constructor.name
+        }. Maybe you need to use 'getFieldArgTC()' method which returns any type composer?`
+      );
+    }
+    return tc;
   }
 
   setFieldArgs(

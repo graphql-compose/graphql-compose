@@ -142,11 +142,16 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     fieldName: string
   ):
     | ObjectTypeComposer<TSource, TContext>
-    | InputTypeComposer<TContext>
     | EnumTypeComposer<TContext>
     | InterfaceTypeComposer<TSource, TContext>
     | UnionTypeComposer<TSource, TContext>
     | ScalarTypeComposer<TContext>;
+
+  /**
+   * Alias for `getFieldTC()` but returns statically checked ObjectTypeComposer.
+   * If field have other type then error will be thrown.
+   */
+  public getFieldOTC(fieldName: string): ObjectTypeComposer<TSource, TContext>;
 
   public makeFieldNonNull(fieldNameOrArray: string | string[]): this;
 
@@ -161,6 +166,17 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public getFieldArg(fieldName: string, argName: string): ComposeArgumentConfigAsObject;
 
   public getFieldArgType(fieldName: string, argName: string): GraphQLInputType;
+
+  public getFieldArgTC(
+    fieldName: string,
+    argName: string
+  ): InputTypeComposer<TContext> | EnumTypeComposer<TContext> | ScalarTypeComposer<TContext>;
+
+  /**
+   * Alias for `getFieldArgTC()` but returns statically checked InputTypeComposer.
+   * If field have other type then error will be thrown.
+   */
+  public getFieldArgITC(fieldName: string, argName: string): InputTypeComposer<TContext>;
 
   public setFieldArgs(fieldName: string, args: ComposeFieldConfigArgumentMap<any>): this;
 
