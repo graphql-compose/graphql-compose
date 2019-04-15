@@ -1105,4 +1105,44 @@ describe('TypeMapper', () => {
       });
     });
   });
+
+  describe('static methods', () => {
+    it('check SDL types', () => {
+      const output = 'type Out { name: String! }';
+      const input = 'input Filter { minAge: Int }';
+      const enumType = 'enum Sort { ASC DESC }';
+      const scalar = 'scalar UInt';
+      const iface = 'interface User { name: String }';
+
+      expect(TypeMapper.isTypeDefinitionString(output)).toBeTruthy();
+      expect(TypeMapper.isOutputTypeDefinitionString(output)).toBeTruthy();
+      expect(TypeMapper.isOutputTypeDefinitionString(input)).toBeFalsy();
+
+      expect(TypeMapper.isTypeDefinitionString(input)).toBeTruthy();
+      expect(TypeMapper.isInputTypeDefinitionString(input)).toBeTruthy();
+      expect(TypeMapper.isInputTypeDefinitionString(output)).toBeFalsy();
+
+      expect(TypeMapper.isTypeDefinitionString(enumType)).toBeTruthy();
+      expect(TypeMapper.isEnumTypeDefinitionString(enumType)).toBeTruthy();
+      expect(TypeMapper.isEnumTypeDefinitionString(output)).toBeFalsy();
+
+      expect(TypeMapper.isTypeDefinitionString(scalar)).toBeTruthy();
+      expect(TypeMapper.isScalarTypeDefinitionString(scalar)).toBeTruthy();
+      expect(TypeMapper.isScalarTypeDefinitionString(output)).toBeFalsy();
+
+      expect(TypeMapper.isTypeDefinitionString(iface)).toBeTruthy();
+      expect(TypeMapper.isInterfaceTypeDefinitionString(iface)).toBeTruthy();
+      expect(TypeMapper.isInterfaceTypeDefinitionString(output)).toBeFalsy();
+    });
+
+    it('check type name', () => {
+      expect(TypeMapper.isTypeNameString('aaaa')).toBeTruthy();
+      expect(TypeMapper.isTypeNameString('Aaaaa')).toBeTruthy();
+      expect(TypeMapper.isTypeNameString('A_')).toBeTruthy();
+      expect(TypeMapper.isTypeNameString('_A')).toBeTruthy();
+      expect(TypeMapper.isTypeNameString('A_123')).toBeTruthy();
+      expect(TypeMapper.isTypeNameString('123')).toBeFalsy();
+      expect(TypeMapper.isTypeNameString('A-')).toBeFalsy();
+    });
+  });
 });
