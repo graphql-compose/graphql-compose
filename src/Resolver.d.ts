@@ -158,7 +158,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
 
   public hasArg(argName: string): boolean;
 
-  public getArg(argName: string): ComposeArgumentConfig;
+  public getArg(argName: string): ComposeArgumentConfigAsObject;
 
   public getArgConfig(argName: string): GraphQLArgumentConfig;
 

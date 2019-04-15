@@ -28,7 +28,11 @@ import type {
   ComposeArgumentType,
   ArgsMap, // eslint-disable-line
 } from './ObjectTypeComposer';
-import { InputTypeComposer, type ComposeInputFieldConfig } from './InputTypeComposer';
+import {
+  InputTypeComposer,
+  isComposeInputType,
+  type ComposeInputFieldConfig,
+} from './InputTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
 import { SchemaComposer } from './SchemaComposer';
 import deepmerge from './utils/deepmerge';
@@ -229,14 +233,22 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     return !!this.args[argName];
   }
 
-  getArg(argName: string): ComposeArgumentConfig {
+  getArg(argName: string): ComposeArgumentConfigAsObject {
     if (!this.hasArg(argName)) {
       throw new Error(
         `Cannot get arg '${argName}' for resolver ${this.name}. Argument does not exist.`
       );
     }
 
-    return this.args[argName];
+    let arg = this.args[argName];
+
+    if (isFunction(arg)) arg = arg();
+
+    if (typeof arg === 'string' || isComposeInputType(arg) || Array.isArray(arg)) {
+      return { type: (arg: any) };
+    }
+
+    return (arg: any);
   }
 
   getArgConfig(argName: string): GraphQLArgumentConfig {

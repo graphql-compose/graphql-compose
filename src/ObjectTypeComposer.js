@@ -23,7 +23,7 @@ import type {
 } from './graphql';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
-import { InputTypeComposer } from './InputTypeComposer';
+import { InputTypeComposer, isComposeInputType } from './InputTypeComposer';
 import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { InterfaceTypeComposer, type ComposeInterfaceType } from './InterfaceTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
@@ -645,7 +645,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
     if (isFunction(arg)) arg = arg();
 
-    if (typeof arg === 'string' || isComposeOutputType(arg) || Array.isArray(arg)) {
+    if (typeof arg === 'string' || isComposeInputType(arg) || Array.isArray(arg)) {
       return { type: (arg: any) };
     }
 

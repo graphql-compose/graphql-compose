@@ -502,7 +502,7 @@ describe('Resolver', () => {
     });
 
     it('should keep untouched other args', () => {
-      expect(newResolver.getArg('other')).toBe(resolver.getArg('other'));
+      expect(newResolver.getArg('other').type).toBe(resolver.getArg('other').type);
       expect(newResolver.getArgType('other')).not.toBe(resolver.getArgType('other'));
     });
 
