@@ -116,12 +116,6 @@ function isInputType(type: any): boolean {
   );
 }
 
-const RegexpOutputTypeDefinition = /type\s[^{]+\{[^}]+\}/im;
-const RegexpInputTypeDefinition = /input\s[^{]+\{[^}]+\}/im;
-const RegexpEnumTypeDefinition = /enum\s[^{]+\{[^}]+\}/im;
-const RegexpScalarTypeDefinition = /scalar\s/im;
-const RegexpInterfaceTypeDefinition = /interface\s/im;
-
 export class TypeMapper<TContext> {
   schemaComposer: SchemaComposer<TContext>;
 
@@ -202,14 +196,38 @@ export class TypeMapper<TContext> {
     return undefined;
   }
 
-  isTypeDefinitionString(str: string): boolean {
+  static isTypeNameString(str: string): boolean {
+    return /^[_A-Za-z][_0-9A-Za-z]*$/.test(str);
+  }
+
+  static isTypeDefinitionString(str: string): boolean {
     return (
-      RegexpOutputTypeDefinition.test(str) ||
-      RegexpInputTypeDefinition.test(str) ||
-      RegexpEnumTypeDefinition.test(str) ||
-      RegexpScalarTypeDefinition.test(str) ||
-      RegexpInterfaceTypeDefinition.test(str)
+      this.isOutputTypeDefinitionString(str) ||
+      this.isInputTypeDefinitionString(str) ||
+      this.isEnumTypeDefinitionString(str) ||
+      this.isScalarTypeDefinitionString(str) ||
+      this.isInterfaceTypeDefinitionString(str)
     );
+  }
+
+  static isOutputTypeDefinitionString(str: string): boolean {
+    return /type\s[^{]+\{[^}]+\}/im.test(str);
+  }
+
+  static isInputTypeDefinitionString(str: string): boolean {
+    return /input\s[^{]+\{[^}]+\}/im.test(str);
+  }
+
+  static isEnumTypeDefinitionString(str: string): boolean {
+    return /enum\s[^{]+\{[^}]+\}/im.test(str);
+  }
+
+  static isScalarTypeDefinitionString(str: string): boolean {
+    return /scalar\s/im.test(str);
+  }
+
+  static isInterfaceTypeDefinitionString(str: string): boolean {
+    return /interface\s/im.test(str);
   }
 
   createGraphQLType(str: TypeDefinitionString): GraphQLType | void {
@@ -240,7 +258,7 @@ export class TypeMapper<TContext> {
     if (this.schemaComposer.hasInstance(composeType, ObjectTypeComposer)) {
       return this.schemaComposer.getOTC(composeType).getType();
     } else if (typeof composeType === 'string') {
-      const type = this.isTypeDefinitionString(composeType)
+      const type = TypeMapper.isTypeDefinitionString(composeType)
         ? this.createGraphQLType(composeType)
         : this.getWrapped(composeType);
 
@@ -320,7 +338,7 @@ export class TypeMapper<TContext> {
 
     const fieldConfig: GraphQLFieldConfig<any, TContext> = ({}: any);
     if (typeof composeType === 'string') {
-      if (RegexpInputTypeDefinition.test(composeType)) {
+      if (TypeMapper.isInputTypeDefinitionString(composeType)) {
         throw new Error(
           `${typeName}.${fieldName} should be OutputType, but got following type definition '${composeType}'`
         );
@@ -334,7 +352,7 @@ export class TypeMapper<TContext> {
           );
         }
       } else {
-        const type = this.isTypeDefinitionString(composeType)
+        const type = TypeMapper.isTypeDefinitionString(composeType)
           ? this.createGraphQLType(composeType)
           : this.getWrapped(composeType);
 
@@ -466,7 +484,7 @@ export class TypeMapper<TContext> {
 
     const argConfig: GraphQLArgumentConfig = ({}: any);
     if (typeof composeType === 'string') {
-      if (RegexpOutputTypeDefinition.test(composeType)) {
+      if (TypeMapper.isOutputTypeDefinitionString(composeType)) {
         throw new Error(
           `${typeName}.${fieldName}@${argName} should be InputType, but got output type definition '${composeType}'`
         );
@@ -480,7 +498,7 @@ export class TypeMapper<TContext> {
           );
         }
       } else {
-        const type = this.isTypeDefinitionString(composeType)
+        const type = TypeMapper.isTypeDefinitionString(composeType)
           ? this.createGraphQLType(composeType)
           : this.getWrapped(composeType);
 
@@ -606,7 +624,7 @@ export class TypeMapper<TContext> {
 
     const fieldConfig: GraphQLInputFieldConfig = ({}: any);
     if (typeof composeType === 'string') {
-      if (RegexpOutputTypeDefinition.test(composeType)) {
+      if (TypeMapper.isOutputTypeDefinitionString(composeType)) {
         throw new Error(
           `${typeName}.${fieldName} should be InputType, but got output type definition '${composeType}'`
         );
@@ -620,7 +638,7 @@ export class TypeMapper<TContext> {
           );
         }
       } else {
-        const type = this.isTypeDefinitionString(composeType)
+        const type = TypeMapper.isTypeDefinitionString(composeType)
           ? this.createGraphQLType(composeType)
           : this.getWrapped(composeType);
 
@@ -694,7 +712,7 @@ export class TypeMapper<TContext> {
     if (this.schemaComposer.hasInstance(composeType, InterfaceTypeComposer)) {
       return this.schemaComposer.getIFTC(composeType).getType();
     } else if (typeof composeType === 'string') {
-      const type = RegexpInterfaceTypeDefinition.test(composeType)
+      const type = TypeMapper.isInterfaceTypeDefinitionString(composeType)
         ? this.createGraphQLType(composeType)
         : this.getWrapped(composeType);
 

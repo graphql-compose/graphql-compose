@@ -51,6 +51,48 @@ declare class TypeMapper<TContext> {
 
   public constructor(schemaComposer: SchemaComposer<TContext>);
 
+  /**
+   * Check that string is a valid GraphQL Type name.
+   * According to spec valid mask is `/^[_A-Za-z][_0-9A-Za-z]*$/`.
+   */
+  public static isTypeNameString(str: string): boolean;
+
+  /**
+   * Checks that string is SDL definition of some type
+   * eg. `type Out { name: String! }` or `input Filter { minAge: Int }` etc.
+   */
+  public static isTypeDefinitionString(str: string): boolean;
+
+  /**
+   * Checks that string is OutputType SDL definition
+   * eg. `type Out { name: String! }`
+   */
+  public static isOutputTypeDefinitionString(str: string): boolean;
+
+  /**
+   * Checks that string is InputType SDL definition
+   * eg. `input Filter { minAge: Int }`
+   */
+  public static isInputTypeDefinitionString(str: string): boolean;
+
+  /**
+   * Checks that string is EnumType SDL definition
+   * eg. `enum Sort { ASC DESC }`
+   */
+  public static isEnumTypeDefinitionString(str: string): boolean;
+
+  /**
+   * Checks that string is ScalarType SDL definition
+   * eg. `scalar UInt`
+   */
+  public static isScalarTypeDefinitionString(str: string): boolean;
+
+  /**
+   * Checks that string is InterfaceType SDL definition
+   * eg. `interface User { name: String }`
+   */
+  public static isInterfaceTypeDefinitionString(str: string): boolean;
+
   public get(name: string): GraphQLNamedType | void;
 
   public set(name: string, type: AnyType<any>): void;
