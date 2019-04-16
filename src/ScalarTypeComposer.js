@@ -194,6 +194,26 @@ export class ScalarTypeComposer<TContext> {
     return cloned;
   }
 
+  merge(type: GraphQLScalarType | ScalarTypeComposer<any>): ScalarTypeComposer<TContext> {
+    if (type instanceof GraphQLScalarType) {
+      this.setSerialize(type.serialize);
+      this.setParseValue(type.parseValue);
+      this.setParseLiteral(type.parseLiteral);
+    } else if (type instanceof ScalarTypeComposer) {
+      this.setSerialize(type.getSerialize());
+      this.setParseValue(type.getParseValue());
+      this.setParseLiteral(type.getParseLiteral());
+    } else {
+      throw new Error(
+        `Cannot merge ${inspect(
+          type
+        )} with ScalarType(${this.getTypeName()}). Provided type should be GraphQLScalarType or ScalarTypeComposer.`
+      );
+    }
+
+    return this;
+  }
+
   // -----------------------------------------------
   // Extensions methods
   // -----------------------------------------------

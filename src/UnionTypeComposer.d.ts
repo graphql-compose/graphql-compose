@@ -134,6 +134,8 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   public clone(newTypeName: string): UnionTypeComposer<TSource, TContext>;
 
+  public merge(type: GraphQLUnionType | UnionTypeComposer<any, any>): this;
+
   /**
    * -----------------------------------------------
    * ResolveType methods

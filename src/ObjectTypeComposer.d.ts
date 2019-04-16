@@ -356,6 +356,18 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   public setIsTypeOf(fn: GraphQLIsTypeOfFn<any, any> | null | void): this;
 
   /**
+   * Merge fields and interfaces from provided `GraphQLObjectType`, or `ObjectTypeComposer`.
+   * Also you may provide `GraphQLInterfaceType` or `InterfaceTypeComposer` for adding fields.
+   */
+  public merge(
+    type:
+      | GraphQLObjectType
+      | GraphQLInterfaceType
+      | ObjectTypeComposer<any, any>
+      | InterfaceTypeComposer<any, any>
+  ): this;
+
+  /**
    * -----------------------------------------------
    * InputType methods
    * -----------------------------------------------
@@ -453,7 +465,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   ): boolean;
 
   public addInterface(
-    interfaceObj: InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType
+    interfaceObj: InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType | string
   ): this;
 
   public removeInterface(

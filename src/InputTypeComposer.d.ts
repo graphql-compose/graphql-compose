@@ -178,6 +178,8 @@ export class InputTypeComposer<TContext = any> {
 
   public clone(newTypeName: string): InputTypeComposer<TContext>;
 
+  public merge(type: GraphQLInputObjectType | InputTypeComposer<any>): this;
+
   /**
    * -----------------------------------------------
    * Extensions methods

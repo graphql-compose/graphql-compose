@@ -94,6 +94,8 @@ export class ScalarTypeComposer<TContext = any> {
 
   public clone(newTypeName: string): ScalarTypeComposer<TContext>;
 
+  public merge(type: GraphQLScalarType | ScalarTypeComposer<any>): this;
+
   /**
    *  -----------------------------------------------
    * Extensions methods

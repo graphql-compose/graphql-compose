@@ -12,7 +12,7 @@ import {
   GraphQLInputObjectType,
   graphql,
 } from '../graphql';
-import { schemaComposer } from '..';
+import { schemaComposer, SchemaComposer } from '..';
 import { Resolver } from '../Resolver';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
@@ -1223,6 +1223,79 @@ describe('ObjectTypeComposer', () => {
       expect(tc1.getFieldArgDirectiveById('field', 'arg', 1)).toEqual({ b: '3' });
       expect(tc1.getFieldArgDirectiveByName('field', 'arg', 'a2')).toEqual(undefined);
       expect(tc1.getFieldArgDirectiveById('field', 'arg', 333)).toEqual(undefined);
+    });
+  });
+
+  describe('merge()', () => {
+    it('should merge with GraphQLObjectType', () => {
+      schemaComposer.createInterfaceTC(`interface IFace { name: String }`);
+      const otc = schemaComposer.createObjectTC(`type User implements IFace { name: String }`);
+      const person = new GraphQLObjectType({
+        name: 'Person',
+        interfaces: [
+          new GraphQLInterfaceType({
+            name: 'WithAge',
+            fields: {
+              age: { type: GraphQLInt },
+            },
+          }),
+        ],
+        fields: {
+          age: { type: GraphQLInt },
+        },
+      });
+
+      otc.merge(person);
+      expect(otc.getFieldNames()).toEqual(['name', 'age']);
+      expect(otc.hasInterface('IFace')).toBeTruthy();
+      expect(otc.hasInterface('WithAge')).toBeTruthy();
+    });
+
+    it('should merge with ObjectTypeComposer', () => {
+      schemaComposer.createInterfaceTC(`interface IFace { name: String }`);
+      const otc = schemaComposer.createObjectTC(`type User implements IFace { name: String }`);
+      const sc2 = new SchemaComposer();
+      sc2.createInterfaceTC(`interface WithAge { age: Int }`);
+      const person = sc2.createObjectTC(`type Person implements WithAge { age: Int }`);
+
+      otc.merge(person);
+
+      expect(otc.getFieldNames()).toEqual(['name', 'age']);
+      expect(otc.hasInterface('IFace')).toBeTruthy();
+      expect(otc.hasInterface('WithAge')).toBeTruthy();
+    });
+
+    it('should merge with GraphQLInterfaceType', () => {
+      schemaComposer.createInterfaceTC(`interface IFace { name: String }`);
+      const otc = schemaComposer.createObjectTC(`type User implements IFace { name: String }`);
+      const iface = new GraphQLInterfaceType({
+        name: 'WithAge',
+        fields: {
+          age: { type: GraphQLInt },
+        },
+      });
+
+      otc.merge(iface);
+      expect(otc.getFieldNames()).toEqual(['name', 'age']);
+      expect(otc.hasInterface('IFace')).toBeTruthy();
+    });
+
+    it('should merge with InterfaceTypeComposer', () => {
+      schemaComposer.createInterfaceTC(`interface IFace { name: String }`);
+      const otc = schemaComposer.createObjectTC(`type User implements IFace { name: String }`);
+      const sc2 = new SchemaComposer();
+      const iface = sc2.createInterfaceTC(`interface WithAge { age: Int }`);
+
+      otc.merge(iface);
+      expect(otc.getFieldNames()).toEqual(['name', 'age']);
+      expect(otc.hasInterface('IFace')).toBeTruthy();
+    });
+
+    it('should throw error on wrong type', () => {
+      const otc = schemaComposer.createObjectTC(`type User { name: String }`);
+      expect(() => otc.merge((schemaComposer.createScalarTC('Scalar'): any))).toThrow(
+        'Cannot merge ScalarTypeComposer'
+      );
     });
   });
 });

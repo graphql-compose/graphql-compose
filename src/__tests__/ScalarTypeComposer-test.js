@@ -1,6 +1,6 @@
 /* @flow strict */
 
-import { schemaComposer } from '..';
+import { schemaComposer, SchemaComposer } from '..';
 import { GraphQLList, GraphQLNonNull, GraphQLScalarType } from '../graphql';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
 
@@ -154,6 +154,36 @@ describe('ScalarTypeComposer', () => {
       expect(tc1.getDirectiveById(1)).toEqual({ b: '3' });
       expect(tc1.getDirectiveByName('d2')).toEqual(undefined);
       expect(tc1.getDirectiveById(333)).toEqual(undefined);
+    });
+  });
+
+  describe('merge()', () => {
+    it('should merge with GraphQLScalarType', () => {
+      const scalar1 = schemaComposer.createScalarTC(`UInt`);
+      const scalar2 = new GraphQLScalarType({
+        name: 'UInt2',
+        serialize() {
+          return 'noop';
+        },
+      });
+      scalar1.merge(scalar2);
+      expect(scalar1.getSerialize()()).toEqual('noop');
+    });
+
+    it('should merge with ScalarTypeComposer', () => {
+      const scalar1 = schemaComposer.createScalarTC(`UInt`);
+      const sc2 = new SchemaComposer();
+      const scalar2 = sc2.createScalarTC(`UInt2`);
+      scalar2.setSerialize(() => 'ok');
+      scalar1.merge(scalar2);
+      expect(scalar1.getSerialize()()).toEqual('ok');
+    });
+
+    it('should throw error on wrong type', () => {
+      const scalar1 = schemaComposer.createScalarTC(`UInt`);
+      expect(() => scalar1.merge((schemaComposer.createObjectTC('Scalar'): any))).toThrow(
+        'Cannot merge ObjectTypeComposer'
+      );
     });
   });
 });

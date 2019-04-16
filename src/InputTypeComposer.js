@@ -491,6 +491,22 @@ export class InputTypeComposer<TContext> {
     );
   }
 
+  merge(type: GraphQLInputObjectType | InputTypeComposer<any>): InputTypeComposer<TContext> {
+    if (type instanceof GraphQLInputObjectType) {
+      this.addFields((type.getFields(): any));
+    } else if (type instanceof InputTypeComposer) {
+      this.addFields(type.getFields());
+    } else {
+      throw new Error(
+        `Cannot merge ${inspect(
+          type
+        )} with InputObjectType(${this.getTypeName()}). Provided type should be GraphQLInputObjectType or InputTypeComposer.`
+      );
+    }
+
+    return this;
+  }
+
   // -----------------------------------------------
   // Extensions methods
   // -----------------------------------------------

@@ -272,6 +272,24 @@ export class UnionTypeComposer<TSource, TContext> {
     return cloned;
   }
 
+  merge(
+    type: GraphQLUnionType | UnionTypeComposer<any, any>
+  ): UnionTypeComposer<TSource, TContext> {
+    if (type instanceof GraphQLUnionType) {
+      type.getTypes().forEach((t: any) => this.addType(t));
+    } else if (type instanceof UnionTypeComposer) {
+      type.getTypes().forEach(t => this.addType(t));
+    } else {
+      throw new Error(
+        `Cannot merge ${inspect(
+          type
+        )} with UnionType(${this.getTypeName()}). Provided type should be GraphQLUnionType or UnionTypeComposer.`
+      );
+    }
+
+    return this;
+  }
+
   // -----------------------------------------------
   // ResolveType methods
   // -----------------------------------------------
