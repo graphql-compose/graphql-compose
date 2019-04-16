@@ -1,6 +1,6 @@
 /* @flow strict */
 
-import { schemaComposer } from '..';
+import { schemaComposer, SchemaComposer } from '..';
 import { EnumTypeComposer } from '../EnumTypeComposer';
 import { GraphQLList, GraphQLNonNull, GraphQLEnumType } from '../graphql';
 import { graphqlVersion } from '../utils/graphqlVersion';
@@ -332,6 +332,39 @@ describe('EnumTypeComposer', () => {
       expect(tc1.getFieldDirectiveById('AAA', 1)).toEqual({ b: '3' });
       expect(tc1.getFieldDirectiveByName('AAA', 'f2')).toEqual(undefined);
       expect(tc1.getFieldDirectiveById('AAA', 333)).toEqual(undefined);
+    });
+  });
+
+  describe('merge()', () => {
+    it('should merge with GraphQLEnumType', () => {
+      const sortETC = schemaComposer.createEnumTC(`enum Sort { ID_ASC ID_DESC }`);
+      const sort2 = new GraphQLEnumType({
+        name: 'Sort2',
+        values: {
+          NAME_ASC: { value: 'name ASC' },
+          NAME_DESC: { value: 'name DESC' },
+          ID_DESC: { value: 'id DESC' },
+        },
+      });
+      sortETC.merge(sort2);
+      expect(sortETC.getFieldNames()).toEqual(['ID_ASC', 'ID_DESC', 'NAME_ASC', 'NAME_DESC']);
+      expect(sortETC.getField('NAME_ASC').value).toEqual('name ASC');
+      expect(sortETC.getField('ID_DESC').value).toEqual('id DESC');
+    });
+
+    it('should merge with EnumTypeComposer', () => {
+      const sortETC = schemaComposer.createEnumTC(`enum Sort { ID_ASC ID_DESC }`);
+      const sc2 = new SchemaComposer();
+      const sort2 = sc2.createEnumTC(`enum Sort2 { NAME_ASC NAME_DESC ID_DESC }`);
+      sortETC.merge(sort2);
+      expect(sortETC.getFieldNames()).toEqual(['ID_ASC', 'ID_DESC', 'NAME_ASC', 'NAME_DESC']);
+    });
+
+    it('should throw error on wrong type', () => {
+      const sortETC = schemaComposer.createEnumTC(`enum Sort { ID_ASC ID_DESC }`);
+      expect(() => sortETC.merge((schemaComposer.createScalarTC('Scalar'): any))).toThrow(
+        'Cannot merge ScalarTypeComposer'
+      );
     });
   });
 });

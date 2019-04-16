@@ -8,7 +8,7 @@ import {
   GraphQLInt,
   GraphQLBoolean,
 } from '../graphql';
-import { schemaComposer } from '..';
+import { schemaComposer, SchemaComposer } from '..';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
@@ -551,6 +551,35 @@ describe('InputTypeComposer', () => {
       expect(tc1.getFieldDirectiveById('field', 1)).toEqual({ b: '3' });
       expect(tc1.getFieldDirectiveByName('field', 'f2')).toEqual(undefined);
       expect(tc1.getFieldDirectiveById('field', 333)).toEqual(undefined);
+    });
+  });
+
+  describe('merge()', () => {
+    it('should merge with GraphQLInputObjectType', () => {
+      const filterITC = schemaComposer.createInputTC(`input Filter { name: String }`);
+      const filter2 = new GraphQLInputObjectType({
+        name: 'Filter2',
+        fields: {
+          age: { type: GraphQLInt },
+        },
+      });
+      filterITC.merge(filter2);
+      expect(filterITC.getFieldNames()).toEqual(['name', 'age']);
+    });
+
+    it('should merge with InputTypeComposer', () => {
+      const filterITC = schemaComposer.createInputTC(`input Filter { name: String }`);
+      const sc2 = new SchemaComposer();
+      const itc2 = sc2.createInputTC(`input Filter2 { age: Int }`);
+      filterITC.merge(itc2);
+      expect(filterITC.getFieldNames()).toEqual(['name', 'age']);
+    });
+
+    it('should throw error on wrong type', () => {
+      const filterITC = schemaComposer.createInputTC(`input Filter { name: String }`);
+      expect(() => filterITC.merge((schemaComposer.createScalarTC('Scalar'): any))).toThrow(
+        'Cannot merge ScalarTypeComposer'
+      );
     });
   });
 });

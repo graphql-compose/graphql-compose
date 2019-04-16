@@ -20,6 +20,7 @@ import {
   GraphQLScalarType,
   GraphQLNonNull,
   GraphQLList,
+  GraphQLSchema,
 } from '../graphql';
 
 describe('SchemaComposer', () => {
@@ -1096,6 +1097,104 @@ describe('SchemaComposer', () => {
       // schoul return the same type composer instance
       expect(sc.get('MyTypeInput')).toBe(tc);
       expect(sc.createTC(`input MyTypeInput { a: Int }`)).toBe(tc);
+    });
+  });
+
+  describe('merge()', () => {
+    it('should load types from GraphQLSchema and merge with existed types', () => {
+      const sc = new SchemaComposer();
+      sc.Query.addFields({ existedInQuery: 'String' });
+      sc.Mutation.addFields({ existedInMutation: 'String' });
+      sc.Subscription.addFields({ existedInSubscription: 'String' });
+      sc.createTC(`type User { age: Int }`);
+
+      const schema = new GraphQLSchema({
+        query: new GraphQLObjectType({
+          name: 'MyQuery',
+          fields: {
+            user: {
+              type: new GraphQLObjectType({
+                name: 'User',
+                interfaces: [
+                  new GraphQLInterfaceType({
+                    name: 'IUser',
+                    fields: { name: { type: GraphQLString } },
+                  }),
+                ],
+                fields: {
+                  name: { type: GraphQLString },
+                },
+              }),
+            },
+          },
+        }),
+        mutation: new GraphQLObjectType({
+          name: 'MyMutation',
+          fields: {
+            write: {
+              type: GraphQLString,
+            },
+          },
+        }),
+        subscription: new GraphQLObjectType({
+          name: 'MySubscription',
+          fields: {
+            subscribe: {
+              type: GraphQLString,
+            },
+          },
+        }),
+      });
+
+      sc.merge(schema);
+
+      // imported schema should extend Query, Mutation and Subscription
+      expect(sc.Query.getFieldNames()).toEqual(['existedInQuery', 'user']);
+      expect(sc.Mutation.getFieldNames()).toEqual(['existedInMutation', 'write']);
+      expect(sc.Subscription.getFieldNames()).toEqual(['existedInSubscription', 'subscribe']);
+      // should merge object types
+      expect(sc.getOTC('User').getFieldNames()).toEqual(['age', 'name']);
+      // should import interfaces
+      expect(sc.getIFTC('IUser').getFieldNames()).toEqual(['name']);
+    });
+
+    it('should load types from another SchemaComposer and merge with existed types', () => {
+      const sc = new SchemaComposer();
+      sc.Query.addFields({ existedInQuery: 'String' });
+      sc.Mutation.addFields({ existedInMutation: 'String' });
+      sc.Subscription.addFields({ existedInSubscription: 'String' });
+      sc.createTC(`type User { age: Int }`);
+
+      const sc2 = new SchemaComposer();
+      sc2.createInterfaceTC(`interface IUser { name: String }`);
+      sc2.Query.addFields({
+        user: sc2.createObjectTC(`type User implements IUser { name: String }`),
+      });
+      sc2.Mutation.addFields({ write: 'String' });
+      sc2.Subscription.addFields({ subscribe: 'String' });
+
+      sc.merge(sc2);
+
+      // imported schema should extend Query, Mutation and Subscription
+      expect(sc.Query.getFieldNames()).toEqual(['existedInQuery', 'user']);
+      expect(sc.Mutation.getFieldNames()).toEqual(['existedInMutation', 'write']);
+      expect(sc.Subscription.getFieldNames()).toEqual(['existedInSubscription', 'subscribe']);
+      // should merge object types
+      expect(sc.getOTC('User').getFieldNames()).toEqual(['age', 'name']);
+      // should import interfaces
+      expect(sc.getIFTC('IUser').getFieldNames()).toEqual(['name']);
+    });
+
+    it('should throw an error on merging different kind of types with the same name', () => {
+      const sc = new SchemaComposer();
+      sc.createTC(`type User { name: String }`);
+
+      const sc2 = new SchemaComposer();
+      sc2.createTC(`input User { name: String }`);
+
+      expect(() => {
+        sc.merge(sc2);
+      }).toThrow(/Cannot merge InputTypeComposer.*with ObjectType/);
     });
   });
 });

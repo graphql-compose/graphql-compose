@@ -386,6 +386,23 @@ export class EnumTypeComposer<TContext> {
     return cloned;
   }
 
+  merge(type: GraphQLEnumType | EnumTypeComposer<any>): EnumTypeComposer<TContext> {
+    if (type instanceof GraphQLEnumType) {
+      const fields = defineEnumValuesToConfig(type._values);
+      this.addFields((fields: any));
+    } else if (type instanceof EnumTypeComposer) {
+      this.addFields(type.getFields());
+    } else {
+      throw new Error(
+        `Cannot merge ${inspect(
+          type
+        )} with EnumType(${this.getTypeName()}). Provided type should be GraphQLEnumType or EnumTypeComposer.`
+      );
+    }
+
+    return this;
+  }
+
   // -----------------------------------------------
   // Extensions methods
   // -----------------------------------------------

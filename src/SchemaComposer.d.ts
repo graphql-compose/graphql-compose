@@ -85,7 +85,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
   protected _schemaMustHaveTypes: Array<AnyType<TContext>>;
   protected _directives: GraphQLDirective[];
 
-  public constructor();
+  public constructor(schema?: GraphQLSchema);
 
   /**
    * Create `GraphQLSchema` instance from defined types.
@@ -103,6 +103,19 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
    * where will be removed all fields with empty object types (without sub-fields).
    */
   public removeEmptyTypes(tc: ObjectTypeComposer<any, TContext>, passedTypes: Set<string>): void;
+
+  /**
+   * Load all types from GraphQLSchema and merge with current SchemaComposer's types.
+   *
+   * @example
+   *     import { schemaComposer } from 'graphql-compose';
+   *     schemaComposer.merge(someSchema1);
+   *     schemaComposer.merge(someSchema2);
+   *     schemaComposer.merge(someSchema3);
+   *     const schemaComposer.getOTC('User').removeField('password');
+   *     const newSchema = schemaComposer.buildSchema();
+   */
+  public merge(schema: GraphQLSchema | SchemaComposer<any>): this;
 
   /**
    * -----------------------------------------------

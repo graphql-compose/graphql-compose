@@ -136,6 +136,8 @@ export class EnumTypeComposer<TContext = any> {
 
   public clone(newTypeName: string): EnumTypeComposer<TContext>;
 
+  public merge(type: GraphQLEnumType | EnumTypeComposer<any>): this;
+
   /**
    * -----------------------------------------------
    * Extensions methods

@@ -804,6 +804,36 @@ export class ObjectTypeComposer<TSource, TContext> {
     return this;
   }
 
+  merge(
+    type:
+      | GraphQLObjectType
+      | GraphQLInterfaceType
+      | ObjectTypeComposer<any, any>
+      | InterfaceTypeComposer<any, any>
+  ): ObjectTypeComposer<TSource, TContext> {
+    if (type instanceof GraphQLObjectType) {
+      this.addFields((type.getFields(): any));
+      type.getInterfaces().forEach(iface => this.addInterface(iface));
+    } else if (type instanceof GraphQLInterfaceType) {
+      this.addFields((type.getFields(): any));
+    } else if (type instanceof ObjectTypeComposer) {
+      this.addFields(type.getFields());
+      type.getInterfaces().forEach(iface => this.addInterface(iface));
+      // Feel free to add other properties for merging two TypeComposers.
+      // For simplicity it just merge fields and interfaces.
+    } else if (type instanceof InterfaceTypeComposer) {
+      this.addFields(type.getFields());
+    } else {
+      throw new Error(
+        `Cannot merge ${inspect(
+          type
+        )} with ObjectType(${this.getTypeName()}). Provided type should be GraphQLObjectType or ObjectTypeComposer.`
+      );
+    }
+
+    return this;
+  }
+
   // -----------------------------------------------
   // InputType methods
   // -----------------------------------------------
@@ -1006,7 +1036,7 @@ export class ObjectTypeComposer<TSource, TContext> {
   }
 
   addInterface(
-    interfaceObj: InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType
+    interfaceObj: InterfaceTypeComposer<any, TContext> | GraphQLInterfaceType | string
   ): ObjectTypeComposer<TSource, TContext> {
     if (!this.hasInterface(interfaceObj)) {
       this.setInterfaces([...this.getInterfaces(), interfaceObj]);

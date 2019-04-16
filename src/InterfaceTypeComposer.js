@@ -609,6 +609,28 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return cloned;
   }
 
+  merge(
+    type:
+      | GraphQLInterfaceType
+      | GraphQLObjectType
+      | InterfaceTypeComposer<any, any>
+      | ObjectTypeComposer<any, any>
+  ): InterfaceTypeComposer<TSource, TContext> {
+    if (type instanceof GraphQLInterfaceType || type instanceof GraphQLObjectType) {
+      this.addFields((type.getFields(): any));
+    } else if (type instanceof InterfaceTypeComposer || type instanceof ObjectTypeComposer) {
+      this.addFields(type.getFields());
+    } else {
+      throw new Error(
+        `Cannot merge ${inspect(
+          type
+        )} with InterfaceType(${this.getTypeName()}). Provided type should be GraphQLInterfaceType, GraphQLObjectType, InterfaceTypeComposer or ObjectTypeComposer.`
+      );
+    }
+
+    return this;
+  }
+
   // -----------------------------------------------
   // InputType methods
   // -----------------------------------------------

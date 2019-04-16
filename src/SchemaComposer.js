@@ -15,7 +15,7 @@ import {
 import { UnionTypeComposer, type UnionTypeComposeDefinition } from './UnionTypeComposer';
 import { Resolver, type ResolverOpts } from './Resolver';
 import { isFunction } from './utils/is';
-import { inspect } from './utils/misc';
+import { inspect, forEachKey } from './utils/misc';
 import { getGraphQLType } from './utils/typeHelpers';
 import {
   GraphQLSchema,
@@ -84,9 +84,13 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
   _schemaMustHaveTypes: Array<AnyType<TContext>> = [];
   _directives: Array<GraphQLDirective> = BUILT_IN_DIRECTIVES;
 
-  constructor(): SchemaComposer<TContext> {
+  constructor(schema?: GraphQLSchema): SchemaComposer<TContext> {
     super();
     this.typeMapper = new TypeMapper(this);
+
+    if (schema instanceof GraphQLSchema) {
+      this.merge(schema);
+    }
 
     // alive proper Flow type casting in autosuggestions for class with Generics
     /* :: return this; */
@@ -108,7 +112,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
 
   /* @deprecated 7.0.0 */
   rootMutation(): ObjectTypeComposer<any, TContext> {
-    deprecate('Use schemaComposer.Query property instead');
+    deprecate('Use schemaComposer.Mutation property instead');
     return this.getOrCreateOTC('Mutation');
   }
 
@@ -118,7 +122,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
 
   /* @deprecated 7.0.0 */
   rootSubscription(): ObjectTypeComposer<any, TContext> {
-    deprecate('Use schemaComposer.Query property instead');
+    deprecate('Use schemaComposer.Subscription property instead');
     return this.getOrCreateOTC('Subscription');
   }
 
@@ -198,6 +202,65 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
         }
       }
     });
+  }
+
+  merge(schema: GraphQLSchema | SchemaComposer<any>): SchemaComposer<TContext> {
+    let query;
+    let mutation;
+    let subscription;
+    let typeMap: Map<any, any>;
+    let directives;
+
+    if (schema instanceof SchemaComposer) {
+      query = schema.Query;
+      mutation = schema.Mutation;
+      subscription = schema.Subscription;
+      typeMap = schema.types;
+      directives = schema.getDirectives();
+    } else if (schema instanceof GraphQLSchema) {
+      query = schema.getQueryType();
+      mutation = schema.getMutationType();
+      subscription = schema.getSubscriptionType();
+      typeMap = new Map();
+      forEachKey(schema.getTypeMap(), (v, k) => {
+        typeMap.set(k, v);
+      });
+      directives = schema.getDirectives();
+    } else {
+      throw new Error(
+        'SchemaComposer.merge() accepts only GraphQLSchema or SchemaComposer instances.'
+      );
+    }
+
+    // Root types may have any name, so import them manually.
+    if (query) this.Query.merge(query);
+    if (mutation) this.Mutation.merge(mutation);
+    if (subscription) this.Subscription.merge(subscription);
+
+    // Merging non-root types
+    typeMap.forEach((type, key) => {
+      // skip internal and root types
+      if (
+        (typeof key === 'string' && key.startsWith('__')) ||
+        type === query ||
+        type === mutation ||
+        type === subscription
+      )
+        return;
+
+      // merge regular types
+      if (this.has(key)) {
+        this.getAnyTC(key).merge((type: any));
+      } else {
+        this.set(key, type);
+      }
+    });
+
+    directives.forEach(directive => {
+      this.addDirective(directive);
+    });
+
+    return this;
   }
 
   /**

@@ -9,9 +9,10 @@ import {
   GraphQLBoolean,
   GraphQLInterfaceType,
   GraphQLInputObjectType,
+  GraphQLObjectType,
   graphql,
 } from '../graphql';
-import { schemaComposer } from '..';
+import { schemaComposer, SchemaComposer } from '..';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
@@ -891,6 +892,59 @@ describe('InterfaceTypeComposer', () => {
       expect(tc1.getFieldArgDirectiveById('field', 'arg', 1)).toEqual({ b: '3' });
       expect(tc1.getFieldArgDirectiveByName('field', 'arg', 'a2')).toEqual(undefined);
       expect(tc1.getFieldArgDirectiveById('field', 'arg', 333)).toEqual(undefined);
+    });
+  });
+
+  describe('merge()', () => {
+    it('should merge with GraphQLInterfaceType', () => {
+      const iface = schemaComposer.createInterfaceTC(`interface IFace { name: String }`);
+      const iface2 = new GraphQLInterfaceType({
+        name: 'WithAge',
+        fields: {
+          age: { type: GraphQLInt },
+        },
+      });
+
+      iface.merge(iface2);
+      expect(iface.getFieldNames()).toEqual(['name', 'age']);
+    });
+
+    it('should merge with InterfaceTypeComposer', () => {
+      const iface = schemaComposer.createInterfaceTC(`interface IFace { name: String }`);
+      const sc2 = new SchemaComposer();
+      const iface2 = sc2.createInterfaceTC(`interface WithAge { age: Int }`);
+
+      iface.merge(iface2);
+      expect(iface.getFieldNames()).toEqual(['name', 'age']);
+    });
+
+    it('should merge with GraphQLObjectType', () => {
+      const iface = schemaComposer.createInterfaceTC(`interface IFace { name: String }`);
+      const person = new GraphQLObjectType({
+        name: 'Person',
+        fields: {
+          age: { type: GraphQLInt },
+        },
+      });
+
+      iface.merge(person);
+      expect(iface.getFieldNames()).toEqual(['name', 'age']);
+    });
+
+    it('should merge with ObjectTypeComposer', () => {
+      const iface = schemaComposer.createInterfaceTC(`interface IFace { name: String }`);
+      const sc2 = new SchemaComposer();
+      const person = sc2.createObjectTC(`type Person { age: Int }`);
+
+      iface.merge(person);
+      expect(iface.getFieldNames()).toEqual(['name', 'age']);
+    });
+
+    it('should throw error on wrong type', () => {
+      const iface = schemaComposer.createInterfaceTC(`interface IFace { name: String }`);
+      expect(() => iface.merge((schemaComposer.createScalarTC('Scalar'): any))).toThrow(
+        'Cannot merge ScalarTypeComposer'
+      );
     });
   });
 });

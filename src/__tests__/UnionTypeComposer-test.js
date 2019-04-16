@@ -485,4 +485,34 @@ describe('UnionTypeComposer', () => {
       expect(tc1.getDirectiveById(333)).toEqual(undefined);
     });
   });
+
+  describe('merge()', () => {
+    it('should merge with GraphQLUnionType', () => {
+      const resultUTC = schemaComposer.createUnionTC(`union Result = Article | Comment`);
+      const result2 = new GraphQLUnionType({
+        name: 'Result2',
+        types: [
+          new GraphQLObjectType({ name: 'User', fields: {} }),
+          new GraphQLObjectType({ name: 'Comment', fields: {} }),
+        ],
+      });
+      resultUTC.merge(result2);
+      expect(resultUTC.getTypeNames()).toEqual(['Article', 'Comment', 'User']);
+    });
+
+    it('should merge with UnionTypeComposer', () => {
+      const resultUTC = schemaComposer.createUnionTC(`union Result = Article | Comment`);
+      const sc2 = new SchemaComposer();
+      const result2 = sc2.createUnionTC(`union Result2 = User | Comment`);
+      resultUTC.merge(result2);
+      expect(resultUTC.getTypeNames()).toEqual(['Article', 'Comment', 'User']);
+    });
+
+    it('should throw error on wrong type', () => {
+      const resultUTC = schemaComposer.createUnionTC(`union Result = Article | Comment`);
+      expect(() => resultUTC.merge((schemaComposer.createScalarTC('Scalar'): any))).toThrow(
+        'Cannot merge ScalarTypeComposer'
+      );
+    });
+  });
 });
