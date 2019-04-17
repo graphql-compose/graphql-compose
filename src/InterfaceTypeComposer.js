@@ -617,7 +617,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
       | ObjectTypeComposer<any, any>
   ): InterfaceTypeComposer<TSource, TContext> {
     if (type instanceof GraphQLInterfaceType || type instanceof GraphQLObjectType) {
-      this.addFields((type.getFields(): any));
+      this.addFields((defineFieldMapToConfig(type.getFields()): any));
     } else if (type instanceof InterfaceTypeComposer || type instanceof ObjectTypeComposer) {
       this.addFields(type.getFields());
     } else {

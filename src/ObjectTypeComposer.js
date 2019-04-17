@@ -812,10 +812,10 @@ export class ObjectTypeComposer<TSource, TContext> {
       | InterfaceTypeComposer<any, any>
   ): ObjectTypeComposer<TSource, TContext> {
     if (type instanceof GraphQLObjectType) {
-      this.addFields((type.getFields(): any));
+      this.addFields((defineFieldMapToConfig(type.getFields()): any));
       type.getInterfaces().forEach(iface => this.addInterface(iface));
     } else if (type instanceof GraphQLInterfaceType) {
-      this.addFields((type.getFields(): any));
+      this.addFields((defineFieldMapToConfig(type.getFields()): any));
     } else if (type instanceof ObjectTypeComposer) {
       this.addFields(type.getFields());
       type.getInterfaces().forEach(iface => this.addInterface(iface));

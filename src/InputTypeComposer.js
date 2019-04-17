@@ -493,7 +493,7 @@ export class InputTypeComposer<TContext> {
 
   merge(type: GraphQLInputObjectType | InputTypeComposer<any>): InputTypeComposer<TContext> {
     if (type instanceof GraphQLInputObjectType) {
-      this.addFields((type.getFields(): any));
+      this.addFields((defineInputFieldMapToConfig(type.getFields()): any));
     } else if (type instanceof InputTypeComposer) {
       this.addFields(type.getFields());
     } else {
