@@ -16,9 +16,7 @@ import {
 } from '../graphql';
 import { schemaComposer as sc } from '..';
 import { graphqlVersion } from '../utils/graphqlVersion';
-import GraphQLJSON from '../type/json';
-import GraphQLDate from '../type/date';
-import GraphQLBuffer from '../type/buffer';
+import { GraphQLDate, GraphQLBuffer, GraphQLJSON, GraphQLJSONObject } from '../type';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
@@ -52,7 +50,7 @@ describe('TypeMapper', () => {
 
   it('should add basic graphql-compose types', () => {
     expect(typeMapper.get('JSON')).toBe(GraphQLJSON);
-    expect(typeMapper.get('Json')).toBe(GraphQLJSON);
+    expect(typeMapper.get('JSONObject')).toBe(GraphQLJSONObject);
     expect(typeMapper.get('Date')).toBe(GraphQLDate);
     expect(typeMapper.get('Buffer')).toBe(GraphQLBuffer);
   });

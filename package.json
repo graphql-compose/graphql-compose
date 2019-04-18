@@ -61,7 +61,7 @@
     "typescript": "^3.4.2"
   },
   "dependencies": {
-    "graphql-type-json": "^0.2.4",
+    "graphql-type-json": "^0.3.0",
     "object-path": "^0.11.4"
   },
   "config": {

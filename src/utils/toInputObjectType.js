@@ -1,7 +1,6 @@
 /* @flow strict */
 /* eslint-disable no-use-before-define, prefer-template */
 
-import util from 'util';
 import {
   GraphQLObjectType,
   GraphQLInterfaceType,
@@ -14,7 +13,8 @@ import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import type { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import type { InputTypeComposer } from '../InputTypeComposer';
 import type { SchemaComposer } from '../SchemaComposer';
-import GenericType from '../type/generic';
+import { GraphQLJSON } from '../type';
+import { inspect } from './misc';
 import type { GraphQLType, GraphQLInputType } from '../graphql';
 
 export type toInputObjectTypeOpts = {
@@ -104,9 +104,9 @@ export function convertInputObjectField(
         `graphql-compose: can not convert field '${opts.outputTypeName || ''}.${opts.fieldName ||
           ''}' to InputType` +
           '\nIt should be GraphQLObjectType or GraphQLInterfaceType, but got \n' +
-          util.inspect(fieldType, { depth: 2, colors: true })
+          inspect(fieldType)
       );
-      fieldType = GenericType;
+      fieldType = GraphQLJSON;
     }
   }
 
