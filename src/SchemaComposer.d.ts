@@ -30,14 +30,7 @@ type AnyComposeType<TContext> =
   | UnionTypeComposer<any, TContext>
   | ScalarTypeComposer<TContext>;
 
-type AnyType<TContext> =
-  | ObjectTypeComposer<any, TContext>
-  | InputTypeComposer<TContext>
-  | EnumTypeComposer<TContext>
-  | InterfaceTypeComposer<any, TContext>
-  | UnionTypeComposer<any, TContext>
-  | ScalarTypeComposer<TContext>
-  | GraphQLNamedType;
+type AnyType<TContext> = AnyComposeType<TContext> | GraphQLNamedType;
 
 type GraphQLToolsResolveMethods<TContext> = {
   [typeName: string]: {
@@ -49,6 +42,16 @@ type GraphQLToolsResolveMethods<TContext> = {
     ) => any;
   };
 };
+
+export function isComposeType(
+  type: any
+): type is
+  | ObjectTypeComposer
+  | InputTypeComposer
+  | ScalarTypeComposer
+  | EnumTypeComposer
+  | InterfaceTypeComposer
+  | UnionTypeComposer;
 
 /**
  * `SchemaComposer` is a class which helps to create `GraphQLSchema`.

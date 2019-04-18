@@ -52,14 +52,7 @@ export type AnyComposeType<TContext> =
   | UnionTypeComposer<any, TContext>
   | ScalarTypeComposer<TContext>;
 
-export type AnyType<TContext> =
-  | ObjectTypeComposer<any, TContext>
-  | InputTypeComposer<TContext>
-  | EnumTypeComposer<TContext>
-  | InterfaceTypeComposer<any, TContext>
-  | UnionTypeComposer<any, TContext>
-  | ScalarTypeComposer<TContext>
-  | GraphQLNamedType;
+export type AnyType<TContext> = AnyComposeType<TContext> | GraphQLNamedType;
 
 type GraphQLToolsResolveMethods<TContext> = {
   [typeName: string]: {
@@ -71,6 +64,17 @@ type GraphQLToolsResolveMethods<TContext> = {
     ) => any,
   },
 };
+
+export function isComposeType(type: mixed): boolean %checks {
+  return (
+    type instanceof ObjectTypeComposer ||
+    type instanceof InputTypeComposer ||
+    type instanceof ScalarTypeComposer ||
+    type instanceof EnumTypeComposer ||
+    type instanceof InterfaceTypeComposer ||
+    type instanceof UnionTypeComposer
+  );
+}
 
 export const BUILT_IN_DIRECTIVES = [
   GraphQLSkipDirective,
@@ -607,14 +611,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, any> {
 
     if (type == null) {
       throw new Error(`Cannot find type with name ${(typeOrName: any)}`);
-    } else if (
-      type instanceof ObjectTypeComposer ||
-      type instanceof InputTypeComposer ||
-      type instanceof ScalarTypeComposer ||
-      type instanceof EnumTypeComposer ||
-      type instanceof InterfaceTypeComposer ||
-      type instanceof UnionTypeComposer
-    ) {
+    } else if (isComposeType(type)) {
       return type;
     }
 
