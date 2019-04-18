@@ -39,6 +39,7 @@ export { default as toDottedObject } from './utils/toDottedObject';
 export { default as deepmerge } from './utils/deepmerge';
 export { filterByDotPaths } from './utils/filterByDotPaths';
 export { pluralize } from './utils/pluralize';
+export { visitSchema } from './utils/schemaVisitor';
 
 export type {
   GetRecordIdFn,
