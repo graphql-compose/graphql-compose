@@ -27,7 +27,7 @@ export { TypeStorage } from './TypeStorage';
 export { TypeMapper } from './TypeMapper';
 
 // Scalar types
-export { GraphQLDate, GraphQLBuffer, GraphQLGeneric, GraphQLJSON } from './type';
+export { GraphQLDate, GraphQLBuffer, GraphQLJSON, GraphQLJSONObject } from './type';
 
 // Utils
 export { getProjectionFromAST, getFlatProjectionFromAST } from './utils/projection';

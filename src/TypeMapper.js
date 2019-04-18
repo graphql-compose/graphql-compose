@@ -60,9 +60,7 @@ import type {
   GraphQLInputFieldConfigMap,
   GraphQLInputFieldConfig,
 } from './graphql';
-import GraphQLJSON from './type/json';
-import GraphQLDate from './type/date';
-import GraphQLBuffer from './type/buffer';
+import { GraphQLDate, GraphQLBuffer, GraphQLJSON, GraphQLJSONObject } from './type';
 
 import type { ComposeInputFieldConfigMap, ComposeInputFieldConfig } from './InputTypeComposer';
 import type {

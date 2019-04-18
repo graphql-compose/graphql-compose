@@ -47,7 +47,7 @@ import { filterByDotPaths } from './utils/filterByDotPaths';
 import { getProjectionFromAST } from './utils/projection';
 import type { ProjectionType } from './utils/projection';
 import { typeByPath } from './utils/typeByPath';
-import GraphQLJSON from './type/json';
+import { GraphQLJSON } from './type';
 
 export type ResolveParams<TSource, TContext, TArgs = ArgsMap> = {
   source: TSource,

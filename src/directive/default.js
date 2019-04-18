@@ -1,7 +1,7 @@
 /* @flow */
 
 import { GraphQLDirective, DirectiveLocation, GraphQLNonNull } from '../graphql';
-import GraphQLJSON from '../type/json';
+import { GraphQLJSON } from '../type';
 
 export default new GraphQLDirective({
   name: 'default',
