@@ -314,7 +314,7 @@ export class InputTypeComposer<TContext> {
   ): InputTypeComposer<TContext> {
     let prevFieldConfig;
     try {
-      prevFieldConfig = (this.getFieldConfig(fieldName): any);
+      prevFieldConfig = this.getField(fieldName);
     } catch (e) {
       throw new Error(
         `Cannot extend field '${fieldName}' from input type '${this.getTypeName()}'. Field does not exist.`
