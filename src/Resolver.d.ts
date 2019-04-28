@@ -10,17 +10,43 @@ import * as graphql from './graphql';
 import { InputTypeComposer } from './InputTypeComposer';
 import { SchemaComposer } from './SchemaComposer';
 import {
-  ComposeArgumentConfig,
-  ComposeArgumentType,
-  ComposeArgumentConfigAsObject,
-  ComposeFieldConfigArgumentMap,
-  ComposeOutputType,
+  ObjectTypeComposerArgumentConfig,
+  ObjectTypeComposerArgumentConfigMapDefinition,
+  ObjectTypeComposerArgumentConfigMap,
   ObjectTypeComposer,
+  ObjectTypeComposerArgumentConfigAsObjectDefinition,
+  ObjectTypeComposerArgumentConfigDefinition,
   ArgsMap,
 } from './ObjectTypeComposer';
+import { Thunk } from './utils/definitions';
 import { ProjectionType } from './utils/projection';
+import {
+  ComposeOutputTypeDefinition,
+  ComposeInputType,
+  ComposeOutputType,
+  ComposeInputTypeDefinition,
+  ComposeNamedOutputType,
+  ComposeNamedInputType,
+} from './utils/typeHelpers';
 
-export type ResolveParams<TSource, TContext, TArgs = ArgsMap> = {
+export type ResolverKinds = 'query' | 'mutation' | 'subscription';
+
+export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
+  type?: Thunk<
+    | Readonly<ComposeOutputType<TContext>>
+    | ComposeOutputTypeDefinition<TContext>
+    | Readonly<Resolver<any, TContext, any>>
+  >;
+  resolve?: ResolverRpCb<TSource, TContext, TArgs>;
+  args?: ObjectTypeComposerArgumentConfigMapDefinition<TArgs>;
+  name?: string;
+  displayName?: string;
+  kind?: ResolverKinds;
+  description?: string;
+  parent?: Resolver<any, TContext, any>;
+};
+
+export type ResolverResolveParams<TSource, TContext, TArgs = ArgsMap> = {
   source: TSource;
   args: TArgs;
   context: TContext;
@@ -29,30 +55,30 @@ export type ResolveParams<TSource, TContext, TArgs = ArgsMap> = {
   [opt: string]: any;
 };
 
-export type ResolverKinds = 'query' | 'mutation' | 'subscription';
-
 export type ResolverFilterArgFn<TSource, TContext, TArgs = ArgsMap> = (
   query: any,
   value: any,
-  resolveParams: ResolveParams<TSource, TContext, TArgs>
+  resolveParams: ResolverResolveParams<TSource, TContext, TArgs>
 ) => any;
 
-export type ResolverFilterArgConfig<TSource, TContext, TArgs = ArgsMap> = {
+export type ResolverFilterArgConfigDefinition<TSource, TContext, TArgs = ArgsMap> = {
   name: string;
-  type: ComposeArgumentType;
-  description?: string;
+  type: ComposeInputTypeDefinition;
+  description?: string | null | void;
   query?: ResolverFilterArgFn<TSource, TContext, TArgs>;
   filterTypeNameFallback?: string;
   defaultValue?: any;
 };
 
 export type ResolverSortArgFn<TSource, TContext, TArgs = ArgsMap> = (
-  resolveParams: ResolveParams<TSource, TContext, TArgs>
+  resolveParams: ResolverResolveParams<TSource, TContext, TArgs>
 ) => any;
 
 export type ResolverSortArgConfig<TSource, TContext, TArgs = ArgsMap> = {
   name: string;
   sortTypeNameFallback?: string;
+  // value also can be an `Object`, but flow does not understande union with object and function
+  // see https://github.com/facebook/flow/issues/1948
   value:
     | { [key: string]: any }
     | ResolverSortArgFn<TSource, TContext, TArgs>
@@ -62,17 +88,6 @@ export type ResolverSortArgConfig<TSource, TContext, TArgs = ArgsMap> = {
     | any[];
   deprecationReason?: string | null;
   description?: string | null;
-};
-
-export type ResolverOpts<TSource, TContext, TArgs = ArgsMap, TReturn = any> = {
-  type?: ComposeOutputType<TReturn, TContext>;
-  resolve?: ResolverRpCb<TSource, TContext, TArgs>;
-  args?: ComposeFieldConfigArgumentMap<TArgs>;
-  name?: string;
-  displayName?: string;
-  kind?: ResolverKinds;
-  description?: string;
-  parent?: Resolver<any, TContext, any>;
 };
 
 export type ResolverWrapCb<
@@ -87,21 +102,13 @@ export type ResolverWrapCb<
 ) => Resolver<TNewSource, TContext, TNewArgs>;
 
 export type ResolverRpCb<TSource, TContext, TArgs = ArgsMap> = (
-  resolveParams: ResolveParams<TSource, TContext, TArgs>
+  resolveParams: ResolverResolveParams<TSource, TContext, TArgs>
 ) => Promise<any> | any;
 export type ResolverNextRpCb<TSource, TContext, TArgs = ArgsMap> = (
   next: ResolverRpCb<TSource, TContext, TArgs>
 ) => ResolverRpCb<TSource, TContext, TArgs>;
 
-export type ResolverWrapArgsCb<TArgs = ArgsMap> = (
-  prevArgs: GraphQLFieldConfigArgumentMap
-) => ComposeFieldConfigArgumentMap<TArgs>;
-
-export type ResolverWrapTypeCb<TContext, TReturn = any> = (
-  prevType: GraphQLOutputType
-) => ComposeOutputType<TReturn, TContext>;
-
-export type ResolveDebugOpts = {
+export type ResolverDebugOpts = {
   showHidden?: boolean;
   depth?: number;
   colors?: boolean;
@@ -120,19 +127,19 @@ export type ResolverMiddleware<TSource, TContext, TArgs = ArgsMap> = (
  */
 export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = any> {
   public schemaComposer: SchemaComposer<TContext>;
-  public type: ComposeOutputType<TReturn, TContext>;
-  public args: ComposeFieldConfigArgumentMap<any>;
-  public resolve: (
-    resolveParams: Partial<ResolveParams<TSource, TContext, TArgs>>
-  ) => Promise<any> | any;
+  public type: ComposeOutputType<TContext>;
+  public args: ObjectTypeComposerArgumentConfigMap<any>;
   public name: string;
   public displayName: string | void;
   public kind: ResolverKinds | void;
   public description: string | void;
   public parent: Resolver<TSource, TContext, any> | void;
+  public resolve: (
+    resolveParams: Partial<ResolverResolveParams<TSource, TContext, TArgs>>
+  ) => Promise<any> | any;
 
   constructor(
-    opts: ResolverOpts<TSource, TContext, TArgs>,
+    opts: ResolverDefinition<TSource, TContext, TArgs>,
     schemaComposer: SchemaComposer<TContext>
   );
 
@@ -144,10 +151,22 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
 
   public getType(): GraphQLOutputType;
 
-  public getTypeComposer(): ObjectTypeComposer<TSource, TContext>;
+  public getTypeName(): string;
+
+  public getTypeComposer(): ComposeNamedOutputType<TContext>;
+
+  /**
+   * Almost alias for `getTypeComposer`, but returns only ObjectTypeComposer.
+   * It will throw an error if resolver has another kind of type.
+   */
+  public getOTC(): ObjectTypeComposer<TReturn, TContext>;
 
   public setType<TNewReturn>(
-    gqType: ComposeOutputType<TNewReturn, TContext>
+    composeType: Thunk<
+      | Readonly<ComposeOutputType<TContext>>
+      | ComposeOutputTypeDefinition<TContext>
+      | Readonly<Resolver<any, TContext, any>>
+    >
   ): Resolver<TSource, TContext, TArgs, TNewReturn>;
 
   /**
@@ -158,27 +177,32 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
 
   public hasArg(argName: string): boolean;
 
-  public getArg(argName: string): ComposeArgumentConfigAsObject;
+  public getArg(argName: string): ObjectTypeComposerArgumentConfig;
 
   public getArgConfig(argName: string): GraphQLArgumentConfig;
 
   public getArgType(argName: string): GraphQLInputType;
 
-  public getArgTC(argName: string): InputTypeComposer<TContext>;
+  public getArgTypeName(fieldName: string): string;
 
-  public getArgs(): ComposeFieldConfigArgumentMap<TArgs>;
+  public getArgs(): ObjectTypeComposerArgumentConfigMap<TArgs>;
 
   public getArgNames(): string[];
 
   public setArgs<TNewArgs>(
-    args: ComposeFieldConfigArgumentMap<TNewArgs>
+    args: ObjectTypeComposerArgumentConfigMapDefinition<TNewArgs>
   ): Resolver<TSource, TContext, TNewArgs>;
 
-  public setArg(argName: string, argConfig: ComposeArgumentConfig): this;
+  public setArg(argName: string, argConfig: ObjectTypeComposerArgumentConfigDefinition): this;
 
-  public extendArg(argName: string, partialArgConfig: Partial<ComposeArgumentConfigAsObject>): this;
+  public setArgType(argName: string, typeDef: Thunk<ComposeInputTypeDefinition>): this;
 
-  public addArgs(newArgs: ComposeFieldConfigArgumentMap<TArgs>): this;
+  public extendArg(
+    argName: string,
+    partialArgConfig: Partial<ObjectTypeComposerArgumentConfigAsObjectDefinition>
+  ): this;
+
+  public addArgs(newArgs: ObjectTypeComposerArgumentConfigMapDefinition<ArgsMap>): this;
 
   public removeArg(argNameOrArray: string | string[]): this;
 
@@ -186,33 +210,41 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
 
   public reorderArgs(names: string[]): this;
 
-  public cloneArg(argName: string, newTypeName: string): this;
+  public getArgTC(argName: string): ComposeNamedInputType<TContext>;
 
-  public isRequired(argName: string): boolean;
+  public getArgITC(argName: string): InputTypeComposer<TContext>;
+
+  public isArgNonNull(argName: string): boolean;
+
+  public makeArgNonNull(argNameOrArray: string | string[]): this;
 
   public makeRequired(argNameOrArray: string | string[]): this;
 
+  public makeArgNullable(argNameOrArray: string | string[]): this;
+
   public makeOptional(argNameOrArray: string | string[]): this;
 
-  public addFilterArg(
-    opts: ResolverFilterArgConfig<TSource, TContext, TArgs>
-  ): Resolver<TSource, TContext, TArgs>;
+  public isArgPlural(argName: string): boolean;
 
-  public addSortArg(
-    opts: ResolverSortArgConfig<TSource, TContext, TArgs>
-  ): Resolver<TSource, TContext, TArgs>;
+  public makeArgPlural(argNameOrArray: string | string[]): this;
+
+  public makeArgNonPlural(argNameOrArray: string | string[]): this;
+
+  public cloneArg(argName: string, newTypeName: string): this;
+
+  public addFilterArg(opts: ResolverFilterArgConfigDefinition<TSource, TContext, TArgs>): this;
+
+  public addSortArg(opts: ResolverSortArgConfig<TSource, TContext, TArgs>): this;
 
   /**
-   *  -----------------------------------------------
+   * -----------------------------------------------
    * Resolve methods
    * -----------------------------------------------
    */
 
   public getResolve(): ResolverRpCb<TSource, TContext, TArgs>;
 
-  public setResolve(
-    resolve: ResolverRpCb<TSource, TContext, TArgs>
-  ): Resolver<TSource, TContext, TArgs>;
+  public setResolve(resolve: ResolverRpCb<TSource, TContext, TArgs>): this;
 
   /**
    * -----------------------------------------------
@@ -257,7 +289,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
 
   public wrap<TNewSource = TSource, TNewArgs = TArgs>(
     cb?: ResolverWrapCb<TNewSource, TSource, TContext, TNewArgs, TArgs>,
-    newResolverOpts?: ResolverOpts<TNewSource, TContext, TArgs>
+    newResolverOpts?: Partial<ResolverDefinition<TNewSource, TContext, TArgs>>
   ): Resolver<TNewSource, TContext, TNewArgs>;
 
   public wrapResolve<TCSource = TSource, TCArgs = TArgs>(
@@ -266,7 +298,9 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
   ): Resolver<TCSource, TContext, TCArgs>;
 
   public wrapArgs<TCArgs = TArgs>(
-    cb: ResolverWrapArgsCb<TCArgs>,
+    cb: (
+      prevArgs: GraphQLFieldConfigArgumentMap
+    ) => ObjectTypeComposerArgumentConfigMapDefinition<TArgs>,
     wrapperName?: string
   ): Resolver<TSource, TContext, TCArgs>;
 
@@ -276,12 +310,12 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
   ): Resolver<TSource, TContext, TCArgs>;
 
   public wrapType(
-    cb: ResolverWrapTypeCb<TContext>,
+    cb: (prevType: ComposeOutputType<TContext>) => ComposeOutputTypeDefinition<TContext>,
     wrapperName?: string
   ): Resolver<TSource, TContext, TArgs>;
 
   /**
-   *  -----------------------------------------------
+   * -----------------------------------------------
    * Misc methods
    * -----------------------------------------------
    */
@@ -301,7 +335,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
   public get(path: string | string[]): any;
 
   public clone<TNewSource = TSource, TNewArgs = TArgs>(
-    opts?: ResolverOpts<TNewSource, TContext, TNewArgs>
+    opts?: Partial<ResolverDefinition<TNewSource, TContext, TNewArgs>>
   ): Resolver<TNewSource, TContext, TNewArgs>;
 
   /**
@@ -322,12 +356,12 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
 
   public debugParams(
     filterPaths: (string | string[]) | null,
-    opts?: ResolveDebugOpts
+    opts?: ResolverDebugOpts
   ): Resolver<TSource, TContext, TArgs>;
 
   public debugPayload(
     filterPaths: (string | string[]) | null,
-    opts?: ResolveDebugOpts
+    opts?: ResolverDebugOpts
   ): Resolver<TSource, TContext, TArgs>;
 
   public debug(
@@ -335,6 +369,6 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
       params?: string | string[];
       payload?: string | string[];
     },
-    opts?: ResolveDebugOpts
+    opts?: ResolverDebugOpts
   ): Resolver<TSource, TContext, TArgs>;
 }
