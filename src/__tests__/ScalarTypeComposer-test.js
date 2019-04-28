@@ -1,8 +1,10 @@
 /* @flow strict */
 
 import { schemaComposer, SchemaComposer } from '..';
-import { GraphQLList, GraphQLNonNull, GraphQLScalarType } from '../graphql';
+import { GraphQLScalarType } from '../graphql';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
+import { NonNullComposer } from '../NonNullComposer';
+import { ListComposer } from '../ListComposer';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -113,14 +115,14 @@ describe('ScalarTypeComposer', () => {
       expect(stc.getTypeName()).toBe('OtherName');
     });
 
-    it('getTypePlural() should return wrapped type with GraphQLList', () => {
-      expect(stc.getTypePlural()).toBeInstanceOf(GraphQLList);
-      expect(stc.getTypePlural().ofType).toBe(stc.getType());
+    it('getTypePlural() should return wrapped type with ListComposer', () => {
+      expect(stc.getTypePlural()).toBeInstanceOf(ListComposer);
+      expect(stc.getTypePlural().ofType).toBe(stc);
     });
 
-    it('getTypeNonNull() should return wrapped type with GraphQLNonNull', () => {
-      expect(stc.getTypeNonNull()).toBeInstanceOf(GraphQLNonNull);
-      expect(stc.getTypeNonNull().ofType).toBe(stc.getType());
+    it('getTypeNonNull() should return wrapped type with NonNullComposer', () => {
+      expect(stc.getTypeNonNull()).toBeInstanceOf(NonNullComposer);
+      expect(stc.getTypeNonNull().ofType).toBe(stc);
     });
   });
 
