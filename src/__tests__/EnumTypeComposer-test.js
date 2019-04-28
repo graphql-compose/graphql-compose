@@ -2,7 +2,9 @@
 
 import { schemaComposer, SchemaComposer } from '..';
 import { EnumTypeComposer } from '../EnumTypeComposer';
-import { GraphQLList, GraphQLNonNull, GraphQLEnumType } from '../graphql';
+import { NonNullComposer } from '../NonNullComposer';
+import { ListComposer } from '../ListComposer';
+import { GraphQLEnumType } from '../graphql';
 import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
@@ -10,11 +12,10 @@ beforeEach(() => {
 });
 
 describe('EnumTypeComposer', () => {
-  let enumType: GraphQLEnumType;
   let etc: EnumTypeComposer<any>;
 
   beforeEach(() => {
-    enumType = new GraphQLEnumType({
+    const enumType = new GraphQLEnumType({
       name: 'MyEnum',
       values: {
         VAL1: { value: 'VAL1' },
@@ -54,10 +55,10 @@ describe('EnumTypeComposer', () => {
           VAL3: { value: 'VAL3', description: 'Added value' },
         });
 
-        expect(enumType.getValue('VAL1')).toBeUndefined();
-        expect(enumType.getValue('VAL2')).toBeUndefined();
+        expect(etc.getType().getValue('VAL1')).toBeUndefined();
+        expect(etc.getType().getValue('VAL2')).toBeUndefined();
 
-        const valueConfig: any = enumType.getValue('VAL3');
+        const valueConfig: any = etc.getType().getValue('VAL3');
         expect(valueConfig.value).toBe('VAL3');
         expect(valueConfig.description).toBe('Added value');
       });
@@ -68,10 +69,10 @@ describe('EnumTypeComposer', () => {
         VAL3: {},
         VAL4: { value: 'VAL4', description: 'Val4 description' },
       });
-      expect(enumType.getValue('VAL1')).toBeDefined();
-      expect(enumType.getValue('VAL2')).toBeDefined();
-      expect(enumType.getValue('VAL3')).toBeDefined();
-      const valueConfig: any = enumType.getValue('VAL4');
+      expect(etc.getType().getValue('VAL1')).toBeDefined();
+      expect(etc.getType().getValue('VAL2')).toBeDefined();
+      expect(etc.getType().getValue('VAL3')).toBeDefined();
+      const valueConfig: any = etc.getType().getValue('VAL4');
       expect(valueConfig.value).toBe('VAL4');
       expect(valueConfig.description).toBe('Val4 description');
     });
@@ -227,13 +228,13 @@ describe('EnumTypeComposer', () => {
     });
 
     it('getTypePlural() should return wrapped type with GraphQLList', () => {
-      expect(etc.getTypePlural()).toBeInstanceOf(GraphQLList);
-      expect(etc.getTypePlural().ofType).toBe(etc.getType());
+      expect(etc.getTypePlural()).toBeInstanceOf(ListComposer);
+      expect(etc.getTypePlural().ofType).toBe(etc);
     });
 
     it('getTypeNonNull() should return wrapped type with GraphQLNonNull', () => {
-      expect(etc.getTypeNonNull()).toBeInstanceOf(GraphQLNonNull);
-      expect(etc.getTypeNonNull().ofType).toBe(etc.getType());
+      expect(etc.getTypeNonNull()).toBeInstanceOf(NonNullComposer);
+      expect(etc.getTypeNonNull().ofType).toBe(etc);
     });
   });
 

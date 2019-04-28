@@ -1,7 +1,7 @@
 /* @flow strict */
 /* eslint-disable no-use-before-define */
 
-import { GraphQLEnumType, GraphQLList, GraphQLNonNull } from './graphql';
+import { GraphQLEnumType } from './graphql';
 import {
   GraphQLEnumValueConfig,
   GraphQLEnumTypeConfig,
@@ -10,51 +10,64 @@ import {
 } from './graphql';
 import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
-import { ObjMap, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
+import { ListComposer } from './ListComposer';
+import { NonNullComposer } from './NonNullComposer';
+import {
+  ObjMap,
+  Extensions,
+  ExtensionsDirective,
+  DirectiveArgs,
+  ObjMapReadOnly,
+} from './utils/definitions';
 
-export type ComposeEnumTypeConfig = {
+export type EnumTypeComposerDefinition =
+  | TypeAsString
+  | EnumTypeComposerAsObjectDefinition
+  | GraphQLEnumType;
+
+export type EnumTypeComposerAsObjectDefinition = {
   name: string;
-  values?: ComposeEnumValueConfigMap;
+  values?: EnumTypeComposerValueConfigMapDefinition;
   description?: string | null;
   extensions?: Extensions;
 };
 
-export type ComposeEnumValueConfig = {
-  value?: any /* T */;
+export type EnumTypeComposerValueConfig = {
+  value: any /* T */;
   deprecationReason?: string | null;
   description?: string | null;
   astNode?: EnumValueDefinitionNode | null;
   extensions?: Extensions;
+  [key: string]: any;
 };
 
-export type ComposeEnumValueConfigMap = ObjMap<ComposeEnumValueConfig>;
-
-export type EnumTypeComposeDefinition = TypeAsString | ComposeEnumTypeConfig | GraphQLEnumType;
-
-export type ComposeEnumType =
-  | EnumTypeComposer<any>
-  | GraphQLEnumType
-  | TypeDefinitionString
-  | TypeAsString;
-
-export type GraphQLEnumTypeExtended = GraphQLEnumType & {
-  _gqcExtensions?: Extensions;
+export type EnumTypeComposerValueConfigDefinition = {
+  value?: any;
+  deprecationReason?: string | null;
+  description?: string | null;
+  extensions?: Extensions;
+  [key: string]: any;
 };
+
+export type EnumTypeComposerValueConfigMap = ObjMap<EnumTypeComposerValueConfig>;
+export type EnumTypeComposerValueConfigMapDefinition = ObjMapReadOnly<
+  EnumTypeComposerValueConfigDefinition
+>;
 
 /**
  * `EnumTypeComposer` is a class which helps to create and modify `GraphQLEnumType`.
  */
 export class EnumTypeComposer<TContext = any> {
   public schemaComposer: SchemaComposer<TContext>;
-  protected gqType: GraphQLEnumTypeExtended;
-
-  public constructor(gqType: GraphQLEnumType, schemaComposer: SchemaComposer<TContext>);
+  protected _gqType: GraphQLEnumType;
+  protected _gqcExtensions: Extensions | void;
+  protected _gqcFields: EnumTypeComposerValueConfigMap;
 
   /**
    * Create `EnumTypeComposer` with adding it by name to the `SchemaComposer`. This type became avaliable in SDL by its name.
    */
   public static create<TCtx = any>(
-    typeDef: EnumTypeComposeDefinition,
+    typeDef: EnumTypeComposerDefinition,
     schemaComposer: SchemaComposer<TCtx>
   ): EnumTypeComposer<TCtx>;
 
@@ -62,9 +75,11 @@ export class EnumTypeComposer<TContext = any> {
    * Create `EnumTypeComposer` without adding it to the `SchemaComposer`. This method may be usefull in plugins, when you need to create type temporary.
    */
   public static createTemp<TCtx = any>(
-    typeDef: EnumTypeComposeDefinition,
+    typeDef: EnumTypeComposerDefinition,
     schemaComposer?: SchemaComposer<TCtx>
   ): EnumTypeComposer<TCtx>;
+
+  public constructor(graphqlType: GraphQLEnumType, schemaComposer: SchemaComposer<TContext>);
 
   /**
    * -----------------------------------------------
@@ -77,23 +92,23 @@ export class EnumTypeComposer<TContext = any> {
    */
   public hasField(name: string): boolean;
 
-  public getFields(): ComposeEnumValueConfigMap;
+  public getFields(): EnumTypeComposerValueConfigMap;
 
-  public getField(name: string): ComposeEnumValueConfig;
+  public getField(name: string): EnumTypeComposerValueConfig;
 
   public getFieldNames(): string[];
 
   /**
    * Completely replace all values in the type with a new set.
    */
-  public setFields(values: ComposeEnumValueConfigMap): this;
+  public setFields(values: EnumTypeComposerValueConfigMapDefinition): this;
 
-  public setField(name: string, valueConfig: ComposeEnumValueConfig): this;
+  public setField(name: string, valueConfig: EnumTypeComposerValueConfigDefinition): this;
 
   /**
    * Add new fields or replace existed, other fields keep untouched.
    */
-  public addFields(newValues: ComposeEnumValueConfigMap): this;
+  public addFields(newValues: EnumTypeComposerValueConfigMapDefinition): this;
 
   /**
    * Remove one value by its name, or by array of field names.
@@ -107,7 +122,10 @@ export class EnumTypeComposer<TContext = any> {
 
   public reorderFields(names: string[]): this;
 
-  public extendField(name: string, partialValueConfig: Partial<ComposeEnumValueConfig>): this;
+  public extendField(
+    name: string,
+    partialValueConfig: Partial<EnumTypeComposerValueConfigDefinition>
+  ): this;
 
   /**
    * Mark value or map of values as deprecated
@@ -122,9 +140,9 @@ export class EnumTypeComposer<TContext = any> {
 
   public getType(): GraphQLEnumType;
 
-  public getTypePlural(): GraphQLList<GraphQLEnumType>;
+  public getTypePlural(): ListComposer<this>;
 
-  public getTypeNonNull(): GraphQLNonNull<GraphQLEnumType>;
+  public getTypeNonNull(): NonNullComposer<this>;
 
   public getTypeName(): string;
 
@@ -134,7 +152,12 @@ export class EnumTypeComposer<TContext = any> {
 
   public setDescription(description: string): this;
 
-  public clone(newTypeName: string): EnumTypeComposer<TContext>;
+  /**
+   * You may clone this type with a new provided name as string.
+   * Or you may provide a new TypeComposer which will get all clonned
+   * settings from this type.
+   */
+  public clone(newTypeNameOrTC: string | EnumTypeComposer<any>): EnumTypeComposer<TContext>;
 
   public merge(type: GraphQLEnumType | EnumTypeComposer<any>): this;
 
