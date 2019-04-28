@@ -1,6 +1,6 @@
 /* @flow strict */
 
-import { schemaComposer } from '../..';
+import { schemaComposer, ObjectTypeComposer } from '../..';
 
 describe('github issue #72', () => {
   it('extendField after addRelation', () => {
@@ -17,7 +17,8 @@ describe('github issue #72', () => {
       description: 'Relation with OtherType',
     });
 
-    expect(typeof (MyTypeTC.gqType._gqcFields: any).field1).toBe('function');
+    expect((MyTypeTC._gqcFields: any).field1.type).toBeInstanceOf(ObjectTypeComposer);
+    expect((MyTypeTC._gqcFields: any).field1.type.getTypeName()).toBe('OtherType');
 
     MyTypeTC.extendField('field1', {
       description: 'Extended desc',

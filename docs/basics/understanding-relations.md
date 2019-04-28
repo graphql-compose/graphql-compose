@@ -183,7 +183,7 @@ ObjectTypeComposer.addRelation(
   fieldName: string,
   opts: {
     resolver: () => Resolver,
-    prepareArgs?: RelationArgsMapper,
+    prepareArgs?: ObjectTypeComposerRelationArgsMapper,
     projection?: ProjectionType,
     description?: string,
     deprecationReason?: string,

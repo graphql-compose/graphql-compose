@@ -403,7 +403,7 @@ This library provides some amount of ready resolvers for fetch and update data w
 The prototype of before save hook:
 
 ```js
-(doc: mixed, rp: ExtendedResolveParams) => Promise<*>,
+(doc: mixed, rp: ResolverResolveParams) => Promise<*>,
 ```
 
 The typical implementation may be like this:

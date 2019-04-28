@@ -8,8 +8,7 @@ import {
   GraphQLList,
   graphql,
 } from 'graphql';
-import { schemaComposer } from '../..';
-import { ObjectTypeComposer } from '../../ObjectTypeComposer';
+import { schemaComposer, ObjectTypeComposer } from '../..';
 
 const remoteSchema = new GraphQLSchema({
   query: new GraphQLObjectType({
@@ -60,10 +59,10 @@ describe('github issue #107 merge Schema types on GQL', () => {
   it('get nested TC from remote schema', () => {
     const RemoteQueryType: any = remoteSchema._queryType;
     const RemoteQueryTC = schemaComposer.createObjectTC(RemoteQueryType);
-    const RemoteUserTC = RemoteQueryTC.get('users');
+    const RemoteUserTC: any = RemoteQueryTC.get('users');
     expect(RemoteUserTC.getTypeName()).toEqual('User');
 
-    const RemoteAccessTC = RemoteQueryTC.get('users.access');
+    const RemoteAccessTC: any = RemoteQueryTC.get('users.access');
     expect(RemoteAccessTC.getTypeName()).toEqual('Access');
   });
 

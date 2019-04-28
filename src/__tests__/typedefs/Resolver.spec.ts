@@ -20,7 +20,7 @@ const findManyPost = new Resolver<Post, Context, Args>(
       }
     },
   },
-  schemaComposer,
+  schemaComposer
 );
 
 const findOnePostAny = new Resolver(
@@ -33,7 +33,7 @@ const findOnePostAny = new Resolver(
       }
     },
   },
-  schemaComposer,
+  schemaComposer
 );
 
 // wrap
@@ -41,9 +41,7 @@ const findManyArt = findManyPost.wrap<Art>(
   (newResolver, prevResolver) => {
     newResolver.cloneArg('filter', 'AuthorFilterForUsers');
 
-    newResolver
-      .getArgTC('filter')
-      .removeField(['age', 'other_sensetive_filter']);
+    newResolver.getArgITC('filter').removeField(['age', 'other_sensetive_filter']);
 
     return newResolver;
   },
@@ -54,7 +52,7 @@ const findManyArt = findManyPost.wrap<Art>(
         source.id = 444;
       }
     },
-  },
+  }
 );
 
 findManyArt.wrapResolve(next => rp => {
@@ -87,7 +85,7 @@ const findManyArt1 = new Resolver<any, any, FindManyArtArgs>(
       }
     },
   },
-  schemaComposer,
+  schemaComposer
 );
 
 // all any
@@ -106,7 +104,7 @@ const findManyPost1 = new Resolver(
       }
     },
   },
-  schemaComposer,
+  schemaComposer
 );
 
 // inherits findManyArtArgs, can be overwritten
@@ -124,9 +122,7 @@ findManyArt1.wrap(
   (newResolver, prevResolver) => {
     newResolver.cloneArg('filter', 'AuthorFilterForUsers');
 
-    newResolver
-      .getArgTC('filter')
-      .removeField(['age', 'other_sensetive_filter']);
+    newResolver.getArgITC('filter').removeField(['age', 'other_sensetive_filter']);
 
     return newResolver;
   },
@@ -139,5 +135,5 @@ findManyArt1.wrap(
         args.skip = 3;
       }
     },
-  },
+  }
 );

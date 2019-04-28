@@ -1,6 +1,9 @@
 /* eslint-disable no-param-reassign, no-unused-vars, import/no-unresolved */
 
-import { ObjectTypeComposer } from '../../ObjectTypeComposer';
+import {
+  ObjectTypeComposer,
+  ObjectTypeComposerRelationOptsWithResolver,
+} from '../../ObjectTypeComposer';
 
 // Person from this schemaComposer gets the context defined for that schemaComposer
 import {
@@ -26,7 +29,7 @@ const PersonTC = ObjectTypeComposer.create<Person, Context>(
       age: 'Int',
     },
   },
-  schemaComposerWithContext,
+  schemaComposerWithContext
 );
 
 // TSource Art, TContext Context
@@ -158,7 +161,7 @@ PersonTC.addFields({
         fields: {
           age: {
             type: 'Int',
-            // test composeFieldConfig<TSource = Person ...
+            // test ObjectTypeComposerFieldConfig<TSource = Person ...
             resolve: (source, args, context) => {
               source.name = 'string';
               // source.name = 55; // <-- errors
