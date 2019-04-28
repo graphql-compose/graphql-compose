@@ -22,9 +22,9 @@ describe('Extensions', () => {
             id: 'ID!',
             name: 'String',
             nonExistingType: 'Bar',
-            thunkedField: () => ({
-              type: 'String',
-            }),
+            thunkedFieldType: {
+              type: () => 'String',
+            },
           },
         },
         sc
@@ -40,9 +40,9 @@ describe('Extensions', () => {
             id: 'ID!',
             name: 'String',
             nonExistingType: 'Bar',
-            thunkedField: () => ({
-              type: 'String',
-            }),
+            thunkedFieldType: {
+              type: () => 'String',
+            },
           },
         },
         sc
@@ -58,9 +58,9 @@ describe('Extensions', () => {
             id: 'ID!',
             name: 'String',
             nonExistingType: 'Bar',
-            thunkedField: () => ({
-              type: 'String',
-            }),
+            thunkedFieldType: {
+              type: () => 'String',
+            },
           },
           extensions: { tags: ['generated'] },
         },
@@ -87,12 +87,12 @@ describe('Extensions', () => {
                 noFilter: true,
               },
             },
-            thunkedField: () => ({
-              type: 'String',
+            thunkedFieldType: {
+              type: () => 'String',
               extensions: {
                 noFilter: true,
               },
-            }),
+            },
           },
         },
         sc
@@ -173,9 +173,9 @@ describe('Extensions', () => {
             id: 'ID!',
             name: 'String',
             nonExistingType: 'Bar',
-            thunkedField: () => ({
-              type: 'String',
-            }),
+            thunkedFieldType: {
+              type: () => 'String',
+            },
           },
         },
         sc
@@ -191,9 +191,9 @@ describe('Extensions', () => {
             id: 'ID!',
             name: 'String',
             nonExistingType: 'Bar',
-            thunkedField: () => ({
-              type: 'String',
-            }),
+            thunkedFieldType: {
+              type: () => 'String',
+            },
           },
         },
         sc
@@ -209,9 +209,9 @@ describe('Extensions', () => {
             id: 'ID!',
             name: 'String',
             nonExistingType: 'Bar',
-            thunkedField: () => ({
-              type: 'String',
-            }),
+            thunkedFieldType: {
+              type: () => 'String',
+            },
           },
           extensions: { tags: ['generated'] },
         },
@@ -238,12 +238,12 @@ describe('Extensions', () => {
                 noFilter: true,
               },
             },
-            thunkedField: () => ({
-              type: 'String',
+            thunkedFieldType: {
+              type: () => 'String',
               extensions: {
                 noFilter: true,
               },
-            }),
+            },
           },
         },
         sc
@@ -261,9 +261,9 @@ describe('Extensions', () => {
             id: 'ID!',
             name: 'String',
             nonExistingType: 'Bar',
-            thunkedField: () => ({
-              type: 'String',
-            }),
+            thunkedFieldType: {
+              type: () => 'String',
+            },
           },
         },
         sc
@@ -279,9 +279,9 @@ describe('Extensions', () => {
             id: 'ID!',
             name: 'String',
             nonExistingType: 'Bar',
-            thunkedField: () => ({
-              type: 'String',
-            }),
+            thunkedFieldType: {
+              type: () => 'String',
+            },
           },
         },
         sc
@@ -298,9 +298,9 @@ describe('Extensions', () => {
             name: 'String',
           },
           nonExistingType: 'Bar',
-          thunkedField: () => ({
-            type: 'String',
-          }),
+          thunkedFieldType: {
+            type: () => 'String',
+          },
           extensions: { tags: ['generated'] },
         },
         sc
@@ -326,12 +326,12 @@ describe('Extensions', () => {
                 noFilter: true,
               },
             },
-            thunkedField: () => ({
-              type: 'String',
+            thunkedFieldType: {
+              type: () => 'String',
               extensions: {
                 noFilter: true,
               },
-            }),
+            },
           },
         },
         sc
@@ -555,7 +555,7 @@ describe('Extensions', () => {
   }
 
   function testFieldExtensions(instance) {
-    ['id', 'name', 'nonExistingType', 'thunkedField'].forEach(fieldName => {
+    ['id', 'name', 'nonExistingType', 'thunkedFieldType'].forEach(fieldName => {
       expect(instance.getFieldExtensions(fieldName)).toEqual({});
       instance.setFieldExtensions(fieldName, {
         tags: ['generated'],
@@ -611,7 +611,7 @@ describe('Extensions', () => {
     expect(instance.getFieldExtensions('nonExistingType')).toEqual({
       noFilter: true,
     });
-    expect(instance.getFieldExtensions('thunkedField')).toEqual({
+    expect(instance.getFieldExtensions('thunkedFieldType')).toEqual({
       noFilter: true,
     });
   }
