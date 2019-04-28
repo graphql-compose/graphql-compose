@@ -47,72 +47,64 @@ import {
   isScalarType,
   valueFromAST,
 } from './graphql';
-import type {
-  GraphQLType,
-  GraphQLNamedType,
-  GraphQLOutputType,
-  GraphQLInputType,
-  GraphQLNullableType,
-  GraphQLFieldConfigMap,
-  GraphQLFieldConfig,
-  GraphQLFieldConfigArgumentMap,
-  GraphQLArgumentConfig,
-  GraphQLInputFieldConfigMap,
-  GraphQLInputFieldConfig,
-} from './graphql';
+import type { GraphQLType, GraphQLInputType } from './graphql';
 import { GraphQLDate, GraphQLBuffer, GraphQLJSON, GraphQLJSONObject } from './type';
+import { createThunkedObjectProxy } from './utils/createThunkedObjectProxy';
 
-import type { ComposeInputFieldConfigMap, ComposeInputFieldConfig } from './InputTypeComposer';
 import type {
-  ComposeOutputType,
-  ComposeFieldConfigMap,
-  ComposeFieldConfig,
-  ComposeArgumentConfig,
-  ComposeFieldConfigArgumentMap,
-  ComposeObjectType,
-  ComposeFieldConfigAsObject,
-  ComposeArgumentConfigAsObject,
+  InputTypeComposerFieldConfigMap,
+  InputTypeComposerFieldConfigMapDefinition,
+  InputTypeComposerFieldConfig,
+  InputTypeComposerFieldConfigDefinition,
+  InputTypeComposerFieldConfigAsObjectDefinition,
+} from './InputTypeComposer';
+import type {
+  ObjectTypeComposerFieldConfig,
+  ObjectTypeComposerFieldConfigDefinition,
+  ObjectTypeComposerFieldConfigMap,
+  ObjectTypeComposerFieldConfigMapDefinition,
+  ObjectTypeComposerArgumentConfig,
+  ObjectTypeComposerArgumentConfigDefinition,
+  ObjectTypeComposerArgumentConfigMap,
+  ObjectTypeComposerArgumentConfigMapDefinition,
+  ObjectTypeComposerArgumentConfigAsObjectDefinition,
+  ObjectTypeComposerDefinition,
 } from './ObjectTypeComposer';
 import { ObjectTypeComposer } from './ObjectTypeComposer';
-import type { SchemaComposer, AnyComposeType, AnyType } from './SchemaComposer';
-import { InputTypeComposer, type ComposeInputFieldConfigAsObject } from './InputTypeComposer';
+import type { SchemaComposer } from './SchemaComposer';
+import { InputTypeComposer } from './InputTypeComposer';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
-import { EnumTypeComposer, type ComposeEnumValueConfig } from './EnumTypeComposer';
-import { InterfaceTypeComposer, type ComposeInterfaceType } from './InterfaceTypeComposer';
+import {
+  EnumTypeComposer,
+  type EnumTypeComposerValueConfig,
+  type EnumTypeComposerValueConfigDefinition,
+} from './EnumTypeComposer';
+import {
+  InterfaceTypeComposer,
+  type InterfaceTypeComposerDefinition,
+  type InterfaceTypeComposerThunked,
+} from './InterfaceTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
+import { ListComposer } from './ListComposer';
+import { NonNullComposer } from './NonNullComposer';
+import { ThunkComposer } from './ThunkComposer';
 import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
 import type { Thunk, ExtensionsDirective } from './utils/definitions';
 import { isFunction, isObject } from './utils/is';
+import type {
+  AnyTypeComposer,
+  ComposeOutputType,
+  ComposeOutputTypeDefinition,
+  ComposeInputType,
+  ComposeInputTypeDefinition,
+  NamedTypeComposer,
+} from './utils/typeHelpers';
 
 export type TypeDefinitionString = string; // eg type Name { field: Int }
 export type TypeWrappedString = string; // eg. Int, Int!, [Int]
 export type TypeNameString = string; // eg. Int, Float
 export type TypeAsString = TypeDefinitionString | TypeWrappedString | TypeNameString;
-
-// solve Flow reqursion limit, do not import from graphql.js
-function isOutputType(type: any): boolean {
-  return (
-    type instanceof GraphQLScalarType ||
-    type instanceof GraphQLObjectType ||
-    type instanceof GraphQLInterfaceType ||
-    type instanceof GraphQLUnionType ||
-    type instanceof GraphQLEnumType ||
-    (type instanceof GraphQLNonNull && isOutputType(type.ofType)) ||
-    (type instanceof GraphQLList && isOutputType(type.ofType))
-  );
-}
-
-// solve Flow reqursion limit, do not import from graphql.js
-function isInputType(type: any): boolean {
-  return (
-    type instanceof GraphQLScalarType ||
-    type instanceof GraphQLEnumType ||
-    type instanceof GraphQLInputObjectType ||
-    (type instanceof GraphQLNonNull && isInputType(type.ofType)) ||
-    (type instanceof GraphQLList && isInputType(type.ofType))
-  );
-}
 
 export class TypeMapper<TContext> {
   schemaComposer: SchemaComposer<TContext>;
@@ -122,76 +114,46 @@ export class TypeMapper<TContext> {
       throw new Error('TypeMapper must have SchemaComposer instance.');
     }
     this.schemaComposer = schemaComposer;
-    this.initScalars();
+    this._initScalars();
 
     // alive proper Flow type casting in autosuggestions for class with Generics
     /* :: return this; */
   }
 
-  initScalars() {
-    const scalars = [
-      ['String', GraphQLString],
-      ['Float', GraphQLFloat],
-      ['Int', GraphQLInt],
-      ['Boolean', GraphQLBoolean],
-      ['ID', GraphQLID],
-      ['JSON', GraphQLJSON],
-      ['Json', GraphQLJSON],
-      ['Date', GraphQLDate],
-      ['Buffer', GraphQLBuffer],
-    ];
-    scalars.forEach(([name, type]) => {
-      this.schemaComposer.set(name, type);
-    });
+  _initScalars() {
+    this.schemaComposer.add(GraphQLString);
+    this.schemaComposer.add(GraphQLFloat);
+    this.schemaComposer.add(GraphQLInt);
+    this.schemaComposer.add(GraphQLBoolean);
+    this.schemaComposer.add(GraphQLID);
+    this.schemaComposer.add(GraphQLJSON);
+    this.schemaComposer.add(GraphQLJSONObject);
+    this.schemaComposer.add(GraphQLDate);
+    this.schemaComposer.add(GraphQLBuffer);
   }
 
-  get(name: string): GraphQLNamedType | void {
-    const schemaType = this.schemaComposer.get(name);
-    if (isNamedType(schemaType) || isScalarType(schemaType)) {
-      return schemaType;
-    }
-    return schemaType.getType();
+  static isOutputType(type: any): boolean {
+    return (
+      type instanceof ScalarTypeComposer ||
+      type instanceof ObjectTypeComposer ||
+      type instanceof InterfaceTypeComposer ||
+      type instanceof UnionTypeComposer ||
+      type instanceof EnumTypeComposer ||
+      (type instanceof NonNullComposer && TypeMapper.isOutputType(type.ofType)) ||
+      (type instanceof ListComposer && TypeMapper.isOutputType(type.ofType)) ||
+      type instanceof ThunkComposer
+    );
   }
 
-  set(name: string, type: AnyType<any>): void {
-    this.schemaComposer.set(name, type);
-  }
-
-  has(name: string): boolean {
-    return this.schemaComposer.has(name);
-  }
-
-  getWrapped(str: TypeWrappedString | TypeNameString): GraphQLType | void {
-    const typeAST: TypeNode = parseType(str);
-    return this.typeFromAST(typeAST);
-  }
-
-  createType(str: TypeDefinitionString): AnyComposeType<TContext> | void {
-    if (this.has(str)) {
-      return this.schemaComposer.getAnyTC(str);
-    }
-
-    const astDocument: DocumentNode = parse(str);
-
-    if (!astDocument || astDocument.kind !== 'Document') {
-      throw new Error(
-        'You should provide correct type syntax. ' +
-          "Eg. createType('type IntRange { min: Int, max: Int }')"
-      );
-    }
-
-    const types = this.parseTypes(astDocument);
-
-    const type = types[0];
-
-    if (type) {
-      this.set(type.getTypeName(), type);
-      // Also keep type string representation for avoiding duplicates type defs for same strings
-      this.set(str, type);
-      return type;
-    }
-
-    return undefined;
+  static isInputType(type: any): boolean {
+    return (
+      type instanceof ScalarTypeComposer ||
+      type instanceof EnumTypeComposer ||
+      type instanceof InputTypeComposer ||
+      (type instanceof NonNullComposer && TypeMapper.isInputType(type.ofType)) ||
+      (type instanceof ListComposer && TypeMapper.isInputType(type.ofType)) ||
+      type instanceof ThunkComposer
+    );
   }
 
   static isTypeNameString(str: string): boolean {
@@ -228,197 +190,213 @@ export class TypeMapper<TContext> {
     return /interface\s/im.test(str);
   }
 
-  createGraphQLType(str: TypeDefinitionString): GraphQLType | void {
-    const type = this.createType(str);
+  convertGraphQLTypeToComposer(type: GraphQLType): AnyTypeComposer<TContext> {
+    if (type instanceof GraphQLObjectType) {
+      return ObjectTypeComposer.create(type, this.schemaComposer);
+    } else if (type instanceof GraphQLInputObjectType) {
+      return InputTypeComposer.create(type, this.schemaComposer);
+    } else if (type instanceof GraphQLScalarType) {
+      return ScalarTypeComposer.create(type, this.schemaComposer);
+    } else if (type instanceof GraphQLEnumType) {
+      return EnumTypeComposer.create(type, this.schemaComposer);
+    } else if (type instanceof GraphQLInterfaceType) {
+      return InterfaceTypeComposer.create(type, this.schemaComposer);
+    } else if (type instanceof GraphQLUnionType) {
+      return UnionTypeComposer.create(type, this.schemaComposer);
+    } else if (type instanceof GraphQLNonNull) {
+      // schema do not store wrapped types
+      return new NonNullComposer(this.convertGraphQLTypeToComposer(type.ofType));
+    } else if (type instanceof GraphQLList) {
+      // schema do not store wrapped types
+      return new ListComposer(this.convertGraphQLTypeToComposer(type.ofType));
+    }
+
+    throw new Error(`Cannot convert to Composer the following value: ${inspect(type)}`);
+  }
+
+  convertSDLWrappedTypeName(
+    str: TypeWrappedString | TypeNameString
+  ): AnyTypeComposer<TContext> | void {
+    const typeAST: TypeNode = parseType(str);
+    return this.typeFromAST(typeAST);
+  }
+
+  convertSDLTypeDefinition(str: TypeDefinitionString): NamedTypeComposer<TContext> | void {
+    if (this.schemaComposer.has(str)) {
+      return this.schemaComposer.getAnyTC(str);
+    }
+
+    const astDocument: DocumentNode = parse(str);
+
+    if (!astDocument || astDocument.kind !== 'Document') {
+      throw new Error(
+        'You should provide correct type syntax. ' +
+          "Eg. convertSDLTypeDefinition('type IntRange { min: Int, max: Int }')"
+      );
+    }
+
+    const types = this.parseTypes(astDocument);
+
+    const type = types[0];
+
     if (type) {
-      return type.getType();
+      this.schemaComposer.set(type.getTypeName(), type);
+      // Also keep type string representation for avoiding duplicates type defs for same strings
+      this.schemaComposer.set(str, type);
+      return type;
     }
 
     return undefined;
   }
 
-  parseTypesFromString(str: string): TypeStorage<string, AnyComposeType<TContext>> {
-    const astDocument: DocumentNode = parse(str);
-
-    if (!astDocument || astDocument.kind !== 'Document') {
-      throw new Error('You should provide correct SDL syntax.');
-    }
-
-    const types = this.parseTypes(astDocument);
-    const typeStorage = new TypeStorage();
-    types.forEach(type => {
-      typeStorage.set(type.getTypeName(), type);
-    });
-    return typeStorage;
-  }
-
-  convertOutputType(composeType: ComposeObjectType): GraphQLObjectType {
-    if (this.schemaComposer.hasInstance(composeType, ObjectTypeComposer)) {
-      return this.schemaComposer.getOTC(composeType).getType();
-    } else if (typeof composeType === 'string') {
-      const type = TypeMapper.isTypeDefinitionString(composeType)
-        ? this.createGraphQLType(composeType)
-        : this.getWrapped(composeType);
-
-      if (!type) {
-        throw new Error(`Cannot convert to OutputType the following string: '${composeType}'`);
+  convertOutputTypeDefinition(
+    typeDef: Thunk<
+      | ComposeOutputTypeDefinition<any>
+      | ObjectTypeComposerDefinition<any, any>
+      | $ReadOnly<Resolver<any, any>>
+    >,
+    fieldName?: string = '',
+    typeName?: string = ''
+  ): ComposeOutputType<TContext> | void {
+    if (typeof typeDef === 'string') {
+      if (TypeMapper.isInputTypeDefinitionString(typeDef)) {
+        throw new Error(
+          `Should be OutputType, but got input type definition: ${inspect(typeDef)}'`
+        );
       }
 
-      if (!(type instanceof GraphQLObjectType)) {
-        throw new Error(`Cannot convert to OutputType the following object: '${inspect(type)}'`);
-      }
+      let tc;
+      if (this.schemaComposer.has(typeDef)) {
+        tc = (this.schemaComposer.getAnyTC(typeDef): any);
+      } else {
+        tc = TypeMapper.isTypeDefinitionString(typeDef)
+          ? this.convertSDLTypeDefinition(typeDef)
+          : this.convertSDLWrappedTypeName(typeDef);
 
-      return type;
-    } else if (composeType instanceof GraphQLObjectType) {
-      return composeType;
-    } else if (composeType instanceof ObjectTypeComposer) {
-      return composeType.getType();
+        if (!tc) {
+          throw new Error(`Cannot convert to OutputType the following string: ${inspect(typeDef)}`);
+        }
+      }
+      if (!TypeMapper.isOutputType(tc)) {
+        throw new Error(`Provided incorrect OutputType: ${inspect(typeDef)}`);
+      }
+      return (tc: any);
+    } else if (TypeMapper.isOutputType(typeDef)) {
+      return (typeDef: any);
+    } else if (Array.isArray(typeDef)) {
+      if (typeDef.length !== 1) {
+        throw new Error(
+          `Array must have exact one output type definition, but has ${typeDef.length}: ${inspect(
+            typeDef
+          )}`
+        );
+      }
+      const tc = this.convertOutputTypeDefinition(typeDef[0], fieldName, typeName);
+      if (!tc) {
+        throw new Error(`Cannot construct TypeComposer from ${inspect(typeDef)}`);
+      }
+      return new ListComposer(tc);
+    } else if (isFunction(typeDef)) {
+      return new ThunkComposer(() => {
+        const def = typeDef();
+        const tc = this.convertOutputFieldConfig((def: any), fieldName, typeName).type;
+        if (!TypeMapper.isOutputType(tc)) {
+          throw new Error(`Provided incorrect OutputType: Function[${inspect(def)}]`);
+        }
+        return tc;
+      });
+    } else if (typeDef instanceof Resolver) {
+      return typeDef.getTypeComposer();
+    } else if (typeDef instanceof GraphQLList || typeDef instanceof GraphQLNonNull) {
+      const type = this.convertGraphQLTypeToComposer(typeDef);
+      if (TypeMapper.isOutputType(type)) {
+        return (type: any);
+      } else {
+        throw new Error(`Provided incorrect OutputType: ${inspect(type)}`);
+      }
+    } else if (
+      typeDef instanceof GraphQLObjectType ||
+      typeDef instanceof GraphQLEnumType ||
+      typeDef instanceof GraphQLInterfaceType ||
+      typeDef instanceof GraphQLUnionType ||
+      typeDef instanceof GraphQLScalarType
+    ) {
+      return (this.convertGraphQLTypeToComposer(typeDef): any);
     }
 
-    throw new Error(`Cannot convert to OutputType the following object: '${inspect(composeType)}'`);
+    if (typeDef instanceof InputTypeComposer) {
+      throw new Error(`Should be OutputType, but provided InputTypeComposer ${inspect(typeDef)}`);
+    }
+
+    return undefined;
   }
 
   convertOutputFieldConfig<TSource>(
-    composeFC: ComposeFieldConfig<TSource, TContext>,
+    composeFC: Thunk<
+      | ObjectTypeComposerFieldConfigDefinition<TSource, TContext>
+      | $ReadOnly<Resolver<any, TContext>>
+    >,
     fieldName?: string = '',
     typeName?: string = ''
-  ): GraphQLFieldConfig<TSource, TContext> {
-    invariant(composeFC, `You provide empty argument field config for ${typeName}.${fieldName}`);
-
-    let composeType;
-    let copyProps;
-    let copyArgs;
-
-    if (composeFC instanceof GraphQLList || composeFC instanceof GraphQLNonNull) {
-      return { type: composeFC };
-    } else if (isFunction(composeFC)) {
-      return (composeFC: any);
-    } else if (composeFC instanceof Resolver) {
-      return composeFC.getFieldConfig();
-    } else if (
-      composeFC instanceof ObjectTypeComposer ||
-      composeFC instanceof EnumTypeComposer ||
-      composeFC instanceof InterfaceTypeComposer ||
-      composeFC instanceof UnionTypeComposer ||
-      composeFC instanceof ScalarTypeComposer
-    ) {
-      return {
-        type: composeFC.getType(),
-        description: composeFC.getDescription(),
-      };
-    } else if (Array.isArray(composeFC)) {
-      composeType = composeFC;
-    } else if (composeFC.type) {
-      const { type, args, ...rest } = (composeFC: any);
-      composeType = type;
-      copyProps = rest;
-      copyArgs = args;
-    } else {
-      composeType = composeFC;
-    }
-
-    let wrapWithList = 0;
-    while (Array.isArray(composeType)) {
-      if (composeType.length !== 1) {
-        throw new Error(
-          `${typeName}.${fieldName} can accept Array exact with one output type definition`
-        );
-      }
-      wrapWithList += 1;
-      composeType = composeType[0];
-    }
-
-    if (composeType instanceof InputTypeComposer) {
-      throw new Error(
-        `You cannot provide InputTypeComposer to the field '${typeName}.${fieldName}'. It should be OutputType.`
-      );
-    }
-
-    const fieldConfig: GraphQLFieldConfig<any, TContext> = ({}: any);
-    if (typeof composeType === 'string') {
-      if (TypeMapper.isInputTypeDefinitionString(composeType)) {
-        throw new Error(
-          `${typeName}.${fieldName} should be OutputType, but got following type definition '${composeType}'`
-        );
+  ): ObjectTypeComposerFieldConfig<TSource, TContext> {
+    try {
+      if (!composeFC) {
+        throw new Error(`You provide empty output field definition: ${inspect(composeFC)}`);
       }
 
-      if (this.schemaComposer.has(composeType)) {
-        fieldConfig.type = (this.schemaComposer.getAnyTC(composeType).getType(): any);
-        if (!isOutputType(fieldConfig.type)) {
-          throw new Error(
-            `${typeName}.${fieldName} cannot convert to OutputType the following type: '${fieldConfig.type.toString()}'`
-          );
-        }
-      } else {
-        const type = TypeMapper.isTypeDefinitionString(composeType)
-          ? this.createGraphQLType(composeType)
-          : this.getWrapped(composeType);
+      if (composeFC instanceof Resolver) {
+        return {
+          type: composeFC.type,
+          args: composeFC.getArgs(),
+          resolve: composeFC.getFieldResolver(),
+          description: composeFC.getDescription(),
+        };
+      }
 
+      // use proxy for evaluation on demand
+      if (isFunction(composeFC)) {
+        return (createThunkedObjectProxy(() =>
+          this.convertOutputFieldConfig(composeFC(), fieldName, typeName)
+        ): any);
+      }
+
+      // convert type when its provided as composeIFC
+      const tcFromIFC = this.convertOutputTypeDefinition(composeFC, fieldName, typeName);
+      if (tcFromIFC) {
+        return { type: tcFromIFC };
+      }
+
+      // convert type when its provided in composeIFC.type
+      if (isObject(composeFC)) {
+        const { type, args, ...rest } = (composeFC: any);
         if (!type) {
           throw new Error(
-            `${typeName}.${fieldName} cannot convert to OutputType the following string: '${composeType}'`
+            `Definition object should contain 'type' property: ${inspect(composeFC)}`
           );
         }
-        fieldConfig.type = (type: any);
-      }
-    } else if (
-      composeType instanceof ObjectTypeComposer ||
-      composeType instanceof EnumTypeComposer ||
-      composeType instanceof InterfaceTypeComposer ||
-      composeType instanceof UnionTypeComposer ||
-      composeType instanceof ScalarTypeComposer
-    ) {
-      fieldConfig.type = composeType.getType();
-    } else if (composeType instanceof Resolver) {
-      fieldConfig.type = composeType.getType();
-    } else {
-      fieldConfig.type = (composeType: any);
-    }
 
-    if (!fieldConfig.type) {
-      throw new Error(`${typeName}.${fieldName} must have some 'type'`);
-    }
-
-    if (!isFunction(fieldConfig.type)) {
-      if (!isOutputType(fieldConfig.type)) {
-        throw new Error(
-          `${typeName}.${fieldName} provided incorrect OutputType: '${inspect(composeType)}'`
-        );
-      }
-
-      if (wrapWithList > 0) {
-        for (let i = 0; i < wrapWithList; i++) {
-          fieldConfig.type = new GraphQLList((fieldConfig.type: any));
+        const tc = this.convertOutputTypeDefinition(type, fieldName, typeName);
+        if (tc) {
+          return {
+            type: tc,
+            args: this.convertArgConfigMap(args || {}, fieldName, typeName),
+            ...rest,
+          };
         }
       }
-    }
 
-    if (copyArgs) {
-      const args: GraphQLFieldConfigArgumentMap = this.convertArgConfigMap(
-        copyArgs,
-        fieldName,
-        typeName
-      );
-      fieldConfig.args = args;
+      throw new Error(`Cannot convert to InputType the following value: ${inspect(composeFC)}`);
+    } catch (e) {
+      e.message = `TypeError[${typeName}.${fieldName}]: ${e.message}`;
+      throw e;
     }
-
-    if (isObject(copyProps)) {
-      // copy all other props
-      for (const prop in copyProps) {
-        if (copyProps.hasOwnProperty(prop)) {
-          fieldConfig[prop] = copyProps[prop];
-        }
-      }
-    }
-
-    return fieldConfig;
   }
 
   convertOutputFieldConfigMap<TSource>(
-    composeFields: ComposeFieldConfigMap<TSource, TContext>,
+    composeFields: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>,
     typeName?: string = ''
-  ): GraphQLFieldConfigMap<TSource, TContext> {
-    const fields: GraphQLFieldConfigMap<TSource, TContext> = ({}: any);
+  ): ObjectTypeComposerFieldConfigMap<TSource, TContext> {
+    const fields: ObjectTypeComposerFieldConfigMap<TSource, TContext> = {};
     Object.keys(composeFields).forEach(name => {
       fields[name] = this.convertOutputFieldConfig(composeFields[name], name, typeName);
     });
@@ -427,134 +405,59 @@ export class TypeMapper<TContext> {
   }
 
   convertArgConfig(
-    composeAC: ComposeArgumentConfig,
+    composeAC: Thunk<ObjectTypeComposerArgumentConfigDefinition>,
     argName?: string = '',
     fieldName?: string = '',
     typeName?: string = ''
-  ): GraphQLArgumentConfig {
-    invariant(
-      composeAC,
-      `You provide empty argument config for ${typeName}.${fieldName}.${argName}`
-    );
-
-    let composeType;
-    let copyProps;
-
-    if (composeAC instanceof GraphQLList || composeAC instanceof GraphQLNonNull) {
-      return { type: composeAC };
-    } else if (
-      composeAC instanceof InputTypeComposer ||
-      composeAC instanceof EnumTypeComposer ||
-      composeAC instanceof ScalarTypeComposer
-    ) {
-      return {
-        type: composeAC.getType(),
-        description: composeAC.getDescription(),
-      };
-    } else if (Array.isArray(composeAC)) {
-      composeType = composeAC;
-    } else if (isFunction(composeAC)) {
-      return (composeAC: any);
-    } else if (composeAC.type) {
-      const { type, ...rest } = (composeAC: any);
-      composeType = type;
-      copyProps = rest;
-    } else {
-      composeType = composeAC;
-    }
-
-    let wrapWithList = 0;
-    while (Array.isArray(composeType)) {
-      if (composeType.length !== 1) {
-        throw new Error(
-          `${typeName}.${fieldName}@${argName} can accept Array exact with one input type definition`
-        );
-      }
-      wrapWithList += 1;
-      composeType = composeType[0];
-    }
-
-    if (composeType instanceof ObjectTypeComposer) {
-      throw new Error(
-        `You cannot provide ObjectTypeComposer to the arg '${typeName}.${fieldName}.@${argName}'. It should be InputType.`
-      );
-    }
-
-    const argConfig: GraphQLArgumentConfig = ({}: any);
-    if (typeof composeType === 'string') {
-      if (TypeMapper.isOutputTypeDefinitionString(composeType)) {
-        throw new Error(
-          `${typeName}.${fieldName}@${argName} should be InputType, but got output type definition '${composeType}'`
-        );
+  ): ObjectTypeComposerArgumentConfig {
+    try {
+      if (!composeAC) {
+        throw new Error(`You provide empty argument config ${inspect(composeAC)}`);
       }
 
-      if (this.schemaComposer.has(composeType)) {
-        argConfig.type = (this.schemaComposer.getAnyTC(composeType).getType(): any);
-        if (!isInputType(argConfig.type)) {
-          throw new Error(
-            `${typeName}.${fieldName}@${argName} cannot convert to InputType the following type: '${argConfig.type.toString()}'`
-          );
-        }
-      } else {
-        const type = TypeMapper.isTypeDefinitionString(composeType)
-          ? this.createGraphQLType(composeType)
-          : this.getWrapped(composeType);
+      // use proxy for evaluation on demand
+      if (isFunction(composeAC)) {
+        return (createThunkedObjectProxy(() =>
+          this.convertArgConfig(composeAC(), argName, fieldName, typeName)
+        ): any);
+      }
 
+      // convert type when its provided as composeAC
+      const tcFromAC = this.convertInputTypeDefinition((composeAC: any));
+      if (tcFromAC) {
+        return { type: tcFromAC };
+      }
+
+      // convert type when its provided in composeIFC.type
+      if (isObject(composeAC)) {
+        const { type, ...rest } = (composeAC: any);
         if (!type) {
           throw new Error(
-            `${typeName}.${fieldName}@${argName} cannot convert to InputType the following string: '${composeType}'`
+            `Definition object should contain 'type' property: ${inspect(composeAC)}'`
           );
         }
 
-        argConfig.type = (type: any);
-      }
-    } else if (
-      composeType instanceof InputTypeComposer ||
-      composeType instanceof EnumTypeComposer ||
-      composeType instanceof ScalarTypeComposer
-    ) {
-      argConfig.type = composeType.getType();
-    } else {
-      argConfig.type = (composeType: any);
-    }
-
-    if (!argConfig.type) {
-      throw new Error(`${typeName}.${fieldName}@${argName} must have some 'type'`);
-    }
-
-    if (!isFunction(argConfig.type)) {
-      if (!isInputType(argConfig.type)) {
-        throw new Error(
-          `${typeName}.${fieldName}@${argName} provided incorrect InputType: '${inspect(
-            composeType
-          )}'`
-        );
-      }
-
-      if (wrapWithList > 0) {
-        for (let i = 0; i < wrapWithList; i++) {
-          argConfig.type = new GraphQLList((argConfig.type: any));
+        const tc = this.convertInputTypeDefinition(type);
+        if (tc) {
+          return {
+            type: tc,
+            ...rest,
+          };
         }
       }
-    }
 
-    if (isObject(copyProps)) {
-      // copy all other props
-      for (const prop in copyProps) {
-        if (copyProps.hasOwnProperty(prop)) {
-          argConfig[prop] = copyProps[prop];
-        }
-      }
+      throw new Error(`Cannot convert to InputType the following value: ${inspect(tcFromAC)}`);
+    } catch (e) {
+      e.message = `TypeError[${typeName}.${fieldName}.${argName}]: ${e.message}`;
+      throw e;
     }
-
-    return argConfig;
   }
 
   convertArgConfigMap(
-    composeArgsConfigMap: ComposeFieldConfigArgumentMap<any>,
+    composeArgsConfigMap: ObjectTypeComposerArgumentConfigMapDefinition<any>,
     fieldName?: string = '',
     typeName?: string = ''
-  ): GraphQLFieldConfigArgumentMap {
+  ): ObjectTypeComposerArgumentConfigMap<any> {
     const argsConfigMap = {};
     if (composeArgsConfigMap) {
       Object.keys(composeArgsConfigMap).forEach(argName => {
@@ -570,134 +473,181 @@ export class TypeMapper<TContext> {
     return argsConfigMap;
   }
 
-  convertInputFieldConfig(
-    composeIFC: ComposeInputFieldConfig,
+  convertInputTypeDefinition(
+    typeDef: Thunk<ComposeInputTypeDefinition>,
     fieldName?: string = '',
     typeName?: string = ''
-  ): GraphQLInputFieldConfig {
-    invariant(composeIFC, `You provide empty input field config for ${typeName}.${fieldName}`);
-
-    let composeType;
-    let copyProps;
-
-    if (composeIFC instanceof GraphQLList || composeIFC instanceof GraphQLNonNull) {
-      return { type: composeIFC };
-    } else if (
-      composeIFC instanceof InputTypeComposer ||
-      composeIFC instanceof EnumTypeComposer ||
-      composeIFC instanceof ScalarTypeComposer
-    ) {
-      return {
-        type: composeIFC.getType(),
-        description: composeIFC.getDescription(),
-      };
-    } else if (Array.isArray(composeIFC)) {
-      composeType = composeIFC;
-    } else if (isFunction(composeIFC)) {
-      return (composeIFC: any);
-    } else if (composeIFC.type) {
-      const { type, ...rest } = (composeIFC: any);
-      composeType = composeIFC.type;
-      copyProps = rest;
-    } else {
-      composeType = composeIFC;
-    }
-
-    let wrapWithList = 0;
-    while (Array.isArray(composeType)) {
-      if (composeType.length !== 1) {
-        throw new Error(
-          `${typeName}.${fieldName} can accept Array exact with one input type definition`
-        );
-      }
-      wrapWithList += 1;
-      composeType = composeType[0];
-    }
-
-    if (composeType instanceof ObjectTypeComposer) {
-      throw new Error(
-        `You cannot provide ObjectTypeComposer to the field '${typeName}.${fieldName}'. It should be InputType.`
-      );
-    }
-
-    const fieldConfig: GraphQLInputFieldConfig = ({}: any);
-    if (typeof composeType === 'string') {
-      if (TypeMapper.isOutputTypeDefinitionString(composeType)) {
-        throw new Error(
-          `${typeName}.${fieldName} should be InputType, but got output type definition '${composeType}'`
-        );
+  ): ComposeInputType | void {
+    if (typeof typeDef === 'string') {
+      if (TypeMapper.isOutputTypeDefinitionString(typeDef)) {
+        throw new Error(`Should be InputType, but got output type definition: ${inspect(typeDef)}`);
       }
 
-      if (this.schemaComposer.has(composeType)) {
-        fieldConfig.type = (this.schemaComposer.getAnyTC(composeType).getType(): any);
-        if (!isInputType(fieldConfig.type)) {
-          throw new Error(
-            `${typeName}.${fieldName} cannot convert to InputType the following type: '${fieldConfig.type.toString()}'`
-          );
-        }
+      let tc;
+      if (this.schemaComposer.has(typeDef)) {
+        tc = (this.schemaComposer.getAnyTC(typeDef): any);
       } else {
-        const type = TypeMapper.isTypeDefinitionString(composeType)
-          ? this.createGraphQLType(composeType)
-          : this.getWrapped(composeType);
+        tc = TypeMapper.isTypeDefinitionString(typeDef)
+          ? this.convertSDLTypeDefinition(typeDef)
+          : this.convertSDLWrappedTypeName(typeDef);
 
+        if (!tc) {
+          throw new Error(`Cannot convert to InputType the following string: ${inspect(typeDef)}`);
+        }
+      }
+      if (!TypeMapper.isInputType(tc)) {
+        throw new Error(`Provided incorrect InputType: ${inspect(typeDef)}`);
+      }
+
+      return (tc: any);
+    } else if (TypeMapper.isInputType(typeDef)) {
+      return (typeDef: any);
+    } else if (Array.isArray(typeDef)) {
+      if (typeDef.length !== 1) {
+        throw new Error(
+          `Array must have exact one input type definition, but has ${typeDef.length}: ${inspect(
+            typeDef
+          )}`
+        );
+      }
+      const tc = this.convertInputTypeDefinition(typeDef[0], fieldName, typeName);
+      if (!tc) {
+        throw new Error(`Cannot construct TypeComposer from ${inspect(typeDef)}`);
+      }
+      return new ListComposer(tc);
+    } else if (isFunction(typeDef)) {
+      return new ThunkComposer(() => {
+        const def = typeDef();
+        const tc = this.convertInputFieldConfig(def, fieldName, typeName).type;
+        if (!TypeMapper.isInputType(tc)) {
+          throw new Error(`Provided incorrect InputType: Function[${inspect(def)}]`);
+        }
+        return tc;
+      });
+    } else if (typeDef instanceof GraphQLList || typeDef instanceof GraphQLNonNull) {
+      const type = this.convertGraphQLTypeToComposer(typeDef);
+      if (TypeMapper.isInputType(type)) {
+        return (type: any);
+      } else {
+        throw new Error(`Provided incorrect InputType: ${inspect(type)}`);
+      }
+    } else if (
+      typeDef instanceof GraphQLInputObjectType ||
+      typeDef instanceof GraphQLScalarType ||
+      typeDef instanceof GraphQLEnumType
+    ) {
+      return (this.convertGraphQLTypeToComposer(typeDef): any);
+    }
+
+    if ((typeDef: any) instanceof ObjectTypeComposer) {
+      throw new Error(`Should be InputType, but provided ObjectTypeComposer ${inspect(typeDef)}`);
+    }
+
+    return undefined;
+  }
+
+  convertInputFieldConfig(
+    composeIFC: Thunk<InputTypeComposerFieldConfigDefinition>,
+    fieldName?: string = '',
+    typeName?: string = ''
+  ): InputTypeComposerFieldConfig {
+    try {
+      if (!composeIFC) {
+        throw new Error(`You provide empty input field definition: ${inspect(composeIFC)}`);
+      }
+
+      // use proxy for evaluation on demand
+      if (isFunction(composeIFC)) {
+        return (createThunkedObjectProxy(() =>
+          this.convertInputFieldConfig(composeIFC(), fieldName, typeName)
+        ): any);
+      }
+
+      // convert type when its provided as composeIFC
+      const tcFromIFC = this.convertInputTypeDefinition(composeIFC, fieldName, typeName);
+      if (tcFromIFC) {
+        return { type: tcFromIFC };
+      }
+
+      // convert type when its provided in composeIFC.type
+      if (isObject(composeIFC)) {
+        const { type, ...rest } = (composeIFC: any);
         if (!type) {
           throw new Error(
-            `${typeName}.${fieldName} cannot convert to InputType the following string: '${composeType}'`
+            `Definition object should contain 'type' property: ${inspect(composeIFC)}`
           );
         }
 
-        fieldConfig.type = (type: any);
-      }
-    } else if (
-      composeType instanceof InputTypeComposer ||
-      composeType instanceof EnumTypeComposer ||
-      composeType instanceof ScalarTypeComposer
-    ) {
-      fieldConfig.type = composeType.getType();
-    } else {
-      fieldConfig.type = (composeType: any);
-    }
-
-    if (!fieldConfig.type) {
-      throw new Error(`${typeName}.${fieldName} must have some 'type'`);
-    }
-
-    if (!isFunction(fieldConfig.type)) {
-      if (!isInputType(fieldConfig.type)) {
-        throw new Error(
-          `${typeName}.${fieldName} provided incorrect InputType: '${inspect(composeType)}'`
-        );
-      }
-
-      if (wrapWithList > 0) {
-        for (let i = 0; i < wrapWithList; i++) {
-          fieldConfig.type = new GraphQLList((fieldConfig.type: any));
+        const tc = this.convertInputTypeDefinition(type, fieldName, typeName);
+        if (tc) {
+          return {
+            type: tc,
+            ...rest,
+          };
         }
       }
-    }
 
-    if (isObject(copyProps)) {
-      // copy all other props
-      for (const prop in copyProps) {
-        if (copyProps.hasOwnProperty(prop)) {
-          fieldConfig[prop] = copyProps[prop];
-        }
-      }
+      throw new Error(`Cannot convert to InputType the following value: ${inspect(composeIFC)}`);
+    } catch (e) {
+      e.message = `TypeError[${typeName}.${fieldName}]: ${e.message}`;
+      throw e;
     }
-
-    return fieldConfig;
   }
 
   convertInputFieldConfigMap(
-    composeFields: ComposeInputFieldConfigMap,
+    composeFields: InputTypeComposerFieldConfigMapDefinition,
     typeName?: string = ''
-  ): GraphQLInputFieldConfigMap {
-    const fields: GraphQLInputFieldConfigMap = ({}: any);
+  ): InputTypeComposerFieldConfigMap {
+    const fields: InputTypeComposerFieldConfigMap = {};
     Object.keys(composeFields).forEach(name => {
       fields[name] = this.convertInputFieldConfig(composeFields[name], name, typeName);
     });
 
     return fields;
+  }
+
+  convertInterfaceTypeDefinition(
+    typeDef: InterfaceTypeComposerDefinition<any, TContext>
+  ): InterfaceTypeComposerThunked<any, TContext> {
+    if (this.schemaComposer.hasInstance(typeDef, InterfaceTypeComposer)) {
+      return this.schemaComposer.getIFTC(typeDef);
+    } else if (typeof typeDef === 'string') {
+      const tc = TypeMapper.isInterfaceTypeDefinitionString(typeDef)
+        ? this.convertSDLTypeDefinition(typeDef)
+        : this.convertSDLWrappedTypeName(typeDef);
+
+      if (!(tc instanceof InterfaceTypeComposer) && !(tc instanceof ThunkComposer)) {
+        throw new Error(
+          `Cannot convert to InterfaceType the following definition: ${inspect(typeDef)}`
+        );
+      }
+      return tc;
+    } else if (typeDef instanceof GraphQLInterfaceType) {
+      return new InterfaceTypeComposer(typeDef, this.schemaComposer);
+    } else if (typeDef instanceof InterfaceTypeComposer || typeDef instanceof ThunkComposer) {
+      return typeDef;
+    } else if (isFunction(typeDef)) {
+      return new ThunkComposer(() => this.convertInterfaceTypeDefinition(typeDef()));
+    }
+
+    throw new Error(
+      `Cannot convert to InterfaceType the following definition: ${inspect(typeDef)}`
+    );
+  }
+
+  parseTypesFromString(str: string): TypeStorage<string, NamedTypeComposer<TContext>> {
+    const astDocument: DocumentNode = parse(str);
+
+    if (!astDocument || astDocument.kind !== 'Document') {
+      throw new Error('You should provide correct SDL syntax.');
+    }
+
+    const types = this.parseTypes(astDocument);
+    const typeStorage = new TypeStorage();
+    types.forEach(type => {
+      typeStorage.set(type.getTypeName(), type);
+    });
+    return typeStorage;
   }
 
   /**
@@ -706,35 +656,7 @@ export class TypeMapper<TContext> {
    * -----------------------------------------------
    */
 
-  convertInterfaceType(composeType: ComposeInterfaceType): GraphQLInterfaceType {
-    if (this.schemaComposer.hasInstance(composeType, InterfaceTypeComposer)) {
-      return this.schemaComposer.getIFTC(composeType).getType();
-    } else if (typeof composeType === 'string') {
-      const type = TypeMapper.isInterfaceTypeDefinitionString(composeType)
-        ? this.createGraphQLType(composeType)
-        : this.getWrapped(composeType);
-
-      if (!type) {
-        throw new Error(`Cannot convert to InterfaceType the following string: '${composeType}'`);
-      }
-
-      if (!(type instanceof GraphQLInterfaceType)) {
-        throw new Error(`Cannot convert to InterfaceType the following object: '${inspect(type)}'`);
-      }
-
-      return type;
-    } else if (composeType instanceof GraphQLInterfaceType) {
-      return composeType;
-    } else if (composeType instanceof InterfaceTypeComposer) {
-      return composeType.getType();
-    }
-
-    throw new Error(
-      `Cannot convert to InterfaceType the following object: '${inspect(composeType)}'`
-    );
-  }
-
-  parseTypes(astDocument: DocumentNode): Array<AnyComposeType<TContext>> {
+  parseTypes(astDocument: DocumentNode): Array<NamedTypeComposer<TContext>> {
     const types = [];
     for (let i = 0; i < astDocument.definitions.length; i++) {
       const def = astDocument.definitions[i];
@@ -746,40 +668,42 @@ export class TypeMapper<TContext> {
     return types;
   }
 
-  typeFromAST(inputTypeAST: TypeNode): GraphQLType | void {
+  typeFromAST(typeNode: TypeNode): AnyTypeComposer<TContext> {
     let innerType;
-    if (inputTypeAST.kind === Kind.LIST_TYPE) {
-      innerType = this.typeFromAST(inputTypeAST.type);
-      return innerType && new GraphQLList(innerType);
+    if (typeNode.kind === Kind.LIST_TYPE) {
+      return new ListComposer(this.typeFromAST(typeNode.type));
+    } else if (typeNode.kind === Kind.NON_NULL_TYPE) {
+      return new NonNullComposer(this.typeFromAST(typeNode.type));
     }
-    if (inputTypeAST.kind === Kind.NON_NULL_TYPE) {
-      innerType = this.typeFromAST(inputTypeAST.type);
-      return innerType && new GraphQLNonNull(((innerType: any): GraphQLNullableType));
+    invariant(typeNode.kind === Kind.NAMED_TYPE, `Must be a named type for ${inspect(typeNode)}.`);
+    const typeName = typeNode.name.value;
+
+    if (this.schemaComposer.has(typeName)) {
+      return this.schemaComposer.get(typeName);
+    } else {
+      return new ThunkComposer(() => {
+        return this.schemaComposer.get(typeName);
+      }, typeName);
     }
-    invariant(inputTypeAST.kind === Kind.NAMED_TYPE, 'Must be a named type.');
-    return this.get(inputTypeAST.name.value);
   }
 
-  typeDefNamed(typeName: string): GraphQLNamedType {
-    const type = this.get(typeName);
-    if (type && isNamedType(type)) {
-      return type;
-    } else if (type) {
-      return type.getType();
+  typeFromASTInput(typeNode: TypeNode): ComposeInputType {
+    const tc = this.typeFromAST(typeNode);
+    if (!TypeMapper.isInputType(tc)) {
+      throw new Error(`TypeAST should be for Input types. But recieved ${inspect(typeNode)}`);
     }
-    if (typeName === 'Query') {
-      return this.schemaComposer.Query.getType();
-    }
-    if (typeName === 'Mutation') {
-      return this.schemaComposer.Mutation.getType();
-    }
-    if (typeName === 'Subscription') {
-      return this.schemaComposer.Subscription.getType();
-    }
-    throw new Error(`Cannot find type with name '${typeName}' in SchemaComposer.`);
+    return (tc: any);
   }
 
-  makeSchemaDef(def: DefinitionNode): AnyComposeType<any> | null {
+  typeFromASTOutput(typeNode: TypeNode): ComposeOutputType<TContext> {
+    const tc = this.typeFromAST(typeNode);
+    if (!TypeMapper.isOutputType(tc)) {
+      throw new Error(`TypeAST should be for Output types. But recieved ${inspect(typeNode)}`);
+    }
+    return (tc: any);
+  }
+
+  makeSchemaDef(def: DefinitionNode): NamedTypeComposer<any> | null {
     if (!def) {
       throw new Error('def must be defined');
     }
@@ -812,7 +736,7 @@ export class TypeMapper<TContext> {
 
   makeArguments(
     values: ?$ReadOnlyArray<InputValueDefinitionNode>
-  ): ComposeFieldConfigArgumentMap<any> {
+  ): ObjectTypeComposerArgumentConfigMap<any> {
     if (!values) {
       return {};
     }
@@ -821,9 +745,9 @@ export class TypeMapper<TContext> {
       const key = value.name.value;
       let val;
       const typeName = this.getNamedTypeAST(value.type).name.value;
-      const type = this.produceType(value.type);
+      const type = this.typeFromASTInput(value.type);
 
-      const ac: ComposeArgumentConfigAsObject = {
+      const ac: ObjectTypeComposerArgumentConfigAsObjectDefinition = {
         type,
         description: getDescription(value),
       };
@@ -841,12 +765,12 @@ export class TypeMapper<TContext> {
       }
 
       if (value.defaultValue) {
-        const typeDef = this.typeDefNamed(typeName);
+        const typeDef = this.schemaComposer.get(typeName);
         const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
-        if (isInputType(wrappedType)) {
+        if (TypeMapper.isInputType(wrappedType)) {
           ac.defaultValue = valueFromAST(
             value.defaultValue,
-            ((wrappedType: any): GraphQLInputType)
+            ((wrappedType.getType(): any): GraphQLInputType)
           );
         } else {
           throw new Error('Non-input type as an argument.');
@@ -860,14 +784,14 @@ export class TypeMapper<TContext> {
 
   makeFieldDefMap(
     def: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode
-  ): ComposeFieldConfigMap<any, any> {
+  ): ObjectTypeComposerFieldConfigMap<any, any> {
     if (!def.fields) return {};
     return keyValMap(
       def.fields,
       field => field.name.value,
       field => {
-        const fc: ComposeFieldConfigAsObject<any, any, any> = {
-          type: this.produceType(field.type),
+        const fc: ObjectTypeComposerFieldConfig<any, any, any> = {
+          type: this.typeFromASTOutput(field.type),
           description: getDescription(field),
           args: this.makeArguments(field.arguments),
           deprecationReason: this.getDeprecationReason(field.directives),
@@ -886,14 +810,14 @@ export class TypeMapper<TContext> {
     );
   }
 
-  makeInputFieldDef(def: InputObjectTypeDefinitionNode): ComposeInputFieldConfigMap {
+  makeInputFieldDef(def: InputObjectTypeDefinitionNode): InputTypeComposerFieldConfigMapDefinition {
     if (!def.fields) return {};
     return keyValMap(
       def.fields,
       field => field.name.value,
       field => {
-        const fc: ComposeInputFieldConfigAsObject = {
-          type: this.produceType(field.type),
+        const fc: InputTypeComposerFieldConfigAsObjectDefinition = {
+          type: this.typeFromASTInput(field.type),
           description: getDescription(field),
           deprecationReason: this.getDeprecationReason(field.directives),
           astNode: field,
@@ -926,7 +850,7 @@ export class TypeMapper<TContext> {
             def.values,
             enumValue => enumValue.name.value,
             enumValue => {
-              const ec: ComposeEnumValueConfig = {
+              const ec: EnumTypeComposerValueConfigDefinition = {
                 description: getDescription(enumValue),
                 deprecationReason: this.getDeprecationReason(enumValue.directives),
               };
@@ -970,10 +894,8 @@ export class TypeMapper<TContext> {
     (def.arguments || []).forEach(value => {
       const key = value.name.value;
       let val;
-      const typeName = this.getNamedTypeAST(value.type).name.value;
-      const typeDef = this.typeDefNamed(typeName);
-      const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
-      if (isInputType(wrappedType)) {
+      const wrappedType = this.typeFromAST(value.type);
+      if (TypeMapper.isInputType(wrappedType)) {
         val = { type: wrappedType, description: getDescription(value) };
       } else {
         throw new Error('Non-input type as an argument.');
@@ -1003,10 +925,16 @@ export class TypeMapper<TContext> {
     return tc;
   }
 
-  makeImplementedInterfaces(def: ObjectTypeDefinitionNode) {
+  makeImplementedInterfaces(
+    def: ObjectTypeDefinitionNode
+  ): Array<InterfaceTypeComposerThunked<any, TContext>> {
     return (def.interfaces || []).map(iface => {
       const name = this.getNamedTypeAST(iface).name.value;
-      return this.schemaComposer.getIFTC(name).getType();
+      if (this.schemaComposer.hasInstance(name, InterfaceTypeComposer)) {
+        return this.schemaComposer.getIFTC(name);
+      } else {
+        return new ThunkComposer(() => this.schemaComposer.getIFTC(name), name);
+      }
     });
   }
 
@@ -1015,7 +943,7 @@ export class TypeMapper<TContext> {
       name: def.name.value,
       description: getDescription(def),
       fields: this.makeFieldDefMap(def),
-      interfaces: () => this.makeImplementedInterfaces(def),
+      interfaces: this.makeImplementedInterfaces(def),
       astNode: def,
     });
     if (def.directives) {
@@ -1081,33 +1009,18 @@ export class TypeMapper<TContext> {
     return namedType;
   }
 
-  buildWrappedType(innerType: string | GraphQLType, inputTypeAST: TypeNode): string {
+  buildWrappedTypeDef(
+    innerType: AnyTypeComposer<any>,
+    inputTypeAST: TypeNode
+  ): AnyTypeComposer<TContext> {
     if (inputTypeAST.kind === Kind.LIST_TYPE) {
-      const wrappedType = this.buildWrappedType(innerType, inputTypeAST.type);
-      return `[${wrappedType}]`;
-    }
-    if (inputTypeAST.kind === Kind.NON_NULL_TYPE) {
-      const wrappedType = this.buildWrappedType(innerType, inputTypeAST.type);
-      return `${wrappedType}!`;
-    }
-    return innerType.toString();
-  }
-
-  buildWrappedTypeDef(innerType: GraphQLType, inputTypeAST: TypeNode): GraphQLType {
-    if (inputTypeAST.kind === Kind.LIST_TYPE) {
-      return new GraphQLList(this.buildWrappedTypeDef(innerType, inputTypeAST.type));
+      return new ListComposer(this.buildWrappedTypeDef(innerType, inputTypeAST.type));
     }
     if (inputTypeAST.kind === Kind.NON_NULL_TYPE) {
       const wrappedType = this.buildWrappedTypeDef(innerType, inputTypeAST.type);
-      invariant(!(wrappedType instanceof GraphQLNonNull), 'No nesting nonnull.');
-      return new GraphQLNonNull(wrappedType);
+      return new NonNullComposer(wrappedType);
     }
     return innerType;
-  }
-
-  produceType(typeAST: TypeNode): string {
-    const typeName = this.getNamedTypeAST(typeAST).name.value;
-    return this.buildWrappedType(typeName, typeAST);
   }
 
   getDeprecationReason(directives: ?$ReadOnlyArray<DirectiveNode>): ?string {
