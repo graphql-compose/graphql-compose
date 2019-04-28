@@ -1,21 +1,17 @@
 /* @flow strict */
 /* eslint-disable no-use-before-define, prefer-template */
 
-import {
-  GraphQLObjectType,
-  GraphQLInterfaceType,
-  isInputType,
-  GraphQLUnionType,
-  GraphQLList,
-  GraphQLNonNull,
-} from '../graphql';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
-import type { InterfaceTypeComposer } from '../InterfaceTypeComposer';
+import { NonNullComposer } from '../NonNullComposer';
+import { ListComposer } from '../ListComposer';
+import { ThunkComposer } from '../ThunkComposer';
+import { TypeMapper } from '../TypeMapper';
+import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import type { InputTypeComposer } from '../InputTypeComposer';
 import type { SchemaComposer } from '../SchemaComposer';
-import { GraphQLJSON } from '../type';
+import type { ComposeOutputType, ComposeInputType } from './typeHelpers';
 import { inspect } from './misc';
-import type { GraphQLType, GraphQLInputType } from '../graphql';
+import { UnionTypeComposer } from '../UnionTypeComposer';
 
 export type toInputObjectTypeOpts = {
   prefix?: string,
@@ -35,30 +31,25 @@ export function toInputObjectType<TContext>(
 
   const inputTypeName = `${prefix}${tc.getTypeName()}${postfix}`;
 
-  const inputTypeComposer = tc.schemaComposer.createInputTC({
-    name: inputTypeName,
-    fields: {},
-  });
+  const inputTypeComposer = tc.schemaComposer.createInputTC(inputTypeName);
   tc.setInputTypeComposer(inputTypeComposer);
 
   const fieldNames = tc.getFieldNames();
-  const inputFields = {};
   fieldNames.forEach(fieldName => {
     const fieldOpts = {
       ...opts,
       fieldName,
       outputTypeName: tc.getTypeName(),
     };
-    const fc = tc.getFieldConfig(fieldName);
-    const inputType = convertInputObjectField(fc.type, fieldOpts, tc.schemaComposer);
-    if (inputType) {
-      inputFields[fieldName] = {
-        type: inputType,
+    const fc = tc.getField(fieldName);
+    const fieldInputType = convertInputObjectField(fc.type, fieldOpts, tc.schemaComposer);
+    if (fieldInputType) {
+      inputTypeComposer.setField(fieldName, {
+        type: fieldInputType,
         description: fc.description,
-      };
+      });
     }
   });
-  inputTypeComposer.addFields(inputFields);
 
   return inputTypeComposer;
 }
@@ -71,49 +62,53 @@ export type ConvertInputObjectFieldOpts = {
 };
 
 export function convertInputObjectField(
-  field: GraphQLType,
+  field: ComposeOutputType<any>,
   opts: ConvertInputObjectFieldOpts,
   schemaComposer: SchemaComposer<any>
-): ?GraphQLInputType {
-  let fieldType = field;
+): ComposeInputType | null {
+  let tc: any = field;
 
   const wrappers = [];
-  while (fieldType instanceof GraphQLList || fieldType instanceof GraphQLNonNull) {
-    wrappers.unshift(fieldType.constructor);
-    fieldType = fieldType.ofType;
+  while (
+    tc instanceof ListComposer ||
+    tc instanceof NonNullComposer ||
+    tc instanceof ThunkComposer
+  ) {
+    if (tc instanceof ThunkComposer) {
+      tc = tc.getUnwrappedTC();
+    } else {
+      wrappers.unshift(tc.constructor);
+      tc = tc.ofType;
+    }
   }
 
-  if (fieldType instanceof GraphQLUnionType) {
+  if (tc instanceof UnionTypeComposer) {
     return null;
   }
 
-  if (!isInputType(fieldType)) {
-    if (fieldType instanceof GraphQLObjectType || fieldType instanceof GraphQLInterfaceType) {
+  if (!TypeMapper.isInputType(tc)) {
+    if (tc instanceof ObjectTypeComposer || tc instanceof InterfaceTypeComposer) {
       const typeOpts = {
         prefix: opts.prefix || '',
         postfix: opts.postfix || 'Input',
       };
-      const tc =
-        fieldType instanceof GraphQLObjectType
-          ? schemaComposer.createObjectTC(fieldType)
-          : schemaComposer.createInterfaceTC(fieldType);
-      fieldType = toInputObjectType(tc, typeOpts).getType();
+      tc = toInputObjectType(tc, typeOpts);
     } else {
       // eslint-disable-next-line
       console.error(
         `graphql-compose: can not convert field '${opts.outputTypeName || ''}.${opts.fieldName ||
           ''}' to InputType` +
-          '\nIt should be GraphQLObjectType or GraphQLInterfaceType, but got \n' +
-          inspect(fieldType)
+          '\nIt should be ObjectType or InterfaceType, but got \n' +
+          inspect(tc)
       );
-      fieldType = GraphQLJSON;
+      tc = schemaComposer.get('JSON');
     }
   }
 
-  const inputFieldType: GraphQLInputType = wrappers.reduce(
-    (type, Wrapper) => new Wrapper(type),
-    fieldType
-  );
+  if (tc) {
+    // wrap TypeComposer back
+    tc = wrappers.reduce((type: any, Wrapper) => new Wrapper(type), tc);
+  }
 
-  return inputFieldType;
+  return (tc: any);
 }

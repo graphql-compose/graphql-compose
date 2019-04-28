@@ -1,19 +1,20 @@
 /* eslint-disable no-use-before-define */
 /* @flow strict */
 
-import { isComposeType, type AnyComposeType, type SchemaComposer } from '../SchemaComposer';
+import type { SchemaComposer } from '../SchemaComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { UnionTypeComposer } from '../UnionTypeComposer';
+import { isNamedTypeComposer, type NamedTypeComposer } from './typeHelpers';
 
 export type SchemaVisitor = {
   [visitKind: VisitSchemaKind]: (
-    tc: AnyComposeType<any>,
+    tc: NamedTypeComposer<any>,
     schemaComposer: SchemaComposer<any>
-  ) => void | null | false | AnyComposeType<any>,
+  ) => void | null | false | NamedTypeComposer<any>,
 };
 
 export type VisitSchemaKind =
@@ -37,7 +38,7 @@ export type VisitSchemaKind =
  * Cause first visit operation may halt other visit calls.
  */
 export function getVisitKinds(
-  tc: AnyComposeType<any>,
+  tc: NamedTypeComposer<any>,
   schema: SchemaComposer<any>
 ): VisitSchemaKind[] {
   let kinds: VisitSchemaKind[] = [];
@@ -65,7 +66,7 @@ export function getVisitKinds(
 
 export function visitSchema(schema: SchemaComposer<any>, visitor: SchemaVisitor) {
   schema.forEach((value, key) => {
-    let tc: AnyComposeType<any> = (value: any);
+    let tc: NamedTypeComposer<any> = (value: any);
     const visitKinds = getVisitKinds(tc, schema);
     for (const kind of visitKinds) {
       if (visitor[kind]) {
@@ -76,7 +77,7 @@ export function visitSchema(schema: SchemaComposer<any>, visitor: SchemaVisitor)
         } else if (result === false) {
           // `false` - halt processing other visit kinds
           break;
-        } else if (isComposeType(result)) {
+        } else if (isNamedTypeComposer(result)) {
           // `AnyTC` - replace type in registry
           tc = result;
           schema.set(key, tc);

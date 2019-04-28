@@ -6,11 +6,17 @@ import { ObjectTypeComposer } from '../../ObjectTypeComposer';
 import { InputTypeComposer } from '../../InputTypeComposer';
 import { Resolver } from '../../Resolver';
 
+beforeEach(() => {
+  sc.clear();
+});
+
 describe('typeByPath', () => {
   const lonLatTC = sc.createObjectTC('type LonLat { lon: Float, lat: Float }');
-  const spotITC = sc.createInputTC('input SpotInput { lon: Float, lat: Float, distance: Float }');
+  const spotITC: any = sc.createInputTC(
+    'input SpotInput { lon: Float, lat: Float, distance: Float }'
+  );
   spotITC.setField('subSpot', spotITC);
-  const tc = sc.createObjectTC({
+  const tc: any = sc.createObjectTC({
     name: 'Place',
     fields: {
       title: 'String!',
@@ -24,7 +30,7 @@ describe('typeByPath', () => {
       points: '[LonLat!]!',
     },
   });
-  const rsv = sc.createResolver({
+  const rsv: any = sc.createResolver({
     name: 'findMany',
     args: {
       limit: 'Int',
@@ -34,8 +40,8 @@ describe('typeByPath', () => {
     type: tc,
   });
   tc.setResolver('findSpots', rsv);
-  const ifc = sc.createInterfaceTC({
-    name: 'Place',
+  const ifc: any = sc.createInterfaceTC({
+    name: 'IPlace',
     fields: {
       title: 'String!',
       lonLat: lonLatTC,

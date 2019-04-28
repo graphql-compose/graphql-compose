@@ -1,9 +1,159 @@
 /* @flow */
-import { isType, parse, type GraphQLType } from '../graphql';
+/* eslint-disable no-use-before-define */
+
+import { isType, parse, isOutputType, isInputType } from '../graphql';
+import type {
+  GraphQLType,
+  GraphQLNamedType,
+  GraphQLOutputType,
+  GraphQLInputType,
+} from '../graphql';
 import { isFunction } from './is';
 import { inspect } from './misc';
+import { ObjectTypeComposer } from '../ObjectTypeComposer';
+import { InputTypeComposer } from '../InputTypeComposer';
+import { ScalarTypeComposer } from '../ScalarTypeComposer';
+import { EnumTypeComposer } from '../EnumTypeComposer';
+import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
+import { UnionTypeComposer } from '../UnionTypeComposer';
+import { Resolver } from '../Resolver';
+import { NonNullComposer } from '../NonNullComposer';
+import { ListComposer } from '../ListComposer';
+import { ThunkComposer } from '../ThunkComposer';
+import type { TypeAsString } from '../TypeMapper';
 
-export function getGraphQLType(anyType: mixed): GraphQLType {
+export type AnyTypeComposer<TContext> =
+  | NamedTypeComposer<TContext>
+  | ListComposer<any>
+  | NonNullComposer<any>
+  | ThunkComposer<any, any>;
+
+export type NamedTypeComposer<TContext> =
+  | ObjectTypeComposer<any, TContext>
+  | InputTypeComposer<TContext>
+  | EnumTypeComposer<TContext>
+  | InterfaceTypeComposer<any, TContext>
+  | UnionTypeComposer<any, TContext>
+  | ScalarTypeComposer<TContext>;
+
+// Output type should not have `TSource`. It should not affect on main Type source!
+export type ComposeNamedOutputType<TContext> =
+  | ObjectTypeComposer<any, TContext>
+  | EnumTypeComposer<TContext>
+  | ScalarTypeComposer<TContext>
+  | InterfaceTypeComposer<any, TContext>
+  | UnionTypeComposer<any, TContext>;
+
+export type ComposeOutputType<TContext> =
+  | ComposeNamedOutputType<TContext>
+  | NonNullComposer<any>
+  | ListComposer<any>
+  | ThunkComposer<any, GraphQLOutputType>;
+
+export type ComposeOutputTypeDefinition<TContext> =
+  | $ReadOnly<ComposeOutputType<TContext>>
+  | $ReadOnly<GraphQLOutputType>
+  | TypeAsString
+  | $ReadOnlyArray<
+      | $ReadOnly<ComposeOutputType<TContext>>
+      | $ReadOnly<GraphQLOutputType>
+      | TypeAsString
+      | $ReadOnlyArray<
+          $ReadOnly<ComposeOutputType<TContext>> | $ReadOnly<GraphQLOutputType> | TypeAsString
+        >
+    >;
+
+export type ComposeNamedInputType<TContext> =
+  | InputTypeComposer<TContext>
+  | EnumTypeComposer<TContext>
+  | ScalarTypeComposer<TContext>;
+
+export type ComposeInputType =
+  | ComposeNamedInputType<any>
+  | ThunkComposer<ComposeNamedInputType<any>, GraphQLInputType>
+  | NonNullComposer<
+      | ComposeNamedInputType<any>
+      | ThunkComposer<ComposeNamedInputType<any>, GraphQLInputType>
+      | ListComposer<any>
+    >
+  | ListComposer<
+      | ComposeNamedInputType<any>
+      | ThunkComposer<ComposeNamedInputType<any>, GraphQLInputType>
+      | ListComposer<any>
+      | NonNullComposer<any>
+    >;
+
+export type ComposeInputTypeDefinition =
+  | TypeAsString
+  | $ReadOnly<ComposeInputType>
+  | $ReadOnly<GraphQLInputType>
+  | $ReadOnlyArray<
+      | TypeAsString
+      | $ReadOnly<ComposeInputType>
+      | $ReadOnly<GraphQLInputType>
+      | $ReadOnlyArray<TypeAsString | $ReadOnly<ComposeInputType> | $ReadOnly<GraphQLInputType>>
+    >;
+
+export function isComposeType(type: any): boolean {
+  return (
+    isType(type) ||
+    (Array.isArray(type) && isComposeType(type[0])) ||
+    type instanceof ObjectTypeComposer ||
+    type instanceof InputTypeComposer ||
+    type instanceof InterfaceTypeComposer ||
+    type instanceof EnumTypeComposer ||
+    type instanceof UnionTypeComposer ||
+    type instanceof ScalarTypeComposer ||
+    type instanceof Resolver
+  );
+}
+
+export function isComposeOutputType(type: any): boolean %checks {
+  return (
+    isOutputType(type) ||
+    (Array.isArray(type) && isComposeOutputType(type[0])) ||
+    type instanceof ObjectTypeComposer ||
+    type instanceof InterfaceTypeComposer ||
+    type instanceof EnumTypeComposer ||
+    type instanceof UnionTypeComposer ||
+    type instanceof ScalarTypeComposer ||
+    type instanceof Resolver
+  );
+}
+
+export function isComposeInputType(type: any): boolean %checks {
+  return (
+    isInputType(type) ||
+    (Array.isArray(type) && isComposeInputType(type[0])) ||
+    type instanceof InputTypeComposer ||
+    type instanceof EnumTypeComposer ||
+    type instanceof ScalarTypeComposer
+  );
+}
+
+export type AnyType<TContext> = NamedTypeComposer<TContext> | GraphQLNamedType;
+
+export function isNamedTypeComposer(type: any): boolean %checks {
+  return (
+    type instanceof ObjectTypeComposer ||
+    type instanceof InputTypeComposer ||
+    type instanceof ScalarTypeComposer ||
+    type instanceof EnumTypeComposer ||
+    type instanceof InterfaceTypeComposer ||
+    type instanceof UnionTypeComposer
+  );
+}
+
+export function isTypeComposer(type: any): boolean %checks {
+  return (
+    isNamedTypeComposer(type) ||
+    type instanceof ListComposer ||
+    type instanceof NonNullComposer ||
+    type instanceof ThunkComposer
+  );
+}
+
+export function getGraphQLType(anyType: any): GraphQLType {
   let type = (anyType: any);
 
   // extract type from ObjectTypeComposer, InputTypeComposer, EnumTypeComposer and Resolver
@@ -18,7 +168,7 @@ export function getGraphQLType(anyType: mixed): GraphQLType {
   return type;
 }
 
-export function getComposeTypeName(type: mixed): string {
+export function getComposeTypeName(type: any): string {
   if (typeof type === 'string') {
     if (/^[_a-zA-Z][_a-zA-Z0-9]*$/.test(type)) {
       // single type name
@@ -36,6 +186,8 @@ export function getComposeTypeName(type: mixed): string {
     }
 
     throw new Error(`Cannot get type name from string: ${inspect(type)}`);
+  } else if (isFunction(type)) {
+    return getComposeTypeName((type: any)());
   } else {
     try {
       const gqlType = getGraphQLType(type);
@@ -48,4 +200,57 @@ export function getComposeTypeName(type: mixed): string {
   }
 
   throw new Error(`Cannot get type name from ${inspect(type)}`);
+}
+
+export function unwrapTC<TContext>(anyTC: AnyTypeComposer<TContext>): NamedTypeComposer<TContext> {
+  if (
+    anyTC instanceof NonNullComposer ||
+    anyTC instanceof ListComposer ||
+    anyTC instanceof ThunkComposer
+  ) {
+    const unwrappedTC = anyTC.getUnwrappedTC();
+    return unwrapTC(unwrappedTC);
+  }
+  return anyTC;
+}
+
+export function unwrapInputTC(inputTC: ComposeInputType): ComposeNamedInputType<any> {
+  return (unwrapTC(inputTC): any);
+}
+
+export function unwrapOutputTC<TContext>(
+  outputTC: ComposeOutputType<TContext>
+): ComposeNamedOutputType<TContext> {
+  return (unwrapTC(outputTC): any);
+}
+
+export function changeUnwrappedTC<TContext, T>(
+  anyTC: T,
+  cb: (tc: NamedTypeComposer<TContext>) => NamedTypeComposer<TContext> | void | null
+): T | void | null {
+  let tc = anyTC;
+
+  const wrappers = [];
+  while (
+    tc instanceof ListComposer ||
+    tc instanceof NonNullComposer ||
+    tc instanceof ThunkComposer
+  ) {
+    if (tc instanceof ThunkComposer) {
+      tc = tc.getUnwrappedTC();
+    } else {
+      wrappers.unshift(tc.constructor);
+      tc = tc.ofType;
+    }
+  }
+
+  // call callback for TC
+  tc = cb((tc: any));
+
+  if (tc) {
+    // wrap TypeComposer back
+    tc = wrappers.reduce((type: any, Wrapper) => new Wrapper(type), tc);
+  }
+
+  return (tc: any);
 }

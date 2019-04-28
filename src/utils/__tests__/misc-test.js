@@ -8,6 +8,8 @@ import {
   clearName,
   omit,
   only,
+  forEachKey,
+  mapEachKey,
 } from '../misc';
 
 describe('util/misc', () => {
@@ -49,5 +51,19 @@ describe('util/misc', () => {
   it('only', () => {
     expect(only({ a: 1, b: 2, c: 3 }, ['a', 'd'])).toEqual({ a: 1 });
     expect(only({ a: 1, b: 2, c: 3 }, 'c')).toEqual({ c: 3 });
+  });
+
+  it('forEachKey', () => {
+    const obj = { a: 1, b: 2, c: 3 };
+    let result = '';
+    forEachKey(obj, (v, k) => {
+      result += `${v},${k};`;
+    });
+    expect(result).toBe('1,a;2,b;3,c;');
+  });
+
+  it('mapEachKey', () => {
+    const obj = { a: 1, b: 2, c: 3 };
+    expect(mapEachKey(obj, (v, k) => `${v}${k}`)).toEqual({ a: '1a', b: '2b', c: '3c' });
   });
 });

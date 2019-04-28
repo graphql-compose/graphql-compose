@@ -16,7 +16,7 @@ import {
   GraphQLNonNull,
   GraphQLInterfaceType,
 } from '../graphql';
-import deepmerge from './deepmerge';
+import { deepmerge } from './deepmerge';
 
 const { FIELD, FRAGMENT_SPREAD, INLINE_FRAGMENT } = Kind;
 

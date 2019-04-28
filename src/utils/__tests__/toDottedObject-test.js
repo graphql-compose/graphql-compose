@@ -1,6 +1,6 @@
 /* @flow strict */
 
-import toDottedObject from '../toDottedObject';
+import { toDottedObject } from '../toDottedObject';
 
 describe('toDottedObject()', () => {
   it('should dot nested objects', () => {
