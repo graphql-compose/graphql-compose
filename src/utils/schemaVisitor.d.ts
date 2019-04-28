@@ -1,18 +1,13 @@
-import { isComposeType, AnyComposeType, SchemaComposer } from '../SchemaComposer';
-import { ObjectTypeComposer } from '../ObjectTypeComposer';
-import { InputTypeComposer } from '../InputTypeComposer';
-import { ScalarTypeComposer } from '../ScalarTypeComposer';
-import { EnumTypeComposer } from '../EnumTypeComposer';
-import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
-import { UnionTypeComposer } from '../UnionTypeComposer';
+import { SchemaComposer } from '../SchemaComposer';
+import { NamedTypeComposer } from './typeHelpers';
 
 export type TypeKind = {};
 
 export type SchemaVisitor = {
   [visitKind in VisitSchemaKind]: (
-    tc: AnyComposeType<any>,
+    tc: NamedTypeComposer<any>,
     schemaComposer: SchemaComposer<any>
-  ) => void | null | false | AnyComposeType<any>
+  ) => void | null | false | NamedTypeComposer<any>
 };
 
 export type VisitSchemaKind =
@@ -36,7 +31,7 @@ export type VisitSchemaKind =
  * Cause first visit operation may halt other visit calls.
  */
 export function getVisitKinds(
-  tc: AnyComposeType<any>,
+  tc: NamedTypeComposer<any>,
   schema: SchemaComposer<any>
 ): VisitSchemaKind[];
 

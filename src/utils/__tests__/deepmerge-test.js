@@ -1,6 +1,6 @@
 /* @flow */
 
-import deepmerge from '../deepmerge';
+import { deepmerge } from '../deepmerge';
 
 describe('deepmerge', () => {
   it('should merge arrays', () => {

@@ -162,7 +162,9 @@ describe('schemaVisitor', () => {
         },
       });
 
-      expect(data).toEqual(['User', 'Article', 'Filter', 'Query', 'Mutation', 'Subscription']);
+      expect(data).toEqual(
+        expect.arrayContaining(['User', 'Article', 'Filter', 'Query', 'Mutation', 'Subscription'])
+      );
     });
   });
 });

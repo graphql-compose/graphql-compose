@@ -1,4 +1,5 @@
 export type ObjMap<T> = { [key: string]: T };
+export type ObjMapReadOnly<T> = Readonly<{ [key: string]: Readonly<T> }>;
 export type Thunk<T> = (() => T) | T;
 export type MaybePromise<T> = Promise<T> | T;
 
