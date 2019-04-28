@@ -1,16 +1,10 @@
 /* @flow strict */
 /* eslint-disable no-use-before-define */
 
-import {
-  GraphQLInterfaceType,
-  GraphQLObjectType,
-  GraphQLList,
-  GraphQLNonNull,
-  getNamedType,
-} from './graphql';
+import { GraphQLInterfaceType, GraphQLObjectType } from './graphql';
 import { isObject, isString, isFunction } from './utils/is';
-import { resolveMaybeThunk, inspect } from './utils/misc';
-import { ObjectTypeComposer, isComposeOutputType } from './ObjectTypeComposer';
+import { resolveMaybeThunk, inspect, mapEachKey } from './utils/misc';
+import { ObjectTypeComposer } from './ObjectTypeComposer';
 import type {
   GraphQLFieldConfig,
   GraphQLFieldConfigMap,
@@ -21,20 +15,23 @@ import type {
   GraphQLTypeResolver,
 } from './graphql';
 import { InputTypeComposer } from './InputTypeComposer';
-import type { EnumTypeComposer } from './EnumTypeComposer';
-import { UnionTypeComposer } from './UnionTypeComposer';
-import type { ScalarTypeComposer } from './ScalarTypeComposer';
 import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
+import { TypeMapper } from './TypeMapper';
 import type {
-  ComposeFieldConfigMap,
-  ComposeFieldConfig,
-  ComposeFieldConfigAsObject,
-  ComposeArgumentConfig,
-  ComposeArgumentConfigAsObject,
-  ComposeFieldConfigArgumentMap,
+  ObjectTypeComposerFieldConfigMap,
+  ObjectTypeComposerFieldConfig,
+  ObjectTypeComposerFieldConfigDefinition,
+  ObjectTypeComposerFieldConfigAsObjectDefinition,
+  ObjectTypeComposerFieldConfigMapDefinition,
+  ObjectTypeComposerArgumentConfigMapDefinition,
+  ObjectTypeComposerArgumentConfig,
+  ObjectTypeComposerArgumentConfigMap,
   ArgsMap,
 } from './ObjectTypeComposer';
+import { ListComposer } from './ListComposer';
+import { NonNullComposer } from './NonNullComposer';
+import { ThunkComposer } from './ThunkComposer';
 import type {
   Thunk,
   Extensions,
@@ -42,61 +39,55 @@ import type {
   DirectiveArgs,
   ExtensionsDirective,
 } from './utils/definitions';
-import {
-  resolveOutputConfigMapAsThunk,
-  resolveOutputConfigAsThunk,
-  resolveArgConfigAsThunk,
-} from './utils/configAsThunk';
 import { toInputObjectType } from './utils/toInputObjectType';
-import { typeByPath } from './utils/typeByPath';
-import { getGraphQLType } from './utils/typeHelpers';
-import { defineFieldMap, defineFieldMapToConfig } from './utils/configToDefine';
+import { typeByPath, type TypeInPath } from './utils/typeByPath';
+import { getGraphQLType, unwrapOutputTC, unwrapInputTC } from './utils/typeHelpers';
+import { defineFieldMap, convertObjectFieldMapToConfig } from './utils/configToDefine';
 import { graphqlVersion } from './utils/graphqlVersion';
+import type { ComposeNamedInputType, ComposeNamedOutputType } from './utils/typeHelpers';
 
-export type GraphQLInterfaceTypeExtended<TSource, TContext> = GraphQLInterfaceType & {
-  _gqcFields?: ComposeFieldConfigMap<TSource, TContext>,
-  _gqcInputTypeComposer?: InputTypeComposer<TContext>,
-  _gqcTypeResolvers?: InterfaceTypeResolversMap<TContext>,
-  _gqcExtensions?: Extensions,
+export type InterfaceTypeComposerDefinition<TSource, TContext> =
+  | TypeAsString
+  | TypeDefinitionString
+  | InterfaceTypeComposerAsObjectDefinition<TSource, TContext>
+  | GraphQLInterfaceType
+  | $ReadOnly<InterfaceTypeComposerThunked<any, TContext>>;
+
+export type InterfaceTypeComposerAsObjectDefinition<TSource, TContext> = {
+  name: string,
+  fields?: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>,
+  resolveType?: null | GraphQLTypeResolver<TSource, TContext>,
+  description?: null | string,
+  extensions?: Extensions,
 };
 
-export type InterfaceTypeResolversMap<TContext> = Map<
+export type InterfaceTypeComposerResolversMap<TContext> = Map<
   ObjectTypeComposer<any, TContext> | GraphQLObjectType,
-  InterfaceTypeResolverCheckFn<any, TContext>
+  InterfaceTypeComposerResolverCheckFn<any, TContext>
 >;
 
-export type InterfaceTypeResolverCheckFn<TSource, TContext> = (
+export type InterfaceTypeComposerResolverCheckFn<TSource, TContext> = (
   value: TSource,
   context: TContext,
   info: GraphQLResolveInfo
-) => MaybePromise<?boolean>;
+) => MaybePromise<boolean | null | void>;
 
-export type ComposeInterfaceTypeConfig<TSource, TContext> = {
-  +name: string,
-  +fields?: Thunk<ComposeFieldConfigMap<TSource, TContext>>,
-  +resolveType?: ?GraphQLTypeResolver<TSource, TContext>,
-  +description?: ?string,
-  +extensions?: Extensions,
-};
-
-export type InterfaceTypeComposeDefinition<TSource, TContext> =
-  | TypeAsString
-  | ComposeInterfaceTypeConfig<TSource, TContext>;
-
-export type ComposeInterfaceType =
-  | InterfaceTypeComposer<any, any>
-  | GraphQLInterfaceType
-  | TypeDefinitionString
-  | TypeAsString;
+export type InterfaceTypeComposerThunked<TReturn, TContext> =
+  | InterfaceTypeComposer<TReturn, TContext>
+  | ThunkComposer<InterfaceTypeComposer<TReturn, TContext>, GraphQLInterfaceType>;
 
 export class InterfaceTypeComposer<TSource, TContext> {
-  gqType: GraphQLInterfaceTypeExtended<TSource, TContext>;
   schemaComposer: SchemaComposer<TContext>;
+  _gqType: GraphQLInterfaceType;
+  _gqcFields: ObjectTypeComposerFieldConfigMap<TSource, TContext>;
+  _gqcInputTypeComposer: void | InputTypeComposer<TContext>;
+  _gqcTypeResolvers: void | InterfaceTypeComposerResolversMap<TContext>;
+  _gqcExtensions: void | Extensions;
 
   // Also supported `GraphQLInterfaceType` but in such case Flowtype force developers
   // to explicitly write annotations in their code. But it's bad.
   static create<TSrc, TCtx>(
-    typeDef: InterfaceTypeComposeDefinition<TSrc, TCtx>,
+    typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>
   ): InterfaceTypeComposer<TSrc, TCtx> {
     if (!(schemaComposer instanceof SchemaComposer)) {
@@ -105,13 +96,17 @@ export class InterfaceTypeComposer<TSource, TContext> {
       );
     }
 
+    if (schemaComposer.hasInstance(typeDef, InterfaceTypeComposer)) {
+      return schemaComposer.getIFTC(typeDef);
+    }
+
     const iftc = this.createTemp(typeDef, schemaComposer);
     schemaComposer.add(iftc);
     return iftc;
   }
 
   static createTemp<TSrc, TCtx>(
-    typeDef: InterfaceTypeComposeDefinition<TSrc, TCtx>,
+    typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
     schemaComposer?: SchemaComposer<TCtx>
   ): InterfaceTypeComposer<TSrc, TCtx> {
     const sc = schemaComposer || new SchemaComposer();
@@ -120,8 +115,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
     if (isString(typeDef)) {
       const typeName: string = typeDef;
-      const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
-      if (NAME_RX.test(typeName)) {
+      if (TypeMapper.isTypeNameString(typeName)) {
         IFTC = new InterfaceTypeComposer(
           new GraphQLInterfaceType({
             name: typeName,
@@ -130,27 +124,38 @@ export class InterfaceTypeComposer<TSource, TContext> {
           sc
         );
       } else {
-        IFTC = sc.typeMapper.createType(typeName);
+        IFTC = sc.typeMapper.convertSDLTypeDefinition(typeName);
         if (!(IFTC instanceof InterfaceTypeComposer)) {
           throw new Error(
-            'You should provide correct GraphQLInterfaceType type definition.' +
+            'You should provide correct GraphQLInterfaceType type definition. ' +
               'Eg. `interface MyType { id: ID!, name: String! }`'
           );
         }
       }
     } else if (typeDef instanceof GraphQLInterfaceType) {
       IFTC = new InterfaceTypeComposer(typeDef, sc);
-    } else if (isObject(typeDef)) {
-      const fields = typeDef.fields;
+    } else if (typeDef instanceof InterfaceTypeComposer) {
+      IFTC = typeDef;
+    } else if (
+      isObject(typeDef) &&
+      !(typeDef instanceof InterfaceTypeComposer) // hate Flow 😈
+    ) {
       const type = new GraphQLInterfaceType({
         ...(typeDef: any),
-        fields: isFunction(fields)
-          ? () => resolveOutputConfigMapAsThunk(sc, (fields(): any), typeDef.name)
-          : () => ({}),
+        fields: () => ({}),
       });
       IFTC = new InterfaceTypeComposer(type, sc);
-      if (isObject(typeDef.fields)) IFTC.addFields(typeDef.fields);
-      IFTC.gqType._gqcExtensions = typeDef.extensions || {};
+
+      const fields = (typeDef: any).fields;
+      if (isFunction(fields)) {
+        // `convertOutputFieldMapToConfig` helps to solve hoisting problems
+        // rewrap fields `() => { f1: { type: A } }` -> `{ f1: { type: () => A } }`
+        IFTC.addFields(convertObjectFieldMapToConfig(fields, sc));
+      } else if (isObject(fields)) {
+        IFTC.addFields(fields);
+      }
+
+      IFTC._gqcExtensions = (typeDef: any).extensions || {};
     } else {
       throw new Error(
         `You should provide GraphQLInterfaceTypeConfig or string with interface name or SDL definition. Provided:\n${inspect(
@@ -163,7 +168,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   constructor(
-    gqType: GraphQLInterfaceType,
+    graphqlType: GraphQLInterfaceType,
     schemaComposer: SchemaComposer<TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
     if (!(schemaComposer instanceof SchemaComposer)) {
@@ -171,12 +176,28 @@ export class InterfaceTypeComposer<TSource, TContext> {
         'You must provide SchemaComposer instance as a second argument for `new InterfaceTypeComposer(GraphQLInterfaceType, SchemaComposer)`'
       );
     }
-    this.schemaComposer = schemaComposer;
-
-    if (!(gqType instanceof GraphQLInterfaceType)) {
+    if (!(graphqlType instanceof GraphQLInterfaceType)) {
       throw new Error('InterfaceTypeComposer accept only GraphQLInterfaceType in constructor');
     }
-    this.gqType = gqType;
+
+    this.schemaComposer = schemaComposer;
+    this._gqType = graphqlType;
+
+    // add itself to TypeStorage on create
+    // it avoids recursive type use errors
+    this.schemaComposer.set(graphqlType, this);
+
+    if (graphqlVersion >= 14) {
+      this._gqcFields = convertObjectFieldMapToConfig(this._gqType._fields, this.schemaComposer);
+    } else {
+      // read
+      const fields: Thunk<GraphQLFieldConfigMap<any, TContext>> = (this._gqType: any)._typeConfig
+        .fields;
+      this._gqcFields = this.schemaComposer.typeMapper.convertOutputFieldConfigMap(
+        (resolveMaybeThunk(fields) || {}: any),
+        this.getTypeName()
+      );
+    }
 
     // alive proper Flow type casting in autosuggestions for class with Generics
     /* :: return this; */
@@ -186,74 +207,42 @@ export class InterfaceTypeComposer<TSource, TContext> {
   // Field methods
   // -----------------------------------------------
 
-  hasField(name: string): boolean {
-    const fields = this.getFields();
-    return !!fields[name];
+  getFields(): ObjectTypeComposerFieldConfigMap<TSource, TContext> {
+    return this._gqcFields;
   }
 
-  getFields(): ComposeFieldConfigMap<TSource, TContext> {
-    if (!this.gqType._gqcFields) {
-      if (graphqlVersion >= 14) {
-        this.gqType._gqcFields = (defineFieldMapToConfig(this.gqType._fields): any);
-      } else {
-        const fields: Thunk<GraphQLFieldConfigMap<any, TContext>> = (this.gqType: any)._typeConfig
-          .fields;
-        this.gqType._gqcFields = (resolveMaybeThunk(fields) || {}: any);
-      }
-    }
-
-    return this.gqType._gqcFields;
+  getFieldNames(): string[] {
+    return Object.keys(this._gqcFields);
   }
 
-  getField(fieldName: string): ComposeFieldConfigAsObject<TSource, TContext> {
-    const fields = this.getFields();
-    let field = fields[fieldName];
-
+  getField(fieldName: string): ObjectTypeComposerFieldConfig<TSource, TContext, ArgsMap> {
+    const field = this._gqcFields[fieldName];
     if (!field) {
       throw new Error(
         `Cannot get field '${fieldName}' from type '${this.getTypeName()}'. Field does not exist.`
       );
     }
-
-    if (isFunction(field)) field = field();
-
-    if (typeof field === 'string' || isComposeOutputType(field) || Array.isArray(field)) {
-      return { type: (field: any) };
-    }
-
-    return (field: any);
+    return field;
   }
 
-  getFieldNames(): string[] {
-    return Object.keys(this.getFields());
+  hasField(fieldName: string): boolean {
+    return !!this._gqcFields[fieldName];
   }
 
   setFields(
-    fields: ComposeFieldConfigMap<TSource, TContext>
+    fields: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
-    this.gqType._gqcFields = fields;
-
-    if (graphqlVersion >= 14) {
-      this.gqType._fields = () => {
-        return defineFieldMap(
-          this.gqType,
-          resolveOutputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName())
-        );
-      };
-    } else {
-      (this.gqType: any)._typeConfig.fields = () => {
-        return resolveOutputConfigMapAsThunk(this.schemaComposer, fields, this.getTypeName());
-      };
-      delete this.gqType._fields; // clear builded fields in type
-    }
+    this._gqcFields = this.schemaComposer.typeMapper.convertOutputFieldConfigMap(fields);
     return this;
   }
 
   setField(
-    name: string,
-    fieldConfig: ComposeFieldConfig<TSource, TContext>
+    fieldName: string,
+    fieldConfig: ObjectTypeComposerFieldConfigDefinition<TSource, TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
-    this.addFields({ [name]: fieldConfig });
+    this._gqcFields[fieldName] = this.schemaComposer.typeMapper.convertOutputFieldConfig(
+      fieldConfig
+    );
     return this;
   }
 
@@ -261,52 +250,53 @@ export class InterfaceTypeComposer<TSource, TContext> {
    * Add new fields or replace existed in a GraphQL type
    */
   addFields(
-    newValues: ComposeFieldConfigMap<TSource, TContext>
+    newFields: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
-    this.setFields({ ...this.getFields(), ...newValues });
+    this._gqcFields = {
+      ...this._gqcFields,
+      ...this.schemaComposer.typeMapper.convertOutputFieldConfigMap(newFields),
+    };
     return this;
   }
 
-  removeField(nameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
-    const fieldNames = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
-    const values = this.getFields();
-    fieldNames.forEach(valueName => delete values[valueName]);
-    this.setFields({ ...values });
+  removeField(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
+    const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
+    fieldNames.forEach(fieldName => delete this._gqcFields[fieldName]);
     return this;
   }
 
   removeOtherFields(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
     const keepFieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    const fields = this.getFields();
-    Object.keys(fields).forEach(fieldName => {
+    Object.keys(this._gqcFields).forEach(fieldName => {
       if (keepFieldNames.indexOf(fieldName) === -1) {
-        delete fields[fieldName];
+        delete this._gqcFields[fieldName];
       }
     });
-    this.setFields(fields);
     return this;
   }
 
   reorderFields(names: string[]): InterfaceTypeComposer<TSource, TContext> {
     const orderedFields = {};
-    const fields = this.getFields();
+    const fields = this._gqcFields;
     names.forEach(name => {
       if (fields[name]) {
         orderedFields[name] = fields[name];
         delete fields[name];
       }
     });
-    this.setFields({ ...orderedFields, ...fields });
+    this._gqcFields = { ...orderedFields, ...fields };
     return this;
   }
 
   extendField(
     fieldName: string,
-    partialFieldConfig: $Shape<ComposeFieldConfigAsObject<TSource, TContext, any>>
+    partialFieldConfig: $Shape<
+      ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, any>
+    >
   ): InterfaceTypeComposer<TSource, TContext> {
     let prevFieldConfig;
     try {
-      prevFieldConfig = (this.getFieldConfig(fieldName): any);
+      prevFieldConfig = this.getField(fieldName);
     } catch (e) {
       throw new Error(
         `Cannot extend field '${fieldName}' from type '${this.getTypeName()}'. Field does not exist.`
@@ -324,39 +314,45 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return this;
   }
 
-  isFieldNonNull(fieldName: string): boolean {
-    return this.getFieldType(fieldName) instanceof GraphQLNonNull;
-  }
-
   getFieldConfig(fieldName: string): GraphQLFieldConfig<TSource, TContext> {
-    const fc = this.getField(fieldName);
-    if (!fc) {
-      throw new Error(`Type ${this.getTypeName()} does not have field with name '${fieldName}'`);
-    }
-
-    return resolveOutputConfigAsThunk(this.schemaComposer, fc, fieldName, this.getTypeName());
+    const { type, args, ...rest } = this.getField(fieldName);
+    return ({
+      type: type.getType(),
+      args:
+        args &&
+        mapEachKey(args, ac => ({
+          ...ac,
+          type: ac.type.getType(),
+        })),
+      ...rest,
+    }: any);
   }
 
   getFieldType(fieldName: string): GraphQLOutputType {
-    return this.getFieldConfig(fieldName).type;
+    return this.getField(fieldName).type.getType();
   }
 
-  getFieldTC(
-    fieldName: string
-  ):
-    | ObjectTypeComposer<TSource, TContext>
-    | EnumTypeComposer<TContext>
-    | InterfaceTypeComposer<TSource, TContext>
-    | UnionTypeComposer<TSource, TContext>
-    | ScalarTypeComposer<TContext> {
-    const fieldType = getNamedType(this.getFieldType(fieldName));
-    const tc = this.schemaComposer.createTC(fieldType);
-    if (tc instanceof InputTypeComposer) {
-      throw new Error(
-        `${this.getTypeName()}.getFieldTC('${fieldName}') returns InputTypeComposer. It's very strange cause fields may have only Output types (Scalar, Object, Enum, Union, Interface).`
-      );
-    }
-    return tc;
+  getFieldTypeName(fieldName: string): string {
+    return this.getField(fieldName).type.getTypeName();
+  }
+
+  /**
+   * Automatically unwrap from List, NonNull, ThunkComposer
+   * It's important! Cause greatly helps to modify fields types in a real code
+   * without manual unwrap writing.
+   *
+   * If you need to work with wrappers, you may use the following code:
+   *   - `TC.getField().type` // returns real wrapped TypeComposer
+   *   - `TC.isFieldNonNull()` // checks is field NonNull or not
+   *   - `TC.makeFieldNonNull()` // for wrapping in NonNullComposer
+   *   - `TC.makeFieldNullable()` // for unwrapping from NonNullComposer
+   *   - `TC.isFieldPlural()` // checks is field wrapped in ListComposer or not
+   *   - `TC.makeFieldPlural()` // for wrapping in ListComposer
+   *   - `TC.makeFieldNonPlural()` // for unwrapping from ListComposer
+   */
+  getFieldTC(fieldName: string): ComposeNamedOutputType<TContext> {
+    const anyTC = this.getField(fieldName).type;
+    return unwrapOutputTC(anyTC);
   }
 
   /**
@@ -375,14 +371,16 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return tc;
   }
 
+  isFieldNonNull(fieldName: string): boolean {
+    return this.getField(fieldName).type instanceof NonNullComposer;
+  }
+
   makeFieldNonNull(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     fieldNames.forEach(fieldName => {
-      if (this.hasField(fieldName)) {
-        const fieldType = this.getFieldType(fieldName);
-        if (!(fieldType instanceof GraphQLNonNull)) {
-          this.extendField(fieldName, { type: new GraphQLNonNull(fieldType) });
-        }
+      const fc = this._gqcFields[fieldName];
+      if (fc && !(fc.type instanceof NonNullComposer)) {
+        fc.type = new NonNullComposer(fc.type);
       }
     });
     return this;
@@ -391,17 +389,56 @@ export class InterfaceTypeComposer<TSource, TContext> {
   makeFieldNullable(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     fieldNames.forEach(fieldName => {
-      if (this.hasField(fieldName)) {
-        const fieldType = this.getFieldType(fieldName);
-        if (fieldType instanceof GraphQLNonNull) {
-          this.extendField(fieldName, { type: fieldType.ofType });
+      const fc = this._gqcFields[fieldName];
+      if (fc && fc.type instanceof NonNullComposer) {
+        fc.type = fc.type.ofType;
+      }
+    });
+    return this;
+  }
+
+  isFieldPlural(fieldName: string): boolean {
+    const type = this.getField(fieldName).type;
+    return (
+      type instanceof ListComposer ||
+      (type instanceof NonNullComposer && type.ofType instanceof ListComposer)
+    );
+  }
+
+  makeFieldPlural(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
+    const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
+    fieldNames.forEach(fieldName => {
+      const fc = this._gqcFields[fieldName];
+      if (fc && !(fc.type instanceof ListComposer)) {
+        fc.type = new ListComposer(fc.type);
+      }
+    });
+    return this;
+  }
+
+  makeFieldNonPlural(
+    fieldNameOrArray: string | string[]
+  ): InterfaceTypeComposer<TSource, TContext> {
+    const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
+    fieldNames.forEach(fieldName => {
+      const fc = this._gqcFields[fieldName];
+      if (fc) {
+        if (fc.type instanceof ListComposer) {
+          fc.type = fc.type.ofType;
+        } else if (fc.type instanceof NonNullComposer && fc.type.ofType instanceof ListComposer) {
+          fc.type =
+            fc.type.ofType.ofType instanceof NonNullComposer
+              ? fc.type.ofType.ofType
+              : new NonNullComposer(fc.type.ofType.ofType);
         }
       }
     });
     return this;
   }
 
-  deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this {
+  deprecateFields(
+    fields: { [fieldName: string]: string } | string[] | string
+  ): InterfaceTypeComposer<TSource, TContext> {
     const existedFieldNames = this.getFieldNames();
 
     if (typeof fields === 'string') {
@@ -436,7 +473,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return this;
   }
 
-  getFieldArgs(fieldName: string): ComposeFieldConfigArgumentMap<ArgsMap> {
+  getFieldArgs(fieldName: string): ObjectTypeComposerArgumentConfigMap<ArgsMap> {
     try {
       const fc = this.getField(fieldName);
       return fc.args || {};
@@ -456,55 +493,43 @@ export class InterfaceTypeComposer<TSource, TContext> {
     }
   }
 
-  getFieldArg(fieldName: string, argName: string): ComposeArgumentConfigAsObject {
+  getFieldArg(fieldName: string, argName: string): ObjectTypeComposerArgumentConfig {
     const fieldArgs = this.getFieldArgs(fieldName);
-    let arg = fieldArgs[argName];
-
+    const arg = fieldArgs[argName];
     if (!arg) {
       throw new Error(
-        `Cannot get arg '${argName}' from type.field '${this.getTypeName()}.${fieldName}'. Argument does not exist.`
+        `Cannot get '${this.getTypeName()}.${fieldName}@${argName}'. Argument does not exist.`
       );
     }
-
-    if (isFunction(arg)) arg = arg();
-
-    if (typeof arg === 'string' || isComposeOutputType(arg) || Array.isArray(arg)) {
-      return { type: (arg: any) };
-    }
-
-    return (arg: any);
+    return arg;
   }
 
   getFieldArgType(fieldName: string, argName: string): GraphQLInputType {
     const ac = this.getFieldArg(fieldName, argName);
-    const graphqlAC = resolveArgConfigAsThunk(
-      this.schemaComposer,
-      ac,
-      argName,
-      fieldName,
-      this.getTypeName()
-    );
-    return graphqlAC.type;
+    return ac.type.getType();
   }
 
-  getFieldArgTC(
-    fieldName: string,
-    argName: string
-  ): InputTypeComposer<TContext> | EnumTypeComposer<TContext> | ScalarTypeComposer<TContext> {
-    const fieldType = getNamedType(this.getFieldArgType(fieldName, argName));
-    const tc = this.schemaComposer.createTC(fieldType);
-    if (
-      tc instanceof ObjectTypeComposer ||
-      tc instanceof InterfaceTypeComposer ||
-      tc instanceof UnionTypeComposer
-    ) {
-      throw new Error(
-        `${this.getTypeName()}.getFieldArgTC('${fieldName}', '${argName}') returns ${
-          tc.constructor.name
-        }. It's very strange cause args may have only Input types (Scalar, InputObject, Enum).`
-      );
-    }
-    return tc;
+  getFieldArgTypeName(fieldName: string, argName: string): string {
+    const ac = this.getFieldArg(fieldName, argName);
+    return ac.type.getTypeName();
+  }
+
+  /**
+   * Automatically unwrap from List, NonNull, ThunkComposer
+   * It's important! Cause greatly helps to modify args types in a real code
+   * without manual unwrap writing.
+   *
+   * If you need to work with wrappers, you may use the following code:
+   *    `isFieldArgPlural()` – checks is arg wrapped in ListComposer or not
+   *    `makeFieldArgPlural()` – for arg wrapping in ListComposer
+   *    `makeFieldArgNonPlural()` – for arg unwrapping from ListComposer
+   *    `isFieldArgNonNull()` – checks is arg wrapped in NonNullComposer or not
+   *    `makeFieldArgNonNull()` – for arg wrapping in NonNullComposer
+   *    `makeFieldArgNullable()` – for arg unwrapping from NonNullComposer
+   */
+  getFieldArgTC(fieldName: string, argName: string): ComposeNamedInputType<TContext> {
+    const anyTC = this.getFieldArg(fieldName, argName).type;
+    return unwrapInputTC(anyTC);
   }
 
   /**
@@ -525,28 +550,126 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   setFieldArgs(
     fieldName: string,
-    args: ComposeFieldConfigArgumentMap<any>
+    args: ObjectTypeComposerArgumentConfigMapDefinition<any>
   ): InterfaceTypeComposer<TSource, TContext> {
-    const field = { ...this.getField(fieldName) };
-    field.args = args;
-    this.setField(fieldName, field);
+    const fc = this.getField(fieldName);
+    fc.args = this.schemaComposer.typeMapper.convertArgConfigMap(
+      args,
+      fieldName,
+      this.getTypeName()
+    );
     return this;
   }
 
   addFieldArgs(
     fieldName: string,
-    newArgs: ComposeFieldConfigMap<TSource, TContext>
+    newArgs: ObjectTypeComposerArgumentConfigMapDefinition<any>
   ): InterfaceTypeComposer<TSource, TContext> {
-    this.setFieldArgs(fieldName, { ...this.getFieldArgs(fieldName), ...newArgs });
+    const fc = this.getField(fieldName);
+    fc.args = {
+      ...fc.args,
+      ...this.schemaComposer.typeMapper.convertArgConfigMap(newArgs, fieldName, this.getTypeName()),
+    };
     return this;
   }
 
   setFieldArg(
     fieldName: string,
     argName: string,
-    argConfig: ComposeArgumentConfig
+    argConfig: ObjectTypeComposerArgumentConfig
   ): InterfaceTypeComposer<TSource, TContext> {
-    this.addFieldArgs(fieldName, { [argName]: argConfig });
+    const fc = this.getField(fieldName);
+    fc.args = fc.args || {};
+    (fc.args: any)[argName] = this.schemaComposer.typeMapper.convertArgConfig(
+      argConfig,
+      argName,
+      fieldName,
+      this.getTypeName()
+    );
+    return this;
+  }
+
+  isFieldArgPlural(fieldName: string, argName: string): boolean {
+    const type = this.getFieldArg(fieldName, argName).type;
+    return (
+      type instanceof ListComposer ||
+      (type instanceof NonNullComposer && type.ofType instanceof ListComposer)
+    );
+  }
+
+  makeFieldArgPlural(
+    fieldName: string,
+    argNameOrArray: string | string[]
+  ): InterfaceTypeComposer<TSource, TContext> {
+    const args = this.getField(fieldName).args;
+    if (!args) return this;
+    const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
+    argNames.forEach(argName => {
+      const ac = args[argName];
+      if (ac && !(ac.type instanceof ListComposer)) {
+        ac.type = new ListComposer(ac.type);
+      }
+    });
+    return this;
+  }
+
+  makeFieldArgNonPlural(
+    fieldName: string,
+    argNameOrArray: string | string[]
+  ): InterfaceTypeComposer<TSource, TContext> {
+    const args = this.getField(fieldName).args;
+    if (!args) return this;
+    const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
+    argNames.forEach(argName => {
+      const ac = args[argName];
+      if (ac) {
+        if (ac.type instanceof ListComposer) {
+          ac.type = ac.type.ofType;
+        } else if (ac.type instanceof NonNullComposer && ac.type.ofType instanceof ListComposer) {
+          ac.type =
+            ac.type.ofType.ofType instanceof NonNullComposer
+              ? ac.type.ofType.ofType
+              : new NonNullComposer(ac.type.ofType.ofType);
+        }
+      }
+    });
+    return this;
+  }
+
+  isFieldArgNonNull(fieldName: string, argName: string): boolean {
+    const type = this.getFieldArg(fieldName, argName).type;
+    return type instanceof NonNullComposer;
+  }
+
+  makeFieldArgNonNull(
+    fieldName: string,
+    argNameOrArray: string | string[]
+  ): InterfaceTypeComposer<TSource, TContext> {
+    const args = this.getField(fieldName).args;
+    if (!args) return this;
+    const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
+    argNames.forEach(argName => {
+      const ac = args[argName];
+      if (ac && !(ac.type instanceof NonNullComposer)) {
+        ac.type = new NonNullComposer(ac.type);
+      }
+    });
+    return this;
+  }
+
+  makeFieldArgNullable(
+    fieldName: string,
+    argNameOrArray: string | string[]
+  ): InterfaceTypeComposer<TSource, TContext> {
+    const args = this.getField(fieldName).args;
+    if (!args) return this;
+    const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
+    argNames.forEach(argName => {
+      const ac = args[argName];
+      if (ac && ac.type instanceof NonNullComposer) {
+        ac.type = ac.type.ofType;
+      }
+    });
     return this;
   }
 
@@ -555,55 +678,75 @@ export class InterfaceTypeComposer<TSource, TContext> {
   // -----------------------------------------------
 
   getType(): GraphQLInterfaceType {
-    return this.gqType;
+    if (graphqlVersion >= 14) {
+      this._gqType._fields = () =>
+        defineFieldMap(
+          this._gqType,
+          mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name))
+        );
+    } else {
+      (this._gqType: any)._typeConfig.fields = () => {
+        return mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name));
+      };
+      delete this._gqType._fields; // clear builded fields in type
+    }
+    return this._gqType;
   }
 
-  getTypePlural(): GraphQLList<GraphQLInterfaceType> {
-    return new GraphQLList(this.gqType);
+  getTypePlural(): ListComposer<InterfaceTypeComposer<TSource, TContext>> {
+    return new ListComposer(this);
   }
 
-  getTypeNonNull(): GraphQLNonNull<GraphQLInterfaceType> {
-    return new GraphQLNonNull(this.gqType);
+  getTypeNonNull(): NonNullComposer<InterfaceTypeComposer<TSource, TContext>> {
+    return new NonNullComposer(this);
   }
 
   getTypeName(): string {
-    return this.gqType.name;
+    return this._gqType.name;
   }
 
   setTypeName(name: string): InterfaceTypeComposer<TSource, TContext> {
-    this.gqType.name = name;
+    this._gqType.name = name;
     this.schemaComposer.add(this);
     return this;
   }
 
   getDescription(): string {
-    return this.gqType.description || '';
+    return this._gqType.description || '';
   }
 
   setDescription(description: string): InterfaceTypeComposer<TSource, TContext> {
-    this.gqType.description = description;
+    this._gqType.description = description;
     return this;
   }
 
-  clone(newTypeName: string): InterfaceTypeComposer<TSource, TContext> {
-    if (!newTypeName) {
+  /**
+   * You may clone this type with a new provided name as string.
+   * Or you may provide a new TypeComposer which will get all clonned
+   * settings from this type.
+   */
+  clone(
+    newTypeNameOrTC: string | InterfaceTypeComposer<any, any>
+  ): InterfaceTypeComposer<TSource, TContext> {
+    if (!newTypeNameOrTC) {
       throw new Error('You should provide newTypeName:string for InterfaceTypeComposer.clone()');
     }
 
-    const newFields = {};
-    this.getFieldNames().forEach(fieldName => {
-      const fc = this.getFieldConfig(fieldName);
-      newFields[fieldName] = { ...(fc: any) };
-    });
+    const cloned =
+      newTypeNameOrTC instanceof InterfaceTypeComposer
+        ? newTypeNameOrTC
+        : InterfaceTypeComposer.create(newTypeNameOrTC, this.schemaComposer);
 
-    const cloned = new InterfaceTypeComposer(
-      new GraphQLInterfaceType({
-        name: newTypeName,
-        fields: newFields,
-      }),
-      this.schemaComposer
-    );
-
+    cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
+      ...fieldConfig,
+      args: mapEachKey(fieldConfig.args, argConfig => ({
+        ...argConfig,
+        extensions: { ...argConfig.extensions },
+      })),
+      extensions: { ...fieldConfig.extensions },
+    }));
+    cloned._gqcTypeResolvers = new Map(this._gqcTypeResolvers);
+    cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
 
     return cloned;
@@ -616,10 +759,15 @@ export class InterfaceTypeComposer<TSource, TContext> {
       | InterfaceTypeComposer<any, any>
       | ObjectTypeComposer<any, any>
   ): InterfaceTypeComposer<TSource, TContext> {
+    let tc: ?InterfaceTypeComposer<any, any> | ?ObjectTypeComposer<any, any>;
     if (type instanceof GraphQLInterfaceType || type instanceof GraphQLObjectType) {
-      this.addFields((defineFieldMapToConfig(type.getFields()): any));
+      tc = (this.schemaComposer.createTempTC(type): any);
     } else if (type instanceof InterfaceTypeComposer || type instanceof ObjectTypeComposer) {
-      this.addFields(type.getFields());
+      tc = type;
+    }
+
+    if (tc) {
+      this.addFields(tc.getFields());
     } else {
       throw new Error(
         `Cannot merge ${inspect(
@@ -640,20 +788,20 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   hasInputTypeComposer(): boolean {
-    return !!this.gqType._gqcInputTypeComposer;
+    return !!this._gqcInputTypeComposer;
   }
 
   setInputTypeComposer(itc: InputTypeComposer<TContext>): InterfaceTypeComposer<TSource, TContext> {
-    this.gqType._gqcInputTypeComposer = itc;
+    this._gqcInputTypeComposer = itc;
     return this;
   }
 
   getInputTypeComposer(): InputTypeComposer<TContext> {
-    if (!this.gqType._gqcInputTypeComposer) {
-      this.gqType._gqcInputTypeComposer = toInputObjectType(this);
+    if (!this._gqcInputTypeComposer) {
+      this._gqcInputTypeComposer = toInputObjectType(this);
     }
 
-    return this.gqType._gqcInputTypeComposer;
+    return this._gqcInputTypeComposer;
   }
 
   getITC(): InputTypeComposer<TContext> {
@@ -661,7 +809,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   removeInputTypeComposer(): InterfaceTypeComposer<TSource, TContext> {
-    this.gqType._gqcInputTypeComposer = undefined;
+    this._gqcInputTypeComposer = undefined;
     return this;
   }
 
@@ -670,13 +818,13 @@ export class InterfaceTypeComposer<TSource, TContext> {
   // -----------------------------------------------
 
   getResolveType(): ?GraphQLTypeResolver<TSource, TContext> {
-    return (this.gqType.resolveType: any);
+    return (this._gqType.resolveType: any);
   }
 
   setResolveType(
     fn: ?GraphQLTypeResolver<TSource, TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
-    this.gqType.resolveType = fn;
+    this._gqType.resolveType = fn;
     return this;
   }
 
@@ -685,16 +833,16 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return typeResolversMap.has(type);
   }
 
-  getTypeResolvers(): InterfaceTypeResolversMap<TContext> {
-    if (!this.gqType._gqcTypeResolvers) {
-      this.gqType._gqcTypeResolvers = new Map();
+  getTypeResolvers(): InterfaceTypeComposerResolversMap<TContext> {
+    if (!this._gqcTypeResolvers) {
+      this._gqcTypeResolvers = new Map();
     }
-    return this.gqType._gqcTypeResolvers;
+    return this._gqcTypeResolvers;
   }
 
   getTypeResolverCheckFn(
     type: ObjectTypeComposer<any, TContext> | GraphQLObjectType
-  ): InterfaceTypeResolverCheckFn<TSource, TContext> {
+  ): InterfaceTypeComposerResolverCheckFn<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
 
     if (!typeResolversMap.has(type)) {
@@ -731,11 +879,11 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   setTypeResolvers(
-    typeResolversMap: InterfaceTypeResolversMap<TContext>
+    typeResolversMap: InterfaceTypeComposerResolversMap<TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
     this._isTypeResolversValid(typeResolversMap);
 
-    this.gqType._gqcTypeResolvers = typeResolversMap;
+    this._gqcTypeResolvers = typeResolversMap;
 
     // extract GraphQLObjectType from ObjectTypeComposer
     const fastEntries = [];
@@ -747,18 +895,18 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const isAsyncRuntime = this._isTypeResolversAsync(typeResolversMap);
     if (isAsyncRuntime) {
       resolveType = async (value, context, info) => {
-        for (const [gqType, checkFn] of fastEntries) {
+        for (const [_gqType, checkFn] of fastEntries) {
           // should we run checkFn simultaniously or in serial?
           // Current decision is: dont SPIKE event loop - run in serial (it may be changed in future)
           // eslint-disable-next-line no-await-in-loop
-          if (await checkFn(value, context, info)) return gqType;
+          if (await checkFn(value, context, info)) return _gqType;
         }
         return null;
       };
     } else {
       resolveType = (value, context, info) => {
-        for (const [gqType, checkFn] of fastEntries) {
-          if (checkFn(value, context, info)) return gqType;
+        for (const [_gqType, checkFn] of fastEntries) {
+          if (checkFn(value, context, info)) return _gqType;
         }
         return null;
       };
@@ -768,7 +916,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return this;
   }
 
-  _isTypeResolversValid(typeResolversMap: InterfaceTypeResolversMap<TContext>): true {
+  _isTypeResolversValid(typeResolversMap: InterfaceTypeComposerResolversMap<TContext>): true {
     if (!(typeResolversMap instanceof Map)) {
       throw new Error(
         `For interface ${this.getTypeName()} you should provide Map object for type resolvers.`
@@ -802,7 +950,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  _isTypeResolversAsync(typeResolversMap: InterfaceTypeResolversMap<TContext>): boolean {
+  _isTypeResolversAsync(typeResolversMap: InterfaceTypeComposerResolversMap<TContext>): boolean {
     let res = false;
     for (const [, checkFn] of typeResolversMap.entries()) {
       try {
@@ -820,7 +968,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   addTypeResolver<TSrc>(
     type: ObjectTypeComposer<TSrc, TContext> | GraphQLObjectType,
-    checkFn: InterfaceTypeResolverCheckFn<TSrc, TContext>
+    checkFn: InterfaceTypeComposerResolverCheckFn<TSrc, TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
     typeResolversMap.set(type, checkFn);
@@ -842,15 +990,15 @@ export class InterfaceTypeComposer<TSource, TContext> {
   // -----------------------------------------------
 
   getExtensions(): Extensions {
-    if (!this.gqType._gqcExtensions) {
+    if (!this._gqcExtensions) {
       return {};
     } else {
-      return this.gqType._gqcExtensions;
+      return this._gqcExtensions;
     }
   }
 
   setExtensions(extensions: Extensions): InterfaceTypeComposer<TSource, TContext> {
-    this.gqType._gqcExtensions = extensions;
+    this._gqcExtensions = extensions;
     return this;
   }
 
@@ -1109,7 +1257,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   // Misc methods
   // -----------------------------------------------
 
-  get(path: string | string[]): any {
+  get(path: string | string[]): TypeInPath<TContext> | void {
     return typeByPath(this, path);
   }
 }
