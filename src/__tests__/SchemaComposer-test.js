@@ -46,6 +46,49 @@ describe('SchemaComposer', () => {
     expect(sc.has('unexistedType')).toBe(false);
   });
 
+  describe('constructor', () => {
+    describe('if GraphQLSchema provided', () => {
+      const gqUser = new GraphQLObjectType({
+        name: 'User',
+        fields: () => ({
+          name: { type: GraphQLString },
+          bestFriend: { type: gqUser },
+        }),
+      });
+      const gqPost = new GraphQLObjectType({
+        name: 'Post',
+        fields: () => ({
+          title: { type: GraphQLString },
+          author: { type: gqUser },
+        }),
+      });
+      const gqSchema = new GraphQLSchema({
+        query: new GraphQLObjectType({
+          name: 'OoopsQuery',
+          fields: () => ({
+            post: { type: new GraphQLList(gqPost) },
+            user: { type: gqUser },
+          }),
+        }),
+      });
+
+      it('should import types from provided schema', () => {
+        const sc = new SchemaComposer(gqSchema);
+        expect(sc.has(gqUser)).toBeTruthy();
+        expect(sc.has('User')).toBeTruthy();
+        expect(sc.has(gqPost)).toBeTruthy();
+        expect(sc.has('Post')).toBeTruthy();
+      });
+
+      it('should merge unstandart root types', () => {
+        const sc = new SchemaComposer(gqSchema);
+        expect(sc.Query.getFieldNames()).toEqual(['post', 'user']);
+        expect(sc.has('OoopsQuery')).toBeTruthy();
+        expect(sc.Query).toBe(sc.get('OoopsQuery'));
+      });
+    });
+  });
+
   describe('getOrCreateOTC()', () => {
     it('should create TC if not exists', () => {
       const sc = new SchemaComposer();
@@ -626,7 +669,7 @@ describe('SchemaComposer', () => {
       });
       const typeName = sc.add(t);
       expect(typeName).toBe('NativeType');
-      expect(sc.get('NativeType')).toBe(t);
+      expect(sc.get('NativeType').getType()).toBe(t);
     });
 
     it('should add InterfaceTypeComposer', () => {
@@ -653,12 +696,12 @@ describe('SchemaComposer', () => {
     });
   });
 
-  describe('addAsComposer()', () => {
+  describe('add()', () => {
     it('should add ObjectTypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.addAsComposer(`type Object1 { name: String }`);
-      sc.addAsComposer(ObjectTypeComposer.createTemp(`type Object2 { name: String }`));
-      sc.addAsComposer(
+      sc.add(`type Object1 { name: String }`);
+      sc.add(ObjectTypeComposer.createTemp(`type Object2 { name: String }`));
+      sc.add(
         new GraphQLObjectType({
           name: 'Object3',
           fields: () => ({}),
@@ -672,9 +715,9 @@ describe('SchemaComposer', () => {
 
     it('should return InputTypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.addAsComposer(`input Object1 { name: String }`);
-      sc.addAsComposer(InputTypeComposer.createTemp(`input Object2 { name: String }`));
-      sc.addAsComposer(
+      sc.add(`input Object1 { name: String }`);
+      sc.add(InputTypeComposer.createTemp(`input Object2 { name: String }`));
+      sc.add(
         new GraphQLInputObjectType({
           name: 'Object3',
           fields: () => ({}),
@@ -688,9 +731,9 @@ describe('SchemaComposer', () => {
 
     it('should return ScalarTypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.addAsComposer(`scalar Object1`);
-      sc.addAsComposer(ScalarTypeComposer.createTemp(`scalar Object2`));
-      sc.addAsComposer(
+      sc.add(`scalar Object1`);
+      sc.add(ScalarTypeComposer.createTemp(`scalar Object2`));
+      sc.add(
         new GraphQLScalarType({
           name: 'Object3',
           serialize: () => ({}),
@@ -704,9 +747,9 @@ describe('SchemaComposer', () => {
 
     it('should return EnumTypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.addAsComposer(`enum Object1 { A B }`);
-      sc.addAsComposer(EnumTypeComposer.createTemp(`enum Object2 { A B }`));
-      sc.addAsComposer(
+      sc.add(`enum Object1 { A B }`);
+      sc.add(EnumTypeComposer.createTemp(`enum Object2 { A B }`));
+      sc.add(
         new GraphQLEnumType({
           name: 'Object3',
           values: {},
@@ -720,9 +763,9 @@ describe('SchemaComposer', () => {
 
     it('should return InterfaceTypeComposer', () => {
       const sc = new SchemaComposer();
-      sc.addAsComposer(`interface Object1 { a: Int }`);
-      sc.addAsComposer(InterfaceTypeComposer.createTemp(`interface Object2 { a: Int }`));
-      sc.addAsComposer(
+      sc.add(`interface Object1 { a: Int }`);
+      sc.add(InterfaceTypeComposer.createTemp(`interface Object2 { a: Int }`));
+      sc.add(
         new GraphQLInterfaceType({
           name: 'Object3',
           fields: () => ({}),
@@ -737,9 +780,9 @@ describe('SchemaComposer', () => {
     it('should return UnionTypeComposer', () => {
       const sc = new SchemaComposer();
       const a = sc.createObjectTC(`type A { f: Int }`);
-      sc.addAsComposer(`union Object1 = A`);
-      sc.addAsComposer(UnionTypeComposer.createTemp(`union Object2 = A`));
-      sc.addAsComposer(
+      sc.add(`union Object1 = A`);
+      sc.add(UnionTypeComposer.createTemp(`union Object2 = A`));
+      sc.add(
         new GraphQLUnionType({
           name: 'Object3',
           types: [a.getType()],
@@ -904,7 +947,7 @@ describe('SchemaComposer', () => {
           },
         }),
       });
-      expect(sc.get('Date')).toBeInstanceOf(GraphQLScalarType);
+      expect(sc.get('Date')).toBeInstanceOf(ScalarTypeComposer);
       expect(Array.from(sc.types.keys())).toContain('Date');
     });
 
@@ -922,7 +965,7 @@ describe('SchemaComposer', () => {
           },
         }: any),
       });
-      expect(sc.get('Date')).toBeInstanceOf(GraphQLScalarType);
+      expect(sc.get('Date')).toBeInstanceOf(ScalarTypeComposer);
       expect(Array.from(sc.types.keys())).toContain('Date');
     });
   });
