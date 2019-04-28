@@ -3,8 +3,6 @@
 
 import {
   GraphQLScalarType,
-  GraphQLList,
-  GraphQLNonNull,
   GraphQLScalarTypeConfig,
   GraphQLScalarSerializer,
   GraphQLScalarValueParser,
@@ -12,20 +10,18 @@ import {
 } from './graphql';
 import { TypeMapper } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
+import { ListComposer } from './ListComposer';
+import { NonNullComposer } from './NonNullComposer';
 import { TypeAsString } from './TypeMapper';
 import { Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 
-export type ComposeScalarTypeConfig = GraphQLScalarTypeConfig<any, any> & {
-  extensions?: Extensions;
-};
-
-export type ScalarTypeComposeDefinition =
+export type ScalarTypeComposerDefinition =
   | TypeAsString
-  | ComposeScalarTypeConfig
-  | GraphQLScalarType;
+  | Readonly<ScalarTypeComposerAsObjectDefinition>
+  | Readonly<GraphQLScalarType>;
 
-export type GraphQLScalarTypeExtended = GraphQLScalarType & {
-  _gqcExtensions?: Extensions;
+export type ScalarTypeComposerAsObjectDefinition = GraphQLScalarTypeConfig<any, any> & {
+  extensions?: Extensions;
 };
 
 /**
@@ -33,16 +29,14 @@ export type GraphQLScalarTypeExtended = GraphQLScalarType & {
  */
 export class ScalarTypeComposer<TContext = any> {
   public schemaComposer: SchemaComposer<TContext>;
-
-  protected gqType: GraphQLScalarTypeExtended;
-
-  public constructor(gqType: GraphQLScalarType, schemaComposer: SchemaComposer<TContext>);
+  protected _gqcExtensions: Extensions | void;
+  protected _gqType: GraphQLScalarType;
 
   /**
    * Create `ScalarTypeComposer` with adding it by name to the `SchemaComposer`. This type became avaliable in SDL by its name.
    */
   public static create<TCtx = any>(
-    typeDef: ScalarTypeComposeDefinition,
+    typeDef: ScalarTypeComposerDefinition,
     schemaComposer: SchemaComposer<TCtx>
   ): ScalarTypeComposer<TCtx>;
 
@@ -50,9 +44,11 @@ export class ScalarTypeComposer<TContext = any> {
    * Create `ScalarTypeComposer` without adding it to the `SchemaComposer`. This method may be usefull in plugins, when you need to create type temporary.
    */
   public static createTemp<TCtx = any>(
-    typeDef: ScalarTypeComposeDefinition,
+    typeDef: ScalarTypeComposerDefinition,
     schemaComposer?: SchemaComposer<TCtx>
   ): ScalarTypeComposer<TCtx>;
+
+  public constructor(graphqlType: GraphQLScalarType, schemaComposer: SchemaComposer<TContext>);
 
   /**
    *  -----------------------------------------------
@@ -80,9 +76,9 @@ export class ScalarTypeComposer<TContext = any> {
 
   public getType(): GraphQLScalarType;
 
-  public getTypePlural(): GraphQLList<GraphQLScalarType>;
+  public getTypePlural(): ListComposer<ScalarTypeComposer<TContext>>;
 
-  public getTypeNonNull(): GraphQLNonNull<GraphQLScalarType>;
+  public getTypeNonNull(): NonNullComposer<ScalarTypeComposer<TContext>>;
 
   public getTypeName(): string;
 
@@ -92,7 +88,12 @@ export class ScalarTypeComposer<TContext = any> {
 
   public setDescription(description: string): this;
 
-  public clone(newTypeName: string): ScalarTypeComposer<TContext>;
+  /**
+   * You may clone this type with a new provided name as string.
+   * Or you may provide a new TypeComposer which will get all clonned
+   * settings from this type.
+   */
+  public clone(newTypeNameOrTC: string | ScalarTypeComposer<any>): ScalarTypeComposer<TContext>;
 
   public merge(type: GraphQLScalarType | ScalarTypeComposer<any>): this;
 
