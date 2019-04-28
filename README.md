@@ -1,6 +1,6 @@
 <p align="center"><img src="https://raw.githubusercontent.com/graphql-compose/graphql-compose/master/docs/logo.png" width="200" /></p>
 
-# GraphQL-compose
+# graphql-compose
 
 [![](https://img.shields.io/npm/v/graphql-compose.svg)](https://www.npmjs.com/package/graphql-compose)
 [![codecov coverage](https://img.shields.io/codecov/c/github/graphql-compose/graphql-compose.svg)](https://codecov.io/github/graphql-compose/graphql-compose)
@@ -48,15 +48,17 @@ Utility plugins:
 * [graphql-compose.herokuapp.com](https://graphql-compose.herokuapp.com/) - Live demo of GraphQL Server (9 models, 14 files, ~750 LOC)
 * [nodkz.github.io/relay-northwind](https://nodkz.github.io/relay-northwind) - Live demo of Relay client working with the server above (8 crazy pages, 47 files, ~3000 LOC)
 
-## Example
+## Examples
 
-city.js
+Please follow [Quick Start Guide](https://graphql-compose.github.io/docs/intro/quick-start.html) for the complete example.
+
+Here is just a demo of ambiguity ways of types definitions:
 
 ```js
-import { TypeComposer} from 'graphql-compose';
-import { CountryTC } from './country';
+import { schemaComposer} from 'graphql-compose';
 
-export const CityTC = TypeComposer.create(`
+// You may use SDL format for type definition
+const CityTC = schemaComposer.createObjectTC(`
   type City {
     code: String!
     name: String!
@@ -66,8 +68,26 @@ export const CityTC = TypeComposer.create(`
   }
 `);
 
-// Define some additional fields
+// Define type via Config object
+const CountryTC = schemaComposer.createObjectTC({
+  name: 'Country',
+  fields: {
+    title: 'String',
+    geo: `type LonLat { lon: Float, lat: Float }`,
+    hoisting: {
+      type: () => AnotherTC,
+      description: `
+        You may wrap type in thunk for solving
+        hoisting problems when two types cross reference
+        each other.
+      `,
+    }
+  }
+});
+
+// Or via declarative methods define some additional fields
 CityTC.addFields({
+  country: CountryTC, // some another Type
   ucName: { // standard GraphQL like field definition
     type: GraphQLString,
     resolve: (source) => source.name.toUpperCase(),
@@ -120,18 +140,6 @@ CityTC.addResolver({
   },
 });
 
-// Add relation between City and Country by `countryCode` field.
-CityTC.addRelation( // GraphQL relation definition
-  'country',
-  {
-    resolver: () => CountryTC.getResolver('findOne'),
-    prepareArgs: {
-      filter: source => ({ code: `${source.countryCode}` }),
-    },
-    projection: { countryCode: true },
-  }
-);
-
 // Remove `tz` field from schema
 CityTC.removeField('tz');
 
@@ -139,18 +147,9 @@ CityTC.removeField('tz');
 CityTC.extendField('name', {
   description: 'City name',
 });
-```
-
-schema.js
-
-```js
-import { schemaComposer } from 'graphql-compose';
-import { CityTC } from './city';
-import { CountryTC } from './country';
 
 schemaComposer.Query.addFields({
   cities: CityTC.getResolver('findMany'),
-  country: CountryTC.getResolver('findOne'),
   currentTime: {
     type: 'Date',
     resolve: () => Date.now(),
@@ -178,7 +177,8 @@ function adminAccess(resolvers) {
   return resolvers;
 }
 
-export default schemaComposer.buildSchema();
+// construct schema which can be passed to express-graphql, apollo-server or graphql-yoga
+export const schema = schemaComposer.buildSchema();
 ```
 
 ## Contributors
