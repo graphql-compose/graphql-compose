@@ -1,32 +1,62 @@
 import {
-  GraphQLInputFieldConfig,
-  GraphQLInputFieldConfigMap,
-  GraphQLInputObjectType,
-  GraphQLNonNull,
-  GraphQLList,
-  GraphQLInputType,
   InputValueDefinitionNode,
+  GraphQLInputObjectType,
+  GraphQLInputType,
+  GraphQLInputFieldConfig,
 } from './graphql';
-import { Thunk, ObjMap, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
+import {
+  Thunk,
+  ObjMap,
+  Extensions,
+  ExtensionsDirective,
+  DirectiveArgs,
+  ObjMapReadOnly,
+} from './utils/definitions';
 import { SchemaComposer } from './SchemaComposer';
-import { ScalarTypeComposer } from './ScalarTypeComposer';
-import { EnumTypeComposer } from './EnumTypeComposer';
-import { TypeAsString } from './TypeMapper';
+import { TypeAsString, TypeDefinitionString } from './TypeMapper';
+import { TypeInPath } from './utils/typeByPath';
+import {
+  ComposeInputTypeDefinition,
+  ComposeInputType,
+  ComposeNamedInputType,
+} from './utils/typeHelpers';
+import { ThunkComposer } from './ThunkComposer';
+import { ListComposer } from './ListComposer';
+import { NonNullComposer } from './NonNullComposer';
 
-export type GraphQLInputObjectTypeExtended = GraphQLInputObjectType & {
-  _gqcFields?: ComposeInputFieldConfigMap;
-  _gqcExtensions?: Extensions;
+export type InputTypeComposerDefinition =
+  | TypeAsString
+  | TypeDefinitionString
+  | InputTypeComposerAsObjectDefinition
+  | Readonly<GraphQLInputObjectType>;
+
+export type InputTypeComposerAsObjectDefinition = {
+  name: string;
+  fields: Thunk<InputTypeComposerFieldConfigMapDefinition>;
+  description?: null | string;
+  extensions?: Extensions;
 };
 
-export type ComposeInputFieldConfigMap = ObjMap<ComposeInputFieldConfig>;
+export type InputTypeComposerFieldConfigMap = ObjMap<InputTypeComposerFieldConfig>;
+export type InputTypeComposerFieldConfigMapDefinition = ObjMapReadOnly<
+  Thunk<InputTypeComposerFieldConfigDefinition>
+>;
 
-export type ComposeInputFieldConfig =
-  | ComposeInputFieldConfigAsObject
-  | ComposeInputType
-  | (() => ComposeInputFieldConfigAsObject | ComposeInputType);
+export type InputTypeComposerFieldConfigDefinition =
+  | InputTypeComposerFieldConfigAsObjectDefinition
+  | ComposeInputTypeDefinition
+  | Readonly<ComposeInputType>;
 
-export type ComposeInputFieldConfigAsObject = {
-  type: Thunk<ComposeInputType> | GraphQLInputType;
+export type InputTypeComposerFieldConfigAsObjectDefinition = {
+  type: Thunk<ComposeInputTypeDefinition>;
+  defaultValue?: any;
+  description?: string | null;
+  extensions?: Extensions;
+  [key: string]: any;
+};
+
+export type InputTypeComposerFieldConfig = {
+  type: ComposeInputType;
   defaultValue?: any;
   description?: string | null;
   astNode?: InputValueDefinitionNode | null;
@@ -34,46 +64,21 @@ export type ComposeInputFieldConfigAsObject = {
   [key: string]: any;
 };
 
-export type ComposeInputType =
-  | InputTypeComposer<any>
-  | EnumTypeComposer<any>
-  | ScalarTypeComposer<any>
-  | GraphQLInputType
-  | TypeAsString
-  | Array<
-      | InputTypeComposer<any>
-      | EnumTypeComposer<any>
-      | ScalarTypeComposer<any>
-      | GraphQLInputType
-      | TypeAsString
-    >;
-
-export function isComposeInputType(type: any): boolean;
-
-export type ComposeInputObjectTypeConfig = {
-  name: string;
-  fields: Thunk<ComposeInputFieldConfigMap>;
-  description?: string | null;
-  extensions?: Extensions;
-};
-
-export type InputTypeComposeDefinition =
-  | TypeAsString
-  | ComposeInputObjectTypeConfig
-  | GraphQLInputObjectType;
+export type InputTypeComposerThunked<TContext> =
+  | InputTypeComposer<TContext>
+  | ThunkComposer<InputTypeComposer<TContext>, GraphQLInputType>;
 
 export class InputTypeComposer<TContext = any> {
   public schemaComposer: SchemaComposer<TContext>;
-
-  protected gqType: GraphQLInputObjectTypeExtended;
-
-  public constructor(gqType: GraphQLInputObjectType, schemaComposer: SchemaComposer<TContext>);
+  protected _gqType: GraphQLInputObjectType;
+  protected _gqcFields: InputTypeComposerFieldConfigMap;
+  protected _gqcExtensions: Extensions | null;
 
   /**
    * Create `InputTypeComposer` with adding it by name to the `SchemaComposer`.
    */
   public static create<TCtx = any>(
-    typeDef: InputTypeComposeDefinition,
+    typeDef: InputTypeComposerDefinition,
     schemaComposer: SchemaComposer<TCtx>
   ): InputTypeComposer<TCtx>;
 
@@ -81,9 +86,11 @@ export class InputTypeComposer<TContext = any> {
    * Create `InputTypeComposer` without adding it to the `SchemaComposer`. This method may be usefull in plugins, when you need to create type temporary.
    */
   public static createTemp<TCtx = any>(
-    typeDef: InputTypeComposeDefinition,
+    typeDef: InputTypeComposerDefinition,
     schemaComposer?: SchemaComposer<TCtx>
   ): InputTypeComposer<TCtx>;
+
+  public constructor(graphqlType: GraphQLInputObjectType, schemaComposer: SchemaComposer<TContext>);
 
   /**
    * -----------------------------------------------
@@ -91,50 +98,65 @@ export class InputTypeComposer<TContext = any> {
    * -----------------------------------------------
    */
 
-  public getFields(): ComposeInputFieldConfigMap;
+  public getFields(): InputTypeComposerFieldConfigMap;
 
   public getFieldNames(): string[];
 
   public hasField(fieldName: string): boolean;
 
-  public setFields(fields: ComposeInputFieldConfigMap): this;
+  public setFields(fields: InputTypeComposerFieldConfigMapDefinition): this;
 
-  public setField(fieldName: string, fieldConfig: ComposeInputFieldConfig): this;
+  public setField(
+    fieldName: string,
+    fieldConfig: Thunk<InputTypeComposerFieldConfigDefinition>
+  ): this;
 
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  public addFields(newFields: ComposeInputFieldConfigMap): this;
+  public addFields(newFields: InputTypeComposerFieldConfigMapDefinition): this;
 
   /**
    * Add new fields or replace existed (where field name may have dots)
    */
-  public addNestedFields(newFields: ComposeInputFieldConfigMap): this;
+  public addNestedFields(newFields: InputTypeComposerFieldConfigMapDefinition): this;
 
-  public getField(fieldName: string): ComposeInputFieldConfigAsObject;
+  public getField(fieldName: string): InputTypeComposerFieldConfig;
 
   public removeField(fieldNameOrArray: string | string[]): this;
 
   public removeOtherFields(fieldNameOrArray: string | string[]): this;
 
-  public extendField(fieldName: string, partialFieldConfig: Partial<ComposeInputFieldConfig>): this;
+  public extendField(
+    fieldName: string,
+    partialFieldConfig: Partial<InputTypeComposerFieldConfigAsObjectDefinition>
+  ): this;
 
   public reorderFields(names: string[]): this;
 
   public isFieldNonNull(fieldName: string): boolean;
 
-  /**
-   * An alias for `isFieldNonNull`
-   */
-  public isRequired(fieldName: string): boolean;
-
   public getFieldConfig(fieldName: string): GraphQLInputFieldConfig;
 
   public getFieldType(fieldName: string): GraphQLInputType;
 
-  public getFieldTC(
-    fieldName: string
-  ): InputTypeComposer<TContext> | EnumTypeComposer<TContext> | ScalarTypeComposer<TContext>;
+  public getFieldTypeName(fieldName: string): string;
+
+  /**
+   * Automatically unwrap from List, NonNull, ThunkComposer
+   * It's important! Cause greatly helps to modify fields types in a real code
+   * without manual unwrap writing.
+   *
+   * If you need to work with wrappers, you may use the following code:
+   *   - `TC.getField().type` // returns real wrapped TypeComposer
+   *   - `TC.isFieldNonNull()` // checks is field NonNull or not
+   *   - `TC.makeFieldNonNull()` // for wrapping in NonNullComposer
+   *   - `TC.makeFieldNullable()` // for unwrapping from NonNullComposer
+   *   - `TC.isFieldPlural()` // checks is field wrapped in ListComposer or not
+   *   - `TC.makeFieldPlural()` // for wrapping in ListComposer
+   *   - `TC.makeFieldNonPlural()` // for unwrapping from ListComposer
+   */
+  public getFieldTC(fieldName: string): ComposeNamedInputType<TContext>;
 
   /**
    * Alias for `getFieldTC()` but returns statically checked InputTypeComposer.
@@ -145,16 +167,22 @@ export class InputTypeComposer<TContext = any> {
   public makeFieldNonNull(fieldNameOrArray: string | string[]): this;
 
   /**
-   * An alias for `makeFieldNonNull`
+   * An alias for `makeFieldNonNull()`
    */
   public makeRequired(fieldNameOrArray: string | string[]): this;
 
   public makeFieldNullable(fieldNameOrArray: string | string[]): this;
 
   /**
-   * An alias for `makeFieldNullable`
+   * An alias for `makeFieldNullable()`
    */
   public makeOptional(fieldNameOrArray: string | string[]): this;
+
+  public isFieldPlural(fieldName: string): boolean;
+
+  public makeFieldPlural(fieldNameOrArray: string | string[]): this;
+
+  public makeFieldNonPlural(fieldNameOrArray: string | string[]): this;
 
   /**
    * -----------------------------------------------
@@ -164,9 +192,9 @@ export class InputTypeComposer<TContext = any> {
 
   public getType(): GraphQLInputObjectType;
 
-  public getTypePlural(): GraphQLList<GraphQLInputObjectType>;
+  public getTypePlural(): ListComposer<this>;
 
-  public getTypeNonNull(): GraphQLNonNull<GraphQLInputObjectType>;
+  public getTypeNonNull(): NonNullComposer<this>;
 
   public getTypeName(): string;
 
@@ -176,7 +204,12 @@ export class InputTypeComposer<TContext = any> {
 
   public setDescription(description: string): this;
 
-  public clone(newTypeName: string): InputTypeComposer<TContext>;
+  /**
+   * You may clone this type with a new provided name as string.
+   * Or you may provide a new TypeComposer which will get all clonned
+   * settings from this type.
+   */
+  public clone(newTypeNameOrTC: string | InputTypeComposer<any>): InputTypeComposer<TContext>;
 
   public merge(type: GraphQLInputObjectType | InputTypeComposer<any>): this;
 
@@ -252,5 +285,5 @@ export class InputTypeComposer<TContext = any> {
    * Misc methods
    * -----------------------------------------------
    */
-  public get(path: string | string[]): any;
+  public get(path: string | string[]): TypeInPath<TContext> | void;
 }

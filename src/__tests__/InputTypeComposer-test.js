@@ -12,6 +12,9 @@ import { schemaComposer, SchemaComposer } from '..';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
+import { ListComposer } from '../ListComposer';
+import { NonNullComposer } from '../NonNullComposer';
+import { ThunkComposer } from '../ThunkComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
@@ -61,7 +64,7 @@ describe('InputTypeComposer', () => {
 
     it('setField()', () => {
       itc.setField('input3', { type: GraphQLString });
-      const fieldNames = Object.keys(objectType.getFields());
+      const fieldNames = Object.keys(itc.getType().getFields());
       expect(fieldNames).toContain('input3');
     });
 
@@ -91,7 +94,7 @@ describe('InputTypeComposer', () => {
         itc.setFields({
           input3: { type: typeAsFn },
         });
-        expect((itc.getField('input3'): any).type).toBe(typeAsFn);
+        expect(itc.getField('input3').type).toBeInstanceOf(ThunkComposer);
         expect(itc.getFieldType('input3')).toBe(GraphQLString);
 
         // show provide unwrapped/unhoisted type for graphql
@@ -246,13 +249,6 @@ describe('InputTypeComposer', () => {
       expect(itc.getFieldType('input1')).toBe(GraphQLString);
     });
 
-    it('isRequired()', () => {
-      itc.setField('input1', 'String');
-      expect(itc.isRequired('input1')).toBe(false);
-      itc.setField('input1', 'String!');
-      expect(itc.isRequired('input1')).toBe(true);
-    });
-
     it('isFieldNonNull()', () => {
       itc.setField('input1', 'String');
       expect(itc.isFieldNonNull('input1')).toBe(false);
@@ -265,7 +261,6 @@ describe('InputTypeComposer', () => {
       expect(itc.getFieldType('input1')).toBeInstanceOf(GraphQLNonNull);
       expect((itc.getFieldType('input1'): any).ofType).toBe(GraphQLString);
       expect(itc.isFieldNonNull('input1')).toBe(true);
-      expect(itc.isRequired('input1')).toBe(true);
     });
 
     it('makeRequired()', () => {
@@ -283,9 +278,42 @@ describe('InputTypeComposer', () => {
 
     it('makeOptional()', () => {
       itc.makeRequired('input1');
-      expect(itc.isRequired('input1')).toBe(true);
+      expect(itc.isFieldNonNull('input1')).toBe(true);
       itc.makeOptional('input1');
-      expect(itc.isRequired('input1')).toBe(false);
+      expect(itc.isFieldNonNull('input1')).toBe(false);
+    });
+
+    it('check Plural methods, wrap/unwrap from ListComposer', () => {
+      itc.setFields({
+        b1: { type: new GraphQLNonNull(GraphQLString) },
+        b2: { type: '[String]' },
+        b3: 'String!',
+        b4: '[String!]!',
+      });
+      expect(itc.isFieldPlural('b1')).toBe(false);
+      expect(itc.isFieldPlural('b2')).toBe(true);
+      expect(itc.isFieldPlural('b3')).toBe(false);
+      expect(itc.isFieldPlural('b4')).toBe(true);
+      expect(itc.isFieldNonNull('b1')).toBe(true);
+      expect(itc.isFieldNonNull('b2')).toBe(false);
+      expect(itc.isFieldNonNull('b3')).toBe(true);
+      expect(itc.isFieldNonNull('b4')).toBe(true);
+
+      itc.makeFieldPlural(['b1', 'b2', 'b3', 'unexisted']);
+      expect(itc.isFieldPlural('b1')).toBe(true);
+      expect(itc.isFieldPlural('b2')).toBe(true);
+      expect(itc.isFieldPlural('b3')).toBe(true);
+
+      itc.makeFieldNonNull('b2');
+      expect(itc.isFieldPlural('b2')).toBe(true);
+      expect(itc.isFieldNonNull('b2')).toBe(true);
+      itc.makeFieldNonPlural(['b2', 'b4', 'unexisted']);
+      expect(itc.isFieldPlural('b2')).toBe(false);
+      expect(itc.isFieldNonNull('b2')).toBe(true);
+      expect(itc.isFieldPlural('b4')).toBe(false);
+      itc.makeFieldNullable(['b2', 'b4', 'unexisted']);
+      expect(itc.isFieldNonNull('b2')).toBe(false);
+      expect(itc.isFieldNonNull('b4')).toBe(false);
     });
 
     it('should add fields with converting types from string to object', () => {
@@ -300,6 +328,9 @@ describe('InputTypeComposer', () => {
       expect((itc.getFieldType('input4'): any).ofType).toBe(GraphQLInt);
       expect(itc.getFieldType('input5')).toBeInstanceOf(GraphQLNonNull);
       expect((itc.getFieldType('input5'): any).ofType).toBe(GraphQLBoolean);
+      expect(itc.getFieldTypeName('input3')).toBe('String');
+      expect(itc.getFieldTypeName('input4')).toBe('[Int]');
+      expect(itc.getFieldTypeName('input5')).toBe('Boolean!');
     });
   });
 
@@ -310,13 +341,13 @@ describe('InputTypeComposer', () => {
     });
 
     it('getTypeNonNull()', () => {
-      expect(itc.getTypeNonNull()).toBeInstanceOf(GraphQLNonNull);
-      expect(itc.getTypeNonNull().ofType.name).toBe('InputType');
+      expect(itc.getTypeNonNull()).toBeInstanceOf(NonNullComposer);
+      expect(itc.getTypeNonNull().getTypeName()).toBe('InputType!');
     });
 
     it('getTypePlural()', () => {
-      expect(itc.getTypePlural()).toBeInstanceOf(GraphQLList);
-      expect(itc.getTypePlural().ofType.name).toBe('InputType');
+      expect(itc.getTypePlural()).toBeInstanceOf(ListComposer);
+      expect(itc.getTypePlural().getTypeName()).toBe('[InputType]');
     });
 
     it('getTypeName()', () => {
@@ -391,14 +422,19 @@ describe('InputTypeComposer', () => {
         },
       });
       expect(itc1).toBeInstanceOf(InputTypeComposer);
-      expect(itc1.getField('f1')).toEqual({
-        type: 'Type1',
-      });
-      expect(itc1.getField('f2')).toEqual({ type: 'Type2!' });
+      expect(itc1.getField('f1').type).toBeInstanceOf(ThunkComposer);
+      expect(() => itc1.getFieldTC('f1').getTypeName()).toThrow(
+        'Type with name "Type1" does not exists'
+      );
+      expect(itc1.isFieldNonNull('f1')).toBeFalsy();
+      expect(itc1.getField('f2').type).toBeInstanceOf(NonNullComposer);
+      expect((itc1.getField('f2').type: any).ofType).toBeInstanceOf(ThunkComposer);
+      expect(itc1.getField('f2').type.getTypeName()).toEqual('Type2!');
+      expect(itc1.isFieldNonNull('f2')).toBeTruthy();
     });
 
     it('should create ITC by GraphQLObjectTypeConfig with fields as Thunk', () => {
-      const itc1 = schemaComposer.createInputTC({
+      const itc1: any = schemaComposer.createInputTC({
         name: 'TestTypeInput',
         fields: (): any => ({
           f1: {
@@ -408,9 +444,10 @@ describe('InputTypeComposer', () => {
         }),
       });
       expect(itc1).toBeInstanceOf(InputTypeComposer);
+      expect(itc1.getField('f1').type).toBeInstanceOf(ThunkComposer);
       expect(itc1.getFieldType('f1')).toBe(GraphQLString);
       expect(itc1.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
-      expect((itc1.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
+      expect(itc1.getFieldType('f2').ofType).toBe(GraphQLInt);
     });
 
     it('should create ITC by GraphQLInputObjectType', () => {
@@ -440,7 +477,7 @@ describe('InputTypeComposer', () => {
   });
 
   it('get() should return type by path', () => {
-    const itc1 = new InputTypeComposer(
+    const itc1: any = new InputTypeComposer(
       new GraphQLInputObjectType({
         name: 'Writable',
         fields: {
@@ -477,7 +514,7 @@ describe('InputTypeComposer', () => {
       list: '[Int]',
       obj: schemaComposer.createInputTC(`input MyInputType { name: String }`),
       objArr: [schemaComposer.createInputTC(`input MyInputType2 { name: String }`)],
-      enum: EnumTypeComposer.create(`enum MyEnumType { FOO BAR }`, schemaComposer),
+      enum: schemaComposer.createEnumTC(`enum MyEnumType { FOO BAR }`),
     });
 
     it('should return TypeComposer for object field', () => {
