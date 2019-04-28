@@ -20,6 +20,9 @@ import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
 import { UnionTypeComposer } from '../UnionTypeComposer';
+import { NonNullComposer } from '../NonNullComposer';
+import { ListComposer } from '../ListComposer';
+import { ThunkComposer } from '../ThunkComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
@@ -27,18 +30,17 @@ beforeEach(() => {
 });
 
 describe('ObjectTypeComposer', () => {
-  let objectType: GraphQLObjectType;
   let tc: ObjectTypeComposer<any, any>;
 
   beforeEach(() => {
-    objectType = new GraphQLObjectType({
+    const type = new GraphQLObjectType({
       name: 'Readable',
       fields: {
         field1: { type: GraphQLString },
         field2: { type: GraphQLString },
       },
     });
-    tc = new ObjectTypeComposer(objectType, schemaComposer);
+    tc = new ObjectTypeComposer(type, schemaComposer);
   });
 
   describe('fields manipulation', () => {
@@ -65,8 +67,8 @@ describe('ObjectTypeComposer', () => {
         tc.setFields({
           field3: { type: GraphQLString },
         });
-        const fields = objectType.getFields();
-        expect(Object.keys(fields)).toContain('field3');
+        const fields = tc.getType().getFields();
+        expect(Object.keys(fields)).toEqual(['field3']);
         expect(fields.field3.type).toBe(GraphQLString);
       });
 
@@ -99,6 +101,8 @@ describe('ObjectTypeComposer', () => {
         expect((tc.getFieldArgType('field3', 'arg1'): any).ofType).toBe(GraphQLString);
         expect(tc.getFieldArgType('field3', 'arg2')).toBeInstanceOf(GraphQLList);
         expect((tc.getFieldArgType('field3', 'arg2'): any).ofType).toBe(GraphQLFloat);
+        expect(tc.getFieldArgTypeName('field3', 'arg1')).toBe('String!');
+        expect(tc.getFieldArgTypeName('field3', 'arg2')).toBe('[Float]');
       });
 
       it('should add projection via `setField` and `addFields`', () => {
@@ -117,7 +121,7 @@ describe('ObjectTypeComposer', () => {
         tc.setFields({
           input3: { type: typeAsFn },
         });
-        expect((tc.getField('input3'): any).type).toBe(typeAsFn);
+        expect(tc.getField('input3').type).toBeInstanceOf(ThunkComposer);
         expect(tc.getFieldType('input3')).toBe(GraphQLString);
 
         // show provide unwrapped/unhoisted type for graphql
@@ -130,14 +134,15 @@ describe('ObjectTypeComposer', () => {
 
       it('accept fieldConfig as function', () => {
         tc.setFields({
-          input4: () => ({ type: 'String' }),
+          input4: () => ({
+            type: 'String',
+            args: { a: 'Int' },
+            resolve: () => 123,
+          }),
         });
-        // show provide unwrapped/unhoisted type for graphql
-        if (graphqlVersion >= 14) {
-          expect((tc.getType(): any)._fields().input4.type).toBe(GraphQLString);
-        } else {
-          expect((tc.getType(): any)._typeConfig.fields().input4.type).toBe(GraphQLString);
-        }
+        expect(tc.getFieldType('input4')).toBe(GraphQLString);
+        expect(tc.getFieldArgType('input4', 'a')).toBe(GraphQLInt);
+        expect((tc.getField('input4'): any).resolve()).toBe(123);
       });
     });
 
@@ -152,6 +157,9 @@ describe('ObjectTypeComposer', () => {
       expect((tc.getFieldType('field4'): any).ofType).toBe(GraphQLInt);
       expect(tc.getFieldType('field5')).toBeInstanceOf(GraphQLNonNull);
       expect((tc.getFieldType('field5'): any).ofType).toBe(GraphQLBoolean);
+      expect(tc.getFieldTypeName('field3')).toBe('String');
+      expect(tc.getFieldTypeName('field4')).toBe('[Int]');
+      expect(tc.getFieldTypeName('field5')).toBe('Boolean!');
     });
 
     it('addNestedFields()', () => {
@@ -238,7 +246,7 @@ describe('ObjectTypeComposer', () => {
       it('getFieldArgs()', () => {
         const args = tc.getFieldArgs('field1');
         expect(Object.keys(args)).toEqual(['arg1', 'arg2']);
-        expect(args.arg1).toBe('Int');
+        expect(args.arg1.type.getType()).toBe(GraphQLInt);
         expect(tc.getFieldArgType('field1', 'arg1')).toBe(GraphQLInt);
         expect(() => tc.getFieldArgs('unexistedField')).toThrow();
       });
@@ -251,9 +259,7 @@ describe('ObjectTypeComposer', () => {
 
       it('getFieldArg()', () => {
         expect(tc.getFieldArg('field1', 'arg1')).toBeTruthy();
-        expect(() => tc.getFieldArg('field1', 'arg222')).toThrow(
-          /Cannot get arg.*Argument does not exist/
-        );
+        expect(() => tc.getFieldArg('field1', 'arg222')).toThrow(/Argument does not exist/);
         expect(tc.hasFieldArg('unexistedField', 'arg1')).toBeFalsy();
       });
 
@@ -352,13 +358,84 @@ describe('ObjectTypeComposer', () => {
       expect(tc.getFieldType('fieldNN')).toBeInstanceOf(GraphQLNonNull);
       expect((tc.getFieldType('fieldNN'): any).ofType).toBe(GraphQLString);
 
-      // should unwrap with GraphQLNonNull
+      // should unwrap GraphQLNonNull
       tc.makeFieldNullable('fieldNN');
       expect(tc.getFieldType('fieldNN')).toBe(GraphQLString);
 
       // should work for already unwrapped type
       tc.makeFieldNullable('fieldNN');
       expect(tc.getFieldType('fieldNN')).toBe(GraphQLString);
+    });
+
+    it('check field Plural methods, wrap/unwrap from ListComposer', () => {
+      tc.setFields({
+        b1: { type: new GraphQLNonNull(GraphQLString) },
+        b2: { type: '[String]' },
+        b3: 'String!',
+        b4: '[String!]!',
+      });
+      expect(tc.isFieldPlural('b1')).toBe(false);
+      expect(tc.isFieldPlural('b2')).toBe(true);
+      expect(tc.isFieldPlural('b3')).toBe(false);
+      expect(tc.isFieldPlural('b4')).toBe(true);
+      expect(tc.isFieldNonNull('b1')).toBe(true);
+      expect(tc.isFieldNonNull('b2')).toBe(false);
+      expect(tc.isFieldNonNull('b3')).toBe(true);
+      expect(tc.isFieldNonNull('b4')).toBe(true);
+
+      tc.makeFieldPlural(['b1', 'b2', 'b3', 'unexisted']);
+      expect(tc.isFieldPlural('b1')).toBe(true);
+      expect(tc.isFieldPlural('b2')).toBe(true);
+      expect(tc.isFieldPlural('b3')).toBe(true);
+
+      tc.makeFieldNonNull('b2');
+      expect(tc.isFieldPlural('b2')).toBe(true);
+      expect(tc.isFieldNonNull('b2')).toBe(true);
+      tc.makeFieldNonPlural(['b2', 'b4', 'unexisted']);
+      expect(tc.isFieldPlural('b2')).toBe(false);
+      expect(tc.isFieldNonNull('b2')).toBe(true);
+      expect(tc.isFieldPlural('b4')).toBe(false);
+      tc.makeFieldNullable(['b2', 'b4', 'unexisted']);
+      expect(tc.isFieldNonNull('b2')).toBe(false);
+      expect(tc.isFieldNonNull('b4')).toBe(false);
+    });
+
+    it('check Plural methods, wrap/unwrap from ListComposer', () => {
+      tc.setFields({
+        f: {
+          type: 'Int',
+          args: {
+            b1: { type: new GraphQLNonNull(GraphQLString) },
+            b2: { type: '[String]' },
+            b3: 'String!',
+            b4: '[String!]!',
+          },
+        },
+      });
+      expect(tc.isFieldArgPlural('f', 'b1')).toBe(false);
+      expect(tc.isFieldArgPlural('f', 'b2')).toBe(true);
+      expect(tc.isFieldArgPlural('f', 'b3')).toBe(false);
+      expect(tc.isFieldArgPlural('f', 'b4')).toBe(true);
+      expect(tc.isFieldArgNonNull('f', 'b1')).toBe(true);
+      expect(tc.isFieldArgNonNull('f', 'b2')).toBe(false);
+      expect(tc.isFieldArgNonNull('f', 'b3')).toBe(true);
+      expect(tc.isFieldArgNonNull('f', 'b4')).toBe(true);
+
+      tc.makeFieldArgPlural('f', ['b1', 'b2', 'b3', 'unexisted']);
+      expect(tc.isFieldArgPlural('f', 'b1')).toBe(true);
+      expect(tc.isFieldArgPlural('f', 'b2')).toBe(true);
+      expect(tc.isFieldArgPlural('f', 'b3')).toBe(true);
+
+      tc.makeFieldArgNonNull('f', 'b2');
+      expect(tc.isFieldArgPlural('f', 'b2')).toBe(true);
+      expect(tc.isFieldArgNonNull('f', 'b2')).toBe(true);
+      tc.makeFieldArgNonPlural('f', ['b2', 'b4', 'unexisted']);
+      expect(tc.isFieldArgPlural('f', 'b2')).toBe(false);
+      expect(tc.isFieldArgNonNull('f', 'b2')).toBe(true);
+      expect(tc.isFieldArgPlural('f', 'b4')).toBe(false);
+      tc.makeFieldArgNullable('f', ['b2', 'b4', 'unexisted']);
+      expect(tc.isFieldArgNonNull('f', 'b2')).toBe(false);
+      expect(tc.isFieldArgNonNull('f', 'b4')).toBe(false);
     });
   });
 
@@ -386,21 +463,24 @@ describe('ObjectTypeComposer', () => {
     );
 
     it('getInterfaces()', () => {
-      if (graphqlVersion >= 14) {
-        tc.gqType._interfaces = [iface];
-      } else {
-        (tc.gqType: any)._typeConfig.interfaces = [iface];
-      }
-      expect(tc.getInterfaces()).toEqual(expect.arrayContaining([iface]));
+      const tc1 = schemaComposer.createObjectTC(`
+        type Meee implements SimpleObject {
+          id: Int
+          name: String
+        }
+      `);
+      expect(tc1.getInterfaces()).toHaveLength(1);
+      expect(tc1.getInterfaces()[0].getTypeName()).toBe('SimpleObject');
     });
 
     it('hasInterface()', () => {
-      if (graphqlVersion >= 14) {
-        tc.gqType._interfaces = [iface];
-      } else {
-        (tc.gqType: any)._typeConfig.interfaces = [iface];
-      }
-      expect(tc.hasInterface(iface)).toBe(true);
+      const tc1 = schemaComposer.createObjectTC(`
+        type Meee implements SimpleObject {
+          id: Int
+          name: String
+        }
+      `);
+      expect(tc1.hasInterface('SimpleObject')).toBe(true);
     });
 
     it('hasInterface() should work by name or ITC', () => {
@@ -422,10 +502,11 @@ describe('ObjectTypeComposer', () => {
 
     it('addInterface()', () => {
       tc.addInterface(iface);
-      expect(tc.getInterfaces()).toEqual(expect.arrayContaining([iface]));
+      expect(tc.getInterfaces()).toHaveLength(1);
       expect(tc.hasInterface(iface)).toBe(true);
       tc.addInterface(iface2);
-      expect(tc.getInterfaces()).toEqual(expect.arrayContaining([iface, iface2]));
+      expect(tc.getInterfaces()).toHaveLength(2);
+      expect(tc.hasInterface(iface)).toBe(true);
       expect(tc.hasInterface(iface2)).toBe(true);
       tc.addInterface(iftc);
       expect(tc.hasInterface(iftc)).toBe(true);
@@ -435,7 +516,10 @@ describe('ObjectTypeComposer', () => {
       tc.addInterface(iface);
       tc.addInterface(iface2);
       tc.addInterface(iftc);
-      expect(tc.getInterfaces()).toEqual(expect.arrayContaining([iface, iface2, iftc]));
+      expect(tc.getInterfaces()).toHaveLength(3);
+      expect(tc.hasInterface(iface)).toBe(true);
+      expect(tc.hasInterface(iftc)).toBe(true);
+      expect(tc.hasInterface(iface2)).toBe(true);
       tc.removeInterface(iface);
       tc.removeInterface(iftc);
       expect(tc.hasInterface(iface)).toBe(false);
@@ -521,8 +605,8 @@ describe('ObjectTypeComposer', () => {
         schemaComposer
       );
       expect(myTC).toBeInstanceOf(ObjectTypeComposer);
-      expect(myTC.getField('f1')).toEqual({ type: 'Type1' });
-      expect(myTC.getField('f2')).toEqual({ type: 'Type2!' });
+      expect(myTC.getField('f1').type.getTypeName()).toEqual('Type1');
+      expect(myTC.getField('f2').type.getTypeName()).toEqual('Type2!');
       expect(myTC.hasInterface('IFace')).toBeTruthy();
       expect(myTC.hasInterface('IFace2')).toBeTruthy();
 
@@ -600,18 +684,15 @@ describe('ObjectTypeComposer', () => {
       });
 
       const tc2 = tc.clone('newObject');
-      expect(tc2.getField('field3')).toEqual(
-        expect.objectContaining({
-          type: GraphQLString,
-          projection: { field1: true, field2: true },
-        })
-      );
+      const fc = tc2.getField('field3');
+      expect(fc.projection).toEqual({ field1: true, field2: true });
+      expect(fc.type.getType()).toBe(GraphQLString);
     });
   });
 
   describe('get()', () => {
     it('should return type by path', () => {
-      const myTC = new ObjectTypeComposer(
+      const myTC: any = new ObjectTypeComposer(
         new GraphQLObjectType({
           name: 'Readable',
           fields: {
@@ -648,19 +729,19 @@ describe('ObjectTypeComposer', () => {
     });
 
     it('addResolver() should accept Resolver options and create instance', () => {
-      const resolverOpts = {
+      const ResolverDefinition = {
         name: 'myResolver2',
       };
-      tc.addResolver(resolverOpts);
+      tc.addResolver(ResolverDefinition);
       expect(tc.getResolver('myResolver2')).toBeInstanceOf(Resolver);
       expect(tc.getResolver('myResolver2').name).toBe('myResolver2');
     });
 
     it('addResolver() should add stub resolve method', () => {
-      const resolverOpts = {
+      const ResolverDefinition = {
         name: 'myResolver3',
       };
-      tc.addResolver(resolverOpts);
+      tc.addResolver(ResolverDefinition);
       expect(tc.getResolver('myResolver3').resolve((undefined: any))).toEqual({});
     });
 
@@ -824,14 +905,14 @@ describe('ObjectTypeComposer', () => {
         const fc: any = ArticleTC._relationWithResolverToFC({
           resolver: UserTC.getResolver('findById'),
         });
-        expect(fc.type.name).toBe('User');
+        expect(fc.type.getTypeName()).toBe('User');
       });
 
       it('should accept resolver as thunk and return FieldConfig', () => {
         const fc: any = ArticleTC._relationWithResolverToFC({
           resolver: () => UserTC.getResolver('findById'),
         });
-        expect(fc.type.name).toBe('User');
+        expect(fc.type.getTypeName()).toBe('User');
       });
 
       it('should throw error if provided incorrect Resolver instance', () => {
@@ -918,14 +999,14 @@ describe('ObjectTypeComposer', () => {
   });
 
   describe('get type methods', () => {
-    it('getTypePlural() should return wrapped type with GraphQLList', () => {
-      expect(tc.getTypePlural()).toBeInstanceOf(GraphQLList);
-      expect(tc.getTypePlural().ofType).toBe(tc.getType());
+    it('getTypePlural() should return wrapped type with ListComposer', () => {
+      expect(tc.getTypePlural()).toBeInstanceOf(ListComposer);
+      expect(tc.getTypePlural().getType().ofType).toBe(tc.getType());
     });
 
-    it('getTypeNonNull() should return wrapped type with GraphQLNonNull', () => {
-      expect(tc.getTypeNonNull()).toBeInstanceOf(GraphQLNonNull);
-      expect(tc.getTypeNonNull().ofType).toBe(tc.getType());
+    it('getTypeNonNull() should return wrapped type with NonNullComposer', () => {
+      expect(tc.getTypeNonNull()).toBeInstanceOf(NonNullComposer);
+      expect(tc.getTypeNonNull().getType().ofType).toBe(tc.getType());
     });
   });
 
@@ -1158,10 +1239,21 @@ describe('ObjectTypeComposer', () => {
     });
 
     it('removeInputTypeComposer()', () => {
-      const itc1 = tc.getInputTypeComposer();
-      tc.removeInputTypeComposer();
-      const itc2 = tc.getInputTypeComposer();
-      expect(itc1).not.toBe(itc2);
+      const tc3 = schemaComposer.createObjectTC(`
+        type Point {
+          x: Int
+          y: Int
+        }
+      `);
+      let itc3 = tc3.getInputTypeComposer();
+      expect(itc3.getFieldNames()).toEqual(['x', 'y']);
+      tc3.addFields({
+        z: 'Int',
+      });
+      expect(itc3.getFieldNames()).toEqual(['x', 'y']);
+      tc3.removeInputTypeComposer();
+      itc3 = tc3.getInputTypeComposer();
+      expect(itc3.getFieldNames()).toEqual(['x', 'y', 'z']);
     });
   });
 
