@@ -3,6 +3,7 @@
   "no-trailing-punctuation": {
     "punctuation": ",;"
   },
+  "no-duplicate-header": false,
   "no-inline-html": false,
   "ol-prefix": false,
   "first-line-h1": false,
