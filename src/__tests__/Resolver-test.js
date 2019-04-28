@@ -16,6 +16,10 @@ import schemaComposer from '../__mocks__/schemaComposer';
 import { Resolver } from '../Resolver';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
+import { ScalarTypeComposer } from '../ScalarTypeComposer';
+import { NonNullComposer } from '../NonNullComposer';
+import { ListComposer } from '../ListComposer';
+import { ThunkComposer } from '../ThunkComposer';
 // import { Resolver, ObjectTypeComposer, InputTypeComposer, EnumTypeComposer } from '..';
 
 describe('Resolver', () => {
@@ -123,10 +127,10 @@ describe('Resolver', () => {
         {
           name: 'someOtherResolver',
           type: `
-          type SomeType {
-            name: String
-          }
-        `,
+            type SomeType {
+              name: String
+            }
+          `,
         },
         schemaComposer
       );
@@ -154,6 +158,7 @@ describe('Resolver', () => {
       const type: any = myResolver.getType();
       expect(type).toBeInstanceOf(GraphQLList);
       expect(type.ofType).toBe(GraphQLString);
+      expect(myResolver.getTypeName()).toBe('[String]');
     });
 
     it('should have wrapType() method', () => {
@@ -176,6 +181,17 @@ describe('Resolver', () => {
       expect(resolver.getArgType('a3')).toBe(GraphQLString);
     });
 
+    it('should return arg names in SDL', () => {
+      resolver.setArgs({
+        a: GraphQLString,
+        b: [GraphQLString],
+        c: '[Int!]!',
+      });
+      expect(resolver.getArgTypeName('a')).toBe('String');
+      expect(resolver.getArgTypeName('b')).toBe('[String]');
+      expect(resolver.getArgTypeName('c')).toBe('[Int!]!');
+    });
+
     it('should have setArgs method', () => {
       resolver.setArgs({
         b1: { type: GraphQLString },
@@ -188,11 +204,15 @@ describe('Resolver', () => {
     });
 
     it('should have getArgType method', () => {
-      resolver.setArgs({
-        b1: 'String',
-      });
+      resolver.setArgs({ b1: 'String' });
       expect(resolver.getArgType('b1')).toBe(GraphQLString);
       expect(() => resolver.getArgType('unexisted')).toThrowError();
+    });
+
+    it('should have setArgType method', () => {
+      resolver.setArgs({ b1: 'String' });
+      resolver.setArgType('b1', 'MySomeInputDefinedLater');
+      expect(resolver.getArg('b1').type.getTypeName()).toBe('MySomeInputDefinedLater');
     });
 
     it('should return undefined for non-existing arg', () => {
@@ -261,11 +281,18 @@ describe('Resolver', () => {
       });
       resolver.makeRequired('b1');
       resolver.makeRequired(['b2', 'b3']);
-      expect(resolver.isRequired('b1')).toBe(true);
+      expect(resolver.isArgNonNull('b1')).toBe(true);
       expect(resolver.getArgType('b1')).toBeInstanceOf(GraphQLNonNull);
-      expect(resolver.isRequired('b2')).toBe(true);
-      expect(resolver.isRequired('b3')).toBe(true);
-      expect(resolver.isRequired('b4')).toBe(false);
+      expect(resolver.isArgNonNull('b2')).toBe(true);
+      expect(resolver.isArgNonNull('b3')).toBe(true);
+      expect(resolver.isArgNonNull('b4')).toBe(false);
+
+      resolver.makeArgNonNull(['b3', 'b4']);
+      expect(resolver.isArgNonNull('b3')).toBe(true);
+      expect(resolver.isArgNonNull('b4')).toBe(true);
+      resolver.makeArgNullable(['b3', 'b4']);
+      expect(resolver.isArgNonNull('b3')).toBe(false);
+      expect(resolver.isArgNonNull('b4')).toBe(false);
     });
 
     it('should make args optional', () => {
@@ -273,15 +300,48 @@ describe('Resolver', () => {
         b1: { type: new GraphQLNonNull(GraphQLString) },
         b2: { type: 'String!' },
         b3: 'String!',
-        b4: 'String!',
+        b4: '[String]!',
       });
       resolver.makeOptional('b1');
       resolver.makeOptional(['b2', 'b3']);
-      expect(resolver.isRequired('b1')).toBe(false);
-      expect(resolver.getArgType('b1')).toBe(GraphQLString);
-      expect(resolver.isRequired('b2')).toBe(false);
-      expect(resolver.isRequired('b3')).toBe(false);
-      expect(resolver.isRequired('b4')).toBe(true);
+      expect(resolver.isArgNonNull('b1')).toBe(false);
+      expect(resolver.getArgTC('b1').getType()).toBe(GraphQLString);
+      expect(resolver.isArgNonNull('b2')).toBe(false);
+      expect(resolver.isArgNonNull('b3')).toBe(false);
+      expect(resolver.isArgNonNull('b4')).toBe(true);
+    });
+
+    it('check Plural methods, wrap/unwrap from ListComposer', () => {
+      resolver.setArgs({
+        b1: { type: new GraphQLNonNull(GraphQLString) },
+        b2: { type: '[String]' },
+        b3: 'String!',
+        b4: '[String!]!',
+      });
+      expect(resolver.isArgPlural('b1')).toBe(false);
+      expect(resolver.isArgPlural('b2')).toBe(true);
+      expect(resolver.isArgPlural('b3')).toBe(false);
+      expect(resolver.isArgPlural('b4')).toBe(true);
+      expect(resolver.isArgNonNull('b1')).toBe(true);
+      expect(resolver.isArgNonNull('b2')).toBe(false);
+      expect(resolver.isArgNonNull('b3')).toBe(true);
+      expect(resolver.isArgNonNull('b4')).toBe(true);
+
+      resolver.makeArgPlural(['b1', 'b2', 'b3', 'unexisted']);
+      expect(resolver.isArgPlural('b1')).toBe(true);
+      expect(resolver.isArgPlural('b2')).toBe(true);
+      expect(resolver.isArgPlural('b3')).toBe(true);
+
+      resolver.makeArgNonNull('b2');
+      expect(resolver.isArgPlural('b2')).toBe(true);
+      expect(resolver.isArgNonNull('b2')).toBe(true);
+      resolver.makeArgNonPlural(['b2', 'b4', 'unexisted']);
+      expect(resolver.isArgPlural('b2')).toBe(false);
+      expect(resolver.isArgNonNull('b2')).toBe(true);
+      expect(resolver.isArgPlural('b4')).toBe(false);
+      resolver.makeArgNullable(['b2', 'b4', 'unexisted']);
+      expect(resolver.isArgNonNull('b2')).toBe(false);
+      expect(resolver.isArgNonNull('b4')).toBe(false);
     });
 
     describe('reorderArgs()', () => {
@@ -337,13 +397,13 @@ describe('Resolver', () => {
       it('should throw error if arg is GraphqlNonNull wrapped scalar type', () => {
         expect(() => {
           resolver.cloneArg('mandatoryScalar', 'NewTypeNameInput');
-        }).toThrowError('should be GraphQLInputObjectType');
+        }).toThrowError('Cannot clone arg');
       });
 
       it('should throw error if arg is scalar type', () => {
         expect(() => {
           resolver.cloneArg('scalar', 'NewTypeNameInput');
-        }).toThrowError('should be GraphQLInputObjectType');
+        }).toThrowError('Cannot clone arg');
       });
 
       it('should throw error if provided incorrect new type name', () => {
@@ -687,7 +747,7 @@ describe('Resolver', () => {
   });
 
   it('should return type by path', () => {
-    const rsv = new Resolver(
+    const rsv: any = new Resolver(
       {
         name: 'find',
         type: 'type LonLat { lon: Float, lat: Float }',
@@ -787,7 +847,7 @@ describe('Resolver', () => {
           name: 'PRICE_ASC',
           value: 123,
         });
-      }).toThrowError('must have `sort` arg with type GraphQLEnumType');
+      }).toThrowError("Resolver must have 'sort' arg with EnumType");
     });
   });
 
@@ -858,7 +918,7 @@ describe('Resolver', () => {
           }: any)
         );
 
-        expect(console.log.mock.calls[0]).toEqual(['ResolveParams for User.find():']);
+        expect(console.log.mock.calls[0]).toEqual(['ResolverResolveParams for User.find():']);
         expect(console.dir.mock.calls[0]).toEqual([
           {
             args: { limit: 1 },
@@ -888,7 +948,7 @@ describe('Resolver', () => {
           }: any)
         );
 
-        expect(console.log.mock.calls[0]).toEqual(['ResolveParams for User.find():']);
+        expect(console.log.mock.calls[0]).toEqual(['ResolverResolveParams for User.find():']);
         expect(console.dir.mock.calls[0]).toEqual([
           {
             args: { limit: 1, sort: 'id' },
@@ -983,7 +1043,7 @@ describe('Resolver', () => {
         expect(console.timeEnd.mock.calls[0]).toEqual(['Execution time for User.find()']);
 
         expect(console.log.mock.calls[0]).toEqual([
-          'ResolveParams for debugExecTime(User.find()):',
+          'ResolverResolveParams for debugExecTime(User.find()):',
         ]);
         expect(console.dir.mock.calls[0]).toEqual([
           {
@@ -1028,16 +1088,23 @@ describe('Resolver', () => {
     it('should return InputTypeComposer for wrapped object argument', () => {
       const objTC = myResolver.getArgTC('objArr');
       expect(objTC.getTypeName()).toBe('RCustomInputType2');
+
+      expect(myResolver.getArgTC('scalar').getTypeName()).toBe('String');
+
+      // should unwrap Int from List
+      expect(myResolver.getArgTC('list').getTypeName()).toBe('Int');
     });
 
-    it('should throw error for non-object argument', () => {
-      expect(() => {
-        myResolver.getArgTC('scalar');
-      }).toThrow('argument should be InputObjectType');
+    it('should work getArgITC() with type checks', () => {
+      const objTC = myResolver.getArgITC('objArr');
+      expect(objTC.getTypeName()).toBe('RCustomInputType2');
 
-      expect(() => {
-        myResolver.getArgTC('list');
-      }).toThrow('argument should be InputObjectType');
+      expect(() => myResolver.getArgITC('scalar').getTypeName()).toThrow(
+        'must be InputTypeComposer, but recieved ScalarTypeComposer'
+      );
+      expect(() => myResolver.getArgITC('list').getTypeName()).toThrow(
+        'must be InputTypeComposer, but recieved ScalarTypeComposer'
+      );
     });
   });
 
@@ -1070,7 +1137,7 @@ describe('Resolver', () => {
         schemaComposer
       );
 
-      expect(r.type).toBe('[MyOutputType!]!');
+      expect(r.type.getTypeName()).toBe('[MyOutputType!]!');
       const type: any = r.getType();
       expect(type).toBeInstanceOf(GraphQLNonNull);
       expect(type.ofType).toBeInstanceOf(GraphQLList);
@@ -1088,9 +1155,11 @@ describe('Resolver', () => {
         },
         schemaComposer
       );
-      expect(r.type).toBe('String');
+      expect(r.type).toBeInstanceOf(ScalarTypeComposer);
+      expect(r.type.getType()).toBe(GraphQLString);
       expect(r.getType()).toBe(GraphQLString);
-      expect(() => r.getTypeComposer()).toThrow();
+      expect(r.getTypeComposer()).toBeInstanceOf(ScalarTypeComposer);
+      expect(() => r.getOTC()).toThrow();
     });
   });
 
