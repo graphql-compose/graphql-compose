@@ -1,25 +1,20 @@
 import {
-  GraphQLArgumentConfig,
-  GraphQLFieldConfig,
-  GraphQLFieldConfigArgumentMap,
-  GraphQLInputObjectType,
-  GraphQLInputType,
   GraphQLUnionType,
-  GraphQLList,
-  GraphQLNonNull,
   GraphQLObjectType,
-  GraphQLOutputType,
   GraphQLResolveInfo,
   GraphQLTypeResolver,
 } from 'graphql';
-import { InputTypeComposer } from './InputTypeComposer';
 import { SchemaComposer } from './SchemaComposer';
 import {
-  ComposeFieldConfig,
-  ComposeFieldConfigMap,
-  ComposeObjectType,
+  ObjectTypeComposerThunked,
+  ObjectTypeComposerFieldConfig,
+  ObjectTypeComposerFieldConfigMap,
+  ObjectTypeComposerDefinition,
   ObjectTypeComposer,
 } from './ObjectTypeComposer';
+import { ListComposer } from './ListComposer';
+import { NonNullComposer } from './NonNullComposer';
+import { ThunkComposer } from './ThunkComposer';
 import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import {
   Thunk,
@@ -29,56 +24,59 @@ import {
   DirectiveArgs,
 } from './utils/definitions';
 
-export type GraphQLUnionTypeExtended<TSource, TContext> = GraphQLUnionType & {
-  _gqcTypeMap: Map<string, ComposeObjectType>;
-  _gqcTypeResolvers?: UnionTypeResolversMap<TSource, TContext>;
-  _gqcExtensions?: Extensions;
-};
+export type UnionTypeComposerDefinition<TSource, TContext> =
+  | TypeAsString
+  | TypeDefinitionString
+  | UnionTypeComposerAsObjectDefinition<TSource, TContext>
+  | GraphQLUnionType;
 
-export type UnionTypeResolversMap<TSource, TContext> = Map<
-  ComposeObjectType,
-  UnionTypeResolverCheckFn<TSource, TContext>
->;
-
-export type UnionTypeResolverCheckFn<TSource, TContext> = (
-  value: TSource,
-  context: TContext,
-  info: GraphQLResolveInfo
-) => MaybePromise<boolean | null | void>;
-
-export type ComposeUnionTypeConfig<TSource, TContext> = {
+export type UnionTypeComposerAsObjectDefinition<TSource, TContext> = {
   name: string;
-  types?: Thunk<ComposeObjectType[]>;
+  types?: Thunk<ReadonlyArray<ObjectTypeComposerDefinition<any, TContext>> | null>;
   resolveType?: GraphQLTypeResolver<TSource, TContext> | null;
   description?: string | null;
   extensions?: Extensions;
 };
 
-export type UnionTypeComposeDefinition<TSource, TContext> =
-  | TypeAsString
-  | ComposeUnionTypeConfig<TSource, TContext>;
+export type UnionTypeComposerResolversMap<TSource, TContext> = Map<
+  ObjectTypeComposerThunked<TSource, TContext>,
+  UnionTypeComposerResolverCheckFn<TSource, TContext>
+>;
 
-export type ComposeUnionType =
-  | UnionTypeComposer<any, any>
-  | GraphQLUnionType
-  | TypeDefinitionString
-  | TypeAsString;
+export type UnionTypeComposerResolversMapDefinition<TSource, TContext> =
+  | Map<
+      ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>,
+      UnionTypeComposerResolverCheckFn<TSource, TContext>
+    >
+  | Readonly<UnionTypeComposerResolversMap<TSource, TContext>>;
+
+export type UnionTypeComposerResolverCheckFn<TSource, TContext> = (
+  value: TSource,
+  context: TContext,
+  info: GraphQLResolveInfo
+) => MaybePromise<boolean | null | void>;
+
+export type UnionTypeComposerThunked<TReturn, TContext> =
+  | UnionTypeComposer<TReturn, TContext>
+  | ThunkComposer<UnionTypeComposer<TReturn, TContext>, GraphQLUnionType>;
 
 /**
  * Class that helps to create `UnionTypeComposer`s and provide ability to modify them.
  */
 export class UnionTypeComposer<TSource = any, TContext = any> {
   public schemaComposer: SchemaComposer<TContext>;
+  protected _gqType: GraphQLUnionType;
+  protected _gqcTypeMap: Map<string, ObjectTypeComposerThunked<any, TContext>>;
+  protected _gqcTypeResolvers: UnionTypeComposerResolversMap<TSource, TContext>;
+  protected _gqcExtensions: Extensions | void;
 
-  protected gqType: GraphQLUnionTypeExtended<TSource, TContext>;
-
-  public constructor(gqType: GraphQLUnionType, schemaComposer: SchemaComposer<TContext>);
+  constructor(graphqlType: GraphQLUnionType, schemaComposer: SchemaComposer<TContext>);
 
   /**
    * Create `UnionTypeComposer` with adding it by name to the `SchemaComposer`.
    */
   public static create<TSrc = any, TCtx = any>(
-    typeDef: UnionTypeComposeDefinition<TSrc, TCtx>,
+    typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>
   ): UnionTypeComposer<TSrc, TCtx>;
 
@@ -86,7 +84,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
    * Create `UnionTypeComposer` without adding it to the `SchemaComposer`. This method may be usefull in plugins, when you need to create type temporary.
    */
   public static createTemp<TSrc = any, TCtx = any>(
-    typeDef: UnionTypeComposeDefinition<TSrc, TCtx>,
+    typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
     schemaComposer?: SchemaComposer<TCtx>
   ): UnionTypeComposer<TSrc, TCtx>;
 
@@ -96,17 +94,29 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
    * -----------------------------------------------
    */
 
-  public hasType(name: string | GraphQLObjectType | ObjectTypeComposer<any, TContext>): boolean;
+  public hasType(name: ObjectTypeComposerDefinition<any, TContext>): boolean;
 
-  public getTypes(): ComposeObjectType[];
+  public getTypes(): Array<ObjectTypeComposerThunked<TSource, TContext>>;
 
   public getTypeNames(): string[];
 
-  public clearTypes(): UnionTypeComposer<TSource, TContext>;
+  public clearTypes(): this;
 
-  public setTypes(types: ComposeObjectType[]): this;
+  public setTypes(
+    types: ReadonlyArray<
+      ObjectTypeComposerThunked<TSource, TContext> | ObjectTypeComposerDefinition<any, TContext>
+    >
+  ): this;
 
-  public addType(type: ComposeObjectType): this;
+  public addType(
+    type: ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>
+  ): this;
+
+  public addTypes(
+    types: ReadonlyArray<
+      ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>
+    >
+  ): this;
 
   public removeType(nameOrArray: string | string[]): this;
 
@@ -120,9 +130,9 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   public getType(): GraphQLUnionType;
 
-  public getTypePlural(): GraphQLList<GraphQLUnionType>;
+  public getTypePlural(): ListComposer<UnionTypeComposer<TSource, TContext>>;
 
-  public getTypeNonNull(): GraphQLNonNull<GraphQLUnionType>;
+  public getTypeNonNull(): NonNullComposer<UnionTypeComposer<TSource, TContext>>;
 
   public getTypeName(): string;
 
@@ -132,7 +142,14 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   public setDescription(description: string): this;
 
-  public clone(newTypeName: string): UnionTypeComposer<TSource, TContext>;
+  /**
+   * You may clone this type with a new provided name as string.
+   * Or you may provide a new TypeComposer which will get all clonned
+   * settings from this type.
+   */
+  public clone(
+    newTypeNameOrTC: string | UnionTypeComposer<any, any>
+  ): UnionTypeComposer<TSource, TContext>;
 
   public merge(type: GraphQLUnionType | UnionTypeComposer<any, any>): this;
 
@@ -142,27 +159,31 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
    * -----------------------------------------------
    */
 
-  public getResolveType(): GraphQLTypeResolver<TSource, TContext> | null | void;
+  public getResolveType(): GraphQLTypeResolver<TSource, TContext> | void | null;
 
-  public setResolveType(fn: GraphQLTypeResolver<TSource, TContext> | null | void): this;
+  public setResolveType(fn: GraphQLTypeResolver<TSource, TContext> | void | null): this;
 
-  public hasTypeResolver(type: ObjectTypeComposer<any, TContext> | GraphQLObjectType): boolean;
+  public hasTypeResolver(
+    type: ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>
+  ): boolean;
 
-  public getTypeResolvers(): UnionTypeResolversMap<TSource, TContext>;
+  public getTypeResolvers(): UnionTypeComposerResolversMap<TSource, TContext>;
 
   public getTypeResolverCheckFn(
-    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType
-  ): UnionTypeResolverCheckFn<any, TContext>;
+    type: ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>
+  ): UnionTypeComposerResolverCheckFn<any, TContext>;
 
   public getTypeResolverNames(): string[];
 
-  public getTypeResolverTypes(): GraphQLObjectType[];
+  public getTypeResolverTypes(): Array<ObjectTypeComposerThunked<any, TContext>>;
 
-  public setTypeResolvers(typeResolversMap: UnionTypeResolversMap<TSource, TContext>): this;
+  public setTypeResolvers(
+    typeResolversMap: UnionTypeComposerResolversMapDefinition<TSource, TContext>
+  ): this;
 
   public addTypeResolver(
-    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
-    checkFn: UnionTypeResolverCheckFn<TSource, TContext>
+    type: ObjectTypeComposerDefinition<any, TContext>,
+    checkFn: UnionTypeComposerResolverCheckFn<TSource, TContext>
   ): this;
 
   public removeTypeResolver(type: ObjectTypeComposer<any, TContext> | GraphQLObjectType): this;

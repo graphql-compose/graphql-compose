@@ -2,13 +2,25 @@
 /* eslint-disable no-use-before-define */
 
 // import invariant from 'graphql/jsutils/invariant';
-import { GraphQLUnionType, GraphQLObjectType, GraphQLList, GraphQLNonNull } from './graphql';
+import {
+  GraphQLUnionType,
+  GraphQLObjectType,
+  type GraphQLResolveInfo,
+  type GraphQLTypeResolver,
+} from './graphql';
 import { isObject, isString, isFunction } from './utils/is';
 import { inspect } from './utils/misc';
-import { ObjectTypeComposer, type ComposeObjectType } from './ObjectTypeComposer';
-import type { GraphQLResolveInfo, GraphQLTypeResolver } from './graphql';
+import {
+  ObjectTypeComposer,
+  type ObjectTypeComposerDefinition,
+  type ObjectTypeComposerThunked,
+} from './ObjectTypeComposer';
 import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
+import { TypeMapper } from './TypeMapper';
+import { ListComposer } from './ListComposer';
+import { NonNullComposer } from './NonNullComposer';
+import { ThunkComposer } from './ThunkComposer';
 import type {
   Thunk,
   Extensions,
@@ -16,53 +28,57 @@ import type {
   ExtensionsDirective,
   DirectiveArgs,
 } from './utils/definitions';
-import { resolveTypeArrayAsThunk } from './utils/configAsThunk';
+import { convertObjectTypeArrayAsThunk } from './utils/configToDefine';
 import { getGraphQLType, getComposeTypeName } from './utils/typeHelpers';
 import { graphqlVersion } from './utils/graphqlVersion';
 
-export type GraphQLUnionTypeExtended<TSource, TContext> = GraphQLUnionType & {
-  _gqcTypeMap?: Map<string, ComposeObjectType>,
-  _gqcTypeResolvers?: UnionTypeResolversMap<TSource, TContext>,
-  _gqcExtensions?: Extensions,
+export type UnionTypeComposerDefinition<TSource, TContext> =
+  | TypeAsString
+  | TypeDefinitionString
+  | UnionTypeComposerAsObjectDefinition<TSource, TContext>
+  | GraphQLUnionType;
+
+export type UnionTypeComposerAsObjectDefinition<TSource, TContext> = {
+  name: string,
+  types?: Thunk<$ReadOnlyArray<ObjectTypeComposerDefinition<any, TContext>> | null>,
+  resolveType?: GraphQLTypeResolver<TSource, TContext> | null,
+  description?: string | null,
+  extensions?: Extensions,
 };
 
-export type UnionTypeResolversMap<TSource, TContext> = Map<
-  ComposeObjectType,
-  UnionTypeResolverCheckFn<TSource, TContext>
+export type UnionTypeComposerResolversMap<TSource, TContext> = Map<
+  ObjectTypeComposerThunked<TSource, TContext>,
+  UnionTypeComposerResolverCheckFn<TSource, TContext>
 >;
 
-export type UnionTypeResolverCheckFn<TSource, TContext> = (
+export type UnionTypeComposerResolversMapDefinition<TSource, TContext> =
+  | Map<
+      ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>,
+      UnionTypeComposerResolverCheckFn<TSource, TContext>
+    >
+  | $ReadOnly<UnionTypeComposerResolversMap<TSource, TContext>>;
+
+export type UnionTypeComposerResolverCheckFn<TSource, TContext> = (
   value: TSource,
   context: TContext,
   info: GraphQLResolveInfo
 ) => MaybePromise<boolean | null | void>;
 
-export type ComposeUnionTypeConfig<TSource, TContext> = {
-  +name: string,
-  +types?: Thunk<ComposeObjectType[]>,
-  +resolveType?: GraphQLTypeResolver<TSource, TContext> | null,
-  +description?: string | null,
-  +extensions?: Extensions,
-};
-
-export type UnionTypeComposeDefinition<TSource, TContext> =
-  | TypeAsString
-  | ComposeUnionTypeConfig<TSource, TContext>;
-
-export type ComposeUnionType =
-  | UnionTypeComposer<any, any>
-  | GraphQLUnionType
-  | TypeDefinitionString
-  | TypeAsString;
+export type UnionTypeComposerThunked<TReturn, TContext> =
+  | UnionTypeComposer<TReturn, TContext>
+  | ThunkComposer<UnionTypeComposer<TReturn, TContext>, GraphQLUnionType>;
 
 export class UnionTypeComposer<TSource, TContext> {
-  gqType: GraphQLUnionTypeExtended<TSource, TContext>;
   schemaComposer: SchemaComposer<TContext>;
+  _gqType: GraphQLUnionType;
+  _gqcTypeMap: Map<string, ObjectTypeComposerThunked<any, TContext>>;
+  _gqcTypeResolvers: UnionTypeComposerResolversMap<TSource, TContext>;
+  _gqcExtensions: Extensions | void;
 
   // Also supported `GraphQLUnionType` but in such case Flowtype force developers
   // to explicitly write annotations in their code. But it's bad.
   static create<TSrc, TCtx>(
-    typeDef: UnionTypeComposeDefinition<TSrc, TCtx>,
+    typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>
   ): UnionTypeComposer<TSrc, TCtx> {
     if (!(schemaComposer instanceof SchemaComposer)) {
@@ -70,13 +86,18 @@ export class UnionTypeComposer<TSource, TContext> {
         'You must provide SchemaComposer instance as a second argument for `UnionTypeComposer.create(typeDef, schemaComposer)`'
       );
     }
+
+    if (schemaComposer.hasInstance(typeDef, UnionTypeComposer)) {
+      return schemaComposer.getUTC(typeDef);
+    }
+
     const utc = this.createTemp(typeDef, schemaComposer);
     schemaComposer.add(utc);
     return utc;
   }
 
   static createTemp<TSrc, TCtx>(
-    typeDef: UnionTypeComposeDefinition<TSrc, TCtx>,
+    typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
     schemaComposer?: SchemaComposer<TCtx>
   ): UnionTypeComposer<TSrc, TCtx> {
     const sc = schemaComposer || new SchemaComposer();
@@ -84,8 +105,7 @@ export class UnionTypeComposer<TSource, TContext> {
 
     if (isString(typeDef)) {
       const typeName: string = typeDef;
-      const NAME_RX = /^[_a-zA-Z][_a-zA-Z0-9]*$/;
-      if (NAME_RX.test(typeName)) {
+      if (TypeMapper.isTypeNameString(typeName)) {
         UTC = new UnionTypeComposer(
           new GraphQLUnionType({
             name: typeName,
@@ -94,10 +114,10 @@ export class UnionTypeComposer<TSource, TContext> {
           sc
         );
       } else {
-        UTC = sc.typeMapper.createType(typeName);
+        UTC = sc.typeMapper.convertSDLTypeDefinition(typeName);
         if (!(UTC instanceof UnionTypeComposer)) {
           throw new Error(
-            'You should provide correct GraphQLUnionType type definition.' +
+            'You should provide correct GraphQLUnionType type definition. ' +
               'Eg. `union MyType = Photo | Person`'
           );
         }
@@ -105,16 +125,21 @@ export class UnionTypeComposer<TSource, TContext> {
     } else if (typeDef instanceof GraphQLUnionType) {
       UTC = new UnionTypeComposer(typeDef, sc);
     } else if (isObject(typeDef)) {
-      const types = typeDef.types;
       const type = new GraphQLUnionType({
         ...(typeDef: any),
-        types: isFunction(types)
-          ? () => resolveTypeArrayAsThunk(sc, (types(): any), typeDef.name)
-          : () => [],
+        types: () => [],
       });
       UTC = new UnionTypeComposer(type, sc);
+
+      const types = typeDef.types;
       if (Array.isArray(types)) UTC.setTypes(types);
-      UTC.gqType._gqcExtensions = typeDef.extensions || {};
+      else if (isFunction(types)) {
+        // rewrap interfaces `() => [i1, i2]` -> `[()=>i1, ()=>i2]`
+        // helps to solve hoisting problems
+        UTC.setTypes(convertObjectTypeArrayAsThunk((types: any), sc));
+      }
+
+      UTC._gqcExtensions = typeDef.extensions || {};
     } else {
       throw new Error(
         `You should provide GraphQLUnionTypeConfig or string with union name or SDL definition. Provided:\n${inspect(
@@ -127,7 +152,7 @@ export class UnionTypeComposer<TSource, TContext> {
   }
 
   constructor(
-    gqType: GraphQLUnionType,
+    graphqlType: GraphQLUnionType,
     schemaComposer: SchemaComposer<TContext>
   ): UnionTypeComposer<TSource, TContext> {
     if (!(schemaComposer instanceof SchemaComposer)) {
@@ -135,14 +160,34 @@ export class UnionTypeComposer<TSource, TContext> {
         'You must provide SchemaComposer instance as a second argument for `new UnionTypeComposer(GraphQLUnionType, SchemaComposer)`'
       );
     }
-    this.schemaComposer = schemaComposer;
-
-    if (!(gqType instanceof GraphQLUnionType)) {
+    if (!(graphqlType instanceof GraphQLUnionType)) {
       throw new Error(
         'UnionTypeComposer accept only GraphQLUnionType in constructor. Try to use more flexible method `UnionTypeComposer.create()`.'
       );
     }
-    this.gqType = (gqType: any);
+
+    this.schemaComposer = schemaComposer;
+    this._gqType = graphqlType;
+
+    // add itself to TypeStorage on create
+    // it avoids recursive type use errors
+    this.schemaComposer.set(graphqlType, this);
+
+    let types = [];
+    if (graphqlVersion >= 14) {
+      types = this._gqType._types;
+    } else {
+      types = this._gqType._types || (this._gqType: any)._typeConfig.types;
+    }
+    types = convertObjectTypeArrayAsThunk(types, this.schemaComposer);
+    this._gqcTypeMap = new Map();
+    types.forEach(type => {
+      this._gqcTypeMap.set(type.getTypeName(), type);
+    });
+
+    if (!this._gqcTypeResolvers) {
+      this._gqcTypeResolvers = new Map();
+    }
 
     // alive proper Flow type casting in autosuggestions for class with Generics
     /* :: return this; */
@@ -152,74 +197,70 @@ export class UnionTypeComposer<TSource, TContext> {
   // Union Types methods
   // -----------------------------------------------
 
-  hasType(name: string | GraphQLObjectType | ObjectTypeComposer<any, TContext>): boolean {
-    const nameAsString = getComposeTypeName(name);
-    return this.getTypeNames().includes(nameAsString);
+  hasType(name: ObjectTypeComposerDefinition<any, TContext>): boolean {
+    const typeName = getComposeTypeName(name);
+    return this._gqcTypeMap.has(typeName);
   }
 
-  _getTypeMap() {
-    if (!this.gqType._gqcTypeMap) {
-      const types = this.gqType.getTypes();
-      const m: Map<string, ComposeObjectType> = new Map();
-      types.forEach(type => {
-        m.set(getComposeTypeName(type), type);
-      });
-      this.gqType._gqcTypeMap = m;
-
-      if (graphqlVersion >= 14) {
-        this.gqType._types = () => {
-          return resolveTypeArrayAsThunk(this.schemaComposer, this.getTypes(), this.getTypeName());
-        };
-      } else {
-        (this.gqType: any)._types = null;
-        (this.gqType: any)._typeConfig.types = () => {
-          return resolveTypeArrayAsThunk(this.schemaComposer, this.getTypes(), this.getTypeName());
-        };
-      }
-    }
-
-    return this.gqType._gqcTypeMap;
-  }
-
-  getTypes(): ComposeObjectType[] {
-    return Array.from(this._getTypeMap().values());
+  getTypes(): Array<ObjectTypeComposerThunked<TSource, TContext>> {
+    return Array.from(this._gqcTypeMap.values());
   }
 
   getTypeNames(): string[] {
-    return Array.from(this._getTypeMap().keys());
+    return Array.from(this._gqcTypeMap.keys());
   }
 
   clearTypes(): UnionTypeComposer<TSource, TContext> {
-    this._getTypeMap().clear();
+    this._gqcTypeMap.clear();
     return this;
   }
 
-  setTypes(types: ComposeObjectType[]): UnionTypeComposer<TSource, TContext> {
+  setTypes(
+    types: $ReadOnlyArray<
+      ObjectTypeComposerThunked<TSource, TContext> | ObjectTypeComposerDefinition<any, TContext>
+    >
+  ): UnionTypeComposer<TSource, TContext> {
     this.clearTypes();
-    types.forEach(type => {
-      this._getTypeMap().set(getComposeTypeName(type), type);
+    const tcs = convertObjectTypeArrayAsThunk(types, this.schemaComposer);
+    tcs.forEach(tc => {
+      this._gqcTypeMap.set(tc.getTypeName(), tc);
     });
     return this;
   }
 
-  addType(type: ComposeObjectType): UnionTypeComposer<TSource, TContext> {
-    this._getTypeMap().set(getComposeTypeName(type), type);
+  addType(
+    type: ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>
+  ): UnionTypeComposer<TSource, TContext> {
+    const tc = this._convertObjectType(type);
+    this._gqcTypeMap.set(tc.getTypeName(), tc);
+    return this;
+  }
+
+  addTypes(
+    types: $ReadOnlyArray<
+      ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>
+    >
+  ) {
+    if (!Array.isArray(types)) {
+      throw new Error(`UnionTypeComposer[${this.getTypeName()}].addType() accepts only array`);
+    }
+    types.forEach(type => this.addType(type));
     return this;
   }
 
   removeType(nameOrArray: string | string[]): UnionTypeComposer<TSource, TContext> {
     const typeNames = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
     typeNames.forEach(typeName => {
-      this._getTypeMap().delete(typeName);
+      this._gqcTypeMap.delete(typeName);
     });
     return this;
   }
 
   removeOtherTypes(nameOrArray: string | string[]): UnionTypeComposer<TSource, TContext> {
     const keepTypeNames = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
-    this._getTypeMap().forEach((v, i) => {
+    this._gqcTypeMap.forEach((v, i) => {
       if (keepTypeNames.indexOf(i) === -1) {
-        this._getTypeMap().delete(i);
+        this._gqcTypeMap.delete(i);
       }
     });
     return this;
@@ -230,43 +271,70 @@ export class UnionTypeComposer<TSource, TContext> {
   // -----------------------------------------------
 
   getType(): GraphQLUnionType {
-    return this.gqType;
+    const prepareTypes = () => {
+      try {
+        return this.getTypes().map(tc => tc.getType());
+      } catch (e) {
+        e.message = `UnionError[${this.getTypeName()}]: ${e.message}`;
+        throw e;
+      }
+    };
+    if (graphqlVersion >= 14) {
+      this._gqType._types = prepareTypes;
+    } else {
+      (this._gqType: any)._types = null;
+      (this._gqType: any)._typeConfig.types = prepareTypes;
+    }
+    return this._gqType;
   }
 
-  getTypePlural(): GraphQLList<GraphQLUnionType> {
-    return new GraphQLList(this.gqType);
+  getTypePlural(): ListComposer<UnionTypeComposer<TSource, TContext>> {
+    return new ListComposer(this);
   }
 
-  getTypeNonNull(): GraphQLNonNull<GraphQLUnionType> {
-    return new GraphQLNonNull(this.gqType);
+  getTypeNonNull(): NonNullComposer<UnionTypeComposer<TSource, TContext>> {
+    return new NonNullComposer(this);
   }
 
   getTypeName(): string {
-    return this.gqType.name;
+    return this._gqType.name;
   }
 
   setTypeName(name: string): UnionTypeComposer<TSource, TContext> {
-    this.gqType.name = name;
+    this._gqType.name = name;
     this.schemaComposer.add(this);
     return this;
   }
 
   getDescription(): string {
-    return this.gqType.description || '';
+    return this._gqType.description || '';
   }
 
   setDescription(description: string): UnionTypeComposer<TSource, TContext> {
-    this.gqType.description = description;
+    this._gqType.description = description;
     return this;
   }
 
-  clone(newTypeName: string): UnionTypeComposer<TSource, TContext> {
-    if (!newTypeName) {
+  /**
+   * You may clone this type with a new provided name as string.
+   * Or you may provide a new TypeComposer which will get all clonned
+   * settings from this type.
+   */
+  clone(
+    newTypeNameOrTC: string | UnionTypeComposer<any, any>
+  ): UnionTypeComposer<TSource, TContext> {
+    if (!newTypeNameOrTC) {
       throw new Error('You should provide newTypeName:string for UnionTypeComposer.clone()');
     }
 
-    const cloned = UnionTypeComposer.create(newTypeName, this.schemaComposer);
-    cloned.setTypes(this.getTypes());
+    const cloned =
+      newTypeNameOrTC instanceof UnionTypeComposer
+        ? newTypeNameOrTC
+        : UnionTypeComposer.create(newTypeNameOrTC, this.schemaComposer);
+
+    cloned._gqcExtensions = { ...this._gqcExtensions };
+    cloned._gqcTypeMap = new Map(this._gqcTypeMap);
+    cloned._gqcTypeResolvers = new Map(this._gqcTypeResolvers);
     cloned.setDescription(this.getDescription());
 
     return cloned;
@@ -275,10 +343,16 @@ export class UnionTypeComposer<TSource, TContext> {
   merge(
     type: GraphQLUnionType | UnionTypeComposer<any, any>
   ): UnionTypeComposer<TSource, TContext> {
+    let tc: ?UnionTypeComposer<any, any>;
+
     if (type instanceof GraphQLUnionType) {
-      type.getTypes().forEach((t: any) => this.addType(t));
+      tc = UnionTypeComposer.createTemp(type, this.schemaComposer);
     } else if (type instanceof UnionTypeComposer) {
-      type.getTypes().forEach(t => this.addType(t));
+      tc = type;
+    }
+
+    if (tc) {
+      this.addTypes(tc.getTypes());
     } else {
       throw new Error(
         `Cannot merge ${inspect(
@@ -294,35 +368,36 @@ export class UnionTypeComposer<TSource, TContext> {
   // ResolveType methods
   // -----------------------------------------------
 
-  getResolveType(): ?GraphQLTypeResolver<TSource, TContext> {
-    return (this.gqType.resolveType: any);
+  getResolveType(): GraphQLTypeResolver<TSource, TContext> | void | null {
+    return (this._gqType.resolveType: any);
   }
 
   setResolveType(
-    fn: ?GraphQLTypeResolver<TSource, TContext>
+    fn: GraphQLTypeResolver<TSource, TContext> | void | null
   ): UnionTypeComposer<TSource, TContext> {
-    this.gqType.resolveType = fn;
+    this._gqType.resolveType = fn;
     return this;
   }
 
-  hasTypeResolver(type: ObjectTypeComposer<any, TContext> | GraphQLObjectType): boolean {
+  hasTypeResolver(
+    type: ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>
+  ): boolean {
     const typeResolversMap = this.getTypeResolvers();
-    return typeResolversMap.has(type);
+    const tc = this._convertObjectType(type);
+    return typeResolversMap.has(tc);
   }
 
-  getTypeResolvers(): UnionTypeResolversMap<TSource, TContext> {
-    if (!this.gqType._gqcTypeResolvers) {
-      this.gqType._gqcTypeResolvers = new Map();
-    }
-    return this.gqType._gqcTypeResolvers;
+  getTypeResolvers(): UnionTypeComposerResolversMap<TSource, TContext> {
+    return this._gqcTypeResolvers;
   }
 
   getTypeResolverCheckFn(
-    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType
-  ): UnionTypeResolverCheckFn<any, TContext> {
+    type: ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>
+  ): UnionTypeComposerResolverCheckFn<any, TContext> {
     const typeResolversMap = this.getTypeResolvers();
+    const tc = this._convertObjectType(type);
 
-    if (!typeResolversMap.has(type)) {
+    if (!typeResolversMap.has(tc)) {
       throw new Error(
         `Type resolve function in union '${this.getTypeName()}' is not defined for type ${inspect(
           type
@@ -330,61 +405,51 @@ export class UnionTypeComposer<TSource, TContext> {
       );
     }
 
-    return (typeResolversMap.get(type): any);
+    return (typeResolversMap.get(tc): any);
   }
 
   getTypeResolverNames(): string[] {
     const typeResolversMap = this.getTypeResolvers();
     const names = [];
-    typeResolversMap.forEach((resolveFn, composeType) => {
-      if (composeType instanceof ObjectTypeComposer) {
-        names.push(composeType.getTypeName());
-      } else if (composeType && typeof composeType.name === 'string') {
-        names.push(composeType.name);
-      }
+    typeResolversMap.forEach((resolveFn, tc) => {
+      names.push(tc.getTypeName());
     });
     return names;
   }
 
-  getTypeResolverTypes(): GraphQLObjectType[] {
+  getTypeResolverTypes(): Array<ObjectTypeComposerThunked<any, TContext>> {
     const typeResolversMap = this.getTypeResolvers();
-    const types = [];
-    typeResolversMap.forEach((resolveFn, composeType) => {
-      types.push(((getGraphQLType(composeType): any): GraphQLObjectType));
-    });
-    return types;
+    return Array.from(typeResolversMap.keys());
   }
 
   setTypeResolvers(
-    typeResolversMap: UnionTypeResolversMap<TSource, TContext>
+    typeResolversMap: UnionTypeComposerResolversMapDefinition<TSource, TContext>
   ): UnionTypeComposer<TSource, TContext> {
-    this._isTypeResolversValid(typeResolversMap);
-
-    this.gqType._gqcTypeResolvers = typeResolversMap;
+    this._gqcTypeResolvers = this._convertTypeResolvers(typeResolversMap);
 
     // extract GraphQLObjectType from ObjectTypeComposer
     const fastEntries = [];
-    for (const [composeType, checkFn] of typeResolversMap.entries()) {
+    for (const [composeType, checkFn] of this._gqcTypeResolvers.entries()) {
       fastEntries.push([((getGraphQLType(composeType): any): GraphQLObjectType), checkFn]);
       this.addType(composeType);
     }
 
     let resolveType;
-    const isAsyncRuntime = this._isTypeResolversAsync(typeResolversMap);
+    const isAsyncRuntime = this._isTypeResolversAsync(this._gqcTypeResolvers);
     if (isAsyncRuntime) {
       resolveType = async (value, context, info) => {
-        for (const [gqType, checkFn] of fastEntries) {
+        for (const [_gqType, checkFn] of fastEntries) {
           // should we run checkFn simultaniously or in serial?
           // Current decision is: dont SPIKE event loop - run in serial (it may be changed in future)
           // eslint-disable-next-line no-await-in-loop
-          if (await checkFn(value, context, info)) return gqType;
+          if (await checkFn(value, context, info)) return _gqType;
         }
         return null;
       };
     } else {
       resolveType = (value, context, info) => {
-        for (const [gqType, checkFn] of fastEntries) {
-          if (checkFn(value, context, info)) return gqType;
+        for (const [_gqType, checkFn] of fastEntries) {
+          if (checkFn(value, context, info)) return _gqType;
         }
         return null;
       };
@@ -394,18 +459,30 @@ export class UnionTypeComposer<TSource, TContext> {
     return this;
   }
 
-  _isTypeResolversValid(typeResolversMap: UnionTypeResolversMap<any, TContext>): true {
+  _convertObjectType(
+    type: ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>
+  ): ObjectTypeComposerThunked<any, TContext> {
+    const tc = this.schemaComposer.typeMapper.convertOutputTypeDefinition(type);
+    if (tc instanceof ObjectTypeComposer || tc instanceof ThunkComposer) {
+      return (tc: any);
+    }
+    throw new Error(`Should be provided ObjectType but recieved ${inspect(type)}`);
+  }
+
+  _convertTypeResolvers(
+    typeResolversMap: UnionTypeComposerResolversMapDefinition<any, TContext>
+  ): UnionTypeComposerResolversMap<any, TContext> {
     if (!(typeResolversMap instanceof Map)) {
       throw new Error(
         `For union ${this.getTypeName()} you should provide Map object for type resolvers.`
       );
     }
 
+    const result = new Map();
     for (const [composeType, checkFn] of typeResolversMap.entries()) {
       // checking composeType
       try {
-        const type = getGraphQLType(composeType);
-        if (!(type instanceof GraphQLObjectType)) throw new Error('Must be GraphQLObjectType');
+        result.set(this._convertObjectType(composeType), checkFn);
       } catch (e) {
         throw new Error(
           `For union type resolver ${this.getTypeName()} you must provide GraphQLObjectType or ObjectTypeComposer, but provided ${inspect(
@@ -422,11 +499,11 @@ export class UnionTypeComposer<TSource, TContext> {
       }
     }
 
-    return true;
+    return result;
   }
 
   // eslint-disable-next-line class-methods-use-this
-  _isTypeResolversAsync(typeResolversMap: UnionTypeResolversMap<any, TContext>): boolean {
+  _isTypeResolversAsync(typeResolversMap: UnionTypeComposerResolversMap<any, TContext>): boolean {
     let res = false;
     for (const [, checkFn] of typeResolversMap.entries()) {
       try {
@@ -443,20 +520,22 @@ export class UnionTypeComposer<TSource, TContext> {
   }
 
   addTypeResolver(
-    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
-    checkFn: UnionTypeResolverCheckFn<TSource, TContext>
+    type: ObjectTypeComposerDefinition<any, TContext>,
+    checkFn: UnionTypeComposerResolverCheckFn<TSource, TContext>
   ): UnionTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
-    typeResolversMap.set(type, checkFn);
+    const tc = this._convertObjectType(type);
+    typeResolversMap.set(tc, checkFn);
     this.setTypeResolvers(typeResolversMap);
     return this;
   }
 
   removeTypeResolver(
-    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType
+    type: ObjectTypeComposerDefinition<any, TContext>
   ): UnionTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
-    typeResolversMap.delete(type);
+    const tc = this._convertObjectType(type);
+    typeResolversMap.delete(tc);
     this.setTypeResolvers(typeResolversMap);
     return this;
   }
@@ -466,15 +545,15 @@ export class UnionTypeComposer<TSource, TContext> {
   // -----------------------------------------------
 
   getExtensions(): Extensions {
-    if (!this.gqType._gqcExtensions) {
+    if (!this._gqcExtensions) {
       return {};
     } else {
-      return this.gqType._gqcExtensions;
+      return this._gqcExtensions;
     }
   }
 
   setExtensions(extensions: Extensions): UnionTypeComposer<TSource, TContext> {
-    this.gqType._gqcExtensions = extensions;
+    this._gqcExtensions = extensions;
     return this;
   }
 
