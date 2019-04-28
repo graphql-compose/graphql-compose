@@ -1,27 +1,38 @@
+import { GraphQLType } from 'graphql';
+import { SchemaComposer } from './SchemaComposer';
 import {
-  DocumentNode,
-  GraphQLArgumentConfig,
-  GraphQLFieldConfig,
-  GraphQLFieldConfigArgumentMap,
-  GraphQLFieldConfigMap,
-  GraphQLInputFieldConfig,
-  GraphQLInputFieldConfigMap,
-  GraphQLNamedType,
-  GraphQLType,
-  GraphQLObjectType,
-} from 'graphql';
-import { SchemaComposer, AnyComposeType, AnyType } from './SchemaComposer';
-import { ComposeInputFieldConfig, ComposeInputFieldConfigMap } from './InputTypeComposer';
+  InputTypeComposerFieldConfig,
+  InputTypeComposerFieldConfigMap,
+  InputTypeComposerFieldConfigDefinition,
+  InputTypeComposerFieldConfigMapDefinition,
+} from './InputTypeComposer';
 import {
   ObjectTypeComposer,
-  ComposeArgumentConfig,
-  ComposeFieldConfig,
-  ComposeFieldConfigArgumentMap,
-  ComposeFieldConfigMap,
-  ComposeObjectType,
+  ObjectTypeComposerArgumentConfig,
+  ObjectTypeComposerFieldConfig,
+  ObjectTypeComposerFieldConfigDefinition,
+  ObjectTypeComposerFieldConfigMapDefinition,
+  ObjectTypeComposerArgumentConfigDefinition,
+  ObjectTypeComposerArgumentConfigMapDefinition,
+  ObjectTypeComposerArgumentConfigMap,
+  ObjectTypeComposerFieldConfigMap,
+  ObjectTypeComposerDefinition,
 } from './ObjectTypeComposer';
-import { TypeDefinitionString, TypeNameString, TypeWrappedString } from './TypeMapper';
+import {
+  InterfaceTypeComposerDefinition,
+  InterfaceTypeComposerThunked,
+} from './InterfaceTypeComposer';
+import { Thunk } from './utils/definitions';
+import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
+import {
+  AnyTypeComposer,
+  ComposeOutputType,
+  ComposeOutputTypeDefinition,
+  ComposeInputType,
+  ComposeInputTypeDefinition,
+  NamedTypeComposer,
+} from './utils/typeHelpers';
 
 /**
  * Eg. `type Name { field: Int }`
@@ -47,9 +58,22 @@ export type TypeAsString = TypeDefinitionString | TypeWrappedString | TypeNameSt
  */
 declare class TypeMapper<TContext> {
   public schemaComposer: SchemaComposer<TContext>;
-  protected basicScalars: Map<string, GraphQLNamedType>;
 
   public constructor(schemaComposer: SchemaComposer<TContext>);
+
+  protected _initScalars(): void;
+
+  /**
+   * Check that provided TypeComposer is OutputType (Object, Scalar, Enum, Interface, Union).
+   * It may be wrapped in NonNull or List.
+   */
+  public static isOutputType(type: any): type is ComposeOutputType<any>;
+
+  /**
+   * Check that provided TypeComposer is InputType (InputObject, Scalar, Enum).
+   * It may be wrapped in NonNull or List.
+   */
+  public static isInputType(type: any): type is ComposeInputType;
 
   /**
    * Check that string is a valid GraphQL Type name.
@@ -93,60 +117,70 @@ declare class TypeMapper<TContext> {
    */
   public static isInterfaceTypeDefinitionString(str: string): boolean;
 
-  public get(name: string): GraphQLNamedType | void;
+  public convertGraphQLTypeToComposer(type: GraphQLType): AnyTypeComposer<TContext>;
 
-  public set(name: string, type: AnyType<any>): void;
+  public convertSDLWrappedTypeName(str: TypeWrappedString | TypeNameString): GraphQLType | null;
 
-  public has(name: string): boolean;
+  public convertSDLTypeDefinition(str: TypeDefinitionString): NamedTypeComposer<TContext> | void;
 
-  public getWrapped(str: TypeWrappedString | TypeNameString): GraphQLType | null;
-
-  public createType(str: TypeDefinitionString): AnyComposeType<TContext> | void;
-
-  public createGraphQLType(str: TypeDefinitionString): GraphQLType | void;
-
-  public parseTypesFromString(str: string): TypeStorage<string, AnyComposeType<TContext>>;
-
-  public parseTypesFromAst(astDocument: DocumentNode): TypeStorage<string, GraphQLNamedType>;
-
-  public convertOutputType(composeType: ComposeObjectType): GraphQLObjectType;
-
-  public convertOutputFieldConfig<TSource = any, TContext = any>(
-    composeFC: ComposeFieldConfig<TSource, TContext>,
+  public convertOutputTypeDefinition(
+    typeDef: Thunk<
+      | ComposeOutputTypeDefinition<any>
+      | ObjectTypeComposerDefinition<any, any>
+      | Readonly<Resolver<any, any>>
+    >,
     fieldName?: string,
     typeName?: string
-  ): GraphQLFieldConfig<TSource, TContext>;
+  ): ComposeOutputType<TContext> | void;
 
-  public convertOutputFieldConfigMap<TSource = any, TContext = any>(
-    composeFields:
-      | ComposeFieldConfigMap<TSource, TContext>
-      | GraphQLFieldConfigMap<TSource, TContext>,
+  public convertOutputFieldConfig<TSource>(
+    composeFC: Thunk<
+      ObjectTypeComposerFieldConfigDefinition<TSource, TContext> | Readonly<Resolver<any, TContext>>
+    >,
+    fieldName?: string,
     typeName?: string
-  ): GraphQLFieldConfigMap<TSource, TContext>;
+  ): ObjectTypeComposerFieldConfig<TSource, TContext>;
+
+  public convertOutputFieldConfigMap<TSource>(
+    composeFields: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>,
+    typeName?: string
+  ): ObjectTypeComposerFieldConfigMap<TSource, TContext>;
 
   public convertArgConfig(
-    composeAC: ComposeArgumentConfig,
+    composeAC: Thunk<ObjectTypeComposerArgumentConfigDefinition>,
     argName?: string,
     fieldName?: string,
     typeName?: string
-  ): GraphQLArgumentConfig;
+  ): ObjectTypeComposerArgumentConfig;
 
   public convertArgConfigMap(
-    composeArgsConfigMap: ComposeFieldConfigArgumentMap<any>,
+    composeArgsConfigMap: ObjectTypeComposerArgumentConfigMapDefinition<any>,
     fieldName?: string,
     typeName?: string
-  ): GraphQLFieldConfigArgumentMap;
+  ): ObjectTypeComposerArgumentConfigMap<any>;
+
+  public convertInputTypeDefinition(
+    typeDef: Thunk<ComposeInputTypeDefinition>,
+    fieldName?: string,
+    typeName?: string
+  ): ComposeInputType | void;
 
   public convertInputFieldConfig(
-    composeIFC: ComposeInputFieldConfig,
+    composeIFC: Thunk<InputTypeComposerFieldConfigDefinition>,
     fieldName?: string,
     typeName?: string
-  ): GraphQLInputFieldConfig;
+  ): InputTypeComposerFieldConfig;
 
   public convertInputFieldConfigMap(
-    composeFields: ComposeInputFieldConfigMap,
+    composeFields: InputTypeComposerFieldConfigMapDefinition,
     typeName?: string
-  ): GraphQLInputFieldConfigMap;
+  ): InputTypeComposerFieldConfigMap;
+
+  public convertInterfaceTypeDefinition(
+    typeDef: InterfaceTypeComposerDefinition<any, TContext>
+  ): InterfaceTypeComposerThunked<any, TContext>;
+
+  public parseTypesFromString(str: string): TypeStorage<string, NamedTypeComposer<TContext>>;
 
   /**
    * -----------------------------------------------
