@@ -1,27 +1,21 @@
 /* @flow strict */
 
-import {
-  GraphQLList,
-  GraphQLNonNull,
-  GraphQLInt,
-  GraphQLObjectType,
-  GraphQLUnionType,
-  graphql,
-} from '../graphql';
+import { GraphQLInt, GraphQLObjectType, GraphQLUnionType, graphql } from '../graphql';
 import { schemaComposer, SchemaComposer } from '..';
 import { UnionTypeComposer } from '../UnionTypeComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
+import { NonNullComposer } from '../NonNullComposer';
+import { ListComposer } from '../ListComposer';
 
 beforeEach(() => {
   schemaComposer.clear();
 });
 
 describe('UnionTypeComposer', () => {
-  let objectType: GraphQLUnionType;
   let utc: UnionTypeComposer<any, any>;
 
   beforeEach(() => {
-    objectType = new GraphQLUnionType({
+    const objectType = new GraphQLUnionType({
       name: 'MyUnion',
       types: [
         new GraphQLObjectType({ name: 'A', fields: { a: { type: GraphQLInt } } }),
@@ -42,7 +36,7 @@ describe('UnionTypeComposer', () => {
     it('should create Union by type template string', () => {
       const myUTC = UnionTypeComposer.create(
         `
-        union TestTypeTpl = A | B
+        union TestTypeTpl = AA | BB
       `,
         schemaComposer
       );
@@ -50,11 +44,13 @@ describe('UnionTypeComposer', () => {
       expect(myUTC.getTypeName()).toBe('TestTypeTpl');
 
       // when types A & B are not defined getTypes() throw an error
-      expect(() => myUTC.getType().getTypes()).toThrowError('Cannot resolve types for TestTypeTpl');
+      expect(() => myUTC.getType().getTypes()).toThrowError(
+        'UnionError[TestTypeTpl]: Type with name "AA" does not exists'
+      );
 
       // when types A & B defined, getTypes() returns them
-      ObjectTypeComposer.create('type A { a: Int }', schemaComposer);
-      ObjectTypeComposer.create('type B { b: Int }', schemaComposer);
+      ObjectTypeComposer.create('type AA { a: Int }', schemaComposer);
+      ObjectTypeComposer.create('type BB { b: Int }', schemaComposer);
       const types = myUTC.getType().getTypes();
       expect(types).toHaveLength(2);
       expect(types[0]).toBeInstanceOf(GraphQLObjectType);
@@ -71,10 +67,11 @@ describe('UnionTypeComposer', () => {
       );
       expect(myUTC).toBeInstanceOf(UnionTypeComposer);
       expect(myUTC.getTypeNames()).toEqual(['AA', 'BB']);
-      const types = myUTC.getTypes();
+      const types: any = myUTC.getTypes();
       expect(types).toHaveLength(2);
-      expect(types[0]).toBe(`type AA { a: Int }`);
-      expect(types[1]).toBe(`BB`);
+      expect(types[0].getTypeName()).toBe('AA');
+      expect(types[0].getFieldType('a')).toBe(GraphQLInt);
+      expect(types[1].getTypeName()).toBe('BB');
     });
 
     it('should create UTC by GraphQLUnionType', () => {
@@ -85,7 +82,7 @@ describe('UnionTypeComposer', () => {
       const myUTC = UnionTypeComposer.create(objType, schemaComposer);
       expect(myUTC).toBeInstanceOf(UnionTypeComposer);
       expect(myUTC.getType()).toBe(objType);
-      expect((myUTC.getTypes(): any)[0].name).toBe('C');
+      expect((myUTC.getTypes(): any)[0].getTypeName()).toBe('C');
     });
 
     it('should create type and store it in schemaComposer', () => {
@@ -103,8 +100,8 @@ describe('UnionTypeComposer', () => {
     it('getTypes()', () => {
       const types = utc.getTypes();
       expect(types).toHaveLength(2);
-      expect(types[0]).toBeInstanceOf(GraphQLObjectType);
-      expect(types[1]).toBeInstanceOf(GraphQLObjectType);
+      expect(types[0]).toBeInstanceOf(ObjectTypeComposer);
+      expect(types[1]).toBeInstanceOf(ObjectTypeComposer);
     });
 
     it('hasType()', () => {
@@ -209,22 +206,22 @@ describe('UnionTypeComposer', () => {
   });
 
   describe('get type methods', () => {
-    it('getTypePlural() should return wrapped type with GraphQLList', () => {
-      expect(utc.getTypePlural()).toBeInstanceOf(GraphQLList);
-      expect(utc.getTypePlural().ofType).toBe(utc.getType());
+    it('getTypePlural() should return wrapped type with ListComposer', () => {
+      expect(utc.getTypePlural()).toBeInstanceOf(ListComposer);
+      expect(utc.getTypePlural().getType().ofType).toBe(utc.getType());
     });
 
-    it('getTypeNonNull() should return wrapped type with GraphQLNonNull', () => {
-      expect(utc.getTypeNonNull()).toBeInstanceOf(GraphQLNonNull);
-      expect(utc.getTypeNonNull().ofType).toBe(utc.getType());
+    it('getTypeNonNull() should return wrapped type with NonNullComposer', () => {
+      expect(utc.getTypeNonNull()).toBeInstanceOf(NonNullComposer);
+      expect(utc.getTypeNonNull().getType().ofType).toBe(utc.getType());
     });
 
-    it('setDescription() should return wrapped type with GraphQLList', () => {
+    it('setDescription() should return description', () => {
       utc.setDescription('My union type');
       expect(utc.getDescription()).toBe('My union type');
     });
 
-    it('setTypeName() should return wrapped type with GraphQLList', () => {
+    it('setTypeName() should return Type name', () => {
       expect(utc.getTypeName()).toBe('MyUnion');
       utc.setTypeName('NewUnionName');
       expect(utc.getTypeName()).toBe('NewUnionName');
@@ -353,7 +350,7 @@ describe('UnionTypeComposer', () => {
 
     it('getTypeResolverTypes()', () => {
       expect(utc.getTypeResolverTypes()).toEqual(
-        expect.arrayContaining([PersonTC.getType(), KindRedTC.getType(), KindBlueTC.getType()])
+        expect.arrayContaining([PersonTC, KindRedTC, KindBlueTC])
       );
     });
 
@@ -365,7 +362,7 @@ describe('UnionTypeComposer', () => {
         ]);
         utc.setTypeResolvers(map);
 
-        const resolveType: any = utc.gqType.resolveType;
+        const resolveType: any = utc._gqType.resolveType;
         expect(resolveType()).toBeInstanceOf(Promise);
         expect(await resolveType()).toBe(KindRedTC.getType());
       });
@@ -378,7 +375,7 @@ describe('UnionTypeComposer', () => {
         ]);
         utc.setTypeResolvers(map);
 
-        const resolveType: any = utc.gqType.resolveType;
+        const resolveType: any = utc._gqType.resolveType;
         expect(resolveType()).toBe(KindBlueTC.getType());
       });
 
