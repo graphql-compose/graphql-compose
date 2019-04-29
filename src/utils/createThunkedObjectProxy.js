@@ -44,7 +44,7 @@ export function createThunkedObjectProxy<T: {}>(thunk: () => T): T {
     //   console.log('hasOwn');
     //   return Object.
     // },
-    defineProperty(o, k, d) {
+    defineProperty(o, k, d: any) {
       return Object.defineProperty(getFC(), k, d);
     },
     // getPropertyNames() {
@@ -56,8 +56,8 @@ export function createThunkedObjectProxy<T: {}>(thunk: () => T): T {
     // getPropertyDescriptor(o, k) {
     //   return Object.getPropertyDescriptor(getFC(), k);
     // },
-    getOwnPropertyDescriptor(o, k) {
-      return Object.getOwnPropertyDescriptor(getFC(), k);
+    getOwnPropertyDescriptor(o, k: any) {
+      return (Object.getOwnPropertyDescriptor(getFC(), k): any);
     },
   });
 

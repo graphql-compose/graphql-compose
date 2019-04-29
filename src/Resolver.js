@@ -558,7 +558,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     }
 
     const { name, type, defaultValue, description } = opts;
-    filterITC.setField(name, { type, description });
+    filterITC.setField(name, ({ type, description }: any));
 
     // default value can be written only on argConfig
     if (defaultValue !== undefined) {

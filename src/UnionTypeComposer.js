@@ -462,7 +462,7 @@ export class UnionTypeComposer<TSource, TContext> {
   _convertObjectType(
     type: ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>
   ): ObjectTypeComposerThunked<any, TContext> {
-    const tc = this.schemaComposer.typeMapper.convertOutputTypeDefinition(type);
+    const tc = this.schemaComposer.typeMapper.convertOutputTypeDefinition((type: any));
     if (tc instanceof ObjectTypeComposer || tc instanceof ThunkComposer) {
       return (tc: any);
     }

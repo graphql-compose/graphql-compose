@@ -44,10 +44,13 @@ export function toInputObjectType<TContext>(
     const fc = tc.getField(fieldName);
     const fieldInputType = convertInputObjectField(fc.type, fieldOpts, tc.schemaComposer);
     if (fieldInputType) {
-      inputTypeComposer.setField(fieldName, {
-        type: fieldInputType,
-        description: fc.description,
-      });
+      inputTypeComposer.setField(
+        fieldName,
+        ({
+          type: fieldInputType,
+          description: fc.description,
+        }: any)
+      );
     }
   });
 
