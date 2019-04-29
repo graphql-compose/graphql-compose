@@ -117,7 +117,7 @@ export function extendByFieldProjection(
 
   let proj = projection;
   Object.keys(proj).forEach(key => {
-    const field = (type: any)._fields[key];
+    const field = (type: any).getFields()[key];
     if (!field) return;
 
     if (field.projection) proj = deepmerge(proj, field.projection);
