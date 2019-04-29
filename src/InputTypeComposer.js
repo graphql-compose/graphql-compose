@@ -218,7 +218,7 @@ export class InputTypeComposer<TContext> {
 
   setField(
     fieldName: string,
-    fieldConfig: Thunk<InputTypeComposerFieldConfigDefinition>
+    fieldConfig: Thunk<InputTypeComposerFieldConfigDefinition | $ReadOnly<ComposeInputType>>
   ): InputTypeComposer<TContext> {
     this._gqcFields[fieldName] = this.schemaComposer.typeMapper.convertInputFieldConfig(
       fieldConfig,

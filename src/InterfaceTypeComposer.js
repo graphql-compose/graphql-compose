@@ -44,7 +44,11 @@ import { typeByPath, type TypeInPath } from './utils/typeByPath';
 import { getGraphQLType, unwrapOutputTC, unwrapInputTC } from './utils/typeHelpers';
 import { defineFieldMap, convertObjectFieldMapToConfig } from './utils/configToDefine';
 import { graphqlVersion } from './utils/graphqlVersion';
-import type { ComposeNamedInputType, ComposeNamedOutputType } from './utils/typeHelpers';
+import type {
+  ComposeNamedInputType,
+  ComposeNamedOutputType,
+  ComposeOutputType,
+} from './utils/typeHelpers';
 
 export type InterfaceTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -238,7 +242,10 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   setField(
     fieldName: string,
-    fieldConfig: ObjectTypeComposerFieldConfigDefinition<TSource, TContext>
+    fieldConfig: Thunk<
+      | $ReadOnly<ComposeOutputType<TContext>>
+      | ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
+    >
   ): InterfaceTypeComposer<TSource, TContext> {
     this._gqcFields[fieldName] = this.schemaComposer.typeMapper.convertOutputFieldConfig(
       fieldConfig

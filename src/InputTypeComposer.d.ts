@@ -108,7 +108,7 @@ export class InputTypeComposer<TContext = any> {
 
   public setField(
     fieldName: string,
-    fieldConfig: Thunk<InputTypeComposerFieldConfigDefinition>
+    fieldConfig: Thunk<InputTypeComposerFieldConfigDefinition | Readonly<ComposeInputType>>
   ): this;
 
   /**

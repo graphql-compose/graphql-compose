@@ -32,7 +32,11 @@ import {
 } from './utils/definitions';
 import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { ThunkComposer } from './ThunkComposer';
-import { ComposeNamedOutputType, ComposeNamedInputType } from './utils/typeHelpers';
+import {
+  ComposeNamedOutputType,
+  ComposeOutputType,
+  ComposeNamedInputType,
+} from './utils/typeHelpers';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { TypeInPath } from './utils/typeByPath';
@@ -114,7 +118,10 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public setField(
     name: string,
-    fieldConfig: ObjectTypeComposerFieldConfigDefinition<TSource, TContext>
+    fieldConfig: Thunk<
+      | Readonly<ComposeOutputType<TContext>>
+      | ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
+    >
   ): this;
 
   /**
