@@ -95,7 +95,15 @@ export function visitSchema<TContext>(
   schema: SchemaComposer<TContext>,
   visitor: SchemaVisitor<TContext>
 ): void {
+  // The same type composer may be added several times under
+  // different keys to TypeRegistry (eg. as key may be: TypeName, GraphQLType, SDL, ORM, ClassObject etc.)
+  // So `visitedTCs` helps to skip already visited types.
+  const visitedTCs = new WeakSet();
+
   schema.forEach((value, key) => {
+    if (visitedTCs.has(value)) return;
+    visitedTCs.add(value);
+
     let tc: NamedTypeComposer<any> = (value: any);
     const visitKinds = getVisitKinds(tc, schema);
     for (const kind of visitKinds) {
