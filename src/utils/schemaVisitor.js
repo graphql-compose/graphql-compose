@@ -89,3 +89,27 @@ export function visitSchema(schema: SchemaComposer<any>, visitor: SchemaVisitor)
     }
   });
 }
+
+export function isScalarTypeComposer(type: NamedTypeComposer<any>): boolean %checks {
+  return type instanceof ScalarTypeComposer;
+}
+
+export function isEnumTypeComposer(type: NamedTypeComposer<any>): boolean %checks {
+  return type instanceof EnumTypeComposer;
+}
+
+export function isObjectTypeComposer(type: NamedTypeComposer<any>): boolean %checks {
+  return type instanceof ObjectTypeComposer;
+}
+
+export function isInputTypeComposer(type: NamedTypeComposer<any>): boolean %checks {
+  return type instanceof InputTypeComposer;
+}
+
+export function isInterfaceTypeComposer(type: NamedTypeComposer<any>): boolean %checks {
+  return type instanceof InterfaceTypeComposer;
+}
+
+export function isUnionTypeComposer(type: NamedTypeComposer<any>): boolean %checks {
+  return type instanceof UnionTypeComposer;
+}

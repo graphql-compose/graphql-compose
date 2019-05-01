@@ -45,7 +45,7 @@ export { createThunkedObjectProxy } from './utils/createThunkedObjectProxy';
 export { deepmerge } from './utils/deepmerge';
 export { filterByDotPaths } from './utils/filterByDotPaths';
 export { pluralize } from './utils/pluralize';
-export { visitSchema } from './utils/schemaVisitor';
+export * from './utils/schemaVisitor';
 
 export type {
   ObjectTypeComposerThunked,

@@ -35,4 +35,31 @@ export function getVisitKinds(
   schema: SchemaComposer<any>
 ): VisitSchemaKind[];
 
-export function visitSchema(schema: SchemaComposer<any>, visitor: SchemaVisitor): void;
+export function visitSchema<TContext>(
+  schema: SchemaComposer<TContext>,
+  visitor: SchemaVisitor<TContext>
+): void;
+
+export function isScalarTypeComposer<TContext>(
+  type: NamedTypeComposer<TContext>
+): type is ScalarTypeComposer<TContext>;
+
+export function isEnumTypeComposer<TContext>(
+  type: NamedTypeComposer<TContext>
+): type is EnumTypeComposer<TContext>;
+
+export function isObjectTypeComposer<TContext>(
+  type: NamedTypeComposer<TContext>
+): type is ObjectTypeComposer<any, TContext>;
+
+export function isInputTypeComposer<TContext>(
+  type: NamedTypeComposer<TContext>
+): type is InputTypeComposer<TContext>;
+
+export function isInterfaceTypeComposer<TContext>(
+  type: NamedTypeComposer<TContext>
+): type is InterfaceTypeComposer<any, TContext>;
+
+export function isUnionTypeComposer<TContext>(
+  type: NamedTypeComposer<TContext>
+): type is UnionTypeComposer<any, TContext>;
