@@ -10,18 +10,45 @@ import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { UnionTypeComposer } from '../UnionTypeComposer';
 import { isNamedTypeComposer, type NamedTypeComposer } from './typeHelpers';
 
-export type SchemaVisitor = {
-  [visitKind: VisitSchemaKind]: (
-    tc: NamedTypeComposer<any>,
-    schemaComposer: SchemaComposer<any>
-  ) => void | null | false | NamedTypeComposer<any>,
+export type VisitorEmptyResult =
+  | void // just move further
+  | null // means remove type from registry
+  | false; // halt processing other visit kinds for this current type. Eg `ObjectTypeComposer` will be visited via 3 kinds in following order `OBJECT_TYPE`, `COMPOSITE_TYPE`, `TYPE`; so `false` returned in `OBJECT_TYPE` informs visitor to not call 'COMPOSITE_TYPE' and 'TYPE'.
+
+export type VisitKindFn<T, TContext> = (
+  tc: T,
+  schemaComposer: SchemaComposer<TContext>
+) => VisitorEmptyResult | NamedTypeComposer<TContext>;
+
+export type SchemaVisitor<TContext> = {
+  TYPE?: VisitKindFn<NamedTypeComposer<TContext>, TContext>,
+  SCALAR_TYPE?: VisitKindFn<ScalarTypeComposer<TContext>, TContext>,
+  ENUM_TYPE?: VisitKindFn<EnumTypeComposer<TContext>, TContext>,
+  COMPOSITE_TYPE?: VisitKindFn<
+    | ObjectTypeComposer<any, TContext>
+    | InterfaceTypeComposer<any, TContext>
+    | UnionTypeComposer<any, TContext>,
+    TContext
+  >,
+  OBJECT_TYPE?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>,
+  INPUT_OBJECT_TYPE?: VisitKindFn<InputTypeComposer<TContext>, TContext>,
+  ABSTRACT_TYPE?: VisitKindFn<
+    InterfaceTypeComposer<any, TContext> | UnionTypeComposer<any, TContext>,
+    TContext
+  >,
+  UNION_TYPE?: VisitKindFn<UnionTypeComposer<any, TContext>, TContext>,
+  INTERFACE_TYPE?: VisitKindFn<InterfaceTypeComposer<any, TContext>, TContext>,
+  ROOT_OBJECT?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>,
+  QUERY?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>,
+  MUTATION?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>,
+  SUBSCRIPTION?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>,
 };
 
 export type VisitSchemaKind =
   | 'TYPE'
   | 'SCALAR_TYPE'
   | 'ENUM_TYPE'
-  | 'COMPOSITE_TYPE'
+  | 'COMPOSITE_TYPE' // These types may describe the parent context of a selection set.
   | 'OBJECT_TYPE'
   | 'INPUT_OBJECT_TYPE'
   | 'ABSTRACT_TYPE'
@@ -35,7 +62,7 @@ export type VisitSchemaKind =
 /**
  * Get visit kinds for provided type.
  * Returns array of kind from specific to common.
- * Cause first visit operation may halt other visit calls.
+ * Cause first visit operation may halt other visit calls (if visitor function returns false).
  */
 export function getVisitKinds(
   tc: NamedTypeComposer<any>,
@@ -64,13 +91,17 @@ export function getVisitKinds(
   return kinds;
 }
 
-export function visitSchema(schema: SchemaComposer<any>, visitor: SchemaVisitor) {
+export function visitSchema<TContext>(
+  schema: SchemaComposer<TContext>,
+  visitor: SchemaVisitor<TContext>
+): void {
   schema.forEach((value, key) => {
     let tc: NamedTypeComposer<any> = (value: any);
     const visitKinds = getVisitKinds(tc, schema);
     for (const kind of visitKinds) {
-      if (visitor[kind]) {
-        const result = visitor[kind](tc, schema);
+      const visitorFn = visitor[kind];
+      if (visitorFn) {
+        const result = visitorFn((tc: any), schema);
         if (result === null) {
           // `null` - means remove type from registry
           schema.delete(key);
@@ -83,7 +114,7 @@ export function visitSchema(schema: SchemaComposer<any>, visitor: SchemaVisitor)
           schema.set(key, tc);
         }
         // `undefined` - just move further
-        // `array` - you have schema as a second arg,
+        // `array` - not implemented, cause you have schema as a second arg,
         //           so you may add new types to it explicitly
       }
     }
