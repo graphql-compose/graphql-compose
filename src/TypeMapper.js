@@ -896,7 +896,7 @@ export class TypeMapper<TContext> {
       let val;
       const wrappedType = this.typeFromAST(value.type);
       if (TypeMapper.isInputType(wrappedType)) {
-        val = { type: wrappedType, description: getDescription(value) };
+        val = { type: wrappedType.getType(), description: getDescription(value) };
       } else {
         throw new Error('Non-input type as an argument.');
       }
