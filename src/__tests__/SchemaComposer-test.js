@@ -1092,20 +1092,24 @@ describe('SchemaComposer', () => {
       expect(sc.getDirectives()[0]).toBeInstanceOf(GraphQLDirective);
     });
 
-    it('clear() should clear directives and restore defaults', () => {
+    it('clear() should clear directives', () => {
       const sc = new SchemaComposer();
       removeDefaultDirectives(sc);
       sc.addDirective(d1);
       expect(sc.getDirectives()).toHaveLength(1);
-      expect(sc.has('String')).toBeTruthy();
+      expect(sc.has('String')).toBeFalsy();
       sc.clear();
-      expect(sc.has('String')).toBeTruthy();
-      expect(sc.has('Int')).toBeTruthy();
       expect(sc.hasDirective('@skip')).toBe(true);
       expect(sc.hasDirective('@include')).toBe(true);
       expect(sc.hasDirective('@deprecated')).toBe(true);
       expect(sc.hasDirective('@default')).toBe(true);
       expect(sc.getDirectives()).toHaveLength(4);
+
+      expect(sc.has('String')).toBeFalsy();
+      expect(sc.has('Int')).toBeFalsy();
+      sc.createObjectTC(`type Me { name: String, age: Int }`);
+      expect(sc.has('String')).toBeTruthy();
+      expect(sc.has('Int')).toBeTruthy();
     });
 
     it('hasDirective()', () => {

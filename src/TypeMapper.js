@@ -114,22 +114,9 @@ export class TypeMapper<TContext> {
       throw new Error('TypeMapper must have SchemaComposer instance.');
     }
     this.schemaComposer = schemaComposer;
-    this._initScalars();
 
     // alive proper Flow type casting in autosuggestions for class with Generics
     /* :: return this; */
-  }
-
-  _initScalars() {
-    this.schemaComposer.add(GraphQLString);
-    this.schemaComposer.add(GraphQLFloat);
-    this.schemaComposer.add(GraphQLInt);
-    this.schemaComposer.add(GraphQLBoolean);
-    this.schemaComposer.add(GraphQLID);
-    this.schemaComposer.add(GraphQLJSON);
-    this.schemaComposer.add(GraphQLJSONObject);
-    this.schemaComposer.add(GraphQLDate);
-    this.schemaComposer.add(GraphQLBuffer);
   }
 
   static isOutputType(type: any): boolean {
@@ -680,11 +667,14 @@ export class TypeMapper<TContext> {
 
     if (this.schemaComposer.has(typeName)) {
       return this.schemaComposer.get(typeName);
-    } else {
-      return new ThunkComposer(() => {
-        return this.schemaComposer.get(typeName);
-      }, typeName);
     }
+
+    const st = this.getBuiltInType(typeName);
+    if (st) return st;
+
+    return new ThunkComposer(() => {
+      return this.schemaComposer.get(typeName);
+    }, typeName);
   }
 
   typeFromASTInput(typeNode: TypeNode): ComposeInputType {
@@ -912,13 +902,61 @@ export class TypeMapper<TContext> {
     });
   }
 
+  getBuiltInType(name: string): ?ScalarTypeComposer<TContext> {
+    let gtype: ?GraphQLScalarType;
+    switch (name) {
+      case 'String':
+        gtype = GraphQLString;
+        break;
+      case 'Float':
+        gtype = GraphQLFloat;
+        break;
+      case 'Int':
+        gtype = GraphQLInt;
+        break;
+      case 'Boolean':
+        gtype = GraphQLBoolean;
+        break;
+      case 'ID':
+        gtype = GraphQLID;
+        break;
+      case 'JSON':
+        gtype = GraphQLJSON;
+        break;
+      case 'JSONObject':
+        gtype = GraphQLJSONObject;
+        break;
+      case 'Date':
+        gtype = GraphQLDate;
+        break;
+      case 'Buffer':
+        gtype = GraphQLBuffer;
+        break;
+      default:
+        gtype = null;
+        break;
+    }
+
+    if (gtype) {
+      return this.schemaComposer.createScalarTC(gtype);
+    }
+    return null;
+  }
+
   makeScalarDef(def: ScalarTypeDefinitionNode) {
-    const tc = this.schemaComposer.createScalarTC({
-      name: def.name.value,
-      description: getDescription(def),
-      serialize: v => v,
-      astNode: def,
-    });
+    let tc: ?ScalarTypeComposer<TContext>;
+    const stc = this.getBuiltInType(def.name.value);
+    if (stc) {
+      tc = stc;
+    }
+    if (!tc) {
+      tc = this.schemaComposer.createScalarTC({
+        name: def.name.value,
+        description: getDescription(def),
+        serialize: v => v,
+        astNode: def,
+      });
+    }
     if (def.directives) {
       tc.setExtension('directives', this.parseDirectives(def.directives));
     }

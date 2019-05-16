@@ -617,7 +617,6 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     super.clear();
     this._schemaMustHaveTypes = [];
     this._directives = BUILT_IN_DIRECTIVES;
-    this.typeMapper._initScalars();
   }
 
   add(typeOrSDL: mixed): string {

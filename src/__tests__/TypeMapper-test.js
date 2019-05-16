@@ -1,5 +1,6 @@
 /* @flow strict */
 
+import { GraphQLSchema } from 'graphql';
 import {
   GraphQLString,
   GraphQLFloat,
@@ -15,6 +16,7 @@ import {
   GraphQLInterfaceType,
 } from '../graphql';
 import { schemaComposer as sc } from '..';
+import { SchemaComposer } from '../SchemaComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
 import { GraphQLDate, GraphQLBuffer, GraphQLJSON, GraphQLJSONObject } from '../type';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
@@ -36,16 +38,41 @@ beforeEach(() => {
 });
 
 describe('TypeMapper', () => {
-  it('should add basic scalar GraphQL types', () => {
-    expect(typeMapper.schemaComposer.get('String').getType()).toBe(GraphQLString);
-    expect(typeMapper.schemaComposer.get('Float').getType()).toBe(GraphQLFloat);
-    expect(typeMapper.schemaComposer.get('Int').getType()).toBe(GraphQLInt);
-    expect(typeMapper.schemaComposer.get('Boolean').getType()).toBe(GraphQLBoolean);
-    expect(typeMapper.schemaComposer.get('ID').getType()).toBe(GraphQLID);
-    expect(typeMapper.schemaComposer.get('JSON').getType()).toBe(GraphQLJSON);
-    expect(typeMapper.schemaComposer.get('JSONObject').getType()).toBe(GraphQLJSONObject);
-    expect(typeMapper.schemaComposer.get('Date').getType()).toBe(GraphQLDate);
-    expect(typeMapper.schemaComposer.get('Buffer').getType()).toBe(GraphQLBuffer);
+  it('should provide default scalar GraphQL types', () => {
+    expect((typeMapper.getBuiltInType('String'): any).getType()).toBe(GraphQLString);
+    expect((typeMapper.getBuiltInType('Float'): any).getType()).toBe(GraphQLFloat);
+    expect((typeMapper.getBuiltInType('Int'): any).getType()).toBe(GraphQLInt);
+    expect((typeMapper.getBuiltInType('Boolean'): any).getType()).toBe(GraphQLBoolean);
+    expect((typeMapper.getBuiltInType('ID'): any).getType()).toBe(GraphQLID);
+    expect((typeMapper.getBuiltInType('JSON'): any).getType()).toBe(GraphQLJSON);
+    expect((typeMapper.getBuiltInType('JSONObject'): any).getType()).toBe(GraphQLJSONObject);
+    expect((typeMapper.getBuiltInType('Date'): any).getType()).toBe(GraphQLDate);
+    expect((typeMapper.getBuiltInType('Buffer'): any).getType()).toBe(GraphQLBuffer);
+  });
+
+  it('should not add basic scalars if they already provided', () => {
+    const CustomJSON = new GraphQLScalarType({
+      name: 'JSON',
+      serialize: () => {},
+    });
+    const CustomDate = new GraphQLScalarType({
+      name: 'Date',
+      serialize: () => {},
+    });
+    const Query = new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        json: { type: CustomJSON },
+        date: { type: CustomDate },
+      },
+    });
+    const schema = new GraphQLSchema({
+      query: Query,
+    });
+
+    const sc2 = new SchemaComposer(schema);
+    expect(sc2.get('JSON').getType()).toBe(CustomJSON);
+    expect(sc2.get('Date').getType()).toBe(CustomDate);
   });
 
   it('should allow to override basic graphql-compose types', () => {
