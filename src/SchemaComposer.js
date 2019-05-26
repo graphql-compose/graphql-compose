@@ -76,7 +76,7 @@ export const BUILT_IN_DIRECTIVES = [
 export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer<TContext>> {
   typeMapper: TypeMapper<TContext>;
   _schemaMustHaveTypes: Array<AnyType<TContext>> = [];
-  _directives: Array<GraphQLDirective> = BUILT_IN_DIRECTIVES;
+  _directives: Array<GraphQLDirective> = [...BUILT_IN_DIRECTIVES];
 
   constructor(schema?: GraphQLSchema): SchemaComposer<TContext> {
     super();
