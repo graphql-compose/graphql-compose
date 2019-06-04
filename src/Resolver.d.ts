@@ -43,6 +43,7 @@ export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
   displayName?: string;
   kind?: ResolverKinds;
   description?: string;
+  projection?: ProjectionType;
   parent?: Resolver<any, TContext, any>;
 };
 

@@ -485,6 +485,19 @@ describe('Resolver', () => {
       expect(rp).toHaveProperty('projection');
     });
 
+    it('should pass resolver `projection` property', () => {
+      let rp: any = {};
+      const r = new Resolver({ name: 'find123' }, schemaComposer);
+      r.projection.someField = 1;
+      r.resolve = resolveParams => {
+        rp = resolveParams;
+      };
+      const fc: any = r.getFieldConfig();
+      fc.resolve();
+      expect(rp).toHaveProperty('projection');
+      expect(rp.projection).toEqual({ someField: 1 });
+    });
+
     it('should resolve args configs as thunk', () => {
       let rp;
       resolver.setArgs({

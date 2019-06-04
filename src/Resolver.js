@@ -63,6 +63,7 @@ export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
   displayName?: string,
   kind?: ResolverKinds,
   description?: string,
+  projection?: ProjectionType,
   parent?: Resolver<any, TContext, any>,
 };
 
@@ -150,6 +151,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   displayName: string | void;
   kind: ResolverKinds | void;
   description: string | void;
+  projection: ProjectionType;
   parent: Resolver<TSource, TContext, any> | void;
   resolve: (
     resolveParams: $Shape<ResolverResolveParams<TSource, TContext, TArgs>>
@@ -174,6 +176,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     this.parent = opts.parent;
     this.kind = opts.kind;
     this.description = opts.description || '';
+    this.projection = opts.projection || {};
 
     if (opts.type) {
       this.setType(opts.type);
@@ -820,6 +823,9 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     const resolve = this.getResolve();
     return (source: TSource, args: TArgs, context: TContext, info: GraphQLResolveInfo) => {
       let projection = getProjectionFromAST(info);
+      if (this.projection) {
+        projection = ((deepmerge(projection, this.projection): any): ProjectionType);
+      }
       if (opts.projection) {
         projection = ((deepmerge(projection, opts.projection): any): ProjectionType);
       }
@@ -869,6 +875,9 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     }
     oldOpts.displayName = undefined;
     oldOpts.args = { ...this.args };
+    if (this.projection) {
+      oldOpts.projection = { ...this.args };
+    }
     return new Resolver({ ...oldOpts, ...opts }, this.schemaComposer);
   }
 
