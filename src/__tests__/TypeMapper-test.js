@@ -442,7 +442,7 @@ describe('TypeMapper', () => {
       });
 
       it('should pass unchanged thunk', () => {
-        const myTypeThunk = () => 'Int';
+        const myTypeThunk = (): string => 'Int';
         const fc: any = typeMapper.convertOutputFieldConfig(myTypeThunk);
         expect(fc.type).toBeInstanceOf(ScalarTypeComposer);
         expect(fc.type.getType()).toBe(GraphQLInt);
@@ -922,7 +922,7 @@ describe('TypeMapper', () => {
     });
 
     it('should pass unchanged thunk', () => {
-      const myTypeThunk = () => 'Int';
+      const myTypeThunk = (): string => 'Int';
       const ac: any = typeMapper.convertArgConfig(myTypeThunk);
       expect(ac.type).toBeInstanceOf(ScalarTypeComposer);
       expect(ac.type.getType()).toBe(GraphQLInt);

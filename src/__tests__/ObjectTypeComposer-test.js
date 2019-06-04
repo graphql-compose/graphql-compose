@@ -134,7 +134,7 @@ describe('ObjectTypeComposer', () => {
 
       it('accept fieldConfig as function', () => {
         tc.setFields({
-          input4: () => ({
+          input4: (): { type: string, args: { [key: string]: string }, resolve: Function } => ({
             type: 'String',
             args: { a: 'Int' },
             resolve: () => 123,

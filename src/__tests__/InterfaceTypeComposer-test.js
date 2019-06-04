@@ -134,7 +134,7 @@ describe('InterfaceTypeComposer', () => {
 
       it('accept fieldConfig as function', () => {
         iftc.setFields({
-          input4: () => ({ type: 'String' }),
+          input4: (): { type: string } => ({ type: 'String' }),
         });
         // show provide unwrapped/unhoisted type for graphql
         if (graphqlVersion >= 14) {

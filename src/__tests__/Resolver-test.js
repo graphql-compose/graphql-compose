@@ -11,6 +11,7 @@ import {
   GraphQLObjectType,
   GraphQLEnumType,
   GraphQLList,
+  type GraphQLInputType,
 } from '../graphql';
 import schemaComposer from '../__mocks__/schemaComposer';
 import { Resolver } from '../Resolver';
@@ -21,6 +22,13 @@ import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { ThunkComposer } from '../ThunkComposer';
 // import { Resolver, ObjectTypeComposer, InputTypeComposer, EnumTypeComposer } from '..';
+
+declare var console: {
+  log: any,
+  dir: any,
+  time: any,
+  timeEnd: any,
+};
 
 describe('Resolver', () => {
   let resolver: Resolver<any, any, any>;
@@ -432,9 +440,10 @@ describe('Resolver', () => {
 
     it('should work with arg as thunk', () => {
       resolver.setArgs({
-        a: () => 'String',
-        b: () => schemaComposer.createInputTC(`input ArgAsThunk1 { b: Int }`),
-        c: () =>
+        a: (): string => 'String',
+        b: (): InputTypeComposer<any> =>
+          schemaComposer.createInputTC(`input ArgAsThunk1 { b: Int }`),
+        c: (): GraphQLInputType =>
           GraphQLNonNull(schemaComposer.createInputTC(`input ArgAsThunk2 { b: Int }`).getType()),
       });
       expect(resolver.getArgType('a')).toBe(GraphQLString);
@@ -480,7 +489,7 @@ describe('Resolver', () => {
       let rp;
       resolver.setArgs({
         arg1: 'String',
-        arg2: () => 'String',
+        arg2: (): string => 'String',
         arg3: {
           type: () => 'String',
         },

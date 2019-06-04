@@ -694,7 +694,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
       let name;
       if (mw.name) {
         name = mw.name;
-      } else if (mw.constructor && mw.constructor.name) {
+      } else if ((mw: any).constructor && mw.constructor.name) {
         name = mw.constructor.name;
       } else {
         name = 'middleware';
