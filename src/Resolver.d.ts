@@ -19,6 +19,7 @@ import {
   ArgsMap,
 } from './ObjectTypeComposer';
 import { ProjectionType } from './utils/projection';
+import { Extensions } from './utils/definitions';
 
 export type ResolveParams<TSource, TContext, TArgs = ArgsMap> = {
   source: TSource;
@@ -73,6 +74,7 @@ export type ResolverOpts<TSource, TContext, TArgs = ArgsMap, TReturn = any> = {
   kind?: ResolverKinds;
   description?: string;
   parent?: Resolver<any, TContext, any>;
+  extensions?: Extensions;
 };
 
 export type ResolverWrapCb<
