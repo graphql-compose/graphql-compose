@@ -44,7 +44,7 @@ import type {
   ComposeNamedInputType,
   ComposeInputTypeDefinition,
 } from './utils/typeHelpers';
-import type { Thunk } from './utils/definitions';
+import type { Thunk, Extensions } from './utils/definitions';
 import { GraphQLJSON } from './type';
 import { NonNullComposer } from './NonNullComposer';
 import { ListComposer } from './ListComposer';
@@ -65,6 +65,7 @@ export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
   description?: string,
   projection?: ProjectionType,
   parent?: Resolver<any, TContext, any>,
+  extensions?: Extensions,
 };
 
 export type ResolverResolveParams<TSource, TContext, TArgs = ArgsMap> = {
@@ -153,6 +154,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   description: string | void;
   projection: ProjectionType;
   parent: Resolver<TSource, TContext, any> | void;
+  extensions: Extensions | void;
   resolve: (
     resolveParams: $Shape<ResolverResolveParams<TSource, TContext, TArgs>>
   ) => Promise<any> | any;
@@ -177,6 +179,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     this.kind = opts.kind;
     this.description = opts.description || '';
     this.projection = opts.projection || {};
+    this.extensions = opts.extensions;
 
     if (opts.type) {
       this.setType(opts.type);

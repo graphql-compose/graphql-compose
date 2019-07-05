@@ -18,7 +18,7 @@ import {
   ObjectTypeComposerArgumentConfigDefinition,
   ArgsMap,
 } from './ObjectTypeComposer';
-import { Thunk } from './utils/definitions';
+import { Thunk, Extensions } from './utils/definitions';
 import { ProjectionType } from './utils/projection';
 import {
   ComposeOutputTypeDefinition,
@@ -45,6 +45,7 @@ export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
   description?: string;
   projection?: ProjectionType;
   parent?: Resolver<any, TContext, any>;
+  extensions?: Extensions;
 };
 
 export type ResolverResolveParams<TSource, TContext, TArgs = ArgsMap> = {

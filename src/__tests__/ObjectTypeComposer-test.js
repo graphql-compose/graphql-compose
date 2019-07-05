@@ -745,6 +745,17 @@ describe('ObjectTypeComposer', () => {
       expect(tc.getResolver('myResolver3').resolve((undefined: any))).toEqual({});
     });
 
+    it('addResolver() should add extensions', () => {
+      const resolverOpts = {
+        name: 'myResolver4',
+        extensions: {
+          journalDescription: 123,
+        },
+      };
+      tc.addResolver(resolverOpts);
+      expect(tc.getResolver('myResolver4').extensions).toEqual({ journalDescription: 123 });
+    });
+
     it('removeResolver() should work', () => {
       const resolver = new Resolver(
         {
