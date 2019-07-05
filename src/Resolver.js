@@ -47,6 +47,7 @@ import { filterByDotPaths } from './utils/filterByDotPaths';
 import { getProjectionFromAST } from './utils/projection';
 import type { ProjectionType } from './utils/projection';
 import { typeByPath } from './utils/typeByPath';
+import type { Extensions } from './utils/definitions';
 import GraphQLJSON from './type/json';
 
 export type ResolveParams<TSource, TContext, TArgs = ArgsMap> = {
@@ -103,6 +104,7 @@ export type ResolverOpts<TSource, TContext, TArgs = ArgsMap, TReturn = any> = {|
   kind?: ResolverKinds,
   description?: string,
   parent?: Resolver<any, TContext, any>,
+  extensions?: Extensions,
 |};
 
 export type ResolverWrapCb<
@@ -155,6 +157,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   kind: ResolverKinds | void;
   description: string | void;
   parent: Resolver<TSource, TContext, any> | void;
+  extensions: Extensions | void;
 
   constructor(
     opts: ResolverOpts<TSource, TContext, TArgs>,
@@ -175,6 +178,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     this.parent = opts.parent;
     this.kind = opts.kind;
     this.description = opts.description || '';
+    this.extensions = opts.extensions;
 
     if (opts.type) {
       this.setType(opts.type);
