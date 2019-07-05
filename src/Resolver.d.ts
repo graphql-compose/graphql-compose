@@ -132,6 +132,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
   public kind: ResolverKinds | void;
   public description: string | void;
   public parent: Resolver<TSource, TContext, any> | void;
+  public extensions?: Extensions;
 
   constructor(
     opts: ResolverOpts<TSource, TContext, TArgs>,
