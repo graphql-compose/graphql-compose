@@ -8,7 +8,7 @@ notifications:
   email: true
 node_js:
   - "10"
-  - "8"
+  - "12"
 script:
   - yarn run test
   - yarn run build
