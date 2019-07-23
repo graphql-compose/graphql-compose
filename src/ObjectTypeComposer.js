@@ -659,6 +659,10 @@ export class ObjectTypeComposer<TSource, TContext> {
     }
   }
 
+  getFieldArgNames(fieldName: string): string[] {
+    return Object.keys(this.getFieldArgs(fieldName));
+  }
+
   hasFieldArg(fieldName: string, argName: string): boolean {
     try {
       const fieldArgs = this.getFieldArgs(fieldName);
@@ -763,6 +767,34 @@ export class ObjectTypeComposer<TSource, TContext> {
       fieldName,
       this.getTypeName()
     );
+    return this;
+  }
+
+  removeFieldArg(
+    fieldName: string,
+    argNameOrArray: string | string[]
+  ): ObjectTypeComposer<TSource, TContext> {
+    const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
+    const args = this._gqcFields[fieldName] && this._gqcFields[fieldName].args;
+    if (args) {
+      argNames.forEach(argName => delete args[argName]);
+    }
+    return this;
+  }
+
+  removeFieldOtherArgs(
+    fieldName: string,
+    argNameOrArray: string | string[]
+  ): ObjectTypeComposer<TSource, TContext> {
+    const keepArgNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
+    const args = this._gqcFields[fieldName] && this._gqcFields[fieldName].args;
+    if (args) {
+      Object.keys(args).forEach(argName => {
+        if (keepArgNames.indexOf(argName) === -1) {
+          delete args[argName];
+        }
+      });
+    }
     return this;
   }
 

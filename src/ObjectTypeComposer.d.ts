@@ -107,11 +107,11 @@ export type ObjectTypeComposerFieldConfig<TSource, TContext, TArgs = ArgsMap> = 
 export type ArgsMap = { [argName: string]: any };
 
 export type ObjectTypeComposerArgumentConfigMap<TArgs = ArgsMap> = {
-  [argName in keyof TArgs]: ObjectTypeComposerArgumentConfig
+  [argName in keyof TArgs]: ObjectTypeComposerArgumentConfig;
 };
 
 export type ObjectTypeComposerArgumentConfigMapDefinition<TArgs = ArgsMap> = {
-  [argName in keyof TArgs]: Thunk<ObjectTypeComposerArgumentConfigDefinition>
+  [argName in keyof TArgs]: Thunk<ObjectTypeComposerArgumentConfigDefinition>;
 };
 
 export type ObjectTypeComposerArgumentConfigAsObjectDefinition = {
@@ -313,6 +313,8 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     fieldName: string
   ): ObjectTypeComposerArgumentConfigMap<TArgs>;
 
+  public getFieldArgNames(fieldName: string): string[];
+
   public hasFieldArg(fieldName: string, argName: string): boolean;
 
   public getFieldArg(fieldName: string, argName: string): ObjectTypeComposerArgumentConfig;
@@ -357,6 +359,10 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     argName: string,
     argConfig: ObjectTypeComposerArgumentConfigDefinition
   ): this;
+
+  public removeFieldArg(fieldName: string, argNameOrArray: string | string[]): this;
+
+  public removeFieldOtherArgs(fieldName: string, argNameOrArray: string | string[]): this;
 
   public isFieldArgPlural(fieldName: string, argName: string): boolean;
 

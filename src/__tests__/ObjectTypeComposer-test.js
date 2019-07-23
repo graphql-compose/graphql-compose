@@ -280,6 +280,71 @@ describe('ObjectTypeComposer', () => {
           'must be InputTypeComposer'
         );
       });
+
+      it('setFieldArgs()', () => {
+        tc.setField('fieldForArgs', {
+          type: 'Int',
+        });
+        expect(tc.getFieldArgs('fieldForArgs')).toEqual({});
+        tc.setFieldArgs('fieldForArgs', { a: 'Int', b: { type: 'String' } });
+        expect(tc.getFieldArgTypeName('fieldForArgs', 'a')).toEqual('Int');
+        expect(tc.getFieldArgTypeName('fieldForArgs', 'b')).toEqual('String');
+        expect(tc.setFieldArg('fieldForArgs', 'a', { type: 'Boolean' }));
+        expect(tc.getFieldArgTypeName('fieldForArgs', 'a')).toEqual('Boolean');
+        expect(tc.getFieldArgTypeName('fieldForArgs', 'b')).toEqual('String');
+      });
+
+      it('addFieldArgs()', () => {
+        tc.setField('fieldForArgs', {
+          type: 'Int',
+          args: { x: 'Int' },
+        });
+        expect(tc.getFieldArgs('fieldForArgs')).toMatchObject({ x: {} });
+        tc.addFieldArgs('fieldForArgs', { a: 'Int', b: { type: 'String' } });
+        expect(tc.getFieldArgTypeName('fieldForArgs', 'a')).toEqual('Int');
+        expect(tc.getFieldArgTypeName('fieldForArgs', 'b')).toEqual('String');
+        expect(tc.getFieldArgs('fieldForArgs')).toMatchObject({ x: {}, a: {}, b: {} });
+      });
+
+      describe('removeFieldArg()', () => {
+        it('should remove one arg', () => {
+          tc.setField('fieldWithArgs', {
+            type: 'Int',
+            args: { a: 'Int', b: 'Int', c: 'Int' },
+          });
+          tc.removeFieldArg('fieldWithArgs', 'b');
+          expect(tc.getFieldArgNames('fieldWithArgs')).toEqual(['a', 'c']);
+        });
+
+        it('should remove list of args', () => {
+          tc.setField('fieldWithArgs', {
+            type: 'Int',
+            args: { a: 'Int', b: 'Int', c: 'Int' },
+          });
+          tc.removeFieldArg('fieldWithArgs', ['b', 'c']);
+          expect(tc.getFieldArgNames('fieldWithArgs')).toEqual(['a']);
+        });
+      });
+
+      describe('removeFieldOtherArgs()', () => {
+        it('should remove one field', () => {
+          tc.setField('fieldWithArgs', {
+            type: 'Int',
+            args: { a: 'Int', b: 'Int', c: 'Int' },
+          });
+          tc.removeFieldOtherArgs('fieldWithArgs', 'b');
+          expect(tc.getFieldArgNames('fieldWithArgs')).toEqual(['b']);
+        });
+
+        it('should remove list of fields', () => {
+          tc.setField('fieldWithArgs', {
+            type: 'Int',
+            args: { a: 'Int', b: 'Int', c: 'Int' },
+          });
+          tc.removeFieldOtherArgs('fieldWithArgs', ['b', 'c']);
+          expect(tc.getFieldArgNames('fieldWithArgs')).toEqual(['b', 'c']);
+        });
+      });
     });
 
     describe('extendField()', () => {
