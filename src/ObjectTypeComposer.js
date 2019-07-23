@@ -648,6 +648,12 @@ export class ObjectTypeComposer<TSource, TContext> {
     return this;
   }
 
+  /**
+   * -----------------------------------------------
+   * Field Args methods
+   * -----------------------------------------------
+   */
+
   getFieldArgs(fieldName: string): ObjectTypeComposerArgumentConfigMap<ArgsMap> {
     try {
       const fc = this.getField(fieldName);

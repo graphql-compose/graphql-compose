@@ -309,6 +309,12 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
 
+  /**
+   * -----------------------------------------------
+   * Field Args methods
+   * -----------------------------------------------
+   */
+
   public getFieldArgs<TArgs = ArgsMap>(
     fieldName: string
   ): ObjectTypeComposerArgumentConfigMap<TArgs>;
