@@ -1522,7 +1522,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     const argsProto = {};
     const argsRuntime: [
       string,
-      ObjectTypeComposerRelationArgsMapperFn<TSource, TContext, ArgsMap>,
+      ObjectTypeComposerRelationArgsMapperFn<TSource, TContext, ArgsMap>
     ][] = [];
 
     // remove args from config, if arg name provided in args

@@ -7,7 +7,7 @@ export type SchemaVisitor = {
   [visitKind in VisitSchemaKind]: (
     tc: NamedTypeComposer<any>,
     schemaComposer: SchemaComposer<any>
-  ) => void | null | false | NamedTypeComposer<any>
+  ) => void | null | false | NamedTypeComposer<any>;
 };
 
 export type VisitSchemaKind =

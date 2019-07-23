@@ -414,9 +414,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     const tc = this.getArgTC(argName);
     if (!(tc instanceof InputTypeComposer)) {
       throw new Error(
-        `Resolver(${this.name}).getArgITC('${argName}') must be InputTypeComposer, but recieved ${
-          tc.constructor.name
-        }. Maybe you need to use 'getArgTC()' method which returns any type composer?`
+        `Resolver(${this.name}).getArgITC('${argName}') must be InputTypeComposer, but recieved ${tc.constructor.name}. Maybe you need to use 'getArgTC()' method which returns any type composer?`
       );
     }
     return tc;

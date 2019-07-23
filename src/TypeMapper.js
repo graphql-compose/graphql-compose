@@ -1030,9 +1030,7 @@ export class TypeMapper<TContext> {
         const actualTypeName = d.type.name.value;
         if (actualTypeName !== validTypeName) {
           throw new Error(
-            `Incorrect type name '${actualTypeName}' for '${
-              d.operation
-            }'. The valid definition is "schema { ${d.operation}: ${validTypeName} }"`
+            `Incorrect type name '${actualTypeName}' for '${d.operation}'. The valid definition is "schema { ${d.operation}: ${validTypeName} }"`
           );
         }
       }
