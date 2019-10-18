@@ -22,6 +22,12 @@ import type {
   EnumTypeDefinitionNode,
   InputObjectTypeDefinitionNode,
   DefinitionNode,
+  ObjectTypeExtensionNode,
+  InputObjectTypeExtensionNode,
+  InterfaceTypeExtensionNode,
+  UnionTypeExtensionNode,
+  EnumTypeExtensionNode,
+  ScalarTypeExtensionNode,
 } from 'graphql/language/ast';
 import { inspect } from './utils/misc';
 import find from './utils/polyfills/find';
@@ -78,6 +84,7 @@ import {
   EnumTypeComposer,
   type EnumTypeComposerValueConfig,
   type EnumTypeComposerValueConfigDefinition,
+  type EnumTypeComposerValueConfigMapDefinition,
 } from './EnumTypeComposer';
 import {
   InterfaceTypeComposer,
@@ -719,6 +726,19 @@ export class TypeMapper<TContext> {
       }
       case Kind.INPUT_OBJECT_TYPE_DEFINITION:
         return this.makeInputObjectDef(def);
+      case Kind.OBJECT_TYPE_EXTENSION:
+        return this.makeExtendTypeDef(def);
+      case Kind.INPUT_OBJECT_TYPE_EXTENSION:
+        return this.makeExtendInputObjectDef(def);
+      case Kind.INTERFACE_TYPE_EXTENSION:
+        return this.makeExtendInterfaceDef(def);
+      case Kind.UNION_TYPE_EXTENSION:
+        return this.makeExtendUnionDef(def);
+      case Kind.ENUM_TYPE_EXTENSION:
+        return this.makeExtendEnumDef(def);
+      case Kind.SCALAR_TYPE_EXTENSION:
+        return this.makeExtendScalarDef(def);
+
       default:
         throw new Error(`Type kind "${def.kind}" not supported.`);
     }
@@ -773,7 +793,11 @@ export class TypeMapper<TContext> {
   }
 
   makeFieldDefMap(
-    def: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode
+    def:
+      | ObjectTypeDefinitionNode
+      | InterfaceTypeDefinitionNode
+      | ObjectTypeExtensionNode
+      | InterfaceTypeExtensionNode
   ): ObjectTypeComposerFieldConfigMap<any, any> {
     if (!def.fields) return {};
     return keyValMap(
@@ -800,7 +824,9 @@ export class TypeMapper<TContext> {
     );
   }
 
-  makeInputFieldDef(def: InputObjectTypeDefinitionNode): InputTypeComposerFieldConfigMapDefinition {
+  makeInputFieldDef(
+    def: InputObjectTypeDefinitionNode | InputObjectTypeExtensionNode
+  ): InputTypeComposerFieldConfigMapDefinition {
     if (!def.fields) return {};
     return keyValMap(
       def.fields,
@@ -834,27 +860,7 @@ export class TypeMapper<TContext> {
     const tc = this.schemaComposer.createEnumTC({
       name: def.name.value,
       description: getDescription(def),
-      values: !def.values
-        ? {}
-        : keyValMap(
-            def.values,
-            enumValue => enumValue.name.value,
-            enumValue => {
-              const ec: EnumTypeComposerValueConfigDefinition = {
-                description: getDescription(enumValue),
-                deprecationReason: this.getDeprecationReason(enumValue.directives),
-              };
-
-              if (enumValue.directives) {
-                const directives = this.parseDirectives(enumValue.directives);
-                if (directives) {
-                  ec.extensions = { directives };
-                }
-              }
-
-              return ec;
-            }
-          ),
+      values: this.makeEnumValuesDef(def),
       astNode: def,
     });
 
@@ -862,6 +868,31 @@ export class TypeMapper<TContext> {
       tc.setExtension('directives', this.parseDirectives(def.directives));
     }
     return tc;
+  }
+
+  makeEnumValuesDef(
+    def: EnumTypeDefinitionNode | EnumTypeExtensionNode
+  ): EnumTypeComposerValueConfigMapDefinition {
+    if (!def.values) return {};
+    return keyValMap(
+      def.values,
+      enumValue => enumValue.name.value,
+      enumValue => {
+        const ec: EnumTypeComposerValueConfigDefinition = {
+          description: getDescription(enumValue),
+          deprecationReason: this.getDeprecationReason(enumValue.directives),
+        };
+
+        if (enumValue.directives) {
+          const directives = this.parseDirectives(enumValue.directives);
+          if (directives) {
+            ec.extensions = { directives };
+          }
+        }
+
+        return ec;
+      }
+    );
   }
 
   makeInputObjectDef(def: InputObjectTypeDefinitionNode) {
@@ -964,7 +995,7 @@ export class TypeMapper<TContext> {
   }
 
   makeImplementedInterfaces(
-    def: ObjectTypeDefinitionNode
+    def: ObjectTypeDefinitionNode | ObjectTypeExtensionNode
   ): Array<InterfaceTypeComposerThunked<any, TContext>> {
     return (def.interfaces || []).map(iface => {
       const name = this.getNamedTypeAST(iface).name.value;
@@ -1085,5 +1116,60 @@ export class TypeMapper<TContext> {
       result.push({ name, args });
     });
     return result;
+  }
+
+  makeExtendTypeDef(def: ObjectTypeExtensionNode) {
+    const tc = this.schemaComposer.getOrCreateOTC(def.name.value);
+    tc.addInterfaces(this.makeImplementedInterfaces(def));
+    tc.addFields(this.makeFieldDefMap(def));
+    if (def.directives) {
+      tc.setExtension('directives', this.parseDirectives(def.directives));
+    }
+    return tc;
+  }
+
+  makeExtendInputObjectDef(def: InputObjectTypeExtensionNode) {
+    const tc = this.schemaComposer.getOrCreateITC(def.name.value);
+    tc.addFields(this.makeInputFieldDef(def));
+    if (def.directives) {
+      tc.setExtension('directives', this.parseDirectives(def.directives));
+    }
+    return tc;
+  }
+
+  makeExtendInterfaceDef(def: InterfaceTypeExtensionNode) {
+    const tc = this.schemaComposer.getOrCreateIFTC(def.name.value);
+    tc.addFields(this.makeFieldDefMap(def));
+    if (def.directives) {
+      tc.setExtension('directives', this.parseDirectives(def.directives));
+    }
+    return tc;
+  }
+
+  makeExtendUnionDef(def: UnionTypeExtensionNode) {
+    const types: ?$ReadOnlyArray<NamedTypeNode> = def.types;
+    const tc = this.schemaComposer.getOrCreateUTC(def.name.value);
+    tc.addTypes((types || []).map(ref => this.getNamedTypeAST(ref).name.value));
+    if (def.directives) {
+      tc.setExtension('directives', this.parseDirectives(def.directives));
+    }
+    return tc;
+  }
+
+  makeExtendEnumDef(def: EnumTypeExtensionNode) {
+    const tc = this.schemaComposer.getOrCreateETC(def.name.value);
+    tc.addFields(this.makeEnumValuesDef(def));
+    if (def.directives) {
+      tc.setExtension('directives', this.parseDirectives(def.directives));
+    }
+    return tc;
+  }
+
+  makeExtendScalarDef(def: ScalarTypeExtensionNode) {
+    const tc = this.schemaComposer.getSTC(def.name.value);
+    if (def.directives) {
+      tc.setExtension('directives', this.parseDirectives(def.directives));
+    }
+    return tc;
   }
 }

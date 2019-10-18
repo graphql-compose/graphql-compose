@@ -1057,6 +1057,62 @@ describe('TypeMapper', () => {
       const types = TypeAB.getTypes();
       expect(types).toHaveLength(2);
     });
+
+    it('extend Object type', async () => {
+      const ts: any = typeMapper.parseTypesFromString(`
+        type MyType { aaa: Int }
+        extend type MyType @ok { bbb: String! }
+      `);
+      expect(ts.get('MyType').getFieldNames()).toEqual(['aaa', 'bbb']);
+      expect(ts.get('MyType').getDirectiveNames()).toEqual(['ok']);
+    });
+
+    it('extend Input type', async () => {
+      const ts: any = typeMapper.parseTypesFromString(`
+        input In { aaa: Int }
+        extend input In @ok { bbb: String! }
+      `);
+      expect(ts.get('In').getFieldNames()).toEqual(['aaa', 'bbb']);
+      expect(ts.get('In').getDirectiveNames()).toEqual(['ok']);
+    });
+
+    it('extend Interface type', async () => {
+      const ts: any = typeMapper.parseTypesFromString(`
+        interface Iface { aaa: Int }
+        extend interface Iface @ok { bbb: String! }
+      `);
+      expect(ts.get('Iface').getFieldNames()).toEqual(['aaa', 'bbb']);
+      expect(ts.get('Iface').getDirectiveNames()).toEqual(['ok']);
+    });
+
+    it('extend Union type', async () => {
+      const ts: any = typeMapper.parseTypesFromString(`
+        type T1 { aaa: Int }
+        type T2 { aaa: Int }
+        type T3 { aaa: Int }
+        union Un = T1 | T2
+        extend union Un @ok = T3
+      `);
+      expect(ts.get('Un').getTypeNames()).toEqual(['T1', 'T2', 'T3']);
+      expect(ts.get('Un').getDirectiveNames()).toEqual(['ok']);
+    });
+
+    it('extend Enum type', async () => {
+      const ts: any = typeMapper.parseTypesFromString(`
+        enum E { AA BB }
+        extend enum E @ok { CC }
+      `);
+      expect(ts.get('E').getFieldNames()).toEqual(['AA', 'BB', 'CC']);
+      expect(ts.get('E').getDirectiveNames()).toEqual(['ok']);
+    });
+
+    it('extend Scalar type', async () => {
+      const ts: any = typeMapper.parseTypesFromString(`
+        scalar S
+        extend scalar S @ok
+      `);
+      expect(ts.get('S').getDirectiveNames()).toEqual(['ok']);
+    });
   });
 
   describe('convertSDLTypeDefinition()', () => {

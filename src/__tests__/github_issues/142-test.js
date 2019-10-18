@@ -111,4 +111,14 @@ describe('github issue #142: Add schema definition in `graphql-tools` way', () =
       },
     });
   });
+
+  it('extend Object type', async () => {
+    expect(schemaComposer.Query.getFieldNames()).toEqual(['posts', 'author']);
+    schemaComposer.addTypeDefs(`
+      extend type Query {
+        test: String!
+      }
+    `);
+    expect(schemaComposer.Query.getFieldNames()).toEqual(['posts', 'author', 'test']);
+  });
 });
