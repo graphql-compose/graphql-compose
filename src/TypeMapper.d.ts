@@ -20,7 +20,6 @@ import {
   ComposeFieldConfigMap,
   ComposeObjectType,
 } from './ObjectTypeComposer';
-import { TypeDefinitionString, TypeNameString, TypeWrappedString } from './TypeMapper';
 import { TypeStorage } from './TypeStorage';
 
 /**
