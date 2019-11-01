@@ -483,7 +483,7 @@ export class InputTypeComposer<TContext> {
       (this._gqType: any)._typeConfig.fields = () => {
         return mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name));
       };
-      delete this._gqType._fields;
+      delete (this._gqType: any)._fields;
     }
     return this._gqType;
   }

@@ -147,7 +147,7 @@ export class EnumTypeComposer<TContext> {
 
     this._gqcFields = {};
     this._gqType.getValues().forEach(({ name, isDeprecated, ...config }) => {
-      this._gqcFields[name] = { extensions: {}, ...config };
+      this._gqcFields[name] = { extensions: ({}: any), ...config };
     });
 
     // alive proper Flow type casting in autosuggestions for class with Generics
@@ -319,8 +319,8 @@ export class EnumTypeComposer<TContext> {
       this._gqType._nameLookup = keyMap(this._gqType._values, value => value.name);
     } else {
       // clear builded fields in type
-      delete this._gqType._valueLookup;
-      delete this._gqType._nameLookup;
+      delete (this._gqType: any)._valueLookup;
+      delete (this._gqType: any)._nameLookup;
       this._gqType._values = defineEnumValues(this._gqType, (this._gqcFields: any));
     }
 

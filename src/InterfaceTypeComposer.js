@@ -695,7 +695,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
       (this._gqType: any)._typeConfig.fields = () => {
         return mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name));
       };
-      delete this._gqType._fields; // clear builded fields in type
+      this._gqType._fields = {}; // clear builded fields in type
     }
     return this._gqType;
   }

@@ -180,6 +180,7 @@ export function defineEnumValues(
       deprecationReason: value.deprecationReason,
       astNode: value.astNode,
       value: value.hasOwnProperty('value') ? value.value : valueName,
+      extensions: undefined,
     };
   });
 }
