@@ -775,15 +775,19 @@ export class TypeMapper<TContext> {
       }
 
       if (value.defaultValue) {
-        const typeDef = this.schemaComposer.get(typeName);
-        const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
-        if (TypeMapper.isInputType(wrappedType)) {
-          ac.defaultValue = valueFromAST(
-            value.defaultValue,
-            ((wrappedType.getType(): any): GraphQLInputType)
-          );
+        if (!this.schemaComposer.has(typeName) && value.defaultValue && value.defaultValue.value) {
+          ac.defaultValue = value.defaultValue.value;
         } else {
-          throw new Error('Non-input type as an argument.');
+          const typeDef = this.schemaComposer.get(typeName);
+          const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
+          if (TypeMapper.isInputType(wrappedType)) {
+            ac.defaultValue = valueFromAST(
+              value.defaultValue,
+              ((wrappedType.getType(): any): GraphQLInputType)
+            );
+          } else {
+            throw new Error('Non-input type as an argument.');
+          }
         }
       }
 
