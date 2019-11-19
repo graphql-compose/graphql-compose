@@ -5,7 +5,7 @@ title: Quick Start Guide
 
 Graphql-compose provides a convenient way to create GraphQL Schema. This schema is completely compatible with [GraphQL.js](https://github.com/graphql/graphql-js).
 
-For comparison with [graphql-tools](https://github.com/apollographql/graphql-tools) let's take its brilliant example "Author <-> User".
+For comparison with [graphql-tools](https://github.com/apollographql/graphql-tools) let's take its brilliant example "Author <-> Posts".
 
 ## Example data
 
