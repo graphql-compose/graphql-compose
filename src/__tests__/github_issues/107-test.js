@@ -35,7 +35,11 @@ const remoteSchema = new GraphQLSchema({
             },
           })
         ),
-        resolve: () => [{ name: 'u1', age: 10 }, { name: 'u2', age: 20 }, { name: 'u3', age: 30 }],
+        resolve: () => [
+          { name: 'u1', age: 10 },
+          { name: 'u2', age: 20 },
+          { name: 'u3', age: 30 },
+        ],
       },
     },
   }),

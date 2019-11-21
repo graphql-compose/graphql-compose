@@ -1154,7 +1154,10 @@ describe('TypeMapper', () => {
         ],
       });
       expect(tc.getFieldArgExtensions('d', 'arg')).toEqual({
-        directives: [{ args: { v: 2 }, name: 'darg' }, { args: { w: '3' }, name: 'darg2' }],
+        directives: [
+          { args: { v: 2 }, name: 'darg' },
+          { args: { w: '3' }, name: 'darg2' },
+        ],
       });
       expect(tc.getFieldExtensions('d')).toEqual({ directives: [{ args: {}, name: 'ddd' }] });
     });
@@ -1189,7 +1192,10 @@ describe('TypeMapper', () => {
 
       expect(tc.getFieldArg('d', 'arg').defaultValue).toBe(15);
       expect(tc.getFieldArgExtensions('d', 'arg')).toEqual({
-        directives: [{ args: { v: 2 }, name: 'darg' }, { args: { w: '3' }, name: 'darg2' }],
+        directives: [
+          { args: { v: 2 }, name: 'darg' },
+          { args: { w: '3' }, name: 'darg2' },
+        ],
       });
       expect(tc.getFieldExtensions('d')).toEqual({ directives: [{ args: {}, name: 'ddd' }] });
     });

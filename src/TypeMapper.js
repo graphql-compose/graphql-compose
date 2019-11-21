@@ -860,7 +860,7 @@ export class TypeMapper<TContext> {
     );
   }
 
-  makeEnumDef(def: EnumTypeDefinitionNode) {
+  makeEnumDef(def: EnumTypeDefinitionNode): EnumTypeComposer<TContext> {
     const tc = this.schemaComposer.createEnumTC({
       name: def.name.value,
       description: getDescription(def),
@@ -899,7 +899,7 @@ export class TypeMapper<TContext> {
     );
   }
 
-  makeInputObjectDef(def: InputObjectTypeDefinitionNode) {
+  makeInputObjectDef(def: InputObjectTypeDefinitionNode): InputTypeComposer<TContext> {
     const tc = this.schemaComposer.createInputTC({
       name: def.name.value,
       description: getDescription(def),
@@ -978,7 +978,7 @@ export class TypeMapper<TContext> {
     return null;
   }
 
-  makeScalarDef(def: ScalarTypeDefinitionNode) {
+  makeScalarDef(def: ScalarTypeDefinitionNode): ScalarTypeComposer<TContext> {
     let tc: ?ScalarTypeComposer<TContext>;
     const stc = this.getBuiltInType(def.name.value);
     if (stc) {
@@ -1011,7 +1011,7 @@ export class TypeMapper<TContext> {
     });
   }
 
-  makeTypeDef(def: ObjectTypeDefinitionNode) {
+  makeTypeDef(def: ObjectTypeDefinitionNode): ObjectTypeComposer<any, TContext> {
     const tc = this.schemaComposer.createObjectTC({
       name: def.name.value,
       description: getDescription(def),
@@ -1025,7 +1025,7 @@ export class TypeMapper<TContext> {
     return tc;
   }
 
-  makeInterfaceDef(def: InterfaceTypeDefinitionNode) {
+  makeInterfaceDef(def: InterfaceTypeDefinitionNode): InterfaceTypeComposer<any, TContext> {
     const tc = this.schemaComposer.createInterfaceTC({
       name: def.name.value,
       description: getDescription(def),
@@ -1038,7 +1038,7 @@ export class TypeMapper<TContext> {
     return tc;
   }
 
-  makeUnionDef(def: UnionTypeDefinitionNode) {
+  makeUnionDef(def: UnionTypeDefinitionNode): UnionTypeComposer<any, TContext> {
     const types: ?$ReadOnlyArray<NamedTypeNode> = def.types;
     const tc = this.schemaComposer.createUnionTC({
       name: def.name.value,
@@ -1122,7 +1122,7 @@ export class TypeMapper<TContext> {
     return result;
   }
 
-  makeExtendTypeDef(def: ObjectTypeExtensionNode) {
+  makeExtendTypeDef(def: ObjectTypeExtensionNode): ObjectTypeComposer<any, TContext> {
     const tc = this.schemaComposer.getOrCreateOTC(def.name.value);
     tc.addInterfaces(this.makeImplementedInterfaces(def));
     tc.addFields(this.makeFieldDefMap(def));
@@ -1132,7 +1132,7 @@ export class TypeMapper<TContext> {
     return tc;
   }
 
-  makeExtendInputObjectDef(def: InputObjectTypeExtensionNode) {
+  makeExtendInputObjectDef(def: InputObjectTypeExtensionNode): InputTypeComposer<TContext> {
     const tc = this.schemaComposer.getOrCreateITC(def.name.value);
     tc.addFields(this.makeInputFieldDef(def));
     if (def.directives) {
@@ -1141,7 +1141,7 @@ export class TypeMapper<TContext> {
     return tc;
   }
 
-  makeExtendInterfaceDef(def: InterfaceTypeExtensionNode) {
+  makeExtendInterfaceDef(def: InterfaceTypeExtensionNode): InterfaceTypeComposer<any, TContext> {
     const tc = this.schemaComposer.getOrCreateIFTC(def.name.value);
     tc.addFields(this.makeFieldDefMap(def));
     if (def.directives) {
@@ -1150,7 +1150,7 @@ export class TypeMapper<TContext> {
     return tc;
   }
 
-  makeExtendUnionDef(def: UnionTypeExtensionNode) {
+  makeExtendUnionDef(def: UnionTypeExtensionNode): UnionTypeComposer<any, TContext> {
     const types: ?$ReadOnlyArray<NamedTypeNode> = def.types;
     const tc = this.schemaComposer.getOrCreateUTC(def.name.value);
     tc.addTypes((types || []).map(ref => this.getNamedTypeAST(ref).name.value));
@@ -1160,7 +1160,7 @@ export class TypeMapper<TContext> {
     return tc;
   }
 
-  makeExtendEnumDef(def: EnumTypeExtensionNode) {
+  makeExtendEnumDef(def: EnumTypeExtensionNode): EnumTypeComposer<TContext> {
     const tc = this.schemaComposer.getOrCreateETC(def.name.value);
     tc.addFields(this.makeEnumValuesDef(def));
     if (def.directives) {
@@ -1169,7 +1169,7 @@ export class TypeMapper<TContext> {
     return tc;
   }
 
-  makeExtendScalarDef(def: ScalarTypeExtensionNode) {
+  makeExtendScalarDef(def: ScalarTypeExtensionNode): ScalarTypeComposer<TContext> {
     const tc = this.schemaComposer.getSTC(def.name.value);
     if (def.directives) {
       tc.setExtension('directives', this.parseDirectives(def.directives));

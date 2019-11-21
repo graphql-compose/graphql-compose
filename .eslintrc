@@ -28,7 +28,8 @@
     "no-use-before-define": ["error", { "functions": false }],
     "prefer-destructuring": 0,
     "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
-    "no-else-return": 0
+    "no-else-return": 0,
+    "class-methods-use-this": "off"
   },
   "env": {
     "jasmine": true,
