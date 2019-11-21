@@ -29,8 +29,14 @@ import type {
   DirectiveArgs,
 } from './utils/definitions';
 import { convertObjectTypeArrayAsThunk } from './utils/configToDefine';
-import { getGraphQLType, getComposeTypeName } from './utils/typeHelpers';
+import {
+  getGraphQLType,
+  getComposeTypeName,
+  unwrapOutputTC,
+  type NamedTypeComposer,
+} from './utils/typeHelpers';
 import { graphqlVersion } from './utils/graphqlVersion';
+import { printUnion, type SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type UnionTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -204,6 +210,10 @@ export class UnionTypeComposer<TSource, TContext> {
 
   getTypes(): Array<ObjectTypeComposerThunked<TSource, TContext>> {
     return Array.from(this._gqcTypeMap.values());
+  }
+
+  getTypeComposers(): Array<ObjectTypeComposer<TSource, TContext>> {
+    return (this.getTypes().map((t: any) => unwrapOutputTC(t)): any);
   }
 
   getTypeNames(): string[] {
@@ -630,4 +640,41 @@ export class UnionTypeComposer<TSource, TContext> {
   // get(path: string | string[]): any {
   //   return typeByPath(this, path);
   // }
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  getNestedTCs(passedTypes: Set<NamedTypeComposer<any>> = new Set()): Set<NamedTypeComposer<any>> {
+    this.getTypeComposers().forEach(tc => {
+      if (!passedTypes.has(tc)) {
+        passedTypes.add(tc);
+        if (tc instanceof ObjectTypeComposer) {
+          tc.getNestedTCs(passedTypes);
+        }
+      }
+    });
+    return passedTypes;
+  }
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  toSDL(opts?: $ReadOnly<{ deep?: ?boolean, commentDescriptions?: ?boolean }>): string {
+    const printOpts: SchemaPrinterOptions = {
+      commentDescriptions: !!(opts && opts.commentDescriptions),
+    };
+
+    if (opts && opts.deep) {
+      let r = '';
+      r += printUnion(this.getType(), printOpts);
+      Array.from(this.getNestedTCs()).forEach(t => {
+        if (t !== this) {
+          r += `\n\n${t.toSDL(printOpts)}`;
+        }
+      });
+      return r;
+    }
+
+    return printUnion(this.getType(), printOpts);
+  }
 }

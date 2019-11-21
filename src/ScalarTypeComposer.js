@@ -17,6 +17,7 @@ import { NonNullComposer } from './NonNullComposer';
 import type { Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 import { inspect } from './utils/misc';
 import { graphqlVersion } from './utils/graphqlVersion';
+import { printScalar, type SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type ScalarTypeComposerDefinition =
   | TypeAsString
@@ -342,5 +343,22 @@ export class ScalarTypeComposer<TContext> {
     const directive = this.getDirectives()[idx];
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  /**
+   * -----------------------------------------------
+   * Misc methods
+   * -----------------------------------------------
+   */
+
+  /**
+   * Prints SDL for current type.
+   */
+  toSDL(opts?: $ReadOnly<{ commentDescriptions?: ?boolean }>): string {
+    const printOpts: SchemaPrinterOptions = {
+      commentDescriptions: !!(opts && opts.commentDescriptions),
+    };
+
+    return printScalar(this.getType(), printOpts);
   }
 }

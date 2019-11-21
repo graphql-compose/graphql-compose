@@ -368,4 +368,25 @@ describe('EnumTypeComposer', () => {
       );
     });
   });
+
+  describe('misc methods', () => {
+    it('toSDL()', () => {
+      const t = schemaComposer.createEnumTC(`
+        """desc1"""
+        enum Sort { 
+          """desc2"""
+          ASC
+          DESC
+        }
+      `);
+      expect(t.toSDL()).toMatchInlineSnapshot(`
+        "\\"\\"\\"desc1\\"\\"\\"
+        enum Sort {
+          \\"\\"\\"desc2\\"\\"\\"
+          ASC
+          DESC
+        }"
+      `);
+    });
+  });
 });

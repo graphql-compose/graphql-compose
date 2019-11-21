@@ -1244,4 +1244,80 @@ describe('SchemaComposer', () => {
       }).toThrow(/Cannot merge InputTypeComposer.*with ObjectType/);
     });
   });
+
+  describe('misc methods', () => {
+    it('toSDL()', () => {
+      const sc = new SchemaComposer();
+      sc.Query.addFields({ existedInQuery: 'String' });
+      sc.Mutation.addFields({ existedInMutation: 'String' });
+      sc.Subscription.addFields({ existedInSubscription: 'String' });
+      sc.createTC(`type User { age: Int }`);
+
+      expect(sc.toSDL()).toMatchInlineSnapshot(`
+        "\\"\\"\\"Provides default value for input field.\\"\\"\\"
+        directive @default(value: JSON!) on INPUT_FIELD_DEFINITION
+
+        \\"\\"\\"
+        The \`JSON\` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+        \\"\\"\\"
+        scalar JSON
+
+        type Mutation {
+          existedInMutation: String
+        }
+
+        type Query {
+          existedInQuery: String
+        }
+
+        type Subscription {
+          existedInSubscription: String
+        }
+        "
+      `);
+    });
+
+    it('getTypeSDL()', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        type User {
+          f1: Int
+          f2(filter: Filter): Boolean 
+        }
+        input Filter { a: String }
+        input AnotherType { a: String }
+      `);
+
+      expect(sc1.getTypeSDL('User')).toMatchInlineSnapshot(`
+        "type User {
+          f1: Int
+          f2(filter: Filter): Boolean
+        }"
+      `);
+
+      expect(sc1.getTypeSDL('User', { deep: true })).toMatchInlineSnapshot(`
+        "type User {
+          f1: Int
+          f2(filter: Filter): Boolean
+        }
+
+        \\"\\"\\"
+        The \`Int\` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.
+        \\"\\"\\"
+        scalar Int
+
+        \\"\\"\\"The \`Boolean\` scalar type represents \`true\` or \`false\`.\\"\\"\\"
+        scalar Boolean
+
+        input Filter {
+          a: String
+        }
+
+        \\"\\"\\"
+        The \`String\` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
+        \\"\\"\\"
+        scalar String"
+      `);
+    });
+  });
 });

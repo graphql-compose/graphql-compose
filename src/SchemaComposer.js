@@ -48,6 +48,7 @@ import {
   type GraphQLResolveInfo,
 } from './graphql';
 import DefaultDirective from './directive/default';
+import { printSchema, type SchemaPrinterOptions } from './utils/schemaPrinter';
 
 type ExtraSchemaConfig = {
   types?: GraphQLNamedType[] | null,
@@ -711,5 +712,22 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   inspect() {
     return 'SchemaComposer';
+  }
+
+  /**
+   * Prints SDL for any type in schema. Or print with all used types if `deep: true` option was provided.
+   */
+  getTypeSDL(
+    typeName: string,
+    opts?: $ReadOnly<{ deep?: ?boolean, commentDescriptions?: ?boolean }>
+  ): string {
+    return this.getAnyTC(typeName).toSDL(opts);
+  }
+
+  /**
+   * Return schema as SDL string.
+   */
+  toSDL(opts?: SchemaPrinterOptions): string {
+    return printSchema(this.buildSchema(), opts || {});
   }
 }

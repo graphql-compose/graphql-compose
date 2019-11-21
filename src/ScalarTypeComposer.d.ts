@@ -132,4 +132,15 @@ export class ScalarTypeComposer<TContext = any> {
   public getDirectiveByName(directiveName: string): DirectiveArgs | void;
 
   public getDirectiveById(idx: number): DirectiveArgs | void;
+
+  /**
+   * -----------------------------------------------
+   * Misc methods
+   * -----------------------------------------------
+   */
+
+  /**
+   * Prints SDL for current type.
+   */
+  public toSDL(opts?: { commentDescriptions?: boolean }): string;
 }

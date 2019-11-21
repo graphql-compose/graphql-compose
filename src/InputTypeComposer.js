@@ -27,12 +27,13 @@ import type {
 } from './graphql';
 import { graphqlVersion } from './utils/graphqlVersion';
 import { defineInputFieldMap, convertInputFieldMapToConfig } from './utils/configToDefine';
-import { unwrapInputTC } from './utils/typeHelpers';
+import { unwrapInputTC, type NamedTypeComposer } from './utils/typeHelpers';
 import type {
   ComposeInputType,
   ComposeNamedInputType,
   ComposeInputTypeDefinition,
 } from './utils/typeHelpers';
+import { printInputObject, type SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type InputTypeComposerDefinition =
   | TypeAsString
@@ -727,5 +728,43 @@ export class InputTypeComposer<TContext> {
 
   get(path: string | string[]): TypeInPath<TContext> | void {
     return typeByPath(this, path);
+  }
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  getNestedTCs(passedTypes: Set<NamedTypeComposer<any>> = new Set()): Set<NamedTypeComposer<any>> {
+    this.getFieldNames().forEach(fieldName => {
+      const itc = this.getFieldTC(fieldName);
+      if (!passedTypes.has(itc)) {
+        passedTypes.add(itc);
+        if (itc instanceof InputTypeComposer) {
+          itc.getNestedTCs(passedTypes);
+        }
+      }
+    });
+    return passedTypes;
+  }
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  toSDL(opts?: $ReadOnly<{ deep?: ?boolean, commentDescriptions?: ?boolean }>): string {
+    const printOpts: SchemaPrinterOptions = {
+      commentDescriptions: !!(opts && opts.commentDescriptions),
+    };
+
+    if (opts && opts.deep) {
+      let r = '';
+      r += printInputObject(this.getType(), printOpts);
+      Array.from(this.getNestedTCs()).forEach(t => {
+        if (t !== this) {
+          r += `\n\n${t.toSDL(printOpts)}`;
+        }
+      });
+      return r;
+    }
+
+    return printInputObject(this.getType(), printOpts);
   }
 }

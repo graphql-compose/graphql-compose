@@ -19,6 +19,7 @@ import {
   DirectiveArgs,
   ObjMapReadOnly,
 } from './utils/definitions';
+import { NamedTypeComposer } from './utils/typeHelpers';
 
 export type EnumTypeComposerDefinition =
   | TypeAsString
@@ -220,4 +221,15 @@ export class EnumTypeComposer<TContext = any> {
   public getFieldDirectiveByName(fieldName: string, directiveName: string): DirectiveArgs | void;
 
   public getFieldDirectiveById(fieldName: string, idx: number): DirectiveArgs | void;
+
+  /**
+   * -----------------------------------------------
+   * Misc methods
+   * -----------------------------------------------
+   */
+
+  /**
+   * Prints SDL for current type.
+   */
+  public toSDL(opts?: { commentDescriptions?: boolean }): string;
 }

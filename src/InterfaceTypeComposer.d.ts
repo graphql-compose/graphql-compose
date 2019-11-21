@@ -36,6 +36,7 @@ import {
   ComposeNamedOutputType,
   ComposeOutputType,
   ComposeNamedInputType,
+  NamedTypeComposer,
 } from './utils/typeHelpers';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
@@ -171,6 +172,8 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public getFieldArgs<TArgs = ArgsMap>(
     fieldName: string
   ): ObjectTypeComposerArgumentConfigMap<TArgs>;
+
+  public getFieldArgNames(fieldName: string): string[];
 
   public hasFieldArg(fieldName: string, argName: string): boolean;
 
@@ -420,4 +423,14 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
    */
 
   public get(path: string | string[]): TypeInPath<TContext> | void;
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  public getNestedTCs(): Set<NamedTypeComposer<any>>;
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  public toSDL(opts?: { deep?: boolean; commentDescriptions?: boolean }): string;
 }

@@ -42,6 +42,7 @@ import {
   ComposeInputType,
   ComposeNamedOutputType,
   ComposeNamedInputType,
+  NamedTypeComposer,
 } from './utils/typeHelpers';
 import { ThunkComposer } from './ThunkComposer';
 import { InputTypeComposer } from './InputTypeComposer';
@@ -518,6 +519,8 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public getInterfaces(): Array<InterfaceTypeComposerThunked<TSource, TContext>>;
 
+  public getInterfacesTypes(): GraphQLInterfaceType[];
+
   public setInterfaces(
     interfaces: ReadonlyArray<InterfaceTypeComposerDefinition<any, TContext>>
   ): this;
@@ -669,4 +672,14 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   public getRecordId(source: TSource, args?: ArgsMap, context?: TContext): string | number;
 
   public get(path: string | string[]): TypeInPath<TContext> | void;
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  public getNestedTCs(): Set<NamedTypeComposer<any>>;
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  public toSDL(opts?: { deep?: boolean; commentDescriptions?: boolean }): string;
 }

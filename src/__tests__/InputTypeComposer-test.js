@@ -619,4 +619,81 @@ describe('InputTypeComposer', () => {
       );
     });
   });
+
+  describe('misc methods', () => {
+    it('getNestedTCs()', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        input Filter { a: Int b: Filter, geo: LonLat }
+        input LonLat { lon: Float lat: Float}
+
+        input OtherInput1 { b: Int }
+        union C = A | B
+        type A { f1: Int }
+        type B { f2: User }
+      `);
+
+      expect(
+        Array.from(
+          sc1
+            .getITC('Filter')
+            .getNestedTCs()
+            .values()
+        ).map(t => t.getTypeName())
+      ).toEqual(['Int', 'Filter', 'LonLat', 'Float']);
+    });
+
+    it('toSDL()', () => {
+      const t = schemaComposer.createInputTC(`
+        """desc1"""
+        input Filter { 
+          """desc2"""
+          name: String
+        }
+      `);
+      expect(t.toSDL()).toMatchInlineSnapshot(`
+        "\\"\\"\\"desc1\\"\\"\\"
+        input Filter {
+          \\"\\"\\"desc2\\"\\"\\"
+          name: String
+        }"
+      `);
+    });
+
+    it('toSDL({ deep: true })', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        input Filter { a: Int b: Filter, geo: LonLat }
+        input LonLat { lon: Float lat: Float}
+
+        input OtherInput1 { b: Int }
+        union C = A | B
+        type A { f1: Int }
+        type B { f2: User }
+      `);
+
+      expect(sc1.getITC('Filter').toSDL({ deep: true })).toMatchInlineSnapshot(`
+        "input Filter {
+          a: Int
+          b: Filter
+          geo: LonLat
+        }
+
+        \\"\\"\\"
+        The \`Int\` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.
+        \\"\\"\\"
+        scalar Int
+
+        input LonLat {
+          lon: Float
+          lat: Float
+        }
+
+        \\"\\"\\"
+        The \`Float\` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).
+        \\"\\"\\"
+        scalar Float"
+      `);
+    });
+  });
 });

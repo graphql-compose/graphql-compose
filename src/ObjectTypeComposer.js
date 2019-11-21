@@ -14,6 +14,7 @@ import type {
   InputValueDefinitionNode,
 } from './graphql';
 import { InputTypeComposer } from './InputTypeComposer';
+import { UnionTypeComposer } from './UnionTypeComposer';
 import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import {
   InterfaceTypeComposer,
@@ -41,7 +42,12 @@ import {
 } from './utils/configToDefine';
 import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath, type TypeInPath } from './utils/typeByPath';
-import { getComposeTypeName, unwrapOutputTC, unwrapInputTC } from './utils/typeHelpers';
+import {
+  getComposeTypeName,
+  unwrapOutputTC,
+  unwrapInputTC,
+  type NamedTypeComposer,
+} from './utils/typeHelpers';
 import type { ProjectionType } from './utils/projection';
 import type {
   ObjMap,
@@ -61,6 +67,7 @@ import type {
   ComposeNamedOutputType,
 } from './utils/typeHelpers';
 import { createThunkedObjectProxy } from './utils/createThunkedObjectProxy';
+import { printObject, type SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type ObjectTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -899,12 +906,12 @@ export class ObjectTypeComposer<TSource, TContext> {
           this._gqType,
           mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name))
         );
-      this._gqType._interfaces = () => this._gqcInterfaces.map(i => i.getType());
+      this._gqType._interfaces = () => this.getInterfacesTypes();
     } else {
       (this._gqType: any)._typeConfig.fields = () => {
         return mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name));
       };
-      (this._gqType: any)._typeConfig.interfaces = () => this._gqcInterfaces.map(i => i.getType());
+      (this._gqType: any)._typeConfig.interfaces = () => this.getInterfacesTypes();
       delete (this._gqType: any)._fields; // clear builded fields in type
       delete (this._gqType: any)._interfaces;
     }
@@ -1174,6 +1181,10 @@ export class ObjectTypeComposer<TSource, TContext> {
 
   getInterfaces(): Array<InterfaceTypeComposerThunked<TSource, TContext>> {
     return this._gqcInterfaces;
+  }
+
+  getInterfacesTypes(): Array<GraphQLInterfaceType> {
+    return this._gqcInterfaces.map(i => i.getType());
   }
 
   setInterfaces(
@@ -1644,5 +1655,61 @@ export class ObjectTypeComposer<TSource, TContext> {
 
   get(path: string | string[]): TypeInPath<TContext> | void {
     return typeByPath(this, path);
+  }
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  getNestedTCs(passedTypes: Set<NamedTypeComposer<any>> = new Set()): Set<NamedTypeComposer<any>> {
+    this.getFieldNames().forEach(fieldName => {
+      const tc = this.getFieldTC(fieldName);
+      if (!passedTypes.has(tc)) {
+        passedTypes.add(tc);
+        if (tc instanceof ObjectTypeComposer || tc instanceof UnionTypeComposer) {
+          tc.getNestedTCs(passedTypes);
+        }
+      }
+
+      this.getFieldArgNames(fieldName).forEach(argName => {
+        const itc = this.getFieldArgTC(fieldName, argName);
+        if (!passedTypes.has(itc)) {
+          passedTypes.add(itc);
+          if (itc instanceof InputTypeComposer) {
+            itc.getNestedTCs(passedTypes);
+          }
+        }
+      });
+    });
+
+    this.getInterfaces().forEach(t => {
+      const iftc = t instanceof ThunkComposer ? t.ofType : t;
+      if (!passedTypes.has(iftc)) {
+        passedTypes.add(iftc);
+        iftc.getNestedTCs(passedTypes);
+      }
+    });
+    return passedTypes;
+  }
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  toSDL(opts?: $ReadOnly<{ deep?: ?boolean, commentDescriptions?: ?boolean }>): string {
+    const printOpts: SchemaPrinterOptions = {
+      commentDescriptions: !!(opts && opts.commentDescriptions),
+    };
+
+    if (opts && opts.deep) {
+      let r = '';
+      r += printObject(this.getType(), printOpts);
+      Array.from(this.getNestedTCs()).forEach(t => {
+        if (t !== this) {
+          r += `\n\n${t.toSDL(printOpts)}`;
+        }
+      });
+      return r;
+    }
+
+    return printObject(this.getType(), printOpts);
   }
 }

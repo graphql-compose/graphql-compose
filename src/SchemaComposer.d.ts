@@ -309,4 +309,17 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    * Misc methods
    * -----------------------------------------------
    */
+
+  /**
+   * Prints SDL for any type in schema. Or print with all used types if `deep: true` option was provided.
+   */
+  public getTypeSDL(
+    typeName: string,
+    opts?: { deep?: boolean; commentDescriptions?: boolean }
+  ): string;
+
+  /**
+   * Return schema as SDL string.
+   */
+  public toSDL(opts?: { commentDescriptions?: boolean }): string;
 }

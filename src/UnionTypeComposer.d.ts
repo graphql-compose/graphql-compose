@@ -23,6 +23,7 @@ import {
   ExtensionsDirective,
   DirectiveArgs,
 } from './utils/definitions';
+import { NamedTypeComposer } from './utils/typeHelpers';
 
 export type UnionTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -97,6 +98,8 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   public hasType(name: ObjectTypeComposerDefinition<any, TContext>): boolean;
 
   public getTypes(): Array<ObjectTypeComposerThunked<TSource, TContext>>;
+
+  public getTypeComposers(): Array<ObjectTypeComposer<TSource, TContext>>;
 
   public getTypeNames(): string[];
 
@@ -229,4 +232,14 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
    * Misc methods
    * -----------------------------------------------
    */
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  public getNestedTCs(): Set<NamedTypeComposer<any>>;
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  public toSDL(opts?: { deep?: boolean; commentDescriptions?: boolean }): string;
 }

@@ -373,7 +373,6 @@ describe('ObjectTypeComposer', () => {
           description: 'this is field #3',
           extensions: { second: true },
         });
-        // $FlowFixMe
         expect(tc.getFieldConfig('field3').extensions).toEqual({
           first: true,
           second: true,
@@ -1256,7 +1255,11 @@ describe('ObjectTypeComposer', () => {
       schemaComposer.Query.addFields({
         check: {
           type: '[MyUnion]',
-          resolve: () => [{ kind: 'A', a: 1 }, { kind: 'B', b: 2 }, { kind: 'C', c: 3 }],
+          resolve: () => [
+            { kind: 'A', a: 1 },
+            { kind: 'B', b: 2 },
+            { kind: 'C', c: 3 },
+          ],
         },
       });
       const res = await graphql(
@@ -1464,6 +1467,135 @@ describe('ObjectTypeComposer', () => {
       expect(() => otc.merge((schemaComposer.createScalarTC('Scalar'): any))).toThrow(
         'Cannot merge ScalarTypeComposer'
       );
+    });
+  });
+
+  describe('misc methods', () => {
+    it('getNestedTCs()', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        type User implements I1 & I2 {
+          f1: String
+          f2: Int
+          f3: User
+          f4(f: Filter): Boolean 
+        }
+
+        input Filter { a: Int b: Filter }
+
+        interface I1 { f1: String }
+        interface I2 { f2: Int }
+
+        type OtherType1 { a: Int }
+        input OtherInput1 { b: Int }
+
+        union C = A | B
+        type A { f1: Int }
+        type B { f2: User }
+      `);
+
+      expect(
+        Array.from(
+          sc1
+            .getITC('Filter')
+            .getNestedTCs()
+            .values()
+        ).map(t => t.getTypeName())
+      ).toEqual(['Int', 'Filter']);
+
+      expect(
+        Array.from(
+          sc1
+            .getOTC('User')
+            .getNestedTCs()
+            .values()
+        ).map(t => t.getTypeName())
+      ).toEqual(['String', 'Int', 'User', 'Boolean', 'Filter', 'I1', 'I2']);
+
+      expect(
+        Array.from(
+          sc1
+            .getUTC('C')
+            .getNestedTCs()
+            .values()
+        ).map(t => t.getTypeName())
+      ).toEqual(['A', 'Int', 'B', 'User', 'String', 'Boolean', 'Filter', 'I1', 'I2']);
+    });
+
+    it('toSDL()', () => {
+      const t = schemaComposer.createObjectTC(`
+        """desc1"""
+        type User { 
+          """desc2"""
+          name(a: Int): String
+        }
+      `);
+      expect(t.toSDL()).toMatchInlineSnapshot(`
+        "\\"\\"\\"desc1\\"\\"\\"
+        type User {
+          \\"\\"\\"desc2\\"\\"\\"
+          name(a: Int): String
+        }"
+      `);
+    });
+
+    it('toSDL({ deep: true })', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        type User implements I1 & I2 {
+          f1: String
+          f2: Int
+          f3: User
+          f4(f: Filter): Boolean 
+        }
+
+        input Filter { a: Int b: Filter }
+
+        interface I1 { f1: String }
+        interface I2 { f2: Int }
+
+        type OtherType1 { a: Int }
+        input OtherInput1 { b: Int }
+
+        union C = A | B
+        type A { f1: Int }
+        type B { f2: User }
+      `);
+
+      expect(sc1.getOTC('User').toSDL({ deep: true })).toMatchInlineSnapshot(`
+        "type User implements I1 & I2 {
+          f1: String
+          f2: Int
+          f3: User
+          f4(f: Filter): Boolean
+        }
+
+        \\"\\"\\"
+        The \`String\` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
+        \\"\\"\\"
+        scalar String
+
+        \\"\\"\\"
+        The \`Int\` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.
+        \\"\\"\\"
+        scalar Int
+
+        \\"\\"\\"The \`Boolean\` scalar type represents \`true\` or \`false\`.\\"\\"\\"
+        scalar Boolean
+
+        input Filter {
+          a: Int
+          b: Filter
+        }
+
+        interface I1 {
+          f1: String
+        }
+
+        interface I2 {
+          f2: Int
+        }"
+      `);
     });
   });
 });

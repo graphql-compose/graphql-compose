@@ -40,6 +40,7 @@ export * from './utils/typeHelpers';
 export * from './utils/is';
 export * from './utils/definitions';
 export * from './utils/graphqlVersion';
+export * from './utils/schemaPrinter';
 export { toDottedObject } from './utils/toDottedObject';
 export { createThunkedObjectProxy } from './utils/createThunkedObjectProxy';
 export { deepmerge } from './utils/deepmerge';

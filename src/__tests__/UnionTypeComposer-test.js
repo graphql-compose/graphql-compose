@@ -512,4 +512,71 @@ describe('UnionTypeComposer', () => {
       );
     });
   });
+
+  describe('misc methods', () => {
+    it('getNestedTCs()', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        type LonLat { lon: Float lat: Float}
+        input OtherInput1 { b: Int }
+        union C = A | B
+        type A { f1: Int }
+        type B { f2: LonLat }
+      `);
+
+      expect(
+        Array.from(
+          sc1
+            .getUTC('C')
+            .getNestedTCs()
+            .values()
+        ).map(t => t.getTypeName())
+      ).toEqual(['A', 'Int', 'B', 'LonLat', 'Float']);
+    });
+
+    it('toSDL()', () => {
+      const t = schemaComposer.createUnionTC(`
+        union C = A | B
+      `);
+      expect(t.toSDL()).toMatchInlineSnapshot(`"union C = A | B"`);
+    });
+
+    it('toSDL({ deep: true })', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        type LonLat { lon: Float lat: Float}
+        input OtherInput1 { b: Int }
+        union C = A | B
+        type A { f1: Int }
+        type B { f2: LonLat }
+      `);
+
+      expect(sc1.getUTC('C').toSDL({ deep: true })).toMatchInlineSnapshot(`
+        "union C = A | B
+
+        type A {
+          f1: Int
+        }
+
+        \\"\\"\\"
+        The \`Int\` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.
+        \\"\\"\\"
+        scalar Int
+
+        type B {
+          f2: LonLat
+        }
+
+        type LonLat {
+          lon: Float
+          lat: Float
+        }
+
+        \\"\\"\\"
+        The \`Float\` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).
+        \\"\\"\\"
+        scalar Float"
+      `);
+    });
+  });
 });

@@ -15,6 +15,7 @@ import type {
   GraphQLTypeResolver,
 } from './graphql';
 import { InputTypeComposer } from './InputTypeComposer';
+import { UnionTypeComposer } from './UnionTypeComposer';
 import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import { TypeMapper } from './TypeMapper';
@@ -41,7 +42,12 @@ import type {
 } from './utils/definitions';
 import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath, type TypeInPath } from './utils/typeByPath';
-import { getGraphQLType, unwrapOutputTC, unwrapInputTC } from './utils/typeHelpers';
+import {
+  getGraphQLType,
+  unwrapOutputTC,
+  unwrapInputTC,
+  type NamedTypeComposer,
+} from './utils/typeHelpers';
 import { defineFieldMap, convertObjectFieldMapToConfig } from './utils/configToDefine';
 import { graphqlVersion } from './utils/graphqlVersion';
 import type {
@@ -49,6 +55,7 @@ import type {
   ComposeNamedOutputType,
   ComposeOutputType,
 } from './utils/typeHelpers';
+import { printInterface, type SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type InterfaceTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -489,6 +496,10 @@ export class InterfaceTypeComposer<TSource, TContext> {
         `Cannot get field args. Field '${fieldName}' from type '${this.getTypeName()}' does not exist.`
       );
     }
+  }
+
+  getFieldArgNames(fieldName: string): string[] {
+    return Object.keys(this.getFieldArgs(fieldName));
   }
 
   hasFieldArg(fieldName: string, argName: string): boolean {
@@ -1266,5 +1277,53 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   get(path: string | string[]): TypeInPath<TContext> | void {
     return typeByPath(this, path);
+  }
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  getNestedTCs(passedTypes: Set<NamedTypeComposer<any>> = new Set()): Set<NamedTypeComposer<any>> {
+    this.getFieldNames().forEach(fieldName => {
+      const tc = this.getFieldTC(fieldName);
+      if (!passedTypes.has(tc)) {
+        passedTypes.add(tc);
+        if (tc instanceof ObjectTypeComposer || tc instanceof UnionTypeComposer) {
+          tc.getNestedTCs(passedTypes);
+        }
+      }
+
+      this.getFieldArgNames(fieldName).forEach(argName => {
+        const itc = this.getFieldArgTC(fieldName, argName);
+        if (!passedTypes.has(itc)) {
+          passedTypes.add(itc);
+          if (itc instanceof InputTypeComposer) {
+            itc.getNestedTCs(passedTypes);
+          }
+        }
+      });
+    });
+    return passedTypes;
+  }
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  toSDL(opts?: $ReadOnly<{ deep?: ?boolean, commentDescriptions?: ?boolean }>): string {
+    const printOpts: SchemaPrinterOptions = {
+      commentDescriptions: !!(opts && opts.commentDescriptions),
+    };
+
+    if (opts && opts.deep) {
+      let r = '';
+      r += printInterface(this.getType(), printOpts);
+      Array.from(this.getNestedTCs()).forEach(t => {
+        if (t !== this) {
+          r += `\n\n${t.toSDL(printOpts)}`;
+        }
+      });
+      return r;
+    }
+
+    return printInterface(this.getType(), printOpts);
   }
 }

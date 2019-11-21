@@ -20,6 +20,7 @@ import type {
   ExtensionsDirective,
   DirectiveArgs,
 } from './utils/definitions';
+import { printEnum, type SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type EnumTypeComposerDefinition =
   | TypeAsString
@@ -558,5 +559,13 @@ export class EnumTypeComposer<TContext> {
     const directive = this.getFieldDirectives(fieldName)[idx];
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  toSDL(opts?: $ReadOnly<{ commentDescriptions?: ?boolean }>): string {
+    const printOpts: SchemaPrinterOptions = {
+      commentDescriptions: !!(opts && opts.commentDescriptions),
+    };
+
+    return printEnum(this.getType(), printOpts);
   }
 }

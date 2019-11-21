@@ -188,4 +188,17 @@ describe('ScalarTypeComposer', () => {
       );
     });
   });
+
+  describe('misc methods', () => {
+    it('toSDL()', () => {
+      const t = schemaComposer.createScalarTC(`
+        """desc1"""
+        scalar UInt
+      `);
+      expect(t.toSDL()).toMatchInlineSnapshot(`
+        "\\"\\"\\"desc1\\"\\"\\"
+        scalar UInt"
+      `);
+    });
+  });
 });

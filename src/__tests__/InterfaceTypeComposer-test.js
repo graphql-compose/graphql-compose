@@ -838,7 +838,11 @@ describe('InterfaceTypeComposer', () => {
         schemaComposer.Query.addFields({
           check: {
             type: '[F]',
-            resolve: () => [{ f: 'A', a: 1 }, { f: 'B', b: 2 }, { f: 'C', c: 3 }],
+            resolve: () => [
+              { f: 'A', a: 1 },
+              { f: 'B', b: 2 },
+              { f: 'C', c: 3 },
+            ],
           },
         });
         const res = await graphql(
@@ -1027,6 +1031,25 @@ describe('InterfaceTypeComposer', () => {
       expect(() => iface.merge((schemaComposer.createScalarTC('Scalar'): any))).toThrow(
         'Cannot merge ScalarTypeComposer'
       );
+    });
+  });
+
+  describe('misc methods', () => {
+    it('toSDL()', () => {
+      const t = schemaComposer.createInterfaceTC(`
+        """desc1"""
+        interface IUser { 
+          """desc2"""
+          name(a: Int): String
+        }
+      `);
+      expect(t.toSDL()).toMatchInlineSnapshot(`
+        "\\"\\"\\"desc1\\"\\"\\"
+        interface IUser {
+          \\"\\"\\"desc2\\"\\"\\"
+          name(a: Int): String
+        }"
+      `);
     });
   });
 });
