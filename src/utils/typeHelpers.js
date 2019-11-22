@@ -94,6 +94,87 @@ export type ComposeInputTypeDefinition =
       | $ReadOnlyArray<TypeAsString | $ReadOnly<ComposeInputType> | $ReadOnly<GraphQLInputType>>
     >;
 
+export function isTypeNameString(str: string): boolean {
+  return /^[_A-Za-z][_0-9A-Za-z]*$/.test(str);
+}
+
+export function isTypeDefinitionString(str: string): boolean {
+  return (
+    isOutputTypeDefinitionString(str) ||
+    isInputTypeDefinitionString(str) ||
+    isEnumTypeDefinitionString(str) ||
+    isScalarTypeDefinitionString(str) ||
+    isInterfaceTypeDefinitionString(str) ||
+    isUnionTypeDefinitionString(str)
+  );
+}
+
+export function isSomeOutputTypeDefinitionString(str: string): boolean {
+  return (
+    isOutputTypeDefinitionString(str) ||
+    isEnumTypeDefinitionString(str) ||
+    isScalarTypeDefinitionString(str) ||
+    isInterfaceTypeDefinitionString(str) ||
+    isUnionTypeDefinitionString(str)
+  );
+}
+
+export function isSomeInputTypeDefinitionString(str: string): boolean {
+  return (
+    isInputTypeDefinitionString(str) ||
+    isEnumTypeDefinitionString(str) ||
+    isScalarTypeDefinitionString(str)
+  );
+}
+
+export function isOutputTypeDefinitionString(str: string): boolean {
+  return /type\s[^{]+\{[^}]+\}/im.test(str);
+}
+
+export function isInputTypeDefinitionString(str: string): boolean {
+  return /input\s[^{]+\{[^}]+\}/im.test(str);
+}
+
+export function isEnumTypeDefinitionString(str: string): boolean {
+  return /enum\s[^{]+\{[^}]+\}/im.test(str);
+}
+
+export function isScalarTypeDefinitionString(str: string): boolean {
+  return /scalar\s/im.test(str);
+}
+
+export function isInterfaceTypeDefinitionString(str: string): boolean {
+  return /interface\s/im.test(str);
+}
+
+export function isUnionTypeDefinitionString(str: string): boolean {
+  return /union\s/im.test(str);
+}
+
+export function isSomeOutputTypeComposer(type: any): boolean %checks {
+  return (
+    type instanceof ObjectTypeComposer ||
+    type instanceof InterfaceTypeComposer ||
+    type instanceof EnumTypeComposer ||
+    type instanceof UnionTypeComposer ||
+    type instanceof ScalarTypeComposer ||
+    (type instanceof NonNullComposer && isSomeOutputTypeComposer(type.ofType)) ||
+    (type instanceof ListComposer && isSomeOutputTypeComposer(type.ofType)) ||
+    type instanceof ThunkComposer
+  );
+}
+
+export function isSomeInputTypeComposer(type: any): boolean %checks {
+  return (
+    type instanceof InputTypeComposer ||
+    type instanceof EnumTypeComposer ||
+    type instanceof ScalarTypeComposer ||
+    (type instanceof NonNullComposer && isSomeInputTypeComposer(type.ofType)) ||
+    (type instanceof ListComposer && isSomeInputTypeComposer(type.ofType)) ||
+    type instanceof ThunkComposer
+  );
+}
+
 export function isComposeType(type: any): boolean {
   return (
     isType(type) ||
@@ -112,11 +193,7 @@ export function isComposeOutputType(type: any): boolean %checks {
   return (
     isOutputType(type) ||
     (Array.isArray(type) && isComposeOutputType(type[0])) ||
-    type instanceof ObjectTypeComposer ||
-    type instanceof InterfaceTypeComposer ||
-    type instanceof EnumTypeComposer ||
-    type instanceof UnionTypeComposer ||
-    type instanceof ScalarTypeComposer ||
+    isSomeOutputTypeComposer(type) ||
     type instanceof Resolver
   );
 }
@@ -125,9 +202,7 @@ export function isComposeInputType(type: any): boolean %checks {
   return (
     isInputType(type) ||
     (Array.isArray(type) && isComposeInputType(type[0])) ||
-    type instanceof InputTypeComposer ||
-    type instanceof EnumTypeComposer ||
-    type instanceof ScalarTypeComposer
+    isSomeInputTypeComposer(type)
   );
 }
 

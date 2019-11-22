@@ -10,7 +10,6 @@ import { defineEnumValues } from './utils/configToDefine';
 import { graphqlVersion } from './utils/graphqlVersion';
 import type { TypeAsString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
-import { TypeMapper } from './TypeMapper';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import type {
@@ -20,6 +19,7 @@ import type {
   ExtensionsDirective,
   DirectiveArgs,
 } from './utils/definitions';
+import { isTypeNameString } from './utils/typeHelpers';
 import { printEnum, type SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type EnumTypeComposerDefinition =
@@ -89,7 +89,7 @@ export class EnumTypeComposer<TContext> {
 
     if (isString(typeDef)) {
       const typeName: string = typeDef;
-      if (TypeMapper.isTypeNameString(typeName)) {
+      if (isTypeNameString(typeName)) {
         ETC = new EnumTypeComposer(
           new GraphQLEnumType({
             name: typeName,

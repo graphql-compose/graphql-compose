@@ -25,6 +25,12 @@ import {
   isNamedTypeComposer,
   isComposeType,
   getComposeTypeName,
+  isOutputTypeDefinitionString,
+  isInputTypeDefinitionString,
+  isScalarTypeDefinitionString,
+  isEnumTypeDefinitionString,
+  isInterfaceTypeDefinitionString,
+  isUnionTypeDefinitionString,
   type AnyType,
   type NamedTypeComposer,
 } from './utils/typeHelpers';
@@ -609,36 +615,37 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   }
 
   isObjectType(type: string | AnyType<any> | GraphQLType): boolean {
-    if (typeof type === 'string' && TypeMapper.isOutputTypeDefinitionString(type)) return true;
+    if (typeof type === 'string' && isOutputTypeDefinitionString(type)) return true;
     if (!this.has(type)) return false;
     return this.getAnyTC(type) instanceof ObjectTypeComposer;
   }
 
   isInputObjectType(type: string | AnyType<any> | GraphQLType): boolean {
+    if (typeof type === 'string' && isInputTypeDefinitionString(type)) return true;
     if (!this.has(type)) return false;
     return this.getAnyTC(type) instanceof InputTypeComposer;
   }
 
   isScalarType(type: string | AnyType<any> | GraphQLType): boolean {
-    if (typeof type === 'string' && TypeMapper.isScalarTypeDefinitionString(type)) return true;
+    if (typeof type === 'string' && isScalarTypeDefinitionString(type)) return true;
     if (!this.has(type)) return false;
     return this.getAnyTC(type) instanceof ScalarTypeComposer;
   }
 
   isEnumType(type: string | AnyType<any> | GraphQLType): boolean {
-    if (typeof type === 'string' && TypeMapper.isEnumTypeDefinitionString(type)) return true;
+    if (typeof type === 'string' && isEnumTypeDefinitionString(type)) return true;
     if (!this.has(type)) return false;
     return this.getAnyTC(type) instanceof EnumTypeComposer;
   }
 
   isInterfaceType(type: string | AnyType<any> | GraphQLType): boolean {
-    if (typeof type === 'string' && TypeMapper.isInterfaceTypeDefinitionString(type)) return true;
+    if (typeof type === 'string' && isInterfaceTypeDefinitionString(type)) return true;
     if (!this.has(type)) return false;
     return this.getAnyTC(type) instanceof InterfaceTypeComposer;
   }
 
   isUnionType(type: string | AnyType<any> | GraphQLType): boolean {
-    if (typeof type === 'string' && TypeMapper.isUnionTypeDefinitionString(type)) return true;
+    if (typeof type === 'string' && isUnionTypeDefinitionString(type)) return true;
     if (!this.has(type)) return false;
     return this.getAnyTC(type) instanceof UnionTypeComposer;
   }

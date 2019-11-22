@@ -32,7 +32,6 @@ import { SchemaComposer } from './SchemaComposer';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { ThunkComposer } from './ThunkComposer';
-import { TypeMapper } from './TypeMapper';
 import { resolveMaybeThunk, upperFirst, inspect, mapEachKey } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
 import {
@@ -46,6 +45,7 @@ import {
   getComposeTypeName,
   unwrapOutputTC,
   unwrapInputTC,
+  isTypeNameString,
   type NamedTypeComposer,
 } from './utils/typeHelpers';
 import type { ProjectionType } from './utils/projection';
@@ -246,7 +246,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
     if (isString(typeDef)) {
       const typeName: string = typeDef;
-      if (TypeMapper.isTypeNameString(typeName)) {
+      if (isTypeNameString(typeName)) {
         TC = new ObjectTypeComposer(
           new GraphQLObjectType({
             name: typeName,

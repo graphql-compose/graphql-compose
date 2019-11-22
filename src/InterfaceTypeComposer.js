@@ -18,7 +18,6 @@ import { InputTypeComposer } from './InputTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
 import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
-import { TypeMapper } from './TypeMapper';
 import type {
   ObjectTypeComposerFieldConfigMap,
   ObjectTypeComposerFieldConfig,
@@ -46,6 +45,7 @@ import {
   getGraphQLType,
   unwrapOutputTC,
   unwrapInputTC,
+  isTypeNameString,
   type NamedTypeComposer,
 } from './utils/typeHelpers';
 import { defineFieldMap, convertObjectFieldMapToConfig } from './utils/configToDefine';
@@ -126,7 +126,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
     if (isString(typeDef)) {
       const typeName: string = typeDef;
-      if (TypeMapper.isTypeNameString(typeName)) {
+      if (isTypeNameString(typeName)) {
         IFTC = new InterfaceTypeComposer(
           new GraphQLInterfaceType({
             name: typeName,

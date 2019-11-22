@@ -11,9 +11,9 @@ import type {
 } from './graphql';
 import type { TypeAsString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
-import { TypeMapper } from './TypeMapper';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
+import { isTypeNameString } from './utils/typeHelpers';
 import type { Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 import { inspect } from './utils/misc';
 import { graphqlVersion } from './utils/graphqlVersion';
@@ -65,7 +65,7 @@ export class ScalarTypeComposer<TContext> {
 
     if (isString(typeDef)) {
       const typeName: string = typeDef;
-      if (TypeMapper.isTypeNameString(typeName)) {
+      if (isTypeNameString(typeName)) {
         STC = new ScalarTypeComposer(
           new GraphQLScalarType({
             name: typeName,

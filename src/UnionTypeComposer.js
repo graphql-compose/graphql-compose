@@ -17,7 +17,6 @@ import {
 } from './ObjectTypeComposer';
 import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
-import { TypeMapper } from './TypeMapper';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { ThunkComposer } from './ThunkComposer';
@@ -33,6 +32,7 @@ import {
   getGraphQLType,
   getComposeTypeName,
   unwrapOutputTC,
+  isTypeNameString,
   type NamedTypeComposer,
 } from './utils/typeHelpers';
 import { graphqlVersion } from './utils/graphqlVersion';
@@ -111,7 +111,7 @@ export class UnionTypeComposer<TSource, TContext> {
 
     if (isString(typeDef)) {
       const typeName: string = typeDef;
-      if (TypeMapper.isTypeNameString(typeName)) {
+      if (isTypeNameString(typeName)) {
         UTC = new UnionTypeComposer(
           new GraphQLUnionType({
             name: typeName,

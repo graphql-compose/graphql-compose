@@ -89,6 +89,76 @@ export type ComposeInputTypeDefinition =
       | ReadonlyArray<TypeAsString | Readonly<ComposeInputType> | Readonly<GraphQLInputType>>
     >;
 
+/**
+ * Check that string is a valid GraphQL Type name.
+ * According to spec valid mask is `/^[_A-Za-z][_0-9A-Za-z]*$/`.
+ */
+export function isTypeNameString(str: string): boolean;
+
+/**
+ * Checks that string is SDL definition of some type
+ * eg. `type Out { name: String! }` or `input Filter { minAge: Int }` etc.
+ */
+export function isTypeDefinitionString(str: string): boolean;
+
+/**
+ * Checks that string is SDL definition of any Output type
+ */
+export function isSomeOutputTypeDefinitionString(str: string): boolean;
+
+/**
+ * Checks that string is SDL definition of any Input type
+ */
+export function isSomeInputTypeDefinitionString(str: string): boolean;
+
+/**
+ * Checks that string is OutputType SDL definition
+ * eg. `type Out { name: String! }`
+ */
+export function isOutputTypeDefinitionString(str: string): boolean;
+
+/**
+ * Checks that string is InputType SDL definition
+ * eg. `input Filter { minAge: Int }`
+ */
+export function isInputTypeDefinitionString(str: string): boolean;
+
+/**
+ * Checks that string is EnumType SDL definition
+ * eg. `enum Sort { ASC DESC }`
+ */
+export function isEnumTypeDefinitionString(str: string): boolean;
+
+/**
+ * Checks that string is ScalarType SDL definition
+ * eg. `scalar UInt`
+ */
+export function isScalarTypeDefinitionString(str: string): boolean;
+
+/**
+ * Checks that string is InterfaceType SDL definition
+ * eg. `interface User { name: String }`
+ */
+export function isInterfaceTypeDefinitionString(str: string): boolean;
+
+/**
+ * Checks that string is UnionType SDL definition
+ * eg. `union User = A | B`
+ */
+export function isUnionTypeDefinitionString(str: string): boolean;
+
+/**
+ * Check that provided TypeComposer is OutputType (Object, Scalar, Enum, Interface, Union).
+ * It may be wrapped in NonNull or List.
+ */
+export function isSomeOutputTypeComposer(type: any): type is ComposeOutputType<any>;
+
+/**
+ * Check that provided TypeComposer is InputType (InputObject, Scalar, Enum).
+ * It may be wrapped in NonNull or List.
+ */
+export function isSomeInputTypeComposer(type: any): type is ComposeInputType;
+
 export function isComposeType(type: any): type is ComposeOutputType<any> | ComposeInputType;
 
 export function isComposeOutputType(type: any): type is ComposeOutputType<any>;

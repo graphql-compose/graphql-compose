@@ -14,7 +14,6 @@ import type {
   DirectiveArgs,
 } from './utils/definitions';
 import { SchemaComposer } from './SchemaComposer';
-import { TypeMapper } from './TypeMapper';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import type { ThunkComposer } from './ThunkComposer';
@@ -27,12 +26,15 @@ import type {
 } from './graphql';
 import { graphqlVersion } from './utils/graphqlVersion';
 import { defineInputFieldMap, convertInputFieldMapToConfig } from './utils/configToDefine';
-import { unwrapInputTC, type NamedTypeComposer } from './utils/typeHelpers';
-import type {
-  ComposeInputType,
-  ComposeNamedInputType,
-  ComposeInputTypeDefinition,
+import {
+  unwrapInputTC,
+  isTypeNameString,
+  type NamedTypeComposer,
+  type ComposeInputType,
+  type ComposeNamedInputType,
+  type ComposeInputTypeDefinition,
 } from './utils/typeHelpers';
+
 import { printInputObject, type SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type InputTypeComposerDefinition =
@@ -114,7 +116,7 @@ export class InputTypeComposer<TContext> {
 
     if (isString(typeDef)) {
       const typeName: string = typeDef;
-      if (TypeMapper.isTypeNameString(typeName)) {
+      if (isTypeNameString(typeName)) {
         ITC = new InputTypeComposer(
           new GraphQLInputObjectType({
             name: typeName,

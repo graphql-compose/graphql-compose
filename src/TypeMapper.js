@@ -29,6 +29,7 @@ import type {
   EnumTypeExtensionNode,
   ScalarTypeExtensionNode,
 } from 'graphql/language/ast';
+import deprecate from './utils/deprecate';
 import { inspect } from './utils/misc';
 import find from './utils/polyfills/find';
 import {
@@ -99,13 +100,23 @@ import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
 import type { Thunk, ExtensionsDirective } from './utils/definitions';
 import { isFunction, isObject } from './utils/is';
-import type {
-  AnyTypeComposer,
-  ComposeOutputType,
-  ComposeOutputTypeDefinition,
-  ComposeInputType,
-  ComposeInputTypeDefinition,
-  NamedTypeComposer,
+import {
+  type AnyTypeComposer,
+  type ComposeOutputType,
+  type ComposeOutputTypeDefinition,
+  type ComposeInputType,
+  type ComposeInputTypeDefinition,
+  type NamedTypeComposer,
+  isInputTypeDefinitionString,
+  isTypeDefinitionString,
+  isOutputTypeDefinitionString,
+  isInterfaceTypeDefinitionString,
+  isSomeOutputTypeComposer,
+  isSomeInputTypeComposer,
+  isTypeNameString,
+  isEnumTypeDefinitionString,
+  isScalarTypeDefinitionString,
+  isUnionTypeDefinitionString,
 } from './utils/typeHelpers';
 
 export type TypeDefinitionString = string; // eg type Name { field: Int }
@@ -126,67 +137,66 @@ export class TypeMapper<TContext> {
     /* :: return this; */
   }
 
+  /* @deprecated 8.0.0 */
   static isOutputType(type: any): boolean {
-    return (
-      type instanceof ScalarTypeComposer ||
-      type instanceof ObjectTypeComposer ||
-      type instanceof InterfaceTypeComposer ||
-      type instanceof UnionTypeComposer ||
-      type instanceof EnumTypeComposer ||
-      (type instanceof NonNullComposer && TypeMapper.isOutputType(type.ofType)) ||
-      (type instanceof ListComposer && TypeMapper.isOutputType(type.ofType)) ||
-      type instanceof ThunkComposer
-    );
+    deprecate("Use `import { isSomeOutputTypeComposer } from './utils/typeHelpers'` instead.");
+    return isSomeOutputTypeComposer(type);
   }
 
+  /* @deprecated 8.0.0 */
   static isInputType(type: any): boolean {
-    return (
-      type instanceof ScalarTypeComposer ||
-      type instanceof EnumTypeComposer ||
-      type instanceof InputTypeComposer ||
-      (type instanceof NonNullComposer && TypeMapper.isInputType(type.ofType)) ||
-      (type instanceof ListComposer && TypeMapper.isInputType(type.ofType)) ||
-      type instanceof ThunkComposer
-    );
+    deprecate("Use `import { isSomeInputTypeComposer } from './utils/typeHelpers'` instead.");
+    return isSomeInputTypeComposer(type);
   }
 
+  /* @deprecated 8.0.0 */
   static isTypeNameString(str: string): boolean {
-    return /^[_A-Za-z][_0-9A-Za-z]*$/.test(str);
+    deprecate("Use `import { isTypeNameString } from './utils/typeHelpers'` instead.");
+    return isTypeNameString(str);
   }
 
+  /* @deprecated 8.0.0 */
   static isTypeDefinitionString(str: string): boolean {
-    return (
-      this.isOutputTypeDefinitionString(str) ||
-      this.isInputTypeDefinitionString(str) ||
-      this.isEnumTypeDefinitionString(str) ||
-      this.isScalarTypeDefinitionString(str) ||
-      this.isInterfaceTypeDefinitionString(str) ||
-      this.isUnionTypeDefinitionString(str)
-    );
+    deprecate("Use `import { isTypeDefinitionString } from './utils/typeHelpers'` instead.");
+    return isTypeDefinitionString(str);
   }
 
+  /* @deprecated 8.0.0 */
   static isOutputTypeDefinitionString(str: string): boolean {
-    return /type\s[^{]+\{[^}]+\}/im.test(str);
+    deprecate("Use `import { isOutputTypeDefinitionString } from './utils/typeHelpers'` instead.");
+    return isOutputTypeDefinitionString(str);
   }
 
+  /* @deprecated 8.0.0 */
   static isInputTypeDefinitionString(str: string): boolean {
-    return /input\s[^{]+\{[^}]+\}/im.test(str);
+    deprecate("Use `import { isInputTypeDefinitionString } from './utils/typeHelpers'` instead.");
+    return isInputTypeDefinitionString(str);
   }
 
+  /* @deprecated 8.0.0 */
   static isEnumTypeDefinitionString(str: string): boolean {
-    return /enum\s[^{]+\{[^}]+\}/im.test(str);
+    deprecate("Use `import { isEnumTypeDefinitionString } from './utils/typeHelpers'` instead.");
+    return isEnumTypeDefinitionString(str);
   }
 
+  /* @deprecated 8.0.0 */
   static isScalarTypeDefinitionString(str: string): boolean {
-    return /scalar\s/im.test(str);
+    deprecate("Use `import { isScalarTypeDefinitionString } from './utils/typeHelpers'` instead.");
+    return isScalarTypeDefinitionString(str);
   }
 
+  /* @deprecated 8.0.0 */
   static isInterfaceTypeDefinitionString(str: string): boolean {
-    return /interface\s/im.test(str);
+    deprecate(
+      "Use `import { isInterfaceTypeDefinitionString } from './utils/typeHelpers'` instead."
+    );
+    return isInterfaceTypeDefinitionString(str);
   }
 
+  /* @deprecated 8.0.0 */
   static isUnionTypeDefinitionString(str: string): boolean {
-    return /union\s/im.test(str);
+    deprecate("Use `import { isUnionTypeDefinitionString } from './utils/typeHelpers'` instead.");
+    return isUnionTypeDefinitionString(str);
   }
 
   convertGraphQLTypeToComposer(type: GraphQLType): AnyTypeComposer<TContext> {
@@ -258,7 +268,7 @@ export class TypeMapper<TContext> {
     typeName?: string = ''
   ): ComposeOutputType<TContext> | void {
     if (typeof typeDef === 'string') {
-      if (TypeMapper.isInputTypeDefinitionString(typeDef)) {
+      if (isInputTypeDefinitionString(typeDef)) {
         throw new Error(
           `Should be OutputType, but got input type definition: ${inspect(typeDef)}'`
         );
@@ -268,7 +278,7 @@ export class TypeMapper<TContext> {
       if (this.schemaComposer.has(typeDef)) {
         tc = (this.schemaComposer.getAnyTC(typeDef): any);
       } else {
-        tc = TypeMapper.isTypeDefinitionString(typeDef)
+        tc = isTypeDefinitionString(typeDef)
           ? this.convertSDLTypeDefinition(typeDef)
           : this.convertSDLWrappedTypeName(typeDef);
 
@@ -276,11 +286,11 @@ export class TypeMapper<TContext> {
           throw new Error(`Cannot convert to OutputType the following string: ${inspect(typeDef)}`);
         }
       }
-      if (!TypeMapper.isOutputType(tc)) {
+      if (!isSomeOutputTypeComposer(tc)) {
         throw new Error(`Provided incorrect OutputType: ${inspect(typeDef)}`);
       }
       return (tc: any);
-    } else if (TypeMapper.isOutputType(typeDef)) {
+    } else if (isSomeOutputTypeComposer(typeDef)) {
       return (typeDef: any);
     } else if (Array.isArray(typeDef)) {
       if (typeDef.length !== 1) {
@@ -299,7 +309,7 @@ export class TypeMapper<TContext> {
       return new ThunkComposer(() => {
         const def = typeDef();
         const tc = this.convertOutputFieldConfig((def: any), fieldName, typeName).type;
-        if (!TypeMapper.isOutputType(tc)) {
+        if (!isSomeOutputTypeComposer(tc)) {
           throw new Error(`Provided incorrect OutputType: Function[${inspect(def)}]`);
         }
         return tc;
@@ -308,7 +318,7 @@ export class TypeMapper<TContext> {
       return typeDef.getTypeComposer();
     } else if (typeDef instanceof GraphQLList || typeDef instanceof GraphQLNonNull) {
       const type = this.convertGraphQLTypeToComposer(typeDef);
-      if (TypeMapper.isOutputType(type)) {
+      if (isSomeOutputTypeComposer(type)) {
         return (type: any);
       } else {
         throw new Error(`Provided incorrect OutputType: ${inspect(type)}`);
@@ -478,7 +488,7 @@ export class TypeMapper<TContext> {
     typeName?: string = ''
   ): ComposeInputType | void {
     if (typeof typeDef === 'string') {
-      if (TypeMapper.isOutputTypeDefinitionString(typeDef)) {
+      if (isOutputTypeDefinitionString(typeDef)) {
         throw new Error(`Should be InputType, but got output type definition: ${inspect(typeDef)}`);
       }
 
@@ -486,7 +496,7 @@ export class TypeMapper<TContext> {
       if (this.schemaComposer.has(typeDef)) {
         tc = (this.schemaComposer.getAnyTC(typeDef): any);
       } else {
-        tc = TypeMapper.isTypeDefinitionString(typeDef)
+        tc = isTypeDefinitionString(typeDef)
           ? this.convertSDLTypeDefinition(typeDef)
           : this.convertSDLWrappedTypeName(typeDef);
 
@@ -494,12 +504,12 @@ export class TypeMapper<TContext> {
           throw new Error(`Cannot convert to InputType the following string: ${inspect(typeDef)}`);
         }
       }
-      if (!TypeMapper.isInputType(tc)) {
+      if (!isSomeInputTypeComposer(tc)) {
         throw new Error(`Provided incorrect InputType: ${inspect(typeDef)}`);
       }
 
       return (tc: any);
-    } else if (TypeMapper.isInputType(typeDef)) {
+    } else if (isSomeInputTypeComposer(typeDef)) {
       return (typeDef: any);
     } else if (Array.isArray(typeDef)) {
       if (typeDef.length !== 1) {
@@ -518,14 +528,14 @@ export class TypeMapper<TContext> {
       return new ThunkComposer(() => {
         const def = typeDef();
         const tc = this.convertInputFieldConfig(def, fieldName, typeName).type;
-        if (!TypeMapper.isInputType(tc)) {
+        if (!isSomeInputTypeComposer(tc)) {
           throw new Error(`Provided incorrect InputType: Function[${inspect(def)}]`);
         }
         return tc;
       });
     } else if (typeDef instanceof GraphQLList || typeDef instanceof GraphQLNonNull) {
       const type = this.convertGraphQLTypeToComposer(typeDef);
-      if (TypeMapper.isInputType(type)) {
+      if (isSomeInputTypeComposer(type)) {
         return (type: any);
       } else {
         throw new Error(`Provided incorrect InputType: ${inspect(type)}`);
@@ -611,7 +621,7 @@ export class TypeMapper<TContext> {
     if (this.schemaComposer.hasInstance(typeDef, InterfaceTypeComposer)) {
       return this.schemaComposer.getIFTC(typeDef);
     } else if (typeof typeDef === 'string') {
-      const tc = TypeMapper.isInterfaceTypeDefinitionString(typeDef)
+      const tc = isInterfaceTypeDefinitionString(typeDef)
         ? this.convertSDLTypeDefinition(typeDef)
         : this.convertSDLWrappedTypeName(typeDef);
 
@@ -691,7 +701,7 @@ export class TypeMapper<TContext> {
 
   typeFromASTInput(typeNode: TypeNode): ComposeInputType {
     const tc = this.typeFromAST(typeNode);
-    if (!TypeMapper.isInputType(tc)) {
+    if (!isSomeInputTypeComposer(tc)) {
       throw new Error(`TypeAST should be for Input types. But recieved ${inspect(typeNode)}`);
     }
     return (tc: any);
@@ -699,7 +709,7 @@ export class TypeMapper<TContext> {
 
   typeFromASTOutput(typeNode: TypeNode): ComposeOutputType<TContext> {
     const tc = this.typeFromAST(typeNode);
-    if (!TypeMapper.isOutputType(tc)) {
+    if (!isSomeOutputTypeComposer(tc)) {
       throw new Error(`TypeAST should be for Output types. But recieved ${inspect(typeNode)}`);
     }
     return (tc: any);
@@ -785,7 +795,7 @@ export class TypeMapper<TContext> {
         } else {
           const typeDef = this.schemaComposer.get(typeName);
           const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
-          if (TypeMapper.isInputType(wrappedType)) {
+          if (isSomeInputTypeComposer(wrappedType)) {
             ac.defaultValue = valueFromAST(
               value.defaultValue,
               ((wrappedType.getType(): any): GraphQLInputType)
@@ -925,7 +935,7 @@ export class TypeMapper<TContext> {
       const key = value.name.value;
       let val;
       const wrappedType = this.typeFromAST(value.type);
-      if (TypeMapper.isInputType(wrappedType)) {
+      if (isSomeInputTypeComposer(wrappedType)) {
         val = { type: wrappedType.getType(), description: getDescription(value) };
       } else {
         throw new Error('Non-input type as an argument.');
