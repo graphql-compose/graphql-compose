@@ -12,13 +12,7 @@ import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
-import {
-  ObjMap,
-  Extensions,
-  ExtensionsDirective,
-  DirectiveArgs,
-  ObjMapReadOnly,
-} from './utils/definitions';
+import { ObjMap, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 import { NamedTypeComposer } from './utils/typeHelpers';
 
 export type EnumTypeComposerDefinition =
@@ -51,7 +45,7 @@ export type EnumTypeComposerValueConfigDefinition = {
 };
 
 export type EnumTypeComposerValueConfigMap = ObjMap<EnumTypeComposerValueConfig>;
-export type EnumTypeComposerValueConfigMapDefinition = ObjMapReadOnly<
+export type EnumTypeComposerValueConfigMapDefinition = ObjMap<
   EnumTypeComposerValueConfigDefinition
 >;
 

@@ -20,14 +20,7 @@ import {
   ResolverMiddleware,
 } from './Resolver';
 import { SchemaComposer } from './SchemaComposer';
-import {
-  ObjMap,
-  Thunk,
-  Extensions,
-  ExtensionsDirective,
-  DirectiveArgs,
-  ObjMapReadOnly,
-} from './utils/definitions';
+import { ObjMap, Thunk, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 import { ProjectionType } from './utils/projection';
 import { TypeDefinitionString, TypeAsString } from './TypeMapper';
 import {
@@ -70,7 +63,7 @@ export type ObjectTypeComposerAsObjectDefinition<TSource, TContext> = {
 export type ObjectTypeComposerFieldConfigMap<TSource, TContext> = ObjMap<
   ObjectTypeComposerFieldConfig<TSource, TContext>
 >;
-export type ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext> = ObjMapReadOnly<
+export type ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext> = ObjMap<
   Thunk<ObjectTypeComposerFieldConfigDefinition<TSource, TContext>>
 >;
 

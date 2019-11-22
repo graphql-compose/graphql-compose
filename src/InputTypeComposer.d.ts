@@ -4,14 +4,7 @@ import {
   GraphQLInputType,
   GraphQLInputFieldConfig,
 } from './graphql';
-import {
-  Thunk,
-  ObjMap,
-  Extensions,
-  ExtensionsDirective,
-  DirectiveArgs,
-  ObjMapReadOnly,
-} from './utils/definitions';
+import { Thunk, ObjMap, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 import { SchemaComposer } from './SchemaComposer';
 import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { TypeInPath } from './utils/typeByPath';
@@ -39,7 +32,7 @@ export type InputTypeComposerAsObjectDefinition = {
 };
 
 export type InputTypeComposerFieldConfigMap = ObjMap<InputTypeComposerFieldConfig>;
-export type InputTypeComposerFieldConfigMapDefinition = ObjMapReadOnly<
+export type InputTypeComposerFieldConfigMapDefinition = ObjMap<
   Thunk<InputTypeComposerFieldConfigDefinition>
 >;
 
