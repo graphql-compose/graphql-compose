@@ -117,6 +117,12 @@ declare class TypeMapper<TContext> {
    */
   public static isInterfaceTypeDefinitionString(str: string): boolean;
 
+  /**
+   * Checks that string is UnionType SDL definition
+   * eg. `union User = A | B`
+   */
+  public static isUnionTypeDefinitionString(str: string): boolean;
+
   public convertGraphQLTypeToComposer(type: GraphQLType): AnyTypeComposer<TContext>;
 
   public convertSDLWrappedTypeName(str: TypeWrappedString | TypeNameString): GraphQLType | null;

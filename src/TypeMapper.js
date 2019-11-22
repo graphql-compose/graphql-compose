@@ -160,7 +160,8 @@ export class TypeMapper<TContext> {
       this.isInputTypeDefinitionString(str) ||
       this.isEnumTypeDefinitionString(str) ||
       this.isScalarTypeDefinitionString(str) ||
-      this.isInterfaceTypeDefinitionString(str)
+      this.isInterfaceTypeDefinitionString(str) ||
+      this.isUnionTypeDefinitionString(str)
     );
   }
 
@@ -182,6 +183,10 @@ export class TypeMapper<TContext> {
 
   static isInterfaceTypeDefinitionString(str: string): boolean {
     return /interface\s/im.test(str);
+  }
+
+  static isUnionTypeDefinitionString(str: string): boolean {
+    return /union\s/im.test(str);
   }
 
   convertGraphQLTypeToComposer(type: GraphQLType): AnyTypeComposer<TContext> {

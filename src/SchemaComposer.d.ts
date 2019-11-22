@@ -248,6 +248,18 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   public getAnyTC(typeName: string | AnyType<any> | GraphQLType): NamedTypeComposer<TContext>;
 
+  public isObjectType(type: string | AnyType<any> | GraphQLType): boolean;
+
+  public isInputType(type: string | AnyType<any> | GraphQLType): boolean;
+
+  public isScalarType(type: string | AnyType<any> | GraphQLType): boolean;
+
+  public isEnumType(type: string | AnyType<any> | GraphQLType): boolean;
+
+  public isInterfaceType(type: string | AnyType<any> | GraphQLType): boolean;
+
+  public isUnionType(type: string | AnyType<any> | GraphQLType): boolean;
+
   /**
    * -----------------------------------------------
    * Storage methods

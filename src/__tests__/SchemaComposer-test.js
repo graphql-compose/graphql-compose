@@ -1320,4 +1320,106 @@ describe('SchemaComposer', () => {
       `);
     });
   });
+
+  describe('is* methods', () => {
+    it('isObjectType', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`type MyType { name: String }`);
+      expect(sc1.isObjectType('MyType')).toBeTruthy();
+      expect(sc1.isObjectType(`type MyType { name: String }`)).toBeTruthy();
+      expect(sc1.isObjectType(sc1.createObjectTC(`type MyType1 { name: String }`))).toBeTruthy();
+      expect(sc1.isObjectType(sc1.get('MyType'))).toBeTruthy();
+      expect(sc1.isObjectType(sc1.get('MyType').getType())).toBeTruthy();
+
+      expect(sc1.isInputObjectType('MyType')).toBeFalsy();
+      expect(sc1.isScalarType('MyType')).toBeFalsy();
+      expect(sc1.isEnumType('MyType')).toBeFalsy();
+      expect(sc1.isInterfaceType('MyType')).toBeFalsy();
+      expect(sc1.isUnionType('MyType')).toBeFalsy();
+    });
+
+    it('isInputType', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`input MyType { name: String }`);
+      expect(sc1.isInputObjectType('MyType')).toBeTruthy();
+      expect(sc1.isInputObjectType(`input MyType { name: String }`)).toBeTruthy();
+      expect(
+        sc1.isInputObjectType(sc1.createInputTC(`input MyType1 { name: String }`))
+      ).toBeTruthy();
+      expect(sc1.isInputObjectType(sc1.get('MyType'))).toBeTruthy();
+      expect(sc1.isInputObjectType(sc1.get('MyType').getType())).toBeTruthy();
+
+      expect(sc1.isObjectType('MyType')).toBeFalsy();
+      expect(sc1.isScalarType('MyType')).toBeFalsy();
+      expect(sc1.isEnumType('MyType')).toBeFalsy();
+      expect(sc1.isInterfaceType('MyType')).toBeFalsy();
+      expect(sc1.isUnionType('MyType')).toBeFalsy();
+    });
+
+    it('isScalarType', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`scalar MyType`);
+      expect(sc1.isScalarType('MyType')).toBeTruthy();
+      expect(sc1.isScalarType(`scalar MyType`)).toBeTruthy();
+      expect(sc1.isScalarType(sc1.createScalarTC(`scalar MyType1`))).toBeTruthy();
+      expect(sc1.isScalarType(sc1.get('MyType'))).toBeTruthy();
+      expect(sc1.isScalarType(sc1.get('MyType').getType())).toBeTruthy();
+
+      expect(sc1.isObjectType('MyType')).toBeFalsy();
+      expect(sc1.isInputObjectType('MyType')).toBeFalsy();
+      expect(sc1.isEnumType('MyType')).toBeFalsy();
+      expect(sc1.isInterfaceType('MyType')).toBeFalsy();
+      expect(sc1.isUnionType('MyType')).toBeFalsy();
+    });
+
+    it('isEnumType', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`enum MyType { A B }`);
+      expect(sc1.isEnumType('MyType')).toBeTruthy();
+      expect(sc1.isEnumType(`enum MyType { A B }`)).toBeTruthy();
+      expect(sc1.isEnumType(sc1.createEnumTC(`enum MyType1 { A B }`))).toBeTruthy();
+      expect(sc1.isEnumType(sc1.get('MyType'))).toBeTruthy();
+      expect(sc1.isEnumType(sc1.get('MyType').getType())).toBeTruthy();
+
+      expect(sc1.isObjectType('MyType')).toBeFalsy();
+      expect(sc1.isInputObjectType('MyType')).toBeFalsy();
+      expect(sc1.isScalarType('MyType')).toBeFalsy();
+      expect(sc1.isInterfaceType('MyType')).toBeFalsy();
+      expect(sc1.isUnionType('MyType')).toBeFalsy();
+    });
+
+    it('isInterfaceType', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`interface MyType { a: Int }`);
+      expect(sc1.isInterfaceType('MyType')).toBeTruthy();
+      expect(sc1.isInterfaceType(`interface MyType { a: Int }`)).toBeTruthy();
+      expect(
+        sc1.isInterfaceType(sc1.createInterfaceTC(`interface MyType1 { a: Int }`))
+      ).toBeTruthy();
+      expect(sc1.isInterfaceType(sc1.get('MyType'))).toBeTruthy();
+      expect(sc1.isInterfaceType(sc1.get('MyType').getType())).toBeTruthy();
+
+      expect(sc1.isObjectType('MyType')).toBeFalsy();
+      expect(sc1.isInputObjectType('MyType')).toBeFalsy();
+      expect(sc1.isScalarType('MyType')).toBeFalsy();
+      expect(sc1.isEnumType('MyType')).toBeFalsy();
+      expect(sc1.isUnionType('MyType')).toBeFalsy();
+    });
+
+    it('isUnionType', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`union MyType = A | B`);
+      expect(sc1.isUnionType('MyType')).toBeTruthy();
+      expect(sc1.isUnionType(`union MyType = A | B`)).toBeTruthy();
+      expect(sc1.isUnionType(sc1.createUnionTC(`union MyType = A | B`))).toBeTruthy();
+      expect(sc1.isUnionType(sc1.get('MyType'))).toBeTruthy();
+      expect(sc1.isUnionType(sc1.get('MyType').getType())).toBeTruthy();
+
+      expect(sc1.isObjectType('MyType')).toBeFalsy();
+      expect(sc1.isInputObjectType('MyType')).toBeFalsy();
+      expect(sc1.isScalarType('MyType')).toBeFalsy();
+      expect(sc1.isEnumType('MyType')).toBeFalsy();
+      expect(sc1.isInterfaceType('MyType')).toBeFalsy();
+    });
+  });
 });
