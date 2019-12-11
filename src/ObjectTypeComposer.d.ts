@@ -47,12 +47,12 @@ export type ObjectTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
   | TypeDefinitionString
   | ObjectTypeComposerAsObjectDefinition<TSource, TContext>
-  | Readonly<ObjectTypeComposer<TSource, TContext>>
-  | Readonly<GraphQLObjectType>;
+  | ObjectTypeComposer<TSource, TContext>
+  | GraphQLObjectType;
 
 export type ObjectTypeComposerAsObjectDefinition<TSource, TContext> = {
   name: string;
-  interfaces?: null | Thunk<ReadonlyArray<InterfaceTypeComposerDefinition<any, TContext>>>;
+  interfaces?: null | Thunk<Array<InterfaceTypeComposerDefinition<any, TContext>>>;
   fields?: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>;
   isTypeOf?: null | GraphQLIsTypeOfFn<TSource, TContext>;
   description?: string | null;
@@ -70,11 +70,11 @@ export type ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext> = ObjM
 export type ObjectTypeComposerFieldConfigDefinition<TSource, TContext, TArgs = ArgsMap> =
   | ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs>
   | ComposeOutputTypeDefinition<TContext>
-  | Readonly<Resolver<any, TContext, any>>
-  | Readonly<ComposeOutputType<TContext>>;
+  | Resolver<any, TContext, any>
+  | ComposeOutputType<TContext>;
 
 export type ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs = ArgsMap> = {
-  type: Thunk<ComposeOutputTypeDefinition<TContext> | Readonly<Resolver<any, TContext, any>>>;
+  type: Thunk<ComposeOutputTypeDefinition<TContext> | Resolver<any, TContext, any>>;
   args?: ObjectTypeComposerArgumentConfigMapDefinition<TArgs>;
   resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>;
   subscribe?: GraphQLFieldResolver<TSource, TContext>;
@@ -231,7 +231,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   public setField<TArgs = ArgsMap>(
     fieldName: string,
     fieldConfig: Thunk<
-      | Readonly<ComposeOutputType<TContext>>
+      | ComposeOutputType<TContext>
       | ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
     >
   ): this;
@@ -514,9 +514,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public getInterfacesTypes(): GraphQLInterfaceType[];
 
-  public setInterfaces(
-    interfaces: ReadonlyArray<InterfaceTypeComposerDefinition<any, TContext>>
-  ): this;
+  public setInterfaces(interfaces: Array<InterfaceTypeComposerDefinition<any, TContext>>): this;
 
   public hasInterface(iface: InterfaceTypeComposerDefinition<any, TContext>): boolean;
 
@@ -527,7 +525,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public addInterfaces(
-    ifaces: ReadonlyArray<
+    ifaces: Array<
       InterfaceTypeComposerDefinition<any, TContext> | InterfaceTypeComposerThunked<any, TContext>
     >
   ): ObjectTypeComposer<TSource, TContext>;
@@ -646,9 +644,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public addRelation<TRelationSource = any, TArgs = ArgsMap>(
     fieldName: string,
-    ObjectTypeComposerRelationOpts: Readonly<
-      ObjectTypeComposerRelationOpts<TRelationSource, TSource, TContext, TArgs>
-    >
+    opts: ObjectTypeComposerRelationOpts<TRelationSource, TSource, TContext, TArgs>
   ): this;
 
   public getRelations(): ObjectTypeComposerRelationThunkMap<any, TContext>;

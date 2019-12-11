@@ -71,9 +71,7 @@ declare class TypeMapper<TContext> {
 
   public convertOutputTypeDefinition(
     typeDef: Thunk<
-      | ComposeOutputTypeDefinition<any>
-      | ObjectTypeComposerDefinition<any, any>
-      | Readonly<Resolver<any, any>>
+      ComposeOutputTypeDefinition<any> | ObjectTypeComposerDefinition<any, any> | Resolver<any, any>
     >,
     fieldName?: string,
     typeName?: string
@@ -81,7 +79,7 @@ declare class TypeMapper<TContext> {
 
   public convertOutputFieldConfig<TSource>(
     composeFC: Thunk<
-      ObjectTypeComposerFieldConfigDefinition<TSource, TContext> | Readonly<Resolver<any, TContext>>
+      ObjectTypeComposerFieldConfigDefinition<TSource, TContext> | Resolver<any, TContext>
     >,
     fieldName?: string,
     typeName?: string

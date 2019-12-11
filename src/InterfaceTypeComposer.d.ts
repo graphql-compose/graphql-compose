@@ -47,7 +47,7 @@ export type InterfaceTypeComposerDefinition<TSource, TContext> =
   | TypeDefinitionString
   | InterfaceTypeComposerAsObjectDefinition<TSource, TContext>
   | GraphQLInterfaceType
-  | Readonly<InterfaceTypeComposerThunked<any, TContext>>;
+  | InterfaceTypeComposerThunked<any, TContext>;
 
 export type InterfaceTypeComposerAsObjectDefinition<TSource, TContext> = {
   name: string;
@@ -120,7 +120,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public setField(
     name: string,
     fieldConfig: Thunk<
-      | Readonly<ComposeOutputType<TContext>>
+      | ComposeOutputType<TContext>
       | ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
     >
   ): this;

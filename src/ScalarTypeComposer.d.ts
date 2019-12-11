@@ -17,8 +17,8 @@ import { Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definiti
 
 export type ScalarTypeComposerDefinition =
   | TypeAsString
-  | Readonly<ScalarTypeComposerAsObjectDefinition>
-  | Readonly<GraphQLScalarType>;
+  | ScalarTypeComposerAsObjectDefinition
+  | GraphQLScalarType;
 
 export type ScalarTypeComposerAsObjectDefinition = GraphQLScalarTypeConfig<any, any> & {
   extensions?: Extensions;

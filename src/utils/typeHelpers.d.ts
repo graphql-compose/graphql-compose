@@ -46,16 +46,14 @@ export type ComposeOutputType<TContext> =
   | ThunkComposer<any, GraphQLOutputType>;
 
 export type ComposeOutputTypeDefinition<TContext> =
-  | Readonly<ComposeOutputType<TContext>>
-  | Readonly<GraphQLOutputType>
+  | ComposeOutputType<TContext>
+  | GraphQLOutputType
   | TypeAsString
-  | ReadonlyArray<
-      | Readonly<ComposeOutputType<TContext>>
-      | Readonly<GraphQLOutputType>
+  | Array<
+      | ComposeOutputType<TContext>
+      | GraphQLOutputType
       | TypeAsString
-      | ReadonlyArray<
-          Readonly<ComposeOutputType<TContext>> | Readonly<GraphQLOutputType> | TypeAsString
-        >
+      | Array<ComposeOutputType<TContext> | GraphQLOutputType | TypeAsString>
     >;
 
 export type ComposeNamedInputType<TContext> =
@@ -80,13 +78,13 @@ export type ComposeInputType =
 
 export type ComposeInputTypeDefinition =
   | TypeAsString
-  | Readonly<ComposeInputType>
-  | Readonly<GraphQLInputType>
-  | ReadonlyArray<
+  | ComposeInputType
+  | GraphQLInputType
+  | Array<
       | TypeAsString
-      | Readonly<ComposeInputType>
-      | Readonly<GraphQLInputType>
-      | ReadonlyArray<TypeAsString | Readonly<ComposeInputType> | Readonly<GraphQLInputType>>
+      | ComposeInputType
+      | GraphQLInputType
+      | Array<TypeAsString | ComposeInputType | GraphQLInputType>
     >;
 
 /**

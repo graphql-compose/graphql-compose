@@ -22,7 +22,7 @@ export type InputTypeComposerDefinition =
   | TypeAsString
   | TypeDefinitionString
   | InputTypeComposerAsObjectDefinition
-  | Readonly<GraphQLInputObjectType>;
+  | GraphQLInputObjectType;
 
 export type InputTypeComposerAsObjectDefinition = {
   name: string;
@@ -39,7 +39,7 @@ export type InputTypeComposerFieldConfigMapDefinition = ObjMap<
 export type InputTypeComposerFieldConfigDefinition =
   | InputTypeComposerFieldConfigAsObjectDefinition
   | ComposeInputTypeDefinition
-  | Readonly<ComposeInputType>;
+  | ComposeInputType;
 
 export type InputTypeComposerFieldConfigAsObjectDefinition = {
   type: Thunk<ComposeInputTypeDefinition>;
@@ -102,7 +102,7 @@ export class InputTypeComposer<TContext = any> {
 
   public setField(
     fieldName: string,
-    fieldConfig: Thunk<InputTypeComposerFieldConfigDefinition | Readonly<ComposeInputType>>
+    fieldConfig: Thunk<InputTypeComposerFieldConfigDefinition | ComposeInputType>
   ): this;
 
   /**

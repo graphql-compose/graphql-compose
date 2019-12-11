@@ -33,7 +33,7 @@ export type UnionTypeComposerDefinition<TSource, TContext> =
 
 export type UnionTypeComposerAsObjectDefinition<TSource, TContext> = {
   name: string;
-  types?: Thunk<ReadonlyArray<ObjectTypeComposerDefinition<any, TContext>> | null>;
+  types?: Thunk<Array<ObjectTypeComposerDefinition<any, TContext>> | null>;
   resolveType?: GraphQLTypeResolver<TSource, TContext> | null;
   description?: string | null;
   extensions?: Extensions;
@@ -49,7 +49,7 @@ export type UnionTypeComposerResolversMapDefinition<TSource, TContext> =
       ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>,
       UnionTypeComposerResolverCheckFn<TSource, TContext>
     >
-  | Readonly<UnionTypeComposerResolversMap<TSource, TContext>>;
+  | UnionTypeComposerResolversMap<TSource, TContext>;
 
 export type UnionTypeComposerResolverCheckFn<TSource, TContext> = (
   value: TSource,
@@ -106,7 +106,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   public clearTypes(): this;
 
   public setTypes(
-    types: ReadonlyArray<
+    types: Array<
       ObjectTypeComposerThunked<TSource, TContext> | ObjectTypeComposerDefinition<any, TContext>
     >
   ): this;
@@ -116,7 +116,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public addTypes(
-    types: ReadonlyArray<
+    types: Array<
       ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>
     >
   ): this;

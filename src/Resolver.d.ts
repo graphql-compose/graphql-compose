@@ -33,9 +33,9 @@ export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 
 export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
   type?: Thunk<
-    | Readonly<ComposeOutputType<TContext>>
+    | ComposeOutputType<TContext>
     | ComposeOutputTypeDefinition<TContext>
-    | Readonly<Resolver<any, TContext, any>>
+    | Resolver<any, TContext, any>
   >;
   resolve?: ResolverRpCb<TSource, TContext, TArgs>;
   args?: ObjectTypeComposerArgumentConfigMapDefinition<TArgs>;
@@ -165,9 +165,9 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
 
   public setType<TNewReturn>(
     composeType: Thunk<
-      | Readonly<ComposeOutputType<TContext>>
+      | ComposeOutputType<TContext>
       | ComposeOutputTypeDefinition<TContext>
-      | Readonly<Resolver<any, TContext, any>>
+      | Resolver<any, TContext, any>
     >
   ): Resolver<TSource, TContext, TArgs, TNewReturn>;
 
