@@ -136,6 +136,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
   public kind: ResolverKinds | void;
   public description: string | void;
   public parent: Resolver<TSource, TContext, any> | void;
+  public extensions: Extensions | void;
   public resolve: (
     resolveParams: Partial<ResolverResolveParams<TSource, TContext, TArgs>>
   ) => Promise<any> | any;
