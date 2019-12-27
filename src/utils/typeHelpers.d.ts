@@ -90,8 +90,20 @@ export type ComposeInputTypeDefinition =
 /**
  * Check that string is a valid GraphQL Type name.
  * According to spec valid mask is `/^[_A-Za-z][_0-9A-Za-z]*$/`.
+ *
+ * Valid names: Person, _Type, Zone51
+ * Invalid names: 123, 1c, String!, @Type, A-
  */
 export function isTypeNameString(str: string): boolean;
+
+/**
+ * Check that provided string is a valid GraphQL type name
+ * which can be wrapped by modifiers `[]` or `!`
+ *
+ * Valid names: Person, Type!, [[Zone51]!]!
+ * Invalid names: !1c, [String, @Type
+ */
+export function isWrappedTypeNameString(str: string): boolean;
 
 /**
  * Checks that string is SDL definition of some type
@@ -185,3 +197,10 @@ export function changeUnwrappedTC<TContext, T>(
   anyTC: T,
   cb: (tc: NamedTypeComposer<TContext>) => NamedTypeComposer<TContext> | void | null
 ): T | void | null;
+
+/**
+ * Remove modifiers `[]` and `!` from type name.
+ *
+ * Eg. Int! -> Int, [String!]! -> String
+ */
+export function unwrapTypeNameString(str: string): string;
