@@ -561,11 +561,7 @@ export class EnumTypeComposer<TContext> {
     return directive.args;
   }
 
-  toSDL(opts?: $ReadOnly<{ commentDescriptions?: ?boolean }>): string {
-    const printOpts: SchemaPrinterOptions = {
-      commentDescriptions: !!(opts && opts.commentDescriptions),
-    };
-
-    return printEnum(this.getType(), printOpts);
+  toSDL(opts?: SchemaPrinterOptions): string {
+    return printEnum(this.getType(), opts);
   }
 }

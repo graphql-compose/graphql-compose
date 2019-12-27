@@ -761,7 +761,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    */
   getTypeSDL(
     typeName: string,
-    opts?: $ReadOnly<{ deep?: ?boolean, commentDescriptions?: ?boolean }>
+    opts?: SchemaPrinterOptions & {
+      deep?: ?boolean,
+      sortTypes?: ?boolean,
+    }
   ): string {
     return this.getAnyTC(typeName).toSDL(opts);
   }

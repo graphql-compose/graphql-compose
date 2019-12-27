@@ -40,7 +40,7 @@ import {
 
 import { astFromValue } from 'graphql/utilities/astFromValue';
 
-type Options = {|
+type Options = {
   /**
    * Descriptions are defined as preceding string literals, however an older
    * experimental version of the SDL supported preceding comments as
@@ -49,8 +49,28 @@ type Options = {|
    *
    * Default: false
    */
-  commentDescriptions?: boolean,
-|};
+  commentDescriptions?: ?boolean,
+
+  /**
+   * Do not print descriptions for types
+   *
+   * Default: false
+   */
+  omitDescriptions?: ?boolean,
+
+  /**
+   * Sort fields, args and interfaces.
+   * Useful for snapshot testing.
+   *
+   * Default: false
+   */
+  sortAll?: ?boolean,
+  sortFields?: ?boolean,
+  sortArgs?: ?boolean,
+  sortInterfaces?: ?boolean,
+  sortUnions?: ?boolean,
+  sortEnums?: ?boolean,
+};
 
 export type SchemaPrinterOptions = Options;
 
@@ -173,14 +193,25 @@ export function printScalar(type: GraphQLScalarType, options?: Options): string 
   return `${printDescription(type, options)}scalar ${type.name}`;
 }
 
-export function printImplementedInterfaces(type: GraphQLObjectType | GraphQLInterfaceType): string {
+export function printImplementedInterfaces(
+  type: GraphQLObjectType | GraphQLInterfaceType,
+  options?: Options
+): string {
   const interfaces = type.getInterfaces ? (type: any).getInterfaces() : [];
-  return interfaces.length ? ` implements ${interfaces.map(i => i.name).join(' & ')}` : '';
+  if (!interfaces.length) return '';
+  if (options?.sortAll || options?.sortInterfaces) {
+    return ` implements ${interfaces
+      .map(i => i.name)
+      .sort()
+      .join(' & ')}`;
+  }
+  return ` implements ${interfaces.map(i => i.name).join(' & ')}`;
 }
 
 export function printObject(type: GraphQLObjectType, options?: Options): string {
   return `${printDescription(type, options)}type ${type.name}${printImplementedInterfaces(
-    type
+    type,
+    options
   )}${printFields(type, options)}`;
 }
 
@@ -191,34 +222,50 @@ export function printInterface(type: GraphQLInterfaceType, options?: Options): s
 }
 
 export function printUnion(type: GraphQLUnionType, options?: Options): string {
-  const types = type.getTypes();
+  let types = type.getTypes();
+  if (options?.sortAll || options?.sortUnions) {
+    types = types.sort();
+  }
   const possibleTypes = types.length ? ` = ${types.join(' | ')}` : '';
   return `${printDescription(type, options)}union ${type.name}${possibleTypes}`;
 }
 
 export function printEnum(type: GraphQLEnumType, options?: Options): string {
-  const values = type
-    .getValues()
-    .map(
-      (value, i) =>
-        `${printDescription(value, options, '  ', !i)}  ${value.name}${printDeprecated(value)}`
-    );
+  let values = type.getValues();
+  if (options?.sortAll || options?.sortEnums) {
+    values = values.sort((a, b) => a.name.localeCompare(b.name));
+  }
 
-  return `${printDescription(type, options)}enum ${type.name}${printBlock(values)}`;
+  const valuesList = values.map(
+    (value, i) =>
+      `${printDescription(value, options, '  ', !i)}  ${value.name}${printDeprecated(value)}`
+  );
+
+  return `${printDescription(type, options)}enum ${type.name}${printBlock(valuesList)}`;
 }
 
 export function printInputObject(type: GraphQLInputObjectType, options?: Options): string {
-  const fields = objectValues(type.getFields()).map(
+  let fields = objectValues(type.getFields());
+  if (options?.sortAll || options?.sortFields) {
+    fields = fields.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  const fieldsList = fields.map(
     (f, i) => `${printDescription(f, options, '  ', !i)}  ${printInputValue(f)}`
   );
-  return `${printDescription(type, options)}input ${type.name}${printBlock(fields)}`;
+  return `${printDescription(type, options)}input ${type.name}${printBlock(fieldsList)}`;
 }
 
 export function printFields(
   type: GraphQLObjectType | GraphQLInterfaceType,
   options?: Options
 ): string {
-  const fields = objectValues(type.getFields()).map(
+  let fields = objectValues(type.getFields());
+  if (options?.sortAll || options?.sortFields) {
+    fields = fields.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  const fieldsList = fields.map(
     (f, i) =>
       `${printDescription(f, options, '  ', !i)}  ${f.name}${printArgs(
         f.args,
@@ -226,7 +273,7 @@ export function printFields(
         '  '
       )}: ${String(f.type)}${printDeprecated(f)}`
   );
-  return printBlock(fields);
+  return printBlock(fieldsList);
 }
 
 export function printBlock(items: Array<string>): string {
@@ -234,13 +281,18 @@ export function printBlock(items: Array<string>): string {
 }
 
 export function printArgs(
-  args: Array<GraphQLArgument>,
+  _args: Array<GraphQLArgument>,
   options?: Options,
   indentation: string = ''
 ): string {
-  if (args.length === 0) {
+  if (_args.length === 0) {
     return '';
   }
+
+  const args =
+    options?.sortAll || options?.sortArgs
+      ? _args.sort((a, b) => a.name.localeCompare(b.name))
+      : _args;
 
   // If every arg does not have a description, print them on one line.
   if (args.every(arg => !arg.description)) {
@@ -292,7 +344,7 @@ export function printDescription(
   firstInBlock: boolean = true
 ): string {
   const { description } = def;
-  if (description == null) {
+  if (description == null || options?.omitDescriptions) {
     return '';
   }
 

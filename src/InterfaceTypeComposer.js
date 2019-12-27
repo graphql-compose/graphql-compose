@@ -1308,22 +1308,29 @@ export class InterfaceTypeComposer<TSource, TContext> {
   /**
    * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
    */
-  toSDL(opts?: $ReadOnly<{ deep?: ?boolean, commentDescriptions?: ?boolean }>): string {
-    const printOpts: SchemaPrinterOptions = {
-      commentDescriptions: !!(opts && opts.commentDescriptions),
-    };
-
-    if (opts && opts.deep) {
+  toSDL(
+    opts?: SchemaPrinterOptions & {
+      deep?: ?boolean,
+      sortTypes?: ?boolean,
+    }
+  ): string {
+    const { deep, ...restOpts } = opts || {};
+    if (deep) {
       let r = '';
-      r += printInterface(this.getType(), printOpts);
-      Array.from(this.getNestedTCs()).forEach(t => {
+      r += printInterface(this.getType(), restOpts);
+
+      let nestedTypes = Array.from(this.getNestedTCs());
+      if (opts?.sortAll || opts?.sortTypes) {
+        nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
+      }
+      nestedTypes.forEach(t => {
         if (t !== this) {
-          r += `\n\n${t.toSDL(printOpts)}`;
+          r += `\n\n${t.toSDL(restOpts)}`;
         }
       });
       return r;
     }
 
-    return printInterface(this.getType(), printOpts);
+    return printInterface(this.getType(), restOpts);
   }
 }

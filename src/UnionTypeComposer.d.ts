@@ -24,6 +24,7 @@ import {
   DirectiveArgs,
 } from './utils/definitions';
 import { NamedTypeComposer } from './utils/typeHelpers';
+import { SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type UnionTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -241,5 +242,10 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   /**
    * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
    */
-  public toSDL(opts?: { deep?: boolean; commentDescriptions?: boolean }): string;
+  public toSDL(
+    opts?: SchemaPrinterOptions & {
+      deep?: boolean;
+      sortTypes?: boolean;
+    }
+  ): string;
 }

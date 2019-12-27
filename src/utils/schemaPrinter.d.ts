@@ -28,6 +28,26 @@ type Options = {
    * Default: false
    */
   commentDescriptions?: boolean;
+
+  /**
+   * Do not print descriptions for types
+   *
+   * Default: false
+   */
+  omitDescriptions?: boolean;
+
+  /**
+   * Sort fields, args and interfaces.
+   * Useful for snapshot testing.
+   *
+   * Default: false
+   */
+  sortAll?: boolean;
+  sortFields?: boolean;
+  sortArgs?: boolean;
+  sortInterfaces?: boolean;
+  sortUnions?: boolean;
+  sortEnums?: boolean;
 };
 
 export type SchemaPrinterOptions = Options;
@@ -72,7 +92,10 @@ export function printType(type: GraphQLNamedType, options?: Options): string;
 
 export function printScalar(type: GraphQLScalarType, options?: Options): string;
 
-export function printImplementedInterfaces(type: GraphQLObjectType | GraphQLInterfaceType): string;
+export function printImplementedInterfaces(
+  type: GraphQLObjectType | GraphQLInterfaceType,
+  options?: Options
+): string;
 
 export function printObject(type: GraphQLObjectType, options?: Options): string;
 

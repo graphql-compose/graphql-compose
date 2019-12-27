@@ -354,11 +354,7 @@ export class ScalarTypeComposer<TContext> {
   /**
    * Prints SDL for current type.
    */
-  toSDL(opts?: $ReadOnly<{ commentDescriptions?: ?boolean }>): string {
-    const printOpts: SchemaPrinterOptions = {
-      commentDescriptions: !!(opts && opts.commentDescriptions),
-    };
-
-    return printScalar(this.getType(), printOpts);
+  toSDL(opts?: SchemaPrinterOptions): string {
+    return printScalar(this.getType(), opts);
   }
 }

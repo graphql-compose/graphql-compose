@@ -1277,47 +1277,91 @@ describe('SchemaComposer', () => {
       `);
     });
 
-    it('getTypeSDL()', () => {
+    describe('getTypeSDL()', () => {
       const sc1 = new SchemaComposer();
       sc1.addTypeDefs(`
-        type User {
+        type User implements IF2 & IF1 {
+          f3(filter: Filter, a: Int): Boolean 
           f1: Int
-          f2(filter: Filter): Boolean 
+          f2: Boolean
         }
-        input Filter { a: String }
+        input Filter { b: Int, a: String }
         input AnotherType { a: String }
+        interface IF1 { f2: Int f1: Int }
+        interface IF2 { f2: Int }
       `);
 
-      expect(sc1.getTypeSDL('User')).toMatchInlineSnapshot(`
-        "type User {
-          f1: Int
-          f2(filter: Filter): Boolean
-        }"
-      `);
+      it('just single type', () => {
+        expect(sc1.getTypeSDL('User')).toMatchInlineSnapshot(`
+          "type User implements IF2 & IF1 {
+            f3(filter: Filter, a: Int): Boolean
+            f1: Int
+            f2: Boolean
+          }"
+        `);
+      });
 
-      expect(sc1.getTypeSDL('User', { deep: true })).toMatchInlineSnapshot(`
-        "type User {
-          f1: Int
-          f2(filter: Filter): Boolean
-        }
+      it('type with nested types and without comments', () => {
+        expect(sc1.getTypeSDL('User', { deep: true, omitDescriptions: true }))
+          .toMatchInlineSnapshot(`
+          "type User implements IF2 & IF1 {
+            f3(filter: Filter, a: Int): Boolean
+            f1: Int
+            f2: Boolean
+          }
 
-        \\"\\"\\"
-        The \`Int\` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.
-        \\"\\"\\"
-        scalar Int
+          scalar Boolean
 
-        \\"\\"\\"The \`Boolean\` scalar type represents \`true\` or \`false\`.\\"\\"\\"
-        scalar Boolean
+          input Filter {
+            b: Int
+            a: String
+          }
 
-        input Filter {
-          a: String
-        }
+          scalar Int
 
-        \\"\\"\\"
-        The \`String\` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
-        \\"\\"\\"
-        scalar String"
-      `);
+          scalar String
+
+          interface IF2 {
+            f2: Int
+          }
+
+          interface IF1 {
+            f2: Int
+            f1: Int
+          }"
+        `);
+      });
+
+      it('type with nested and sorting for snapshots', () => {
+        expect(sc1.getTypeSDL('User', { sortAll: true, deep: true, omitDescriptions: true }))
+          .toMatchInlineSnapshot(`
+          "type User implements IF1 & IF2 {
+            f1: Int
+            f2: Boolean
+            f3(a: Int, filter: Filter): Boolean
+          }
+
+          scalar Boolean
+
+          input Filter {
+            a: String
+            b: Int
+          }
+
+          interface IF1 {
+            f1: Int
+            f2: Int
+          }
+
+          interface IF2 {
+            f2: Int
+          }
+
+          scalar Int
+
+          scalar String"
+        `);
+      });
     });
   });
 

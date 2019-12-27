@@ -551,16 +551,13 @@ describe('UnionTypeComposer', () => {
         type B { f2: LonLat }
       `);
 
-      expect(sc1.getUTC('C').toSDL({ deep: true })).toMatchInlineSnapshot(`
+      expect(sc1.getUTC('C').toSDL({ deep: true, omitDescriptions: true })).toMatchInlineSnapshot(`
         "union C = A | B
 
         type A {
           f1: Int
         }
 
-        \\"\\"\\"
-        The \`Int\` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.
-        \\"\\"\\"
         scalar Int
 
         type B {
@@ -572,9 +569,6 @@ describe('UnionTypeComposer', () => {
           lat: Float
         }
 
-        \\"\\"\\"
-        The \`Float\` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).
-        \\"\\"\\"
         scalar Float"
       `);
     });

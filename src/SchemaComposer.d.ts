@@ -18,6 +18,7 @@ import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
 import { Resolver, ResolverDefinition } from './Resolver';
 import { NamedTypeComposer, AnyType } from './utils/typeHelpers';
+import { SchemaPrinterOptions } from './utils/schemaPrinter';
 
 type ExtraSchemaConfig = {
   types?: GraphQLNamedType[] | null;
@@ -327,11 +328,14 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    */
   public getTypeSDL(
     typeName: string,
-    opts?: { deep?: boolean; commentDescriptions?: boolean }
+    opts?: SchemaPrinterOptions & {
+      deep?: boolean;
+      sortTypes?: boolean;
+    }
   ): string;
 
   /**
    * Return schema as SDL string.
    */
-  public toSDL(opts?: { commentDescriptions?: boolean }): string;
+  public toSDL(opts?: SchemaPrinterOptions): string;
 }

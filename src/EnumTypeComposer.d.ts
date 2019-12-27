@@ -14,6 +14,7 @@ import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { ObjMap, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 import { NamedTypeComposer } from './utils/typeHelpers';
+import { SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type EnumTypeComposerDefinition =
   | TypeAsString
@@ -225,5 +226,5 @@ export class EnumTypeComposer<TContext = any> {
   /**
    * Prints SDL for current type.
    */
-  public toSDL(opts?: { commentDescriptions?: boolean }): string;
+  public toSDL(opts?: SchemaPrinterOptions): string;
 }

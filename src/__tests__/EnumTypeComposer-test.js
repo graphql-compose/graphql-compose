@@ -387,6 +387,12 @@ describe('EnumTypeComposer', () => {
           DESC
         }"
       `);
+      expect(t.toSDL({ omitDescriptions: true })).toMatchInlineSnapshot(`
+        "enum Sort {
+          ASC
+          DESC
+        }"
+      `);
     });
   });
 });

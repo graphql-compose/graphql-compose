@@ -199,6 +199,7 @@ describe('ScalarTypeComposer', () => {
         "\\"\\"\\"desc1\\"\\"\\"
         scalar UInt"
       `);
+      expect(t.toSDL({ omitDescriptions: true })).toMatchInlineSnapshot(`"scalar UInt"`);
     });
   });
 });

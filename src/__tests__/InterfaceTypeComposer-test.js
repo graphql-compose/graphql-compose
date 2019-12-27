@@ -1050,6 +1050,11 @@ describe('InterfaceTypeComposer', () => {
           name(a: Int): String
         }"
       `);
+      expect(t.toSDL({ omitDescriptions: true })).toMatchInlineSnapshot(`
+        "interface IUser {
+          name(a: Int): String
+        }"
+      `);
     });
   });
 });

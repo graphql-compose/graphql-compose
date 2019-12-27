@@ -14,6 +14,7 @@ import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { TypeAsString } from './TypeMapper';
 import { Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
+import { SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type ScalarTypeComposerDefinition =
   | TypeAsString
@@ -142,5 +143,5 @@ export class ScalarTypeComposer<TContext = any> {
   /**
    * Prints SDL for current type.
    */
-  public toSDL(opts?: { commentDescriptions?: boolean }): string;
+  public toSDL(opts?: SchemaPrinterOptions): string;
 }

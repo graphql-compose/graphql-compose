@@ -1562,7 +1562,8 @@ describe('ObjectTypeComposer', () => {
         type B { f2: User }
       `);
 
-      expect(sc1.getOTC('User').toSDL({ deep: true })).toMatchInlineSnapshot(`
+      expect(sc1.getOTC('User').toSDL({ deep: true, omitDescriptions: true }))
+        .toMatchInlineSnapshot(`
         "type User implements I1 & I2 {
           f1: String
           f2: Int
@@ -1570,17 +1571,10 @@ describe('ObjectTypeComposer', () => {
           f4(f: Filter): Boolean
         }
 
-        \\"\\"\\"
-        The \`String\` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
-        \\"\\"\\"
         scalar String
 
-        \\"\\"\\"
-        The \`Int\` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.
-        \\"\\"\\"
         scalar Int
 
-        \\"\\"\\"The \`Boolean\` scalar type represents \`true\` or \`false\`.\\"\\"\\"
         scalar Boolean
 
         input Filter {
