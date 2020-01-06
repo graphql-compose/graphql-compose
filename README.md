@@ -14,7 +14,7 @@
 
 [GraphQL](http://graphql.org/) – is a query language for APIs. [graphql-js](https://github.com/graphql/graphql-js) is the reference implementation of GraphQL for nodejs which introduce GraphQL type system for describing schema _(definition over configuration)_ and executes queries on the server side. [express-graphql](https://github.com/graphql/express-graphql) is a HTTP server which gets request data, passes it to `graphql-js` and returned result passes to response.
 
-**`graphql-compose`** – the _imperative tool_ which worked on top of `graphql-js`. It provides some methods for creating types and GraphQL Models (so I call types with a list of common resolvers) for further building of complex relations in your schema.
+**`graphql-compose`** – the _imperative tool_ which works on top of `graphql-js`. It provides some methods for creating types and GraphQL Models (so I call types with a list of common resolvers) for further building of complex relations in your schema.
 
 * provides methods for editing GraphQL output/input types (add/remove fields/args/interfaces)
 * introduces `Resolver`s – the named graphql fieldConfigs, which can be used for finding, updating, removing records
@@ -24,7 +24,7 @@
 * provides `GraphQL schema language` for defining simple types
 * adds additional types `Date`, `Json`
 
-**`graphql-compose-[plugin]`** – is a _declarative generators/plugins_ that build on top of `graphql-compose`, which take some ORMs, schema definitions and creates GraphQL Models from them or modify existed GraphQL Types.
+**`graphql-compose-[plugin]`** – are _declarative generators/plugins_ built on top of `graphql-compose`, which take some ORMs, schema definitions and create GraphQL Models from them or modify existing GraphQL Types.
 
 Type generator plugins:
 
@@ -37,7 +37,7 @@ Utility plugins:
 
 * [graphql-compose-relay](https://github.com/graphql-compose/graphql-compose-relay) - reassemble GraphQL types with `Relay` specific things, like `Node` type and interface, `globalId`, `clientMutationId`.
 * [graphql-compose-connection](https://github.com/graphql-compose/graphql-compose-connection) - generates `connection` Resolver from `findMany` and `count` Resolvers.
-* [graphql-compose-dataloader](https://github.com/stoffern/graphql-compose-dataloader) - add DataLoader to graphql-composer resolvers.
+* [graphql-compose-dataloader](https://github.com/stoffern/graphql-compose-dataloader) - adds DataLoader to graphql-composer resolvers.
 
 ## Documentation
 
