@@ -47,6 +47,7 @@ export { deepmerge } from './utils/deepmerge';
 export { filterByDotPaths } from './utils/filterByDotPaths';
 export { pluralize } from './utils/pluralize';
 export { visitSchema } from './utils/schemaVisitor';
+export { dedent } from './utils/dedent';
 
 export type {
   ObjectTypeComposerThunked,

@@ -19,6 +19,7 @@ import { ThunkComposer } from './ThunkComposer';
 import { Resolver, type ResolverDefinition } from './Resolver';
 import { isFunction } from './utils/is';
 import { inspect, forEachKey } from './utils/misc';
+import { dedent } from './utils/dedent';
 import {
   getGraphQLType,
   isTypeComposer,
@@ -31,6 +32,7 @@ import {
   isEnumTypeDefinitionString,
   isInterfaceTypeDefinitionString,
   isUnionTypeDefinitionString,
+  cloneTypeTo,
   type AnyType,
   type NamedTypeComposer,
 } from './utils/typeHelpers';
@@ -145,16 +147,17 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     }
 
     if (!roots.query) {
-      throw new Error(
-        'Can not build schema. Must be initialized Query type. See https://github.com/graphql/graphql-js/issues/448'
-      );
+      throw new Error(dedent`
+        Can not build schema. Must be initialized Query type. 
+        See: https://github.com/graphql/graphql-js/issues/448
+      `);
     }
 
     if (Object.keys(roots).length === 0) {
-      throw new Error(
-        'Can not build schema. Must be initialized at least one ' +
-          'of the following types: Query, Mutation, Subscription.'
-      );
+      throw new Error(dedent`
+        Can not build schema. Must be initialized at least one of the following types: 
+          Query, Mutation, Subscription.
+      `);
     }
 
     const types = [
@@ -324,7 +327,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
         });
         return;
       }
-      throw new Error(`Cannot add resolver to the following type ${inspect(tc)}`);
+      throw new Error(dedent`
+        Cannot add resolver to the following type: 
+          ${inspect(tc)}
+      `);
     });
   }
 
@@ -411,7 +417,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       return UnionTypeComposer.createTemp(type, this);
     }
 
-    throw new Error(`Cannot create as TypeComposer the following value: ${inspect(type)}.`);
+    throw new Error(dedent`
+      Cannot create as TypeComposer the following value: 
+        ${inspect(type)}.
+    `);
   }
 
   /* @deprecated 8.0.0 */
@@ -599,11 +608,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       return UnionTypeComposer.create(type, this);
     }
 
-    throw new Error(
-      `Type with name ${inspect(
-        typeOrName
-      )} cannot be obtained as any Composer helper. Put something strange?`
-    );
+    throw new Error(dedent`
+      Type with name ${inspect(typeOrName)} cannot be obtained as any Composer helper.
+      Put something strange?
+    `);
   }
 
   /* @deprecated 8.0.0 */
@@ -687,11 +695,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   addDirective(directive: GraphQLDirective): SchemaComposer<TContext> {
     if (!(directive instanceof GraphQLDirective)) {
-      throw new Error(
-        `You should provide GraphQLDirective to schemaComposer.addDirective(), but recieved ${inspect(
-          directive
-        )}`
-      );
+      throw new Error(dedent`
+        You should provide GraphQLDirective to schemaComposer.addDirective(), but recieved: 
+          ${inspect(directive)}
+      `);
     }
     if (!this.hasDirective(directive)) {
       this._directives.push(directive);
