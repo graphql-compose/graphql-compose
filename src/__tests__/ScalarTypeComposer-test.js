@@ -139,6 +139,18 @@ describe('ScalarTypeComposer', () => {
     });
   });
 
+  describe('cloneTo()', () => {
+    it('scalar types must be the same', () => {
+      const sc2 = new SchemaComposer();
+      const cloned = stc.cloneTo(sc2);
+
+      expect(stc).toBe(cloned);
+      expect(stc.getTypeName()).toEqual(cloned.getTypeName());
+      expect(stc.getType()).toBe(cloned.getType());
+      expect(sc2.getSTC(stc.getTypeName())).toBe(stc);
+    });
+  });
+
   describe('directive methods', () => {
     it('type level directive methods', () => {
       const tc1 = schemaComposer.createScalarTC(`

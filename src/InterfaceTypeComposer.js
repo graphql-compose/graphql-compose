@@ -46,6 +46,7 @@ import {
   unwrapOutputTC,
   unwrapInputTC,
   isTypeNameString,
+  cloneTypeTo,
   type NamedTypeComposer,
 } from './utils/typeHelpers';
 import { defineFieldMap, convertObjectFieldMapToConfig } from './utils/configToDefine';
@@ -85,7 +86,7 @@ export type InterfaceTypeComposerResolverCheckFn<TSource, TContext> = (
 
 export type InterfaceTypeComposerThunked<TReturn, TContext> =
   | InterfaceTypeComposer<TReturn, TContext>
-  | ThunkComposer<InterfaceTypeComposer<TReturn, TContext>, GraphQLInterfaceType>;
+  | ThunkComposer<InterfaceTypeComposer<any, any>, GraphQLInterfaceType>;
 
 export class InterfaceTypeComposer<TSource, TContext> {
   schemaComposer: SchemaComposer<TContext>;
@@ -766,6 +767,53 @@ export class InterfaceTypeComposer<TSource, TContext> {
     cloned._gqcTypeResolvers = new Map(this._gqcTypeResolvers);
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
+
+    return cloned;
+  }
+
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    nonCloneableTypes?: Set<any> = new Set()
+  ): InterfaceTypeComposer<any, any> {
+    if (!anotherSchemaComposer) {
+      throw new Error('You should provide SchemaComposer for InterfaceTypeComposer.cloneTo()');
+    }
+
+    if (nonCloneableTypes.has(this)) return this;
+    const cloned = InterfaceTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
+    nonCloneableTypes.add(cloned);
+
+    cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
+      ...fieldConfig,
+      type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, nonCloneableTypes),
+      args: mapEachKey(fieldConfig.args, argConfig => ({
+        ...argConfig,
+        type: cloneTypeTo(argConfig.type, anotherSchemaComposer, nonCloneableTypes),
+        extensions: { ...argConfig.extensions },
+      })),
+      extensions: { ...fieldConfig.extensions },
+    }));
+    cloned._gqcExtensions = { ...this._gqcExtensions };
+    cloned.setDescription(this.getDescription());
+
+    // clone this._gqcTypeResolvers
+    const typeResolversMap = this.getTypeResolvers();
+    if (typeResolversMap.size > 0) {
+      const clonedTypeResolvers: InterfaceTypeComposerResolversMap<any> = new Map();
+      typeResolversMap.forEach((fn, tc) => {
+        const clonedTC: ObjectTypeComposer<any, any> | GraphQLObjectType = (cloneTypeTo(
+          tc,
+          anotherSchemaComposer,
+          nonCloneableTypes
+        ): any);
+        clonedTypeResolvers.set(clonedTC, fn);
+      });
+      cloned.setTypeResolvers(clonedTypeResolvers);
+    }
 
     return cloned;
   }

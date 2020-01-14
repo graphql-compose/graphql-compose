@@ -691,4 +691,68 @@ describe('InputTypeComposer', () => {
       `);
     });
   });
+
+  describe('clone()', () => {
+    it('should clone type', () => {
+      itc.setExtension('ext1', 123);
+      itc.setFieldExtension('input1', 'ext2', 456);
+      const cloned = itc.clone('ClonedInput');
+      expect(cloned.getTypeName()).toEqual('ClonedInput');
+      expect(itc.getType()).not.toBe(cloned.getType());
+
+      // field config should be different
+      cloned.setField('input3', 'String');
+      expect(cloned.hasField('input3')).toBeTruthy();
+      expect(itc.hasField('input3')).toBeFalsy();
+
+      // extensions should be different
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(itc.getExtension('ext1')).toBe(123);
+      expect(cloned.getFieldExtension('input1', 'ext2')).toBe(456);
+      cloned.setFieldExtension('input1', 'ext2', 600);
+      expect(cloned.getFieldExtension('input1', 'ext2')).toBe(600);
+      expect(itc.getFieldExtension('input1', 'ext2')).toBe(456);
+
+      expect(() => {
+        const wrongArgs: any = [];
+        itc.clone(...wrongArgs);
+      }).toThrowError(/You should provide new type name/);
+    });
+  });
+
+  describe('cloneTo()', () => {
+    it('should clone type with subtypes to another Schema', () => {
+      itc.setExtension('ext1', 123);
+      itc.setFieldExtension('input1', 'ext2', 456);
+      itc.setField('complex', `input InnerType { a: String }`);
+      const sc2 = new SchemaComposer();
+      const cloned = itc.cloneTo(sc2);
+
+      expect(itc.getTypeName()).toEqual(cloned.getTypeName());
+      expect(itc).not.toBe(cloned);
+      expect(itc.getType()).not.toBe(cloned.getType());
+      expect(itc.getField('complex')).not.toBe(cloned.getField('complex'));
+      expect(itc.getFieldType('complex')).not.toBe(cloned.getFieldType('complex'));
+      expect(itc.getFieldTC('complex')).not.toBe(cloned.getFieldTC('complex'));
+
+      expect(sc2.getITC(itc.getTypeName())).not.toBe(itc);
+
+      // field config should be different
+      cloned.setField('input3', 'String');
+      expect(cloned.hasField('input3')).toBeTruthy();
+      expect(itc.hasField('input3')).toBeFalsy();
+
+      // extensions should be different
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(itc.getExtension('ext1')).toBe(123);
+      expect(cloned.getFieldExtension('input1', 'ext2')).toBe(456);
+      cloned.setFieldExtension('input1', 'ext2', 600);
+      expect(cloned.getFieldExtension('input1', 'ext2')).toBe(600);
+      expect(itc.getFieldExtension('input1', 'ext2')).toBe(456);
+    });
+  });
 });

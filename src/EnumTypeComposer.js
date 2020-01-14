@@ -380,6 +380,25 @@ export class EnumTypeComposer<TContext> {
     return cloned;
   }
 
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    nonCloneableTypes?: Set<any> = new Set()
+  ): EnumTypeComposer<any> {
+    if (!anotherSchemaComposer) {
+      throw new Error('You should provide SchemaComposer for EnumTypeComposer.cloneTo()');
+    }
+
+    if (nonCloneableTypes.has(this)) return this;
+    const cloned = EnumTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
+    nonCloneableTypes.add(cloned);
+
+    return this.clone(cloned);
+  }
+
   merge(type: GraphQLEnumType | EnumTypeComposer<any>): EnumTypeComposer<TContext> {
     let tc: ?EnumTypeComposer<any>;
     if (type instanceof GraphQLEnumType) {

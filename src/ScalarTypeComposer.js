@@ -357,4 +357,30 @@ export class ScalarTypeComposer<TContext> {
   toSDL(opts?: SchemaPrinterOptions): string {
     return printScalar(this.getType(), opts);
   }
+
+  /**
+   * Copy this scalar type to another SchemaComposer.
+   *
+   * Scalar types cannot be cloned.
+   * It will be very strange if we clone for example Boolean or Date types.
+   *
+   * This methods exists for compatibility with other TypeComposers.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    nonCloneableTypes?: Set<any> = new Set()
+  ): ScalarTypeComposer<any> {
+    if (!anotherSchemaComposer) {
+      throw new Error('You should provide SchemaComposer for ObjectTypeComposer.cloneTo()');
+    }
+
+    if (!nonCloneableTypes.has(this)) nonCloneableTypes.add(this);
+
+    // copy same type instance
+    if (!anotherSchemaComposer.has(this.getTypeName())) {
+      anotherSchemaComposer.add(this);
+    }
+
+    return this;
+  }
 }

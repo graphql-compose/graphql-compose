@@ -36,6 +36,7 @@ import {
   unwrapInputTC,
   changeUnwrappedTC,
   isComposeInputType,
+  cloneTypeTo,
 } from './utils/typeHelpers';
 import type {
   ComposeOutputType,
@@ -880,6 +881,50 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
       oldOpts.projection = { ...this.args };
     }
     return new Resolver({ ...oldOpts, ...opts }, this.schemaComposer);
+  }
+
+  /**
+   * Clone this resolver to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    nonCloneableTypes?: Set<any> = new Set()
+  ): Resolver<any, any, any> {
+    if (!anotherSchemaComposer) {
+      throw new Error('You should provide SchemaComposer for InterfaceTypeComposer.cloneTo()');
+    }
+
+    if (nonCloneableTypes.has(this)) return this;
+    const cloned = new Resolver(
+      {
+        name: this.getTypeName(),
+        displayName: this.displayName,
+        kind: this.kind,
+        description: this.description,
+        projection: this.projection,
+        extensions: { ...this.extensions },
+        resolve: this.resolve,
+      },
+      anotherSchemaComposer
+    );
+    nonCloneableTypes.add(cloned);
+
+    if (this.type) {
+      cloned.type = (this.type.cloneTo(anotherSchemaComposer, nonCloneableTypes): any);
+    }
+
+    if (this.parent) {
+      cloned.parent = this.parent.cloneTo(anotherSchemaComposer, nonCloneableTypes);
+    }
+
+    cloned.args = (mapEachKey((this.args: any), argConfig => ({
+      ...argConfig,
+      type: cloneTypeTo(argConfig.type, anotherSchemaComposer, nonCloneableTypes),
+      extensions: { ...argConfig.extensions },
+    })): any);
+
+    return cloned;
   }
 
   // -----------------------------------------------

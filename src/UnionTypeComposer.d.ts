@@ -155,6 +155,15 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
     newTypeNameOrTC: string | UnionTypeComposer<any, any>
   ): UnionTypeComposer<TSource, TContext>;
 
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    nonCloneableTypes?: Set<any>
+  ): UnionTypeComposer<any, TCtx>;
+
   public merge(type: GraphQLUnionType | UnionTypeComposer<any, any>): this;
 
   /**

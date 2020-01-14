@@ -46,6 +46,7 @@ import {
   unwrapOutputTC,
   unwrapInputTC,
   isTypeNameString,
+  cloneTypeTo,
   type NamedTypeComposer,
 } from './utils/typeHelpers';
 import type { ProjectionType } from './utils/projection';
@@ -978,6 +979,48 @@ export class ObjectTypeComposer<TSource, TContext> {
     this.getResolvers().forEach(resolver => {
       const newResolver = resolver.clone();
       cloned.addResolver(newResolver);
+    });
+
+    return cloned;
+  }
+
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    nonCloneableTypes?: Set<any> = new Set()
+  ): ObjectTypeComposer<any, any> {
+    if (!anotherSchemaComposer) {
+      throw new Error('You should provide SchemaComposer for ObjectTypeComposer.cloneTo()');
+    }
+
+    if (nonCloneableTypes.has(this)) return this;
+    const cloned = ObjectTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
+    nonCloneableTypes.add(cloned);
+
+    cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
+      ...fieldConfig,
+      type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, nonCloneableTypes),
+      args: mapEachKey(fieldConfig.args, argConfig => ({
+        ...argConfig,
+        type: cloneTypeTo(argConfig.type, anotherSchemaComposer, nonCloneableTypes),
+        extensions: { ...argConfig.extensions },
+      })),
+      extensions: { ...fieldConfig.extensions },
+    }));
+
+    cloned._gqcInterfaces = (this._gqcInterfaces.map(i =>
+      i.cloneTo(anotherSchemaComposer, nonCloneableTypes)
+    ): any);
+    cloned._gqcExtensions = { ...this._gqcExtensions };
+    cloned._gqcGetRecordIdFn = this._gqcGetRecordIdFn;
+    cloned.setDescription(this.getDescription());
+
+    this.getResolvers().forEach(resolver => {
+      const clonnedResolver = resolver.cloneTo(anotherSchemaComposer, nonCloneableTypes);
+      cloned.addResolver(clonnedResolver);
     });
 
     return cloned;

@@ -284,15 +284,30 @@ describe('EnumTypeComposer', () => {
 
   describe('clone()', () => {
     it('should clone type', () => {
-      const etc2 = etc.clone('ClonedEnum');
-      expect(etc2.getTypeName()).toEqual('ClonedEnum');
-      expect(etc.getType()).not.toBe(etc2.getType());
-      expect(etc.getField('VAL1')).not.toBe(etc2.getField('VAL1'));
+      const cloned = etc.clone('ClonedEnum');
+      expect(etc).not.toBe(cloned);
+      expect(cloned.getTypeName()).toEqual('ClonedEnum');
+      expect(etc.getType()).not.toBe(cloned.getType());
+      expect(etc.getField('VAL1')).not.toBe(cloned.getField('VAL1'));
 
       expect(() => {
         const wrongArgs: any = [];
         etc.clone(...wrongArgs);
       }).toThrowError(/You should provide newTypeName/);
+    });
+  });
+
+  describe('cloneTo()', () => {
+    it('should clone type to another Schema', () => {
+      const sc2 = new SchemaComposer();
+      const cloned = etc.cloneTo(sc2);
+
+      expect(etc.getTypeName()).toEqual(cloned.getTypeName());
+      expect(etc).not.toBe(cloned);
+      expect(etc.getType()).not.toBe(cloned.getType());
+      expect(etc.getField('VAL1')).not.toBe(cloned.getField('VAL1'));
+
+      expect(sc2.getETC(etc.getTypeName())).not.toBe(etc);
     });
   });
 

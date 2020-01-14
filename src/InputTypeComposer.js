@@ -29,6 +29,7 @@ import { defineInputFieldMap, convertInputFieldMapToConfig } from './utils/confi
 import {
   unwrapInputTC,
   isTypeNameString,
+  cloneTypeTo,
   type NamedTypeComposer,
   type ComposeInputType,
   type ComposeNamedInputType,
@@ -535,6 +536,33 @@ export class InputTypeComposer<TContext> {
 
     cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
       ...fieldConfig,
+      extensions: { ...fieldConfig.extensions },
+    }));
+    cloned._gqcExtensions = { ...this._gqcExtensions };
+    cloned.setDescription(this.getDescription());
+
+    return cloned;
+  }
+
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    nonCloneableTypes?: Set<any> = new Set()
+  ): InputTypeComposer<any> {
+    if (!anotherSchemaComposer) {
+      throw new Error('You should provide SchemaComposer for InputTypeComposer.cloneTo()');
+    }
+
+    if (nonCloneableTypes.has(this)) return this;
+    const cloned = InputTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
+    nonCloneableTypes.add(cloned);
+
+    cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
+      ...fieldConfig,
+      type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, nonCloneableTypes),
       extensions: { ...fieldConfig.extensions },
     }));
     cloned._gqcExtensions = { ...this._gqcExtensions };

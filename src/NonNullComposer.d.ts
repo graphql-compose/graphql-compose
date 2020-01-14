@@ -1,6 +1,7 @@
 import { GraphQLNonNull } from 'graphql';
 import { ListComposer } from './ListComposer';
 import { AnyTypeComposer, NamedTypeComposer } from './utils/typeHelpers';
+import { SchemaComposer } from './SchemaComposer';
 
 export class NonNullComposer<T extends AnyTypeComposer<any>> {
   public ofType: T;
@@ -16,4 +17,13 @@ export class NonNullComposer<T extends AnyTypeComposer<any>> {
   public getTypePlural(): ListComposer<NonNullComposer<T>>;
 
   public getTypeNonNull(): NonNullComposer<T>;
+
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all wrapped types.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    nonCloneableTypes?: Set<any>
+  ): NonNullComposer<AnyTypeComposer<TCtx>>;
 }

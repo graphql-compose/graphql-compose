@@ -260,6 +260,15 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
    */
   public clone(newTypeNameOrTC: string | InterfaceTypeComposer<any, any>): this;
 
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    nonCloneableTypes?: Set<any>
+  ): InterfaceTypeComposer<any, TCtx>;
+
   public merge(
     type:
       | GraphQLInterfaceType

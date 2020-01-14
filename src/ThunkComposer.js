@@ -7,6 +7,7 @@ import type { NamedTypeComposer } from './utils/typeHelpers';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { inspect } from './utils/misc';
+import type { SchemaComposer } from './SchemaComposer';
 
 export class ThunkComposer<T = NamedTypeComposer<any>, G = GraphQLType> {
   _thunk: Function;
@@ -42,7 +43,7 @@ export class ThunkComposer<T = NamedTypeComposer<any>, G = GraphQLType> {
   }
 
   getType(): G {
-    return (this.getUnwrappedTC(): any).getType();
+    return (this.ofType: any).getType();
   }
 
   getTypeName(): string {
@@ -60,5 +61,17 @@ export class ThunkComposer<T = NamedTypeComposer<any>, G = GraphQLType> {
 
   getTypeNonNull(): NonNullComposer<ThunkComposer<T, G>> {
     return new NonNullComposer(this);
+  }
+
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all wrapped types.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    nonCloneableTypes?: Set<any> = new Set()
+  ): ThunkComposer<NamedTypeComposer<any>, G> {
+    const cloned = (this.ofType: any).cloneTo(anotherSchemaComposer, nonCloneableTypes);
+    return new ThunkComposer(() => cloned, this._typeName);
   }
 }

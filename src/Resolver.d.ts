@@ -337,9 +337,23 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
 
   public get(path: string | string[]): any;
 
+  /**
+   * Clone this Resolver with overriding of some options.
+   * Internally it just copies all properties.
+   * But for `args` and `projection` it recreates objects with the same type & values (it allows to add or remove properties without affection old Resolver).
+   */
   public clone<TNewSource = TSource, TNewArgs = TArgs>(
     opts?: Partial<ResolverDefinition<TNewSource, TContext, TNewArgs>>
   ): Resolver<TNewSource, TContext, TNewArgs>;
+
+  /**
+   * Clone this resolver to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    nonCloneableTypes?: Set<any>
+  ): Resolver<any, TCtx, any>;
 
   /**
    * -----------------------------------------------

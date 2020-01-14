@@ -1,6 +1,6 @@
 /* @flow strict */
 
-import { schemaComposer } from '..';
+import { schemaComposer, SchemaComposer } from '..';
 import { GraphQLObjectType } from '../graphql';
 import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
@@ -92,5 +92,18 @@ describe('ThunkComposer', () => {
     const UserTC2 = tc2.getUnwrappedTC();
     expect(UserTC2.getTypeName()).toBe('User');
     expect(UserTC1).toBe(UserTC2);
+  });
+
+  it('cloneTo() should clone type with subtype to another Schema', () => {
+    const sc2 = new SchemaComposer();
+    const cloned = tc.cloneTo(sc2);
+
+    expect(tc.getTypeName()).toEqual(cloned.getTypeName());
+    expect(tc).not.toBe(cloned);
+    expect(tc.getType()).not.toBe(cloned.getType());
+    expect(tc.ofType).not.toBe(cloned.ofType);
+    expect(tc.ofType.getTypeName()).toBe('User');
+
+    expect(sc2.getOTC('User')).not.toBe(tc.getUnwrappedTC());
   });
 });
