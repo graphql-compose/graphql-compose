@@ -406,6 +406,15 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     newTypeNameOrTC: string | ObjectTypeComposer<any, any>
   ): ObjectTypeComposer<TCloneSource, TContext>;
 
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    nonCloneableTypes?: Set<any>
+  ): ObjectTypeComposer<any, TCtx>;
+
   public getIsTypeOf(): GraphQLIsTypeOfFn<TSource, TContext> | null | void;
 
   public setIsTypeOf(fn: GraphQLIsTypeOfFn<any, any> | null | void): this;

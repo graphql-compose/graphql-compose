@@ -33,6 +33,7 @@ import {
   getComposeTypeName,
   unwrapOutputTC,
   isTypeNameString,
+  cloneTypeTo,
   type NamedTypeComposer,
 } from './utils/typeHelpers';
 import { graphqlVersion } from './utils/graphqlVersion';
@@ -346,6 +347,51 @@ export class UnionTypeComposer<TSource, TContext> {
     cloned._gqcTypeMap = new Map(this._gqcTypeMap);
     cloned._gqcTypeResolvers = new Map(this._gqcTypeResolvers);
     cloned.setDescription(this.getDescription());
+
+    return cloned;
+  }
+
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    nonCloneableTypes?: Set<any> = new Set()
+  ): UnionTypeComposer<any, any> {
+    if (!anotherSchemaComposer) {
+      throw new Error('You should provide SchemaComposer for ObjectTypeComposer.cloneTo()');
+    }
+
+    if (nonCloneableTypes.has(this)) return this;
+    const cloned = UnionTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
+    nonCloneableTypes.add(cloned);
+
+    cloned._gqcExtensions = { ...this._gqcExtensions };
+    cloned.setDescription(this.getDescription());
+
+    // clone this._gqcTypeResolvers
+    const typeResolversMap = this.getTypeResolvers();
+    if (typeResolversMap.size > 0) {
+      const clonedTypeResolvers: UnionTypeComposerResolversMap<any, any> = new Map();
+      typeResolversMap.forEach((fn, tc) => {
+        const clonedTC: ObjectTypeComposerThunked<any, any> = (cloneTypeTo(
+          tc,
+          anotherSchemaComposer,
+          nonCloneableTypes
+        ): any);
+        clonedTypeResolvers.set(clonedTC, fn);
+      });
+      cloned.setTypeResolvers(clonedTypeResolvers);
+    }
+
+    // this._gqcTypeMap
+    const types = this.getTypes();
+    if (types.length > 0) {
+      this.setTypes(
+        types.map(tc => (cloneTypeTo(tc, anotherSchemaComposer, nonCloneableTypes): any))
+      );
+    }
 
     return cloned;
   }

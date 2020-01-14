@@ -155,6 +155,15 @@ export class EnumTypeComposer<TContext = any> {
    */
   public clone(newTypeNameOrTC: string | EnumTypeComposer<any>): EnumTypeComposer<TContext>;
 
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    nonCloneableTypes?: Set<any>
+  ): EnumTypeComposer<TCtx>;
+
   public merge(type: GraphQLEnumType | EnumTypeComposer<any>): this;
 
   /**

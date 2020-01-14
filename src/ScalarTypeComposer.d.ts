@@ -96,6 +96,19 @@ export class ScalarTypeComposer<TContext = any> {
    */
   public clone(newTypeNameOrTC: string | ScalarTypeComposer<any>): ScalarTypeComposer<TContext>;
 
+  /**
+   * Copy this scalar type to another SchemaComposer.
+   *
+   * Scalar types cannot be cloned.
+   * It will be very strange if we clone for example Boolean or Date types.
+   *
+   * This methods exists for compatibility with other TypeComposers.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    nonCloneableTypes?: Set<any>
+  ): ScalarTypeComposer<TCtx>;
+
   public merge(type: GraphQLScalarType | ScalarTypeComposer<any>): this;
 
   /**

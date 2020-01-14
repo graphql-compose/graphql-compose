@@ -1,7 +1,7 @@
 /* @flow */
 /* eslint-disable no-use-before-define */
 
-import { isType, parse, isOutputType, isInputType } from '../graphql';
+import { isType, isNamedType, parse, isOutputType, isInputType } from '../graphql';
 import type {
   GraphQLType,
   GraphQLNamedType,
@@ -10,6 +10,7 @@ import type {
 } from '../graphql';
 import { isFunction } from './is';
 import { inspect } from './misc';
+import { dedent } from './dedent';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
@@ -21,6 +22,7 @@ import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { ThunkComposer } from '../ThunkComposer';
 import type { TypeAsString } from '../TypeMapper';
+import { SchemaComposer } from '../SchemaComposer';
 
 export type AnyTypeComposer<TContext> =
   | NamedTypeComposer<TContext>
@@ -193,17 +195,27 @@ export function isSomeInputTypeComposer(type: any): boolean %checks {
   );
 }
 
-export function isComposeType(type: any): boolean {
+export function isComposeNamedType(type: any): boolean {
   return (
-    isType(type) ||
-    (Array.isArray(type) && isComposeType(type[0])) ||
+    isNamedType(type) ||
     type instanceof ObjectTypeComposer ||
     type instanceof InputTypeComposer ||
     type instanceof InterfaceTypeComposer ||
     type instanceof EnumTypeComposer ||
     type instanceof UnionTypeComposer ||
-    type instanceof ScalarTypeComposer ||
-    type instanceof Resolver
+    type instanceof ScalarTypeComposer
+  );
+}
+
+export function isComposeType(type: any): boolean {
+  return (
+    isComposeNamedType(type) ||
+    (Array.isArray(type) && isComposeType(type[0])) ||
+    type instanceof NonNullComposer ||
+    type instanceof ListComposer ||
+    type instanceof ThunkComposer ||
+    type instanceof Resolver ||
+    isType(type)
   );
 }
 
@@ -360,4 +372,30 @@ export function unwrapTypeNameString(str: string): string {
     return unwrapTypeNameString(str.slice(1, -1));
   }
   return str;
+}
+
+/**
+ * Clone any type to the new SchemaComposer.
+ * It may be: ComposeType, string, Wrapped ComposeType, GraphQL any type
+ */
+export function cloneTypeTo(
+  type: AnyTypeComposer<any> | TypeAsString | GraphQLType,
+  anotherSchemaComposer: SchemaComposer<any>,
+  nonCloneableTypes?: Set<any> = new Set()
+): AnyTypeComposer<any> | TypeAsString {
+  if (nonCloneableTypes.has(type)) {
+    return (type: any);
+  } else if (typeof type === 'string') {
+    return type;
+  } else if (isComposeType(type)) {
+    if (Array.isArray(type)) return type[0].cloneTo(anotherSchemaComposer, nonCloneableTypes);
+    else return (type: any).cloneTo(anotherSchemaComposer, nonCloneableTypes);
+  } else if (isType(type)) {
+    return anotherSchemaComposer.typeMapper.convertGraphQLTypeToComposer(type);
+  } else {
+    throw new Error(dedent`
+      Something strange was provided to utils cloneTypeTo() method:
+        ${inspect(type)}
+    `);
+  }
 }
