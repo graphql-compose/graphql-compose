@@ -16,6 +16,7 @@ import type {
 } from './graphql';
 import { InputTypeComposer } from './InputTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
+import { EnumTypeComposer } from './EnumTypeComposer';
 import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import type {
@@ -275,9 +276,34 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return this;
   }
 
+  /**
+   * Remove fields from type by name or array of names.
+   * You also may pass name in dot-notation, in such case will be removed nested field.
+   *
+   * @example
+   *     removeField('field1'); // remove 1 field
+   *     removeField(['field1', 'field2']); // remove 2 fields
+   *     removeField('field1.subField1'); // remove 1 nested field
+   */
   removeField(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => delete this._gqcFields[fieldName]);
+    fieldNames.forEach(fieldName => {
+      const names = fieldName.split('.');
+      const name = names.shift();
+      if (names.length === 0) {
+        // single field
+        delete this._gqcFields[name];
+      } else {
+        // nested field
+        // eslint-disable-next-line no-lonely-if
+        if (this.hasField(name)) {
+          const subTC = this.getFieldTC(name);
+          if (subTC instanceof ObjectTypeComposer || subTC instanceof EnumTypeComposer) {
+            subTC.removeField(names.join('.'));
+          }
+        }
+      }
+    });
     return this;
   }
 

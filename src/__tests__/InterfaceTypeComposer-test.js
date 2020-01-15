@@ -23,6 +23,7 @@ import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { ThunkComposer } from '../ThunkComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
+import { dedent } from '../utils/dedent';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -170,6 +171,58 @@ describe('InterfaceTypeComposer', () => {
       it('should remove list of fields', () => {
         iftc.removeField(['field1', 'field2']);
         expect(iftc.getFieldNames()).toEqual(expect.arrayContaining([]));
+      });
+
+      it('should remove field via dot-notation', () => {
+        schemaComposer.addTypeDefs(`
+          interface IFace {
+            field1: [SubType!]
+            field2: Int
+            field3: Int
+          }
+          
+          type SubType {
+            subField1: SubSubType
+            subField2: Int
+            subField3: Int
+          }
+
+          type SubSubType {
+            subSubField1: Int
+            subSubField2: Int
+          }
+        `);
+
+        schemaComposer
+          .getIFTC('IFace')
+          .removeField([
+            'field1.subField1.subSubField1',
+            'field1.subField1.nonexistent',
+            'field1.nonexistent.nonexistent',
+            'field1.subField3',
+            'field2',
+            '',
+            '..',
+          ]);
+
+        expect(schemaComposer.getIFTC('IFace').toSDL({ deep: true, omitDescriptions: true }))
+          .toEqual(dedent`
+          interface IFace {
+            field1: [SubType!]
+            field3: Int
+          }
+
+          type SubType {
+            subField1: SubSubType
+            subField2: Int
+          }
+
+          type SubSubType {
+            subSubField2: Int
+          }
+
+          scalar Int
+        `);
       });
     });
 

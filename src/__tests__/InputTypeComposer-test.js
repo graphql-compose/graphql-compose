@@ -16,6 +16,7 @@ import { ListComposer } from '../ListComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ThunkComposer } from '../ThunkComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
+import { dedent } from '../utils/dedent';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -137,12 +138,69 @@ describe('InputTypeComposer', () => {
       }
     });
 
-    it('removeField()', () => {
-      itc.removeField('input1');
-      expect(itc.getFieldNames()).not.toContain('input1');
-      expect(itc.getFieldNames()).toContain('input2');
-      itc.removeField(['input2', 'input3']);
-      expect(itc.getFieldNames()).not.toContain('input2');
+    describe('removeField()', () => {
+      it('should remove one field', () => {
+        itc.removeField('input1');
+        expect(itc.getFieldNames()).not.toContain('input1');
+        expect(itc.getFieldNames()).toContain('input2');
+      });
+
+      it('should remove list of fields', () => {
+        itc.removeField(['input2', 'input3']);
+        expect(itc.getFieldNames()).not.toContain('input2');
+      });
+
+      it('should remove field via dot-notation', () => {
+        schemaComposer.addTypeDefs(`
+          input Type {
+            field1: [SubType]!
+            field2: Int
+            field3: Int
+          }
+
+          input SubType {
+            subField1: SubSubType!
+            subField2: Int
+            subField3: Int
+          }
+
+          input SubSubType {
+            subSubField1: Int
+            subSubField2: Int
+          }
+        `);
+
+        schemaComposer
+          .getITC('Type')
+          .removeField([
+            'field1.subField1.subSubField1',
+            'field1.subField1.nonexistent',
+            'field1.nonexistent.nonexistent',
+            'field1.subField3',
+            'field2',
+            '',
+            '..',
+          ]);
+
+        expect(schemaComposer.getITC('Type').toSDL({ deep: true, omitDescriptions: true }))
+          .toEqual(dedent`
+          input Type {
+            field1: [SubType]!
+            field3: Int
+          }
+
+          input SubType {
+            subField1: SubSubType!
+            subField2: Int
+          }
+
+          input SubSubType {
+            subSubField2: Int
+          }
+
+          scalar Int
+        `);
+      });
     });
 
     it('removeOtherFields()', () => {
