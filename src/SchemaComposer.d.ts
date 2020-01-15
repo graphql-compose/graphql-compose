@@ -92,6 +92,12 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   public removeEmptyTypes(tc: ObjectTypeComposer<any, TContext>, passedTypes: Set<string>): void;
 
   /**
+   * Clone schema with deep clonning of all its types.
+   * Except Scalar types which will be the same for both schemas.
+   */
+  public clone<TCtx = TContext>(): SchemaComposer<TCtx>;
+
+  /**
    * Load all types from GraphQLSchema and merge with current SchemaComposer's types.
    *
    * @example

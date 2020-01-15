@@ -1466,4 +1466,54 @@ describe('SchemaComposer', () => {
       expect(sc1.isInterfaceType('MyType')).toBeFalsy();
     });
   });
+
+  describe('clone()', () => {
+    let sc1;
+
+    beforeEach(() => {
+      sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        type Query {
+          list: [User]
+        }
+
+        type User {
+          name: String
+          friends: [User]
+        }
+      `);
+    });
+
+    it('should deeply clone all types', () => {
+      const sc2 = sc1.clone();
+      expect(sc2.getOTC('User')).not.toBe(sc1.getOTC('User'));
+      expect(sc2.getOTC('Query')).not.toBe(sc1.getOTC('Query'));
+    });
+
+    it('should clone MustHaveTypes', () => {
+      const a = sc1.createObjectTC(`type A { i: Int }`);
+      sc1.addSchemaMustHaveType(a);
+      const sc2 = sc1.clone();
+      expect(sc2._schemaMustHaveTypes).toHaveLength(1);
+      expect(sc2._schemaMustHaveTypes[0]).not.toBe(sc1._schemaMustHaveTypes[0]);
+    });
+
+    it('directives should be different', () => {
+      const directive = new GraphQLDirective({
+        name: 'D',
+        locations: ['QUERY'],
+      });
+      sc1.addDirective(directive);
+      const sc2 = sc1.clone();
+      expect(sc2.hasDirective(directive)).toBeTruthy();
+
+      const directive2 = new GraphQLDirective({
+        name: 'D2',
+        locations: ['QUERY'],
+      });
+      sc2.addDirective(directive2);
+      expect(sc2.hasDirective(directive2)).toBeTruthy();
+      expect(sc1.hasDirective(directive2)).toBeFalsy();
+    });
+  });
 });
