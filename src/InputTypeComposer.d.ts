@@ -212,7 +212,7 @@ export class InputTypeComposer<TContext = any> {
    */
   public cloneTo<TCtx = any>(
     anotherSchemaComposer: SchemaComposer<TCtx>,
-    nonCloneableTypes?: Set<any>
+    cloneMap?: Map<any, any>
   ): InputTypeComposer<TCtx>;
 
   public merge(type: GraphQLInputObjectType | InputTypeComposer<any>): this;

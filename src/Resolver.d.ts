@@ -352,7 +352,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
    */
   public cloneTo<TCtx = any>(
     anotherSchemaComposer: SchemaComposer<TCtx>,
-    nonCloneableTypes?: Set<any>
+    cloneMap?: Map<any, any>
   ): Resolver<any, TCtx, any>;
 
   /**

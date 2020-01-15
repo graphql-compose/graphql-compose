@@ -550,19 +550,19 @@ export class InputTypeComposer<TContext> {
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
-    nonCloneableTypes?: Set<any> = new Set()
+    cloneMap?: Map<any, any> = new Map()
   ): InputTypeComposer<any> {
     if (!anotherSchemaComposer) {
       throw new Error('You should provide SchemaComposer for InputTypeComposer.cloneTo()');
     }
 
-    if (nonCloneableTypes.has(this)) return this;
+    if (cloneMap.has(this)) return (cloneMap.get(this): any);
     const cloned = InputTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
-    nonCloneableTypes.add(cloned);
+    cloneMap.set(this, cloned);
 
     cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
       ...fieldConfig,
-      type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, nonCloneableTypes),
+      type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, cloneMap),
       extensions: { ...fieldConfig.extensions },
     }));
     cloned._gqcExtensions = { ...this._gqcExtensions };

@@ -16,6 +16,7 @@ import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { ThunkComposer } from '../ThunkComposer';
 import { TypeAsString } from '../TypeMapper';
+import { SchemaComposer } from '../SchemaComposer';
 
 export type AnyTypeComposer<TContext> =
   | NamedTypeComposer<TContext>
@@ -193,10 +194,37 @@ export function unwrapOutputTC<TReturn, TContext>(
   outputTC: ComposeOutputType<TContext>
 ): ComposeNamedOutputType<TContext>;
 
+/**
+ * @deprecated Use `replaceTC()` function instead.
+ */
 export function changeUnwrappedTC<TContext, T>(
   anyTC: T,
   cb: (tc: NamedTypeComposer<TContext>) => NamedTypeComposer<TContext> | void | null
 ): T | void | null;
+
+/**
+ * Replace one TC to another.
+ * If type is wrapped with List, NonNull, Thunk then will be replaced inner type and all wrappers will be preserved in the same order.
+ *
+ * @example
+ *   1) replaceTC(A, B)
+ *      // returns `B`
+ *   2) replaceTC(ListComposer(NonNullComposer(A)), B)
+ *      // returns `ListComposer(NonNullComposer(B))`
+ *   3) replaceTC(ListComposer(A), (A) => { A.addFields({ f: 'Int' }); return A; })
+ *      // returns `ListComposer(A)` where A will be with new field
+ *   4) replaceTC(ListComposer(A), (A) => { return someCheck(A) ? B : C; })
+ *      // returns `ListComposer(B or C)` B or C depends on `someCheck`
+ *
+ * @param anyTC may be AnyTypeComposer
+ * @param replaceByTC can be a NamedTypeComposer or a callback which gets NamedTypeComposer and should return updated or new NamedTypeComposer
+ */
+export function replaceTC<T>(
+  anyTC: T,
+  replaceByTC:
+    | NamedTypeComposer<any>
+    | ((unwrappedTC: NamedTypeComposer<any>) => NamedTypeComposer<any>)
+): T;
 
 /**
  * Remove modifiers `[]` and `!` from type name.
@@ -204,3 +232,13 @@ export function changeUnwrappedTC<TContext, T>(
  * Eg. Int! -> Int, [String!]! -> String
  */
 export function unwrapTypeNameString(str: string): string;
+
+/**
+ * Clone any type to the new SchemaComposer.
+ * It may be: ComposeType, string, Wrapped ComposeType, GraphQL any type
+ */
+export function cloneTypeTo(
+  type: AnyTypeComposer<any> | TypeAsString | GraphQLType,
+  anotherSchemaComposer: SchemaComposer<any>,
+  cloneMap?: Map<any, any>
+): AnyTypeComposer<any> | TypeAsString;

@@ -22,6 +22,7 @@ import {
   ObjectTypeComposerFieldConfigDefinition,
   ObjectTypeComposerFieldConfigAsObjectDefinition,
   ObjectTypeComposerArgumentConfigMapDefinition,
+  ObjectTypeComposerArgumentConfigDefinition,
 } from './ObjectTypeComposer';
 import {
   Thunk,
@@ -218,7 +219,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public setFieldArg(
     fieldName: string,
     argName: string,
-    argConfig: ObjectTypeComposerArgumentConfig
+    argConfig: ObjectTypeComposerArgumentConfigDefinition
   ): this;
 
   public isFieldArgPlural(fieldName: string, argName: string): boolean;
@@ -266,7 +267,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
    */
   public cloneTo<TCtx = any>(
     anotherSchemaComposer: SchemaComposer<TCtx>,
-    nonCloneableTypes?: Set<any>
+    cloneMap?: Map<any, any>
   ): InterfaceTypeComposer<any, TCtx>;
 
   public merge(

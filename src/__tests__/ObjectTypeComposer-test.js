@@ -741,16 +741,184 @@ describe('ObjectTypeComposer', () => {
   });
 
   describe('clone()', () => {
-    it('should clone projection for fields', () => {
-      tc.setField('field3', {
-        type: GraphQLString,
-        projection: { field1: true, field2: true },
-      });
+    it('should clone type', () => {
+      const cloned = tc.clone('NewObject');
+      expect(cloned).not.toBe(tc);
+      expect(cloned.getTypeName()).toBe('NewObject');
+      expect(cloned.getFieldNames()).toEqual(tc.getFieldNames());
+    });
 
-      const tc2 = tc.clone('newObject');
-      const fc = tc2.getField('field3');
-      expect(fc.projection).toEqual({ field1: true, field2: true });
-      expect(fc.type.getType()).toBe(GraphQLString);
+    it('field types should not be cloned', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      tc.setField('user', UserTC);
+      const cloned = tc.clone('NewObject');
+      expect(cloned.getField('user').type).toBe(UserTC);
+    });
+
+    it('field config should be different', () => {
+      const cloned = tc.clone('NewObject');
+      cloned.setField('field4', 'String');
+      expect(cloned.hasField('field4')).toBeTruthy();
+      expect(tc.hasField('field4')).toBeFalsy();
+    });
+
+    it('field args should be different', () => {
+      tc.setField('field3', {
+        type: 'String',
+        args: { a1: 'Int' },
+      });
+      const cloned = tc.clone('NewObject');
+
+      cloned.setFieldArg('field3', 'a2', 'String');
+      expect(cloned.hasFieldArg('field3', 'a2')).toBeTruthy();
+      expect(tc.hasFieldArg('field3', 'a2')).toBeFalsy();
+    });
+
+    it('interfaces should be the same', () => {
+      const iftc = schemaComposer.createInterfaceTC(`interface A { field1: String }`);
+      tc.addInterface(iftc);
+      const cloned = tc.clone('NewObject');
+      expect(cloned.getInterfaces()).toEqual(tc.getInterfaces());
+    });
+
+    it('extensions should be different', () => {
+      tc.setExtension('ext1', 123);
+      tc.setFieldExtension('field2', 'ext2', 456);
+      const cloned = tc.clone('NewObject');
+
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(tc.getExtension('ext1')).toBe(123);
+      expect(cloned.getFieldExtension('field2', 'ext2')).toBe(456);
+      cloned.setFieldExtension('field2', 'ext2', 600);
+      expect(cloned.getFieldExtension('field2', 'ext2')).toBe(600);
+      expect(tc.getFieldExtension('field2', 'ext2')).toBe(456);
+    });
+
+    it('resolvers should be cloned with only current type replacement', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      tc.setField('user', UserTC);
+      tc.addResolver({
+        name: 'findMany',
+        type: [tc],
+      });
+      tc.addResolver({
+        name: 'findUser',
+        type: UserTC,
+      });
+      const cloned = tc.clone('NewObject');
+
+      const findMany = tc.getResolver('findMany');
+      const findManyCloned = cloned.getResolver('findMany');
+      expect(findMany).not.toBe(findManyCloned);
+      // replace type even it wrapped with List or any other modifier
+      expect(findMany.type.getTypeName()).toBe('[Readable]');
+      expect(findManyCloned.type.getTypeName()).toBe('[NewObject]');
+
+      // other types should stay as is
+      const findUser = tc.getResolver('findUser');
+      const findUserCloned = cloned.getResolver('findUser');
+      expect(findUser).not.toBe(findUserCloned);
+      expect(findUser.type).toBe(findUserCloned.type);
+      expect(findUserCloned.type.getTypeName()).toBe('User');
+    });
+  });
+
+  describe('cloneTo()', () => {
+    let anotherSchemaComposer;
+    beforeEach(() => {
+      anotherSchemaComposer = new SchemaComposer();
+    });
+
+    it('should clone type', () => {
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+      expect(cloned).not.toBe(tc);
+      expect(cloned.getTypeName()).toBe(tc.getTypeName());
+      expect(cloned.getFieldNames()).toEqual(tc.getFieldNames());
+    });
+
+    it('field types should be cloned too', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      tc.setField('user', UserTC);
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+      expect(cloned.getField('user').type).not.toBe(UserTC);
+      expect(cloned.getFieldTypeName('user')).toBe(tc.getFieldTypeName('user'));
+    });
+
+    it('field config should be different', () => {
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+      cloned.setField('field4', 'String');
+      expect(cloned.hasField('field4')).toBeTruthy();
+      expect(tc.hasField('field4')).toBeFalsy();
+    });
+
+    it('field args should be different', () => {
+      tc.setField('field3', {
+        type: 'String',
+        args: { a1: 'Int' },
+      });
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+
+      cloned.setFieldArg('field3', 'a2', 'String');
+      expect(cloned.hasFieldArg('field3', 'a2')).toBeTruthy();
+      expect(tc.hasFieldArg('field3', 'a2')).toBeFalsy();
+    });
+
+    it('interfaces should be different', () => {
+      const iftc = schemaComposer.createInterfaceTC(`interface A { field1: String }`);
+      tc.addInterface(iftc);
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+
+      const ifaceA: InterfaceTypeComposer<any, any> = (tc.getInterfaces()[0]: any);
+      const ifaceACloned: InterfaceTypeComposer<any, any> = (cloned.getInterfaces()[0]: any);
+      expect(ifaceA).not.toBe(ifaceACloned);
+      expect(ifaceA.getTypeName()).toBe(ifaceACloned.getTypeName());
+      expect(ifaceA.getFieldNames()).toEqual(ifaceACloned.getFieldNames());
+    });
+
+    it('extensions should be different', () => {
+      tc.setExtension('ext1', 123);
+      tc.setFieldExtension('field2', 'ext2', 456);
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(tc.getExtension('ext1')).toBe(123);
+      expect(cloned.getFieldExtension('field2', 'ext2')).toBe(456);
+      cloned.setFieldExtension('field2', 'ext2', 600);
+      expect(cloned.getFieldExtension('field2', 'ext2')).toBe(600);
+      expect(tc.getFieldExtension('field2', 'ext2')).toBe(456);
+    });
+
+    it('resolvers should be cloned with all subtypes', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      tc.setField('user', UserTC);
+      tc.addResolver({
+        name: 'findMany',
+        type: [tc],
+      });
+      tc.addResolver({
+        name: 'findUser',
+        type: UserTC,
+      });
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+
+      const findMany = tc.getResolver('findMany');
+      const findManyCloned = cloned.getResolver('findMany');
+      expect(findMany).not.toBe(findManyCloned);
+      // replace type even it wrapped with List or any other modifier
+      expect(findMany.type.getTypeName()).toBe('[Readable]');
+      expect(findManyCloned.type.getTypeName()).toBe('[Readable]');
+      expect((findMany: any).type.ofType).not.toBe((findManyCloned: any).type.ofType);
+
+      // other types also should be cloned
+      const findUser = tc.getResolver('findUser');
+      const findUserCloned = cloned.getResolver('findUser');
+      expect(findUser).not.toBe(findUserCloned);
+      expect(findUser.type).not.toBe(findUserCloned.type);
+      expect(findUserCloned.type.getTypeName()).toBe('User');
     });
   });
 

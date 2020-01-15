@@ -161,7 +161,7 @@ export class EnumTypeComposer<TContext = any> {
    */
   public cloneTo<TCtx = any>(
     anotherSchemaComposer: SchemaComposer<TCtx>,
-    nonCloneableTypes?: Set<any>
+    cloneMap?: Map<any, any>
   ): EnumTypeComposer<TCtx>;
 
   public merge(type: GraphQLEnumType | EnumTypeComposer<any>): this;

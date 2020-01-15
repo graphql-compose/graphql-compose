@@ -26,6 +26,7 @@ import type {
   ObjectTypeComposerFieldConfigMapDefinition,
   ObjectTypeComposerArgumentConfigMapDefinition,
   ObjectTypeComposerArgumentConfig,
+  ObjectTypeComposerArgumentConfigDefinition,
   ObjectTypeComposerArgumentConfigMap,
   ArgsMap,
 } from './ObjectTypeComposer';
@@ -595,7 +596,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   setFieldArg(
     fieldName: string,
     argName: string,
-    argConfig: ObjectTypeComposerArgumentConfig
+    argConfig: ObjectTypeComposerArgumentConfigDefinition
   ): InterfaceTypeComposer<TSource, TContext> {
     const fc = this.getField(fieldName);
     fc.args = fc.args || {};
@@ -777,22 +778,22 @@ export class InterfaceTypeComposer<TSource, TContext> {
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
-    nonCloneableTypes?: Set<any> = new Set()
+    cloneMap?: Map<any, any> = new Map()
   ): InterfaceTypeComposer<any, any> {
     if (!anotherSchemaComposer) {
       throw new Error('You should provide SchemaComposer for InterfaceTypeComposer.cloneTo()');
     }
 
-    if (nonCloneableTypes.has(this)) return this;
+    if (cloneMap.has(this)) return (cloneMap.get(this): any);
     const cloned = InterfaceTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
-    nonCloneableTypes.add(cloned);
+    cloneMap.set(this, cloned);
 
     cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
       ...fieldConfig,
-      type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, nonCloneableTypes),
+      type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, cloneMap),
       args: mapEachKey(fieldConfig.args, argConfig => ({
         ...argConfig,
-        type: cloneTypeTo(argConfig.type, anotherSchemaComposer, nonCloneableTypes),
+        type: cloneTypeTo(argConfig.type, anotherSchemaComposer, cloneMap),
         extensions: { ...argConfig.extensions },
       })),
       extensions: { ...fieldConfig.extensions },
@@ -808,7 +809,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
         const clonedTC: ObjectTypeComposer<any, any> | GraphQLObjectType = (cloneTypeTo(
           tc,
           anotherSchemaComposer,
-          nonCloneableTypes
+          cloneMap
         ): any);
         clonedTypeResolvers.set(clonedTC, fn);
       });

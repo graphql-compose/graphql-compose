@@ -23,6 +23,7 @@ import { ListComposer } from '../ListComposer';
 import { ThunkComposer } from '../ThunkComposer';
 import type { TypeAsString } from '../TypeMapper';
 import { SchemaComposer } from '../SchemaComposer';
+import deprecate from './deprecate';
 
 export type AnyTypeComposer<TContext> =
   | NamedTypeComposer<TContext>
@@ -329,10 +330,40 @@ export function unwrapOutputTC<TContext>(
   return (unwrapTC(outputTC): any);
 }
 
+/**
+ * @deprecated 8.0.0
+ */
 export function changeUnwrappedTC<TContext, T>(
   anyTC: T,
-  cb: (tc: NamedTypeComposer<TContext>) => NamedTypeComposer<TContext> | void | null
-): T | void | null {
+  cb: (tc: NamedTypeComposer<TContext>) => NamedTypeComposer<TContext>
+) {
+  deprecate('Please use `replaceTC()` function instead.');
+  return replaceTC(anyTC, cb);
+}
+
+/**
+ * Replace one TC to another.
+ * If type is wrapped with List, NonNull, Thunk then will be replaced inner type and all wrappers will be preserved in the same order.
+ *
+ * @example
+ *   1) replaceTC(A, B)
+ *      // returns `B`
+ *   2) replaceTC(ListComposer(NonNullComposer(A)), B)
+ *      // returns `ListComposer(NonNullComposer(B))`
+ *   3) replaceTC(ListComposer(A), (A) => { A.addFields({ f: 'Int' }); return A; })
+ *      // returns `ListComposer(A)` where A will be with new field
+ *   4) replaceTC(ListComposer(A), (A) => { return someCheck(A) ? B : C; })
+ *      // returns `ListComposer(B or C)` B or C depends on `someCheck`
+ *
+ * @param anyTC may be AnyTypeComposer
+ * @param replaceByTC can be a NamedTypeComposer or a callback which gets NamedTypeComposer and should return updated or new NamedTypeComposer
+ */
+export function replaceTC<T>(
+  anyTC: T,
+  replaceByTC:
+    | $ReadOnly<NamedTypeComposer<any>>
+    | ((unwrappedTC: NamedTypeComposer<any>) => NamedTypeComposer<any>)
+): T {
   let tc = anyTC;
 
   const wrappers = [];
@@ -350,7 +381,7 @@ export function changeUnwrappedTC<TContext, T>(
   }
 
   // call callback for TC
-  tc = cb((tc: any));
+  tc = isFunction(replaceByTC) ? replaceByTC((tc: any)) : replaceByTC;
 
   if (tc) {
     // wrap TypeComposer back
@@ -381,17 +412,20 @@ export function unwrapTypeNameString(str: string): string {
 export function cloneTypeTo(
   type: AnyTypeComposer<any> | TypeAsString | GraphQLType,
   anotherSchemaComposer: SchemaComposer<any>,
-  nonCloneableTypes?: Set<any> = new Set()
+  cloneMap?: Map<any, any> = new Map()
 ): AnyTypeComposer<any> | TypeAsString {
-  if (nonCloneableTypes.has(type)) {
-    return (type: any);
+  if (cloneMap.has(type)) {
+    return (cloneMap.get(type): any);
   } else if (typeof type === 'string') {
     return type;
   } else if (isComposeType(type)) {
-    if (Array.isArray(type)) return type[0].cloneTo(anotherSchemaComposer, nonCloneableTypes);
-    else return (type: any).cloneTo(anotherSchemaComposer, nonCloneableTypes);
+    if (Array.isArray(type)) return type[0].cloneTo(anotherSchemaComposer, cloneMap);
+    else return (type: any).cloneTo(anotherSchemaComposer, cloneMap);
   } else if (isType(type)) {
-    return anotherSchemaComposer.typeMapper.convertGraphQLTypeToComposer(type);
+    // create new TC directly in new schema
+    const tc = anotherSchemaComposer.typeMapper.convertGraphQLTypeToComposer(type);
+    cloneMap.set(type, tc);
+    return tc;
   } else {
     throw new Error(dedent`
       Something strange was provided to utils cloneTypeTo() method:

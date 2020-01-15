@@ -386,15 +386,15 @@ export class EnumTypeComposer<TContext> {
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
-    nonCloneableTypes?: Set<any> = new Set()
+    cloneMap?: Map<any, any> = new Map()
   ): EnumTypeComposer<any> {
     if (!anotherSchemaComposer) {
       throw new Error('You should provide SchemaComposer for EnumTypeComposer.cloneTo()');
     }
 
-    if (nonCloneableTypes.has(this)) return this;
+    if (cloneMap.has(this)) return (cloneMap.get(this): any);
     const cloned = EnumTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
-    nonCloneableTypes.add(cloned);
+    cloneMap.set(this, cloned);
 
     return this.clone(cloned);
   }

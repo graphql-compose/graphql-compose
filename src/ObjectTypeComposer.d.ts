@@ -412,7 +412,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
    */
   public cloneTo<TCtx = any>(
     anotherSchemaComposer: SchemaComposer<TCtx>,
-    nonCloneableTypes?: Set<any>
+    cloneMap?: Map<any, any>
   ): ObjectTypeComposer<any, TCtx>;
 
   public getIsTypeOf(): GraphQLIsTypeOfFn<TSource, TContext> | null | void;

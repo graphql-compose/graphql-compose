@@ -49,8 +49,8 @@ export class ListComposer<+T: AnyTypeComposer<any>> {
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
-    nonCloneableTypes?: Set<any> = new Set()
+    cloneMap?: Map<any, any> = new Map()
   ): ListComposer<AnyTypeComposer<any>> {
-    return new ListComposer((this.ofType: any).cloneTo(anotherSchemaComposer, nonCloneableTypes));
+    return new ListComposer((this.ofType: any).cloneTo(anotherSchemaComposer, cloneMap));
   }
 }
