@@ -24,7 +24,7 @@ import {
   getGraphQLType,
   isTypeComposer,
   isNamedTypeComposer,
-  isComposeType,
+  isComposeNamedType,
   getComposeTypeName,
   isOutputTypeDefinitionString,
   isInputTypeDefinitionString,
@@ -203,6 +203,26 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     });
   }
 
+  /**
+   * Clone schema with deep clonning of all its types.
+   * Except Scalar types which will be the same for both schemas.
+   */
+  clone(): SchemaComposer<any> {
+    const sc = new SchemaComposer();
+
+    const cloneMap = new Map();
+    this.forEach((type, key) => {
+      sc.set(key, (cloneTypeTo(type, sc, cloneMap): any));
+    });
+
+    sc._schemaMustHaveTypes = this._schemaMustHaveTypes.map(
+      t => (cloneTypeTo(t, sc, cloneMap): any)
+    );
+    sc._directives = [...this._directives];
+
+    return sc;
+  }
+
   merge(schema: GraphQLSchema | SchemaComposer<any>): SchemaComposer<TContext> {
     let sc;
     if (schema instanceof SchemaComposer) {
@@ -233,7 +253,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       }
 
       let typeName;
-      if (isComposeType(type)) {
+      if (isComposeNamedType(type)) {
         typeName = getComposeTypeName(type);
       }
 
@@ -378,7 +398,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     if (this.has(typeOrSDL)) {
       return this.get(typeOrSDL);
     }
-    const tc = this.createTempTC(typeOrSDL);
+    const tc = isNamedTypeComposer(typeOrSDL) ? typeOrSDL : this.createTempTC(typeOrSDL);
     const typeName = tc.getTypeName();
     this.set(typeName, tc);
     this.set(typeOrSDL, tc);
