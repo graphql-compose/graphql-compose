@@ -54,10 +54,8 @@ export class NonNullComposer<+T: AnyTypeComposer<any>> {
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
-    nonCloneableTypes?: Set<any> = new Set()
+    cloneMap?: Map<any, any> = new Map()
   ): NonNullComposer<AnyTypeComposer<any>> {
-    return new NonNullComposer(
-      (this.ofType: any).cloneTo(anotherSchemaComposer, nonCloneableTypes)
-    );
+    return new NonNullComposer((this.ofType: any).cloneTo(anotherSchemaComposer, cloneMap));
   }
 }

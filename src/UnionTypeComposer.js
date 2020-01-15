@@ -357,15 +357,15 @@ export class UnionTypeComposer<TSource, TContext> {
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
-    nonCloneableTypes?: Set<any> = new Set()
+    cloneMap?: Map<any, any> = new Map()
   ): UnionTypeComposer<any, any> {
     if (!anotherSchemaComposer) {
       throw new Error('You should provide SchemaComposer for ObjectTypeComposer.cloneTo()');
     }
 
-    if (nonCloneableTypes.has(this)) return this;
+    if (cloneMap.has(this)) return this;
     const cloned = UnionTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
-    nonCloneableTypes.add(cloned);
+    cloneMap.set(this, cloned);
 
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
@@ -378,7 +378,7 @@ export class UnionTypeComposer<TSource, TContext> {
         const clonedTC: ObjectTypeComposerThunked<any, any> = (cloneTypeTo(
           tc,
           anotherSchemaComposer,
-          nonCloneableTypes
+          cloneMap
         ): any);
         clonedTypeResolvers.set(clonedTC, fn);
       });
@@ -388,9 +388,7 @@ export class UnionTypeComposer<TSource, TContext> {
     // this._gqcTypeMap
     const types = this.getTypes();
     if (types.length > 0) {
-      this.setTypes(
-        types.map(tc => (cloneTypeTo(tc, anotherSchemaComposer, nonCloneableTypes): any))
-      );
+      cloned.setTypes(types.map(tc => (cloneTypeTo(tc, anotherSchemaComposer, cloneMap): any)));
     }
 
     return cloned;

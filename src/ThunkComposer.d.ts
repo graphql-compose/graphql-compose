@@ -33,6 +33,6 @@ export class ThunkComposer<
    */
   public cloneTo<TCtx = any>(
     anotherSchemaComposer: SchemaComposer<TCtx>,
-    nonCloneableTypes?: Set<any>
+    cloneMap?: Map<any, any>
   ): ThunkComposer<NamedTypeComposer<TCtx>, G>;
 }

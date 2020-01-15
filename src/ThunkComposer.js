@@ -69,9 +69,9 @@ export class ThunkComposer<T = NamedTypeComposer<any>, G = GraphQLType> {
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
-    nonCloneableTypes?: Set<any> = new Set()
+    cloneMap?: Map<any, any> = new Map()
   ): ThunkComposer<NamedTypeComposer<any>, G> {
-    const cloned = (this.ofType: any).cloneTo(anotherSchemaComposer, nonCloneableTypes);
+    const cloned = (this.ofType: any).cloneTo(anotherSchemaComposer, cloneMap);
     return new ThunkComposer(() => cloned, this._typeName);
   }
 }

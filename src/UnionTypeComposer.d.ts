@@ -161,7 +161,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
    */
   public cloneTo<TCtx = any>(
     anotherSchemaComposer: SchemaComposer<TCtx>,
-    nonCloneableTypes?: Set<any>
+    cloneMap?: Map<any, any>
   ): UnionTypeComposer<any, TCtx>;
 
   public merge(type: GraphQLUnionType | UnionTypeComposer<any, any>): this;

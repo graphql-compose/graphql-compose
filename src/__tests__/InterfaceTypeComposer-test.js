@@ -516,16 +516,121 @@ describe('InterfaceTypeComposer', () => {
   });
 
   describe('clone()', () => {
-    it('should clone projection for fields', () => {
-      iftc.setField('field3', {
-        type: GraphQLString,
-        projection: { field1: true, field2: true },
-      });
+    it('should clone type', () => {
+      const cloned = iftc.clone('NewObject');
+      expect(cloned).not.toBe(iftc);
+      expect(cloned.getTypeName()).toBe('NewObject');
+    });
 
-      const iftc2 = iftc.clone('newObject');
-      const fc = iftc2.getField('field3');
-      expect(fc.projection).toEqual({ field1: true, field2: true });
-      expect(fc.type.getType()).toBe(GraphQLString);
+    it('field config should be different', () => {
+      const cloned = iftc.clone('NewObject');
+      cloned.setField('field4', 'String');
+      expect(cloned.hasField('field4')).toBeTruthy();
+      expect(iftc.hasField('field4')).toBeFalsy();
+    });
+
+    it('field args should be different', () => {
+      iftc.setField('field3', {
+        type: 'String',
+        args: { a1: 'Int' },
+      });
+      const cloned = iftc.clone('NewObject');
+      cloned.setFieldArg('field3', 'a2', 'String');
+      expect(cloned.hasFieldArg('field3', 'a2')).toBeTruthy();
+      expect(iftc.hasFieldArg('field3', 'a2')).toBeFalsy();
+    });
+
+    it('extensions should be different', () => {
+      iftc.setExtension('ext1', 123);
+      iftc.setFieldExtension('field1', 'ext2', 456);
+      const cloned = iftc.clone('NewObject');
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(iftc.getExtension('ext1')).toBe(123);
+      expect(cloned.getFieldExtension('field1', 'ext2')).toBe(456);
+      cloned.setFieldExtension('field1', 'ext2', 600);
+      expect(cloned.getFieldExtension('field1', 'ext2')).toBe(600);
+      expect(iftc.getFieldExtension('field1', 'ext2')).toBe(456);
+    });
+
+    it('typeResolvers should be the same', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      iftc.addTypeResolver(UserTC, () => true);
+      const cloned = iftc.clone('NewObject');
+
+      const clonedUserTC = cloned
+        .getTypeResolvers()
+        .keys()
+        .next().value;
+      expect(clonedUserTC).toBe(UserTC);
+    });
+  });
+
+  describe('cloneTo()', () => {
+    let anotherSchemaComposer;
+
+    beforeEach(() => {
+      anotherSchemaComposer = new SchemaComposer();
+    });
+
+    it('should clone type', () => {
+      const cloned = iftc.cloneTo(anotherSchemaComposer);
+      expect(cloned).not.toBe(iftc);
+      expect(cloned.getTypeName()).toBe(iftc.getTypeName());
+    });
+
+    it('should clone field complex type', () => {
+      const ComplexTC = schemaComposer.createObjectTC(`type Complex { a: String }`);
+      iftc.setField('field3', {
+        type: ComplexTC,
+        args: { a1: 'Int' },
+      });
+      const cloned = iftc.cloneTo(anotherSchemaComposer);
+      const fc = cloned.getField('field3');
+      expect(fc.type.getTypeName()).toBe('Complex');
+      expect(fc.type).not.toBe(ComplexTC);
+      expect(fc.type.getType()).not.toBe(ComplexTC.getType());
+    });
+
+    it('field config should be different', () => {
+      const cloned = iftc.cloneTo(anotherSchemaComposer);
+      cloned.setField('field4', 'String');
+      expect(cloned.hasField('field4')).toBeTruthy();
+      expect(iftc.hasField('field4')).toBeFalsy();
+    });
+
+    it('field args should be different', () => {
+      const cloned = iftc.cloneTo(anotherSchemaComposer);
+      cloned.setFieldArg('field1', 'a2', 'String');
+      expect(cloned.hasFieldArg('field1', 'a2')).toBeTruthy();
+      expect(iftc.hasFieldArg('field1', 'a2')).toBeFalsy();
+    });
+
+    it('extensions should be different', () => {
+      iftc.setExtension('ext1', 123);
+      iftc.setFieldExtension('field1', 'ext2', 456);
+      const cloned = iftc.cloneTo(anotherSchemaComposer);
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(iftc.getExtension('ext1')).toBe(123);
+      expect(cloned.getFieldExtension('field1', 'ext2')).toBe(456);
+      cloned.setFieldExtension('field1', 'ext2', 600);
+      expect(cloned.getFieldExtension('field1', 'ext2')).toBe(600);
+      expect(iftc.getFieldExtension('field1', 'ext2')).toBe(456);
+    });
+
+    it('typeResolvers should be different', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      iftc.addTypeResolver(UserTC, () => true);
+      const cloned = iftc.cloneTo(anotherSchemaComposer);
+      const clonedUserTC: any = cloned
+        .getTypeResolvers()
+        .keys()
+        .next().value;
+      expect(clonedUserTC).not.toBe(UserTC);
+      expect(clonedUserTC.getTypeName()).toBe(UserTC.getTypeName());
     });
   });
 

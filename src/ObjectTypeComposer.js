@@ -47,6 +47,7 @@ import {
   unwrapInputTC,
   isTypeNameString,
   cloneTypeTo,
+  replaceTC,
   type NamedTypeComposer,
 } from './utils/typeHelpers';
 import type { ProjectionType } from './utils/projection';
@@ -978,6 +979,10 @@ export class ObjectTypeComposer<TSource, TContext> {
 
     this.getResolvers().forEach(resolver => {
       const newResolver = resolver.clone();
+      // in clonned resolvers we also replace cloned ObjectTypeComposer
+      newResolver.type = replaceTC(newResolver.type, tc => {
+        return tc === this ? cloned : tc;
+      });
       cloned.addResolver(newResolver);
     });
 
@@ -990,36 +995,36 @@ export class ObjectTypeComposer<TSource, TContext> {
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
-    nonCloneableTypes?: Set<any> = new Set()
+    cloneMap?: Map<any, any> = new Map()
   ): ObjectTypeComposer<any, any> {
     if (!anotherSchemaComposer) {
       throw new Error('You should provide SchemaComposer for ObjectTypeComposer.cloneTo()');
     }
 
-    if (nonCloneableTypes.has(this)) return this;
+    if (cloneMap.has(this)) return (cloneMap.get(this): any);
     const cloned = ObjectTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
-    nonCloneableTypes.add(cloned);
+    cloneMap.set(this, cloned);
 
     cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
       ...fieldConfig,
-      type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, nonCloneableTypes),
+      type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, cloneMap),
       args: mapEachKey(fieldConfig.args, argConfig => ({
         ...argConfig,
-        type: cloneTypeTo(argConfig.type, anotherSchemaComposer, nonCloneableTypes),
+        type: cloneTypeTo(argConfig.type, anotherSchemaComposer, cloneMap),
         extensions: { ...argConfig.extensions },
       })),
       extensions: { ...fieldConfig.extensions },
     }));
 
     cloned._gqcInterfaces = (this._gqcInterfaces.map(i =>
-      i.cloneTo(anotherSchemaComposer, nonCloneableTypes)
+      i.cloneTo(anotherSchemaComposer, cloneMap)
     ): any);
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned._gqcGetRecordIdFn = this._gqcGetRecordIdFn;
     cloned.setDescription(this.getDescription());
 
     this.getResolvers().forEach(resolver => {
-      const clonnedResolver = resolver.cloneTo(anotherSchemaComposer, nonCloneableTypes);
+      const clonnedResolver = resolver.cloneTo(anotherSchemaComposer, cloneMap);
       cloned.addResolver(clonnedResolver);
     });
 

@@ -34,7 +34,7 @@ import { typeByPath, type TypeInPath } from './utils/typeByPath';
 import {
   unwrapOutputTC,
   unwrapInputTC,
-  changeUnwrappedTC,
+  replaceTC,
   isComposeInputType,
   cloneTypeTo,
 } from './utils/typeHelpers';
@@ -506,7 +506,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
     const argTC = this.getArg(argName).type;
 
-    const clonnedTC = changeUnwrappedTC(argTC, unwrappedTC => {
+    const clonnedTC = replaceTC(argTC, unwrappedTC => {
       if (!(unwrappedTC instanceof InputTypeComposer)) {
         throw new Error(
           `Cannot clone arg ${inspect(argName)} for resolver ${inspect(this.name)}. ` +
@@ -878,7 +878,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     oldOpts.displayName = undefined;
     oldOpts.args = { ...this.args };
     if (this.projection) {
-      oldOpts.projection = { ...this.args };
+      oldOpts.projection = { ...this.projection };
     }
     return new Resolver({ ...oldOpts, ...opts }, this.schemaComposer);
   }
@@ -889,38 +889,38 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
-    nonCloneableTypes?: Set<any> = new Set()
+    cloneMap?: Map<any, any> = new Map()
   ): Resolver<any, any, any> {
     if (!anotherSchemaComposer) {
       throw new Error('You should provide SchemaComposer for InterfaceTypeComposer.cloneTo()');
     }
 
-    if (nonCloneableTypes.has(this)) return this;
+    if (cloneMap.has(this)) return (cloneMap.get(this): any);
     const cloned = new Resolver(
       {
-        name: this.getTypeName(),
+        name: this.name,
         displayName: this.displayName,
         kind: this.kind,
         description: this.description,
-        projection: this.projection,
+        projection: { ...this.projection },
         extensions: { ...this.extensions },
         resolve: this.resolve,
       },
       anotherSchemaComposer
     );
-    nonCloneableTypes.add(cloned);
+    cloneMap.set(this, cloned);
 
     if (this.type) {
-      cloned.type = (this.type.cloneTo(anotherSchemaComposer, nonCloneableTypes): any);
+      cloned.type = (this.type.cloneTo(anotherSchemaComposer, cloneMap): any);
     }
 
     if (this.parent) {
-      cloned.parent = this.parent.cloneTo(anotherSchemaComposer, nonCloneableTypes);
+      cloned.parent = this.parent.cloneTo(anotherSchemaComposer, cloneMap);
     }
 
     cloned.args = (mapEachKey((this.args: any), argConfig => ({
       ...argConfig,
-      type: cloneTypeTo(argConfig.type, anotherSchemaComposer, nonCloneableTypes),
+      type: cloneTypeTo(argConfig.type, anotherSchemaComposer, cloneMap),
       extensions: { ...argConfig.extensions },
     })): any);
 

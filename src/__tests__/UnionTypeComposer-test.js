@@ -196,12 +196,90 @@ describe('UnionTypeComposer', () => {
   });
 
   describe('clone()', () => {
-    it('should create new Union', () => {
-      const utc2 = utc.clone('NewObject');
-      utc2.addType('AAA');
+    it('should clone type', () => {
+      const cloned = utc.clone('NewObject');
+      expect(cloned).not.toBe(utc);
+      expect(cloned.getTypeName()).toBe('NewObject');
+    });
 
-      expect(utc2.getTypes()).toHaveLength(3);
-      expect(utc.getTypes()).toHaveLength(2);
+    it('type unions should be different but have same type instances', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      utc.addTypeResolver(UserTC, () => true);
+      const cloned = utc.clone('NewObject');
+      cloned.addType('AAA');
+      expect(cloned.getTypes()).toHaveLength(4);
+      expect(utc.getTypes()).toHaveLength(3);
+      expect(cloned.hasType(UserTC)).toBeTruthy();
+    });
+
+    it('extensions should be different', () => {
+      utc.setExtension('ext1', 123);
+      const cloned = utc.clone('NewObject');
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(utc.getExtension('ext1')).toBe(123);
+    });
+
+    it('typeResolvers should be the same', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      utc.addTypeResolver(UserTC, () => true);
+      const cloned = utc.clone('NewObject');
+      const clonedUserTC = cloned
+        .getTypeResolvers()
+        .keys()
+        .next().value;
+      expect(clonedUserTC).toBe(UserTC);
+    });
+  });
+
+  describe('cloneTo()', () => {
+    let anotherSchemaComposer;
+
+    beforeEach(() => {
+      anotherSchemaComposer = new SchemaComposer();
+    });
+
+    it('should clone type', () => {
+      const cloned = utc.cloneTo(anotherSchemaComposer);
+      expect(cloned).not.toBe(utc);
+      expect(cloned.getTypeName()).toBe(utc.getTypeName());
+    });
+
+    it('type unions should be different & have cloned type instances', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      utc.addTypeResolver(UserTC, () => true);
+      const cloned = utc.cloneTo(anotherSchemaComposer);
+      cloned.addType('AAA');
+      expect(cloned.getTypes()).toHaveLength(4);
+      expect(utc.getTypes()).toHaveLength(3);
+
+      const ClonedUserTC = anotherSchemaComposer.getOTC('User');
+      expect(cloned.getTypes()).toEqual(expect.arrayContaining([ClonedUserTC]));
+      expect(cloned.getTypes()).toEqual(expect.not.arrayContaining([UserTC]));
+    });
+
+    it('extensions should be different', () => {
+      utc.setExtension('ext1', 123);
+      const cloned = utc.cloneTo(anotherSchemaComposer);
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(utc.getExtension('ext1')).toBe(123);
+    });
+
+    it('typeResolvers should be different', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      utc.addTypeResolver(UserTC, () => true);
+      const cloned = utc.cloneTo(anotherSchemaComposer);
+      const clonedUserTC: any = cloned
+        .getTypeResolvers()
+        .keys()
+        .next().value;
+      // different type instances
+      expect(clonedUserTC).not.toBe(UserTC);
+      // but have same typename
+      expect(clonedUserTC.getTypeName()).toBe(UserTC.getTypeName());
     });
   });
 

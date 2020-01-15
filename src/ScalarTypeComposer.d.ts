@@ -106,7 +106,7 @@ export class ScalarTypeComposer<TContext = any> {
    */
   public cloneTo<TCtx = any>(
     anotherSchemaComposer: SchemaComposer<TCtx>,
-    nonCloneableTypes?: Set<any>
+    cloneMap?: Map<any, any>
   ): ScalarTypeComposer<TCtx>;
 
   public merge(type: GraphQLScalarType | ScalarTypeComposer<any>): this;

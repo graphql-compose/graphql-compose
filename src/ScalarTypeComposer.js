@@ -368,13 +368,15 @@ export class ScalarTypeComposer<TContext> {
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
-    nonCloneableTypes?: Set<any> = new Set()
+    cloneMap?: Map<any, any> = new Map()
   ): ScalarTypeComposer<any> {
     if (!anotherSchemaComposer) {
       throw new Error('You should provide SchemaComposer for ObjectTypeComposer.cloneTo()');
     }
 
-    if (!nonCloneableTypes.has(this)) nonCloneableTypes.add(this);
+    if (cloneMap.has(this)) return (cloneMap.get(this): any);
+    // scalar cannot be cloned, so use the same instance
+    cloneMap.set(this, this);
 
     // copy same type instance
     if (!anotherSchemaComposer.has(this.getTypeName())) {

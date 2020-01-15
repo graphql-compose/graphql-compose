@@ -21,7 +21,7 @@ import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { ThunkComposer } from '../ThunkComposer';
-// import { Resolver, ObjectTypeComposer, InputTypeComposer, EnumTypeComposer } from '..';
+import { SchemaComposer } from '../SchemaComposer';
 
 declare var console: {
   log: any,
@@ -1220,6 +1220,72 @@ describe('Resolver', () => {
       const res = await r.withMiddlewares([mw1, mw2]).resolve(({}: any));
       expect(res).toBe('users result');
       expect(log).toEqual(['m1.before', 'm2.before', 'call User.find()', 'm2.after', 'm1.after']);
+    });
+  });
+
+  describe('clone()', () => {
+    it('should clone resolver', () => {
+      const cloned = resolver.clone({ name: 'newFind' });
+      expect(cloned).not.toBe(resolver);
+      expect(cloned.name).toBe('newFind');
+    });
+
+    it('resolver type should not be cloned', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      resolver.setType(UserTC);
+      const cloned = resolver.clone({ name: 'newFind' });
+      expect(cloned.getTypeComposer()).toBe(UserTC);
+    });
+
+    it('args config should be different', () => {
+      const cloned = resolver.clone({ name: 'newFind' });
+      cloned.setArg('arg123', 'String');
+      expect(cloned.hasArg('arg123')).toBeTruthy();
+      expect(resolver.hasArg('arg123')).toBeFalsy();
+    });
+
+    it('projection config should be different', () => {
+      resolver.projection = { field1: true };
+      const cloned = resolver.clone({ name: 'newFind' });
+      cloned.projection.field2 = true;
+      expect(cloned.projection).toEqual({ field1: true, field2: true });
+      expect(resolver.projection).toEqual({ field1: true });
+    });
+  });
+
+  describe('cloneTo()', () => {
+    let anotherSchemaComposer;
+    beforeEach(() => {
+      anotherSchemaComposer = new SchemaComposer();
+    });
+
+    it('should clone resolver', () => {
+      const cloned = resolver.cloneTo(anotherSchemaComposer);
+      expect(cloned).not.toBe(resolver);
+      expect(cloned.name).toBe('find');
+    });
+
+    it('resolver type should be cloned', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      resolver.setType(UserTC);
+      const cloned = resolver.cloneTo(anotherSchemaComposer);
+      expect(cloned.getTypeComposer()).not.toBe(UserTC);
+      expect(cloned.getTypeName()).toBe('User');
+    });
+
+    it('args config should be different', () => {
+      const cloned = resolver.cloneTo(anotherSchemaComposer);
+      cloned.setArg('arg123', 'String');
+      expect(cloned.hasArg('arg123')).toBeTruthy();
+      expect(resolver.hasArg('arg123')).toBeFalsy();
+    });
+
+    it('projection config should be different', () => {
+      resolver.projection = { field1: true };
+      const cloned = resolver.cloneTo(anotherSchemaComposer);
+      cloned.projection.field2 = true;
+      expect(cloned.projection).toEqual({ field1: true, field2: true });
+      expect(resolver.projection).toEqual({ field1: true });
     });
   });
 });

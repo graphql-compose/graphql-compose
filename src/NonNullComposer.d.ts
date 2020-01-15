@@ -24,6 +24,6 @@ export class NonNullComposer<T extends AnyTypeComposer<any>> {
    */
   public cloneTo<TCtx = any>(
     anotherSchemaComposer: SchemaComposer<TCtx>,
-    nonCloneableTypes?: Set<any>
+    cloneMap?: Map<any, any>
   ): NonNullComposer<AnyTypeComposer<TCtx>>;
 }
