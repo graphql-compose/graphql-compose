@@ -118,6 +118,15 @@ export class InputTypeComposer<TContext = any> {
 
   public getField(fieldName: string): InputTypeComposerFieldConfig;
 
+  /**
+   * Remove fields from type by name or array of names.
+   * You also may pass name in dot-notation, in such case will be removed nested field.
+   *
+   * @example
+   *     removeField('field1'); // remove 1 field
+   *     removeField(['field1', 'field2']); // remove 2 fields
+   *     removeField('field1.subField1'); // remove 1 nested field
+   */
   public removeField(fieldNameOrArray: string | string[]): this;
 
   public removeOtherFields(fieldNameOrArray: string | string[]): this;

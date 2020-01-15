@@ -290,9 +290,34 @@ export class InputTypeComposer<TContext> {
     return field;
   }
 
+  /**
+   * Remove fields from type by name or array of names.
+   * You also may pass name in dot-notation, in such case will be removed nested field.
+   *
+   * @example
+   *     removeField('field1'); // remove 1 field
+   *     removeField(['field1', 'field2']); // remove 2 fields
+   *     removeField('field1.subField1'); // remove 1 nested field
+   */
   removeField(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => delete this._gqcFields[fieldName]);
+    fieldNames.forEach(fieldName => {
+      const names = fieldName.split('.');
+      const name = names.shift();
+      if (names.length === 0) {
+        // single field
+        delete this._gqcFields[name];
+      } else {
+        // nested field
+        // eslint-disable-next-line no-lonely-if
+        if (this.hasField(name)) {
+          const subTC = this.getFieldTC(name);
+          if (subTC instanceof InputTypeComposer) {
+            subTC.removeField(names.join('.'));
+          }
+        }
+      }
+    });
     return this;
   }
 

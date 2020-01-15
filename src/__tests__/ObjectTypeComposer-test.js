@@ -12,7 +12,7 @@ import {
   GraphQLInputObjectType,
   graphql,
 } from '../graphql';
-import { schemaComposer, SchemaComposer } from '..';
+import { schemaComposer, SchemaComposer, sc } from '..';
 import { Resolver } from '../Resolver';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
@@ -24,6 +24,7 @@ import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { ThunkComposer } from '../ThunkComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
+import { dedent } from '../utils/dedent';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -192,6 +193,55 @@ describe('ObjectTypeComposer', () => {
       it('should remove list of fields', () => {
         tc.removeField(['field1', 'field2']);
         expect(tc.getFieldNames()).toEqual(expect.arrayContaining([]));
+      });
+
+      it('should remove field via dot-notation', () => {
+        sc.addTypeDefs(`
+          type Type {
+            field1: [SubType]!
+            field2: Int
+            field3: Int
+          }
+
+          type SubType {
+            subField1: SubSubType!
+            subField2: Int
+            subField3: Int
+          }
+
+          type SubSubType {
+            subSubField1: Int
+            subSubField2: Int
+          }
+        `);
+
+        sc.getOTC('Type').removeField([
+          'field1.subField1.subSubField1',
+          'field1.subField1.nonexistent',
+          'field1.nonexistent.nonexistent',
+          'field1.subField3',
+          'field2',
+          '',
+          '..',
+        ]);
+
+        expect(sc.getOTC('Type').toSDL({ deep: true, omitDescriptions: true })).toEqual(dedent`
+          type Type {
+            field1: [SubType]!
+            field3: Int
+          }
+
+          type SubType {
+            subField1: SubSubType!
+            subField2: Int
+          }
+
+          type SubSubType {
+            subSubField2: Int
+          }
+
+          scalar Int
+        `);
       });
     });
 
