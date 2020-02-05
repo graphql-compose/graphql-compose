@@ -279,6 +279,8 @@ export class InputTypeComposer<TContext = any> {
 
   public getDirectives(): ExtensionsDirective[];
 
+  public setDirectives(directives: ExtensionsDirective[]): this;
+
   public getDirectiveNames(): string[];
 
   public getDirectiveByName(directiveName: string): DirectiveArgs | void;
@@ -286,6 +288,8 @@ export class InputTypeComposer<TContext = any> {
   public getDirectiveById(idx: number): DirectiveArgs | void;
 
   public getFieldDirectives(fieldName: string): ExtensionsDirective[];
+
+  public setFieldDirectives(fieldName: string, directives: ExtensionsDirective[]): this;
 
   public getFieldDirectiveNames(fieldName: string): string[];
 

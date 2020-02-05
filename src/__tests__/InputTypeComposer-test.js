@@ -647,6 +647,30 @@ describe('InputTypeComposer', () => {
       expect(tc1.getFieldDirectiveByName('field', 'f2')).toEqual(undefined);
       expect(tc1.getFieldDirectiveById('field', 333)).toEqual(undefined);
     });
+
+    it('check directive set-methods', () => {
+      const tc1 = schemaComposer.createInputTC(`
+        input My1 @d0(a: true) {
+          field: Int @f0(a: false) @f1(b: "3") @f0(a: true)
+        }
+      `);
+      expect(tc1.toSDL()).toBe(dedent`
+        input My1 @d0(a: true) {
+          field: Int @f0(a: false) @f1(b: "3") @f0(a: true)
+        }
+      `);
+      tc1.setDirectives([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      tc1.setFieldDirectives('field', [{ args: { b: '6' }, name: 'd1' }]);
+      expect(tc1.toSDL()).toBe(dedent`
+        input My1 @d0(a: false) @d1(b: "3") @d0(a: true) {
+          field: Int @d1(b: "6")
+        }
+      `);
+    });
   });
 
   describe('merge()', () => {

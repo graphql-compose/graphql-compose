@@ -35,8 +35,8 @@ import {
   type ComposeNamedInputType,
   type ComposeInputTypeDefinition,
 } from './utils/typeHelpers';
-
 import { printInputObject, type SchemaPrinterOptions } from './utils/schemaPrinter';
+import { getInputObjectTypeDefinitionNode } from './utils/definitionNode';
 
 export type InputTypeComposerDefinition =
   | TypeAsString
@@ -501,11 +501,13 @@ export class InputTypeComposer<TContext> {
   // -----------------------------------------------
 
   getType(): GraphQLInputObjectType {
+    this._gqType.astNode = getInputObjectTypeDefinitionNode(this);
     if (graphqlVersion >= 14) {
       this._gqType._fields = () => {
         return defineInputFieldMap(
           this._gqType,
-          mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name))
+          mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name)),
+          this._gqType.astNode
         );
       };
     } else {
@@ -737,6 +739,11 @@ export class InputTypeComposer<TContext> {
     return [];
   }
 
+  setDirectives(directives: Array<ExtensionsDirective>): InputTypeComposer<TContext> {
+    this.setExtension('directives', directives);
+    return this;
+  }
+
   getDirectiveNames(): string[] {
     return this.getDirectives().map(d => d.name);
   }
@@ -759,6 +766,14 @@ export class InputTypeComposer<TContext> {
       return directives;
     }
     return [];
+  }
+
+  setFieldDirectives(
+    fieldName: string,
+    directives: Array<ExtensionsDirective>
+  ): InputTypeComposer<TContext> {
+    this.setFieldExtension(fieldName, 'directives', directives);
+    return this;
   }
 
   getFieldDirectiveNames(fieldName: string): string[] {
