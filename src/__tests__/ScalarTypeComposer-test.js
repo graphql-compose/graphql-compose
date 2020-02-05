@@ -5,6 +5,7 @@ import { GraphQLScalarType } from '../graphql';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
+import { dedent } from '../utils/dedent';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -168,6 +169,23 @@ describe('ScalarTypeComposer', () => {
       expect(tc1.getDirectiveById(1)).toEqual({ b: '3' });
       expect(tc1.getDirectiveByName('d2')).toEqual(undefined);
       expect(tc1.getDirectiveById(333)).toEqual(undefined);
+    });
+
+    it('check directive set-methods', () => {
+      const tc1 = schemaComposer.createScalarTC(`
+        scalar My1 @d1(b: "3")
+      `);
+      expect(tc1.toSDL()).toBe(dedent`
+        scalar My1 @d1(b: "3")
+      `);
+      tc1.setDirectives([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      expect(tc1.toSDL()).toBe(dedent`
+        scalar My1 @d0(a: false) @d1(b: "3") @d0(a: true)
+      `);
     });
   });
 

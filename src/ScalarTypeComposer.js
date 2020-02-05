@@ -18,6 +18,7 @@ import type { Extensions, ExtensionsDirective, DirectiveArgs } from './utils/def
 import { inspect } from './utils/misc';
 import { graphqlVersion } from './utils/graphqlVersion';
 import { printScalar, type SchemaPrinterOptions } from './utils/schemaPrinter';
+import { getScalarTypeDefinitionNode } from './utils/definitionNode';
 
 export type ScalarTypeComposerDefinition =
   | TypeAsString
@@ -173,6 +174,7 @@ export class ScalarTypeComposer<TContext> {
   // -----------------------------------------------
 
   getType(): GraphQLScalarType {
+    this._gqType.astNode = getScalarTypeDefinitionNode(this);
     if (graphqlVersion >= 14) {
       this._gqType.serialize = this._gqcSerialize;
       this._gqType.parseValue = this._gqcParseValue;
@@ -327,6 +329,11 @@ export class ScalarTypeComposer<TContext> {
       return directives;
     }
     return [];
+  }
+
+  setDirectives(directives: Array<ExtensionsDirective>): ScalarTypeComposer<TContext> {
+    this.setExtension('directives', directives);
+    return this;
   }
 
   getDirectiveNames(): string[] {
