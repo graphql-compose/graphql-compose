@@ -406,6 +406,8 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public getDirectives(): ExtensionsDirective[];
 
+  public setDirectives(directives: ExtensionsDirective[]): this;
+
   public getDirectiveNames(): string[];
 
   public getDirectiveByName(directiveName: string): DirectiveArgs | void;
@@ -414,6 +416,8 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public getFieldDirectives(fieldName: string): ExtensionsDirective[];
 
+  public setFieldDirectives(fieldName: string, directives: ExtensionsDirective[]): this;
+
   public getFieldDirectiveNames(fieldName: string): string[];
 
   public getFieldDirectiveByName(fieldName: string, directiveName: string): DirectiveArgs | void;
@@ -421,6 +425,12 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public getFieldDirectiveById(fieldName: string, idx: number): DirectiveArgs | void;
 
   public getFieldArgDirectives(fieldName: string, argName: string): ExtensionsDirective[];
+
+  public setFieldArgDirectives(
+    fieldName: string,
+    argName: string,
+    directives: ExtensionsDirective[]
+  ): this;
 
   public getFieldArgDirectiveNames(fieldName: string, argName: string): string[];
 

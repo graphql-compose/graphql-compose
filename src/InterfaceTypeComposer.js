@@ -59,6 +59,7 @@ import type {
   ComposeOutputType,
 } from './utils/typeHelpers';
 import { printInterface, type SchemaPrinterOptions } from './utils/schemaPrinter';
+import { getInterfaceTypeDefinitionNode } from './utils/definitionNode';
 
 export type InterfaceTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -724,11 +725,13 @@ export class InterfaceTypeComposer<TSource, TContext> {
   // -----------------------------------------------
 
   getType(): GraphQLInterfaceType {
+    this._gqType.astNode = getInterfaceTypeDefinitionNode(this);
     if (graphqlVersion >= 14) {
       this._gqType._fields = () =>
         defineFieldMap(
           this._gqType,
-          mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name))
+          mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name)),
+          this._gqType.astNode
         );
     } else {
       (this._gqType: any)._typeConfig.fields = () => {
@@ -1276,6 +1279,11 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return [];
   }
 
+  setDirectives(directives: Array<ExtensionsDirective>): InterfaceTypeComposer<TSource, TContext> {
+    this.setExtension('directives', directives);
+    return this;
+  }
+
   getDirectiveNames(): string[] {
     return this.getDirectives().map(d => d.name);
   }
@@ -1300,6 +1308,14 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return [];
   }
 
+  setFieldDirectives(
+    fieldName: string,
+    directives: Array<ExtensionsDirective>
+  ): InterfaceTypeComposer<TSource, TContext> {
+    this.setFieldExtension(fieldName, 'directives', directives);
+    return this;
+  }
+
   getFieldDirectiveNames(fieldName: string): string[] {
     return this.getFieldDirectives(fieldName).map(d => d.name);
   }
@@ -1322,6 +1338,15 @@ export class InterfaceTypeComposer<TSource, TContext> {
       return directives;
     }
     return [];
+  }
+
+  setFieldArgDirectives(
+    fieldName: string,
+    argName: string,
+    directives: Array<ExtensionsDirective>
+  ): InterfaceTypeComposer<TSource, TContext> {
+    this.setFieldArgExtension(fieldName, argName, 'directives', directives);
+    return this;
   }
 
   getFieldArgDirectiveNames(fieldName: string, argName: string): string[] {

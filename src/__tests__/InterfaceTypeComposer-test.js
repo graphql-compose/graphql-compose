@@ -1137,6 +1137,34 @@ describe('InterfaceTypeComposer', () => {
       expect(tc1.getFieldArgDirectiveByName('field', 'arg', 'a2')).toEqual(undefined);
       expect(tc1.getFieldArgDirectiveById('field', 'arg', 333)).toEqual(undefined);
     });
+
+    it('check directive set-methods', () => {
+      const tc1 = schemaComposer.createInterfaceTC(`
+        interface My1 @d0(a: true) {
+          field: Int @d2(a: false, b: true)
+          field2(ok: Int = 15 @d5(a: 5)): Int
+        }
+      `);
+      expect(tc1.toSDL()).toBe(dedent`
+        interface My1 @d0(a: true) {
+          field: Int @d2(a: false, b: true)
+          field2(ok: Int = 15 @d5(a: 5)): Int
+        }
+      `);
+      tc1.setDirectives([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      tc1.setFieldDirectives('field', [{ args: { b: '6' }, name: 'd1' }]);
+      tc1.setFieldArgDirectives('field2', 'ok', [{ args: { b: '7' }, name: 'd1' }]);
+      expect(tc1.toSDL()).toBe(dedent`
+        interface My1 @d0(a: false) @d1(b: "3") @d0(a: true) {
+          field: Int @d1(b: "6")
+          field2(ok: Int = 15 @d1(b: "7")): Int
+        }
+      `);
+    });
   });
 
   describe('merge()', () => {
