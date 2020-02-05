@@ -21,6 +21,7 @@ import type {
 } from './utils/definitions';
 import { isTypeNameString } from './utils/typeHelpers';
 import { printEnum, type SchemaPrinterOptions } from './utils/schemaPrinter';
+import { getEnumTypeDefinitionNode } from './utils/definitionNode';
 
 export type EnumTypeComposerDefinition =
   | TypeAsString
@@ -312,8 +313,13 @@ export class EnumTypeComposer<TContext> {
   // -----------------------------------------------
 
   getType(): GraphQLEnumType {
+    this._gqType.astNode = getEnumTypeDefinitionNode(this);
     if (graphqlVersion >= 14) {
-      this._gqType._values = defineEnumValues(this._gqType, (this._gqcFields: any));
+      this._gqType._values = defineEnumValues(
+        this._gqType,
+        (this._gqcFields: any),
+        this._gqType.astNode
+      );
       this._gqType._valueLookup = new Map(
         this._gqType._values.map(enumValue => [enumValue.value, enumValue])
       );
@@ -322,7 +328,11 @@ export class EnumTypeComposer<TContext> {
       // clear builded fields in type
       delete (this._gqType: any)._valueLookup;
       delete (this._gqType: any)._nameLookup;
-      this._gqType._values = defineEnumValues(this._gqType, (this._gqcFields: any));
+      this._gqType._values = defineEnumValues(
+        this._gqType,
+        (this._gqcFields: any),
+        this._gqType.astNode
+      );
     }
 
     return this._gqType;
@@ -540,6 +550,11 @@ export class EnumTypeComposer<TContext> {
     return [];
   }
 
+  setDirectives(directives: Array<ExtensionsDirective>): EnumTypeComposer<TContext> {
+    this.setExtension('directives', directives);
+    return this;
+  }
+
   getDirectiveNames(): string[] {
     return this.getDirectives().map(d => d.name);
   }
@@ -562,6 +577,14 @@ export class EnumTypeComposer<TContext> {
       return directives;
     }
     return [];
+  }
+
+  setFieldDirectives(
+    fieldName: string,
+    directives: Array<ExtensionsDirective>
+  ): EnumTypeComposer<TContext> {
+    this.setFieldExtension(fieldName, 'directives', directives);
+    return this;
   }
 
   getFieldDirectiveNames(fieldName: string): string[] {

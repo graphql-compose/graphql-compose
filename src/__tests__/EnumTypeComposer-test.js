@@ -6,6 +6,7 @@ import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { GraphQLEnumType } from '../graphql';
 import { graphqlVersion } from '../utils/graphqlVersion';
+import { dedent } from '../utils/dedent';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -348,6 +349,30 @@ describe('EnumTypeComposer', () => {
       expect(tc1.getFieldDirectiveById('AAA', 1)).toEqual({ b: '3' });
       expect(tc1.getFieldDirectiveByName('AAA', 'f2')).toEqual(undefined);
       expect(tc1.getFieldDirectiveById('AAA', 333)).toEqual(undefined);
+    });
+
+    it('check directive set-methods', () => {
+      const tc1 = schemaComposer.createEnumTC(`
+        enum My1 @d0(a: true) {
+          AAA @f0(a: false) @f1(b: "3") @f0(a: true)
+        }
+      `);
+      expect(tc1.toSDL()).toBe(dedent`
+        enum My1 @d0(a: true) {
+          AAA @f0(a: false) @f1(b: "3") @f0(a: true)
+        }
+      `);
+      tc1.setDirectives([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      tc1.setFieldDirectives('AAA', [{ args: { b: '6' }, name: 'd1' }]);
+      expect(tc1.toSDL()).toBe(dedent`
+        enum My1 @d0(a: false) @d1(b: "3") @d0(a: true) {
+          AAA @d1(b: "6")
+        }
+      `);
     });
   });
 
