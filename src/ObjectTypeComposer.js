@@ -71,6 +71,7 @@ import type {
 } from './utils/typeHelpers';
 import { createThunkedObjectProxy } from './utils/createThunkedObjectProxy';
 import { printObject, type SchemaPrinterOptions } from './utils/schemaPrinter';
+import { getObjectTypeDefinitionNode } from './utils/definitionNode';
 
 export type ObjectTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -928,11 +929,13 @@ export class ObjectTypeComposer<TSource, TContext> {
   // -----------------------------------------------
 
   getType(): GraphQLObjectType {
+    this._gqType.astNode = getObjectTypeDefinitionNode(this);
     if (graphqlVersion >= 14) {
       this._gqType._fields = () =>
         defineFieldMap(
           this._gqType,
-          mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name))
+          mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name)),
+          this._gqType.astNode
         );
       this._gqType._interfaces = () => this.getInterfacesTypes();
     } else {
@@ -1506,6 +1509,11 @@ export class ObjectTypeComposer<TSource, TContext> {
     return [];
   }
 
+  setDirectives(directives: Array<ExtensionsDirective>): ObjectTypeComposer<TSource, TContext> {
+    this.setExtension('directives', directives);
+    return this;
+  }
+
   getDirectiveNames(): string[] {
     return this.getDirectives().map(d => d.name);
   }
@@ -1530,6 +1538,14 @@ export class ObjectTypeComposer<TSource, TContext> {
     return [];
   }
 
+  setFieldDirectives(
+    fieldName: string,
+    directives: Array<ExtensionsDirective>
+  ): ObjectTypeComposer<TSource, TContext> {
+    this.setFieldExtension(fieldName, 'directives', directives);
+    return this;
+  }
+
   getFieldDirectiveNames(fieldName: string): string[] {
     return this.getFieldDirectives(fieldName).map(d => d.name);
   }
@@ -1552,6 +1568,15 @@ export class ObjectTypeComposer<TSource, TContext> {
       return directives;
     }
     return [];
+  }
+
+  setFieldArgDirectives(
+    fieldName: string,
+    argName: string,
+    directives: Array<ExtensionsDirective>
+  ): ObjectTypeComposer<TSource, TContext> {
+    this.setFieldArgExtension(fieldName, argName, 'directives', directives);
+    return this;
   }
 
   getFieldArgDirectiveNames(fieldName: string, argName: string): string[] {
