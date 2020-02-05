@@ -22,6 +22,11 @@ import type {
   GraphQLInterfaceType,
   GraphQLInputObjectType,
   GraphQLInputFieldMap,
+  ObjectTypeDefinitionNode,
+  InterfaceTypeDefinitionNode,
+  EnumTypeDefinitionNode,
+  FieldDefinitionNode,
+  InputObjectTypeDefinitionNode,
 } from '../graphql';
 import type { InputTypeComposerFieldConfigMap } from '../InputTypeComposer';
 import {
@@ -44,7 +49,8 @@ function isPlainObj(obj) {
 
 export function defineFieldMap(
   config: GraphQLObjectType | GraphQLInterfaceType,
-  fieldMap: GraphQLFieldConfigMap<any, any>
+  fieldMap: GraphQLFieldConfigMap<any, any>,
+  parentAstNode?: ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode | null
 ): GraphQLFieldMap<any, any> {
   invariant(
     isPlainObj(fieldMap),
@@ -55,6 +61,10 @@ export function defineFieldMap(
   const resultFieldMap = Object.create(null);
   for (const fieldName of Object.keys(fieldMap)) {
     const fieldConfig = fieldMap[fieldName];
+    // $FlowFixMe
+    const fieldNodeAst: ?FieldDefinitionNode = parentAstNode?.fields?.find(
+      f => f.name.value === fieldName
+    );
     invariant(
       isPlainObj(fieldConfig),
       `${config.name}.${fieldName} field config must be an object`
@@ -68,6 +78,7 @@ export function defineFieldMap(
       ...fieldConfig,
       isDeprecated: Boolean(fieldConfig.deprecationReason),
       name: fieldName,
+      astNode: fieldNodeAst,
     };
     invariant(
       field.resolve == null || typeof field.resolve === 'function',
@@ -89,7 +100,8 @@ export function defineFieldMap(
           description: arg.description === undefined ? null : arg.description,
           type: arg.type,
           defaultValue: arg.defaultValue,
-          astNode: arg.astNode,
+          // $FlowFixMe
+          astNode: fieldNodeAst?.arguments?.find(a => a.name.value === argName),
         };
       });
     }
@@ -156,7 +168,8 @@ export function convertObjectFieldMapToConfig(
 
 export function defineEnumValues(
   type: GraphQLEnumType,
-  valueMap: GraphQLEnumValueConfigMap /* <T> */
+  valueMap: GraphQLEnumValueConfigMap /* <T> */,
+  parentAstNode?: EnumTypeDefinitionNode
 ): Array<GraphQLEnumValue /* <T> */> {
   invariant(
     isPlainObj(valueMap),
@@ -178,7 +191,8 @@ export function defineEnumValues(
       description: value.description,
       isDeprecated: Boolean(value.deprecationReason),
       deprecationReason: value.deprecationReason,
-      astNode: value.astNode,
+      // $FlowFixMe
+      astNode: parentAstNode?.values?.find(v => v.name.value === valueName),
       value: value.hasOwnProperty('value') ? value.value : valueName,
       extensions: undefined,
     };
@@ -187,7 +201,8 @@ export function defineEnumValues(
 
 export function defineInputFieldMap(
   config: GraphQLInputObjectType,
-  fieldMap: GraphQLInputFieldConfigMap
+  fieldMap: GraphQLInputFieldConfigMap,
+  parentAstNode?: InputObjectTypeDefinitionNode | null
 ): GraphQLInputFieldMap {
   invariant(
     isPlainObj(fieldMap),
@@ -199,6 +214,8 @@ export function defineInputFieldMap(
     const field = {
       ...fieldMap[fieldName],
       name: fieldName,
+      // $FlowFixMe
+      astNode: parentAstNode?.fields?.find(f => f.name.value === fieldName),
     };
     invariant(
       !field.hasOwnProperty('resolve'),

@@ -1,8 +1,8 @@
 /* eslint-disable consistent-return */
 // @flow strict
 
-// copied from https://github.com/graphql/graphql-js/blob/master/src/utilities/schemaPrinter.js
-// just expose all methods via adding export
+// copied from https://github.com/graphql/graphql-js/blob/master/src/utilities/printSchema.js
+// added printNodeDirectives() method
 
 import objectValues from 'graphql/polyfills/objectValues';
 
@@ -11,7 +11,7 @@ import invariant from 'graphql/jsutils/invariant';
 
 import { print } from 'graphql/language/printer';
 import { printBlockString } from 'graphql/language/blockString';
-
+import type { DirectiveNode } from 'graphql/language/ast';
 import { type GraphQLSchema } from 'graphql/type/schema';
 import { isIntrospectionType } from 'graphql/type/introspection';
 import { GraphQLString, isSpecifiedScalarType } from 'graphql/type/scalars';
@@ -190,7 +190,9 @@ export function printType(type: GraphQLNamedType, options?: Options): string {
 }
 
 export function printScalar(type: GraphQLScalarType, options?: Options): string {
-  return `${printDescription(type, options)}scalar ${type.name}`;
+  return `${printDescription(type, options)}scalar ${type.name}${printNodeDirectives(
+    type.astNode
+  )}`;
 }
 
 export function printImplementedInterfaces(
@@ -212,13 +214,13 @@ export function printObject(type: GraphQLObjectType, options?: Options): string 
   return `${printDescription(type, options)}type ${type.name}${printImplementedInterfaces(
     type,
     options
-  )}${printFields(type, options)}`;
+  )}${printNodeDirectives(type.astNode)}${printFields(type, options)}`;
 }
 
 export function printInterface(type: GraphQLInterfaceType, options?: Options): string {
   return `${printDescription(type, options)}interface ${type.name}${printImplementedInterfaces(
     type
-  )}${printFields(type, options)}`;
+  )}${printNodeDirectives(type.astNode)}${printFields(type, options)}`;
 }
 
 export function printUnion(type: GraphQLUnionType, options?: Options): string {
@@ -227,7 +229,9 @@ export function printUnion(type: GraphQLUnionType, options?: Options): string {
     types = types.sort();
   }
   const possibleTypes = types.length ? ` = ${types.join(' | ')}` : '';
-  return `${printDescription(type, options)}union ${type.name}${possibleTypes}`;
+  return `${printDescription(type, options)}union ${type.name}${printNodeDirectives(
+    type.astNode
+  )}${possibleTypes}`;
 }
 
 export function printEnum(type: GraphQLEnumType, options?: Options): string {
@@ -238,10 +242,14 @@ export function printEnum(type: GraphQLEnumType, options?: Options): string {
 
   const valuesList = values.map(
     (value, i) =>
-      `${printDescription(value, options, '  ', !i)}  ${value.name}${printDeprecated(value)}`
+      `${printDescription(value, options, '  ', !i)}  ${value.name}${printNodeDirectives(
+        value.astNode
+      )}${printDeprecated(value)}`
   );
 
-  return `${printDescription(type, options)}enum ${type.name}${printBlock(valuesList)}`;
+  return `${printDescription(type, options)}enum ${type.name}${printNodeDirectives(
+    type.astNode
+  )}${printBlock(valuesList)}`;
 }
 
 export function printInputObject(type: GraphQLInputObjectType, options?: Options): string {
@@ -253,7 +261,9 @@ export function printInputObject(type: GraphQLInputObjectType, options?: Options
   const fieldsList = fields.map(
     (f, i) => `${printDescription(f, options, '  ', !i)}  ${printInputValue(f)}`
   );
-  return `${printDescription(type, options)}input ${type.name}${printBlock(fieldsList)}`;
+  return `${printDescription(type, options)}input ${type.name}${printNodeDirectives(
+    type.astNode
+  )}${printBlock(fieldsList)}`;
 }
 
 export function printFields(
@@ -271,7 +281,7 @@ export function printFields(
         f.args,
         options,
         '  '
-      )}: ${String(f.type)}${printDeprecated(f)}`
+      )}: ${String(f.type)}${printNodeDirectives(f.astNode)}${printDeprecated(f)}`
   );
   return printBlock(fieldsList);
 }
@@ -315,7 +325,7 @@ export function printInputValue(arg: GraphQLArgument): string {
   if (defaultAST) {
     argDecl += ` = ${print(defaultAST)}`;
   }
-  return argDecl;
+  return `${argDecl}${printNodeDirectives(arg.astNode)}`;
 }
 
 export function printDirective(directive: GraphQLDirective, options?: Options) {
@@ -323,6 +333,23 @@ export function printDirective(directive: GraphQLDirective, options?: Options) {
     directive.args,
     options
   )}${directive.isRepeatable ? ' repeatable' : ''} on ${directive.locations.join(' | ')}`;
+}
+
+export function printNodeDirectives(
+  node: ?{
+    +directives?: $ReadOnlyArray<DirectiveNode>,
+  }
+): string {
+  if (!node || !node.directives || !node.directives.length) return '';
+  return ` ${node.directives
+    .map(d => {
+      let args = '';
+      if (d.arguments && d.arguments.length) {
+        args = `(${d.arguments.map(a => `${a.name.value}: ${print(a.value)}`).join(', ')})`;
+      }
+      return `@${d.name.value}${args}`;
+    })
+    .join(' ')}`;
 }
 
 export function printDeprecated(fieldOrEnumVal: GraphQLEnumValue) {
