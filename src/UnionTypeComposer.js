@@ -38,6 +38,7 @@ import {
 } from './utils/typeHelpers';
 import { graphqlVersion } from './utils/graphqlVersion';
 import { printUnion, type SchemaPrinterOptions } from './utils/schemaPrinter';
+import { getUnionTypeDefinitionNode } from './utils/definitionNode';
 
 export type UnionTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -282,6 +283,7 @@ export class UnionTypeComposer<TSource, TContext> {
   // -----------------------------------------------
 
   getType(): GraphQLUnionType {
+    this._gqType.astNode = getUnionTypeDefinitionNode(this);
     const prepareTypes = () => {
       try {
         return this.getTypes().map(tc => tc.getType());
@@ -659,6 +661,11 @@ export class UnionTypeComposer<TSource, TContext> {
       return directives;
     }
     return [];
+  }
+
+  setDirectives(directives: Array<ExtensionsDirective>): UnionTypeComposer<TSource, TContext> {
+    this.setExtension('directives', directives);
+    return this;
   }
 
   getDirectiveNames(): string[] {

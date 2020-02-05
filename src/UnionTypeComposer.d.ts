@@ -231,6 +231,8 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   public getDirectives(): ExtensionsDirective[];
 
+  public setDirectives(directives: ExtensionsDirective[]): this;
+
   public getDirectiveNames(): string[];
 
   public getDirectiveByName(directiveName: string): DirectiveArgs | void;

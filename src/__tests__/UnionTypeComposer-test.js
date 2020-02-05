@@ -6,6 +6,7 @@ import { UnionTypeComposer } from '../UnionTypeComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
+import { dedent } from '../utils/dedent';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -558,6 +559,27 @@ describe('UnionTypeComposer', () => {
       expect(tc1.getDirectiveById(1)).toEqual({ b: '3' });
       expect(tc1.getDirectiveByName('d2')).toEqual(undefined);
       expect(tc1.getDirectiveById(333)).toEqual(undefined);
+    });
+
+    it('check directive set-methods', () => {
+      schemaComposer.addTypeDefs(`
+        type My2 { f: Int }
+        type My3 { f: Int }
+      `);
+      const tc1 = schemaComposer.createUnionTC(`
+        union My1 @d1(b: "3") = My2 | My3 
+      `);
+      expect(tc1.toSDL()).toBe(dedent`
+        union My1 @d1(b: "3") = My2 | My3
+      `);
+      tc1.setDirectives([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      expect(tc1.toSDL()).toBe(dedent`
+        union My1 @d0(a: false) @d1(b: "3") @d0(a: true) = My2 | My3
+      `);
     });
   });
 
