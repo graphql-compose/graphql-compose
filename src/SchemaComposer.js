@@ -50,6 +50,7 @@ import {
   GraphQLScalarType,
   GraphQLNonNull,
   GraphQLList,
+  defaultFieldResolver,
   type GraphQLType,
   type GraphQLNamedType,
   type SchemaDefinitionNode,
@@ -60,6 +61,7 @@ import {
   type SchemaPrinterOptions,
   type SchemaComposerPrinterOptions,
 } from './utils/schemaPrinter';
+import { visitSchema } from './utils/schemaVisitor';
 
 type ExtraSchemaConfig = {|
   +types?: GraphQLNamedType[] | null,
@@ -824,8 +826,28 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   }
 
   /**
-   * TODO: for Apollo Federation
-   * see https://github.com/graphql-compose/graphql-compose/issues/214#issuecomment-546723693
+   * Returns a map of resolvers for each relevant GraphQL Object Type.
+   *
+   * This map of Resolvers can be used with graphql-tools and Apollo Federation.
+   *
+   * @param {Object} options
+   * @param {String[]} options.exclude - do not add resolvers from provided types
    */
-  // getResolveMethods(): GraphQLToolsResolveMethods<TContext> {}
+  getResolveMethods(opts?: { exclude?: ?(string[]) }): GraphQLToolsResolveMethods<TContext> {
+    const resolveMethods = {};
+    const exclude = opts?.exclude || [];
+    visitSchema(this, {
+      OBJECT_TYPE: (tc: ObjectTypeComposer<any, any>) => {
+        const typename = tc.getTypeName();
+        if (exclude.includes(typename)) return;
+        forEachKey(tc.getFields(), (fc, fieldName) => {
+          if (!fc.resolve || fc.resolve === defaultFieldResolver) return;
+          if (!resolveMethods[typename]) resolveMethods[typename] = {};
+          resolveMethods[typename][fieldName] = fc.resolve;
+        });
+      },
+    });
+
+    return resolveMethods;
+  }
 }

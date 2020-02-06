@@ -362,4 +362,16 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    * @param {Boolean} options.sortEnums - sort enum values by name
    */
   public toSDL(options?: SchemaComposerPrinterOptions): string;
+
+  /**
+   * Returns a map of resolvers for each relevant GraphQL Object Type.
+   *
+   * This map of Resolvers can be used with graphql-tools and Apollo Federation.
+   *
+   * @param {Object} options
+   * @param {String[]} options.exclude - do not add resolvers from provided types
+   */
+  public getResolveMethods(opts?: {
+    exclude?: string[] | null;
+  }): GraphQLToolsResolveMethods<TContext>;
 }

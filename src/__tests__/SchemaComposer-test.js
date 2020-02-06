@@ -970,6 +970,42 @@ describe('SchemaComposer', () => {
     });
   });
 
+  describe('getResolveMethods', () => {
+    it('should return resolver map in graphql-tools way', async () => {
+      const sc = new SchemaComposer();
+      sc.addTypeDefs(`
+        schema {
+          query: Query
+        }
+        type Post {
+          id: Int!
+          title: String
+          votes: Int
+        }
+        type Query {
+          posts: [Post]
+        }
+      `);
+      const inResolveMap = {
+        Query: {
+          posts: () => [{ id: 1, title: 'Post title' }],
+        },
+        Post: {
+          votes: () => 10,
+        },
+      };
+      sc.addResolveMethods(inResolveMap);
+
+      const outResolveMap = sc.getResolveMethods();
+      expect(outResolveMap.Query.posts).toBe(inResolveMap.Query.posts);
+      expect(outResolveMap.Post.votes).toBe(inResolveMap.Post.votes);
+      expect(Object.keys(outResolveMap)).toEqual(['Post', 'Query']);
+
+      const outResolveMap2 = sc.getResolveMethods({ exclude: ['Post'] });
+      expect(Object.keys(outResolveMap2)).toEqual(['Query']);
+    });
+  });
+
   describe('createTC helper methods', () => {
     it('createObjectTC()', () => {
       const sc = new SchemaComposer();
