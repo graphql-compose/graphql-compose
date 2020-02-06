@@ -781,11 +781,6 @@ export class TypeMapper<TContext> {
         const directives = this.parseDirectives(value.directives);
         if (directives) {
           ac.extensions = { directives };
-
-          const data = directives.find(d => d.name === 'default');
-          if (data) {
-            ac.defaultValue = data.args.value;
-          }
         }
       }
 
@@ -862,11 +857,6 @@ export class TypeMapper<TContext> {
           const directives = this.parseDirectives(field.directives);
           if (directives) {
             fc.extensions = { directives };
-
-            const data = directives.find(d => d.name === 'default');
-            if (data) {
-              fc.defaultValue = data.args.value;
-            }
           }
         }
 

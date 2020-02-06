@@ -439,7 +439,7 @@ describe('InputTypeComposer', () => {
       const itc1 = schemaComposer.createInputTC(
         `
         input TestTypeTplInput {
-          f1: String @default(value: "new")
+          f1: String
           # Description for some required Int field
           f2: Int!
         }
@@ -448,7 +448,6 @@ describe('InputTypeComposer', () => {
       expect(itc1).toBeInstanceOf(InputTypeComposer);
       expect(itc1.getTypeName()).toBe('TestTypeTplInput');
       expect(itc1.getFieldType('f1')).toBe(GraphQLString);
-      expect((itc1.getField('f1'): any).defaultValue).toBe('new');
       expect(itc1.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
       expect((itc1.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });

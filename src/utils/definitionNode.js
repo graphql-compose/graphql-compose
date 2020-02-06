@@ -216,13 +216,15 @@ function getDirectiveNodes(values: ExtensionsDirective[]): $ReadOnlyArray<Direct
 function getInterfaceNodes(
   ifaces: InterfaceTypeComposerThunked<any, any>[]
 ): $ReadOnlyArray<NamedTypeNode> {
-  return ifaces.map(
-    iface =>
-      ({
+  return ifaces
+    .map(iface => {
+      if (!iface || !iface.getTypeName) return;
+      return ({
         kind: 'NamedType',
         name: { kind: 'Name', value: iface.getTypeName() },
-      }: NamedTypeNode)
-  );
+      }: NamedTypeNode);
+    })
+    .filter(Boolean);
 }
 
 function getTypeNode(atc: AnyTypeComposer<any>): TypeNode | void {
@@ -242,7 +244,7 @@ function getTypeNode(atc: AnyTypeComposer<any>): TypeNode | void {
       kind: 'NonNullType',
       type: (subType: any),
     };
-  } else if (atc) {
+  } else if (atc && atc.getTypeName) {
     return {
       kind: 'NamedType',
       name: { kind: 'Name', value: atc.getTypeName() },

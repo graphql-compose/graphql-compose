@@ -1052,8 +1052,7 @@ describe('SchemaComposer', () => {
       expect(sc.hasDirective('@skip')).toBeTruthy();
       expect(sc.hasDirective('@include')).toBeTruthy();
       expect(sc.hasDirective('@deprecated')).toBeTruthy();
-      expect(sc.hasDirective('@default')).toBeTruthy();
-      expect(sc.getDirectives()).toHaveLength(4);
+      expect(sc.getDirectives()).toHaveLength(3);
     });
 
     it('addDirective()', () => {
@@ -1102,8 +1101,7 @@ describe('SchemaComposer', () => {
       expect(sc.hasDirective('@skip')).toBe(true);
       expect(sc.hasDirective('@include')).toBe(true);
       expect(sc.hasDirective('@deprecated')).toBe(true);
-      expect(sc.hasDirective('@default')).toBe(true);
-      expect(sc.getDirectives()).toHaveLength(4);
+      expect(sc.getDirectives()).toHaveLength(3);
 
       expect(sc.has('String')).toBeFalsy();
       expect(sc.has('Int')).toBeFalsy();
@@ -1254,9 +1252,6 @@ describe('SchemaComposer', () => {
       sc.createTC(`type User { age: Int }`);
 
       expect(sc.toSDL()).toMatchInlineSnapshot(`
-        "\\"\\"\\"Provides default value for input field.\\"\\"\\"
-        directive @default(value: JSON!) on INPUT_FIELD_DEFINITION
-
         \\"\\"\\"
         The \`JSON\` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
         \\"\\"\\"

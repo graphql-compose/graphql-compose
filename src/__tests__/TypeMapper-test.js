@@ -135,7 +135,7 @@ describe('TypeMapper', () => {
     const tc: any = typeMapper.convertSDLTypeDefinition(
       `
       input InputIntRange {
-        min: Int @default(value: 0)
+        min: Int
         max: Int!
       }
     `
@@ -148,7 +148,6 @@ describe('TypeMapper', () => {
 
     const IntRangeTC: any = new InputTypeComposer(type, sc);
     expect(IntRangeTC.getTypeName()).toBe('InputIntRange');
-    expect(IntRangeTC.getField('min').defaultValue).toBe(0);
     expect(IntRangeTC.getFieldType('min')).toBe(GraphQLInt);
     expect(IntRangeTC.getFieldType('max')).toBeInstanceOf(GraphQLNonNull);
     expect(IntRangeTC.getFieldType('max').ofType).toBe(GraphQLInt);
@@ -1129,7 +1128,7 @@ describe('TypeMapper', () => {
     it('ObjectType', () => {
       const tc: ObjectTypeComposer<any, any> = (typeMapper.convertSDLTypeDefinition(`
         type My1 @typeDirective(a: false) { 
-          a: Int @default(value: 1)
+          a: Int @cost(value: 1)
           b: Float @unexisted(q: 1, w: true, e: "s")
           c: String @me @they @me
           d(arg: Int = 15 @darg(v: 2) @darg2(w: "3")): Int @ddd
@@ -1141,7 +1140,7 @@ describe('TypeMapper', () => {
       });
 
       expect(tc.getFieldExtensions('a')).toEqual({
-        directives: [{ args: { value: 1 }, name: 'default' }],
+        directives: [{ args: { value: 1 }, name: 'cost' }],
       });
       expect(tc.getFieldExtensions('b')).toEqual({
         directives: [{ args: { e: 's', q: 1, w: true }, name: 'unexisted' }],
@@ -1165,7 +1164,7 @@ describe('TypeMapper', () => {
     it('InterfaceType', () => {
       const tc: InterfaceTypeComposer<any, any> = (typeMapper.convertSDLTypeDefinition(`
         interface My1 @typeDirective(a: false) { 
-          a: Int @default(value: 1)
+          a: Int @cost(value: 1)
           b: Float @unexisted(q: 1, w: true, e: "s")
           c: String @me @they @me
           d(arg: Int = 15 @darg(v: 2) @darg2(w: "3")): Int @ddd
@@ -1177,7 +1176,7 @@ describe('TypeMapper', () => {
       });
 
       expect(tc.getFieldExtensions('a')).toEqual({
-        directives: [{ args: { value: 1 }, name: 'default' }],
+        directives: [{ args: { value: 1 }, name: 'cost' }],
       });
       expect(tc.getFieldExtensions('b')).toEqual({
         directives: [{ args: { e: 's', q: 1, w: true }, name: 'unexisted' }],
@@ -1203,7 +1202,7 @@ describe('TypeMapper', () => {
     it('InputType', () => {
       const tc: InputTypeComposer<any> = (typeMapper.convertSDLTypeDefinition(`
         input My1 @typeDirective(a: false) { 
-          a: Int @default(value: 1)
+          a: Int @cost(value: 1)
           b: Float @unexisted(q: 1, w: true, e: "s")
           c: String @me @they @me
         }`): any);
@@ -1214,7 +1213,7 @@ describe('TypeMapper', () => {
       });
 
       expect(tc.getFieldExtensions('a')).toEqual({
-        directives: [{ args: { value: 1 }, name: 'default' }],
+        directives: [{ args: { value: 1 }, name: 'cost' }],
       });
       expect(tc.getFieldExtensions('b')).toEqual({
         directives: [{ args: { e: 's', q: 1, w: true }, name: 'unexisted' }],

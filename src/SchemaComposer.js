@@ -55,7 +55,6 @@ import {
   type SchemaDefinitionNode,
   type GraphQLResolveInfo,
 } from './graphql';
-import DefaultDirective from './directive/default';
 import { printSchema, type SchemaPrinterOptions } from './utils/schemaPrinter';
 
 type ExtraSchemaConfig = {
@@ -79,7 +78,6 @@ export const BUILT_IN_DIRECTIVES = [
   GraphQLSkipDirective,
   GraphQLIncludeDirective,
   GraphQLDeprecatedDirective,
-  DefaultDirective,
 ];
 
 export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer<TContext>> {
