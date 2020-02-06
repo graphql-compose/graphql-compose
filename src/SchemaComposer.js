@@ -55,7 +55,11 @@ import {
   type SchemaDefinitionNode,
   type GraphQLResolveInfo,
 } from './graphql';
-import { printSchema, type SchemaPrinterOptions } from './utils/schemaPrinter';
+import {
+  printSchemaComposer,
+  type SchemaPrinterOptions,
+  type SchemaComposerPrinterOptions,
+} from './utils/schemaPrinter';
 
 type ExtraSchemaConfig = {
   types?: GraphQLNamedType[] | null,
@@ -782,22 +786,46 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   }
 
   /**
-   * Prints SDL for any type in schema. Or print with all used types if `deep: true` option was provided.
+   * Prints SDL for any type in schema by its name.
+   *
+   * Can print all used sub-types if provided `deep: true` option.
+   * Also you may omit some sub-types via `exclude: string[]` option.
    */
   getTypeSDL(
     typeName: string,
     opts?: SchemaPrinterOptions & {
       deep?: ?boolean,
       sortTypes?: ?boolean,
+      exclude?: ?(string[]),
     }
   ): string {
     return this.getAnyTC(typeName).toSDL(opts);
   }
 
   /**
-   * Return schema as SDL string.
+   * Return schema as a SDL string.
+   * This SDL can be used with graphql-tools and Apollo Federation.
+   *
+   * @param {Object} options
+   * @param {String[]} options.include - add to SDL only provided types
+   * @param {String[]} options.exclude - do not add provided types to SDL
+   * @param {Boolean} options.omitDescriptions - do not add descriptions to SDL
+   * @param {Boolean} options.omitDirectiveDefinitions - do not add directives definitions to SDL
+   * @param {Boolean} options.commentDescriptions - print descriptions like comments, starting with #
+   * @param {Boolean} options.sortAll - sort fields, args, values, interfaces by its names. Useful for snapshot testing.
+   * @param {Boolean} options.sortFields - sort fields by name
+   * @param {Boolean} options.sortArgs - sort args by name
+   * @param {Boolean} options.sortInterfaces  - sort interfaces by name
+   * @param {Boolean} options.sortUnions - sort union types by name
+   * @param {Boolean} options.sortEnums - sort enum values by name
    */
-  toSDL(opts?: SchemaPrinterOptions): string {
-    return printSchema(this.buildSchema(), opts || {});
+  toSDL(options?: SchemaComposerPrinterOptions): string {
+    return printSchemaComposer(this, options);
   }
+
+  /**
+   * TODO: for Apollo Federation
+   * see https://github.com/graphql-compose/graphql-compose/issues/214#issuecomment-546723693
+   */
+  // getResolveMethods(): GraphQLToolsResolveMethods<TContext> {}
 }

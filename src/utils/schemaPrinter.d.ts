@@ -17,6 +17,7 @@ import {
   GraphQLUnionType,
   GraphQLInputObjectType,
 } from 'graphql/type/definition';
+import { SchemaComposer } from '../SchemaComposer';
 
 type Options = {
   /**
@@ -51,6 +52,20 @@ type Options = {
 };
 
 export type SchemaPrinterOptions = Options;
+
+export type SchemaComposerPrinterOptions = Options & {
+  include?: string[] | null;
+  exclude?: string[] | null;
+  omitDirectiveDefinitions?: boolean | null;
+};
+
+/**
+ * Return schema as a SDL string.
+ */
+export function printSchemaComposer(
+  sc: SchemaComposer<any>,
+  options?: SchemaComposerPrinterOptions
+): string;
 
 /**
  * Accepts options as a second argument:

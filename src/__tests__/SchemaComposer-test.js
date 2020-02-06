@@ -1252,12 +1252,7 @@ describe('SchemaComposer', () => {
       sc.createTC(`type User { age: Int }`);
 
       expect(sc.toSDL()).toMatchInlineSnapshot(`
-        \\"\\"\\"
-        The \`JSON\` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
-        \\"\\"\\"
-        scalar JSON
-
-        type Mutation {
+        "type Mutation {
           existedInMutation: String
         }
 
@@ -1265,10 +1260,14 @@ describe('SchemaComposer', () => {
           existedInQuery: String
         }
 
+        \\"\\"\\"
+        The \`String\` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
+        \\"\\"\\"
+        scalar String
+
         type Subscription {
           existedInSubscription: String
-        }
-        "
+        }"
       `);
     });
 

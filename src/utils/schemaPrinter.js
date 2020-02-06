@@ -5,10 +5,8 @@
 // added printNodeDirectives() method
 
 import objectValues from 'graphql/polyfills/objectValues';
-
 import inspect from 'graphql/jsutils/inspect';
 import invariant from 'graphql/jsutils/invariant';
-
 import { print } from 'graphql/language/printer';
 import { printBlockString } from 'graphql/language/blockString';
 import type { DirectiveNode } from 'graphql/language/ast';
@@ -37,8 +35,14 @@ import {
   isEnumType,
   isInputObjectType,
 } from 'graphql/type/definition';
-
 import { astFromValue } from 'graphql/utilities/astFromValue';
+
+import { SchemaComposer, BUILT_IN_DIRECTIVES } from '../SchemaComposer';
+import { ObjectTypeComposer } from '../ObjectTypeComposer';
+import { InputTypeComposer } from '../InputTypeComposer';
+import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
+import { UnionTypeComposer } from '../UnionTypeComposer';
+import { type NamedTypeComposer } from './typeHelpers';
 
 type Options = {
   /**
@@ -73,6 +77,70 @@ type Options = {
 };
 
 export type SchemaPrinterOptions = Options;
+
+export type SchemaComposerPrinterOptions = Options & {
+  include?: ?(string[]),
+  exclude?: ?(string[]),
+  omitDirectiveDefinitions?: ?boolean,
+};
+
+/**
+ * Return schema as a SDL string.
+ */
+export function printSchemaComposer(
+  sc: SchemaComposer<any>,
+  options?: SchemaComposerPrinterOptions
+): string {
+  const { exclude = [], include, omitDirectiveDefinitions, ...innerOpts } = (options: any) || {};
+
+  const includeTypes = new Set();
+  if (Array.isArray(include) && include.length) {
+    include.forEach(s => {
+      if (s && typeof s === 'string') {
+        includeTypes.add(sc.getAnyTC(s));
+      }
+    });
+  } else {
+    if (sc.has('Query')) includeTypes.add(sc.getOTC('Query'));
+    if (sc.has('Mutation')) includeTypes.add(sc.getOTC('Mutation'));
+    if (sc.has('Subscription')) includeTypes.add(sc.getOTC('Subscription'));
+  }
+
+  const res = [];
+  if (!omitDirectiveDefinitions) {
+    const directives = sc._directives.filter(d => !BUILT_IN_DIRECTIVES.includes(d));
+    res.push(...directives.map(d => printDirective(d, innerOpts)));
+    // directives may have specific types in arguments, so add them to includeTypes
+    directives.forEach(d => {
+      if (!Array.isArray(d.args)) return;
+      d.args.forEach(ac => {
+        includeTypes.add(sc.getAnyTC(ac.type));
+      });
+    });
+  }
+
+  const printTypeSet: Set<NamedTypeComposer<any>> = new Set();
+  includeTypes.forEach(tc => {
+    if (
+      tc instanceof ObjectTypeComposer ||
+      tc instanceof InputTypeComposer ||
+      tc instanceof InterfaceTypeComposer ||
+      tc instanceof UnionTypeComposer
+    ) {
+      printTypeSet.add(tc);
+      tc.getNestedTCs({ exclude }, printTypeSet);
+    } else {
+      printTypeSet.add(tc);
+    }
+  });
+  const printTypes = Array.from(printTypeSet).sort((tc1, tc2) =>
+    tc1.getTypeName().localeCompare(tc2.getTypeName())
+  );
+
+  res.push(...printTypes.map(tc => tc.toSDL(innerOpts)));
+
+  return res.filter(Boolean).join('\n\n');
+}
 
 /**
  * Accepts options as a second argument:
