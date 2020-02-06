@@ -225,20 +225,24 @@ function getInterfaceNodes(
   );
 }
 
-function getTypeNode(atc: AnyTypeComposer<any>): TypeNode {
+function getTypeNode(atc: AnyTypeComposer<any>): TypeNode | void {
   if (atc instanceof ThunkComposer) {
     return getTypeNode(atc.ofType);
   } else if (atc instanceof ListComposer) {
+    const subType = getTypeNode(atc.ofType);
+    if (!subType) return;
     return {
       kind: 'ListType',
-      type: getTypeNode(atc.ofType),
+      type: subType,
     };
   } else if (atc instanceof NonNullComposer) {
+    const subType = getTypeNode(atc.ofType);
+    if (!subType) return;
     return {
       kind: 'NonNullType',
-      type: (getTypeNode(atc.ofType): any),
+      type: (subType: any),
     };
-  } else {
+  } else if (atc) {
     return {
       kind: 'NamedType',
       name: { kind: 'Name', value: atc.getTypeName() },
@@ -252,17 +256,21 @@ function getArgumentsDefinitionNodes(
 ): $ReadOnlyArray<InputValueDefinitionNode> | void {
   const argNames = tc.getFieldArgNames(fieldName);
   if (!argNames.length) return;
-  return argNames.map(argName => {
-    const ac = tc.getFieldArg(fieldName, argName);
-    return ({
-      kind: 'InputValueDefinition',
-      name: { kind: 'Name', value: argName },
-      type: getTypeNode(ac.type),
-      description: getDescriptionNode(ac.description),
-      directives: getDirectiveNodes(tc.getFieldArgDirectives(fieldName, argName)),
-      defaultValue: toValueNode(ac.defaultValue),
-    }: InputValueDefinitionNode);
-  });
+  return argNames
+    .map(argName => {
+      const ac = tc.getFieldArg(fieldName, argName);
+      const type = getTypeNode(ac.type);
+      if (!type) return;
+      return ({
+        kind: 'InputValueDefinition',
+        name: { kind: 'Name', value: argName },
+        type,
+        description: getDescriptionNode(ac.description),
+        directives: getDirectiveNodes(tc.getFieldArgDirectives(fieldName, argName)),
+        defaultValue: toValueNode(ac.defaultValue),
+      }: InputValueDefinitionNode);
+    })
+    .filter(Boolean);
 }
 
 function getFieldDefinitionNodes(
@@ -270,17 +278,21 @@ function getFieldDefinitionNodes(
 ): $ReadOnlyArray<FieldDefinitionNode> | void {
   const fieldNames = tc.getFieldNames();
   if (!fieldNames.length) return;
-  return fieldNames.map(fieldName => {
-    const fc = tc.getField(fieldName);
-    return ({
-      kind: 'FieldDefinition',
-      name: { kind: 'Name', value: fieldName },
-      type: getTypeNode(fc.type),
-      arguments: getArgumentsDefinitionNodes(tc, fieldName),
-      description: getDescriptionNode(fc.description),
-      directives: getDirectiveNodes(tc.getFieldDirectives(fieldName)),
-    }: FieldDefinitionNode);
-  });
+  return fieldNames
+    .map(fieldName => {
+      const fc = tc.getField(fieldName);
+      const type = getTypeNode(fc.type);
+      if (!type) return;
+      return ({
+        kind: 'FieldDefinition',
+        name: { kind: 'Name', value: fieldName },
+        type,
+        arguments: getArgumentsDefinitionNodes(tc, fieldName),
+        description: getDescriptionNode(fc.description),
+        directives: getDirectiveNodes(tc.getFieldDirectives(fieldName)),
+      }: FieldDefinitionNode);
+    })
+    .filter(Boolean);
 }
 
 function getInputValueDefinitionNodes(
@@ -288,17 +300,21 @@ function getInputValueDefinitionNodes(
 ): $ReadOnlyArray<InputValueDefinitionNode> | void {
   const fieldNames = tc.getFieldNames();
   if (!fieldNames.length) return;
-  return fieldNames.map(fieldName => {
-    const fc = tc.getField(fieldName);
-    return ({
-      kind: 'InputValueDefinition',
-      name: { kind: 'Name', value: fieldName },
-      type: getTypeNode(fc.type),
-      description: getDescriptionNode(fc.description),
-      directives: getDirectiveNodes(tc.getFieldDirectives(fieldName)),
-      defaultValue: toValueNode(fc.defaultValue),
-    }: InputValueDefinitionNode);
-  });
+  return fieldNames
+    .map(fieldName => {
+      const fc = tc.getField(fieldName);
+      const type = getTypeNode(fc.type);
+      if (!type) return;
+      return ({
+        kind: 'InputValueDefinition',
+        name: { kind: 'Name', value: fieldName },
+        type,
+        description: getDescriptionNode(fc.description),
+        directives: getDirectiveNodes(tc.getFieldDirectives(fieldName)),
+        defaultValue: toValueNode(fc.defaultValue),
+      }: InputValueDefinitionNode);
+    })
+    .filter(Boolean);
 }
 
 function getEnumValueDefinitionNodes(
