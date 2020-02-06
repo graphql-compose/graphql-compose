@@ -166,5 +166,20 @@ describe('schemaVisitor', () => {
         expect.arrayContaining(['User', 'Article', 'Filter', 'Query', 'Mutation', 'Subscription'])
       );
     });
+
+    it('should visit TypeComposer only once under different keys', () => {
+      // TypeComposer will be added to Registry 4 times,
+      // as keys will be: SDL as string, TypeName as string, GraphQLObjectType(AAA) and TypeComposer
+      schemaComposer.createTC(`type AAA { f: Int }`);
+
+      // BUT visitor should visit type AAA only once
+      let catchCount = 0;
+      visitSchema(schemaComposer, {
+        TYPE: tc => {
+          if (tc.getTypeName() === 'AAA') catchCount += 1;
+        },
+      });
+      expect(catchCount).toBe(1);
+    });
   });
 });
