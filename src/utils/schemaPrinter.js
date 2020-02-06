@@ -37,7 +37,7 @@ import {
 } from 'graphql/type/definition';
 import { astFromValue } from 'graphql/utilities/astFromValue';
 
-import { SchemaComposer, BUILT_IN_DIRECTIVES } from '../SchemaComposer';
+import { BUILT_IN_DIRECTIVES } from '../SchemaComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
@@ -88,7 +88,7 @@ export type SchemaComposerPrinterOptions = Options & {
  * Return schema as a SDL string.
  */
 export function printSchemaComposer(
-  sc: SchemaComposer<any>,
+  sc: any, // SchemaComposer<any>, // HATE FLOWTYPE for *** Recursion limit exceeded ***
   options?: SchemaComposerPrinterOptions
 ): string {
   const { exclude = [], include, omitDirectiveDefinitions, ...innerOpts } = (options: any) || {};
