@@ -1759,22 +1759,28 @@ export class ObjectTypeComposer<TSource, TContext> {
   /**
    * Returns all types which are used inside the current type
    */
-  getNestedTCs(passedTypes: Set<NamedTypeComposer<any>> = new Set()): Set<NamedTypeComposer<any>> {
+  getNestedTCs(
+    opts: {
+      exclude?: string[],
+    } = {},
+    passedTypes: Set<NamedTypeComposer<any>> = new Set()
+  ): Set<NamedTypeComposer<any>> {
+    const exclude = Array.isArray(opts.exclude) ? (opts: any).exclude : [];
     this.getFieldNames().forEach(fieldName => {
       const tc = this.getFieldTC(fieldName);
-      if (!passedTypes.has(tc)) {
+      if (!passedTypes.has(tc) && !exclude.includes(tc.getTypeName())) {
         passedTypes.add(tc);
         if (tc instanceof ObjectTypeComposer || tc instanceof UnionTypeComposer) {
-          tc.getNestedTCs(passedTypes);
+          tc.getNestedTCs(opts, passedTypes);
         }
       }
 
       this.getFieldArgNames(fieldName).forEach(argName => {
         const itc = this.getFieldArgTC(fieldName, argName);
-        if (!passedTypes.has(itc)) {
+        if (!passedTypes.has(itc) && !exclude.includes(itc.getTypeName())) {
           passedTypes.add(itc);
           if (itc instanceof InputTypeComposer) {
-            itc.getNestedTCs(passedTypes);
+            itc.getNestedTCs(opts, passedTypes);
           }
         }
       });
@@ -1782,9 +1788,9 @@ export class ObjectTypeComposer<TSource, TContext> {
 
     this.getInterfaces().forEach(t => {
       const iftc = t instanceof ThunkComposer ? t.ofType : t;
-      if (!passedTypes.has(iftc)) {
+      if (!passedTypes.has(iftc) && !exclude.includes(iftc.getTypeName())) {
         passedTypes.add(iftc);
-        iftc.getNestedTCs(passedTypes);
+        iftc.getNestedTCs(opts, passedTypes);
       }
     });
     return passedTypes;
@@ -1797,25 +1803,27 @@ export class ObjectTypeComposer<TSource, TContext> {
     opts?: SchemaPrinterOptions & {
       deep?: ?boolean,
       sortTypes?: ?boolean,
+      exclude?: ?(string[]),
     }
   ): string {
-    const { deep, ...restOpts } = opts || {};
+    const { deep, ...innerOpts } = opts || {};
+    const exclude = Array.isArray((innerOpts: any).exclude) ? (innerOpts: any).exclude : [];
     if (deep) {
       let r = '';
-      r += printObject(this.getType(), restOpts);
+      r += printObject(this.getType(), innerOpts);
 
-      let nestedTypes = Array.from(this.getNestedTCs());
+      let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
       if (opts?.sortAll || opts?.sortTypes) {
         nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
       }
       nestedTypes.forEach(t => {
-        if (t !== this) {
-          r += `\n\n${t.toSDL(restOpts)}`;
+        if (t !== this && !exclude.includes(t.getTypeName())) {
+          r += `\n\n${t.toSDL(innerOpts)}`;
         }
       });
       return r;
     }
 
-    return printObject(this.getType(), restOpts);
+    return printObject(this.getType(), innerOpts);
   }
 }

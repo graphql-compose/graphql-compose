@@ -695,12 +695,18 @@ export class UnionTypeComposer<TSource, TContext> {
   /**
    * Returns all types which are used inside the current type
    */
-  getNestedTCs(passedTypes: Set<NamedTypeComposer<any>> = new Set()): Set<NamedTypeComposer<any>> {
+  getNestedTCs(
+    opts: {
+      exclude?: string[],
+    } = {},
+    passedTypes: Set<NamedTypeComposer<any>> = new Set()
+  ): Set<NamedTypeComposer<any>> {
+    const exclude = Array.isArray(opts.exclude) ? (opts: any).exclude : [];
     this.getTypeComposers().forEach(tc => {
-      if (!passedTypes.has(tc)) {
+      if (!passedTypes.has(tc) && !exclude.includes(tc.getTypeName())) {
         passedTypes.add(tc);
         if (tc instanceof ObjectTypeComposer) {
-          tc.getNestedTCs(passedTypes);
+          tc.getNestedTCs(opts, passedTypes);
         }
       }
     });
@@ -714,25 +720,27 @@ export class UnionTypeComposer<TSource, TContext> {
     opts?: SchemaPrinterOptions & {
       deep?: ?boolean,
       sortTypes?: ?boolean,
+      exclude?: ?(string[]),
     }
   ): string {
-    const { deep, ...restOpts } = opts || {};
+    const { deep, ...innerOpts } = opts || {};
+    const exclude = Array.isArray((innerOpts: any).exclude) ? (innerOpts: any).exclude : [];
     if (deep) {
       let r = '';
-      r += printUnion(this.getType(), restOpts);
+      r += printUnion(this.getType(), innerOpts);
 
-      let nestedTypes = Array.from(this.getNestedTCs());
+      let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
       if (opts?.sortAll || opts?.sortTypes) {
         nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
       }
       nestedTypes.forEach(t => {
-        if (t !== this) {
-          r += `\n\n${t.toSDL(restOpts)}`;
+        if (t !== this && !exclude.includes(t.getTypeName())) {
+          r += `\n\n${t.toSDL(innerOpts)}`;
         }
       });
       return r;
     }
 
-    return printUnion(this.getType(), restOpts);
+    return printUnion(this.getType(), innerOpts);
   }
 }

@@ -1226,20 +1226,61 @@ describe('InterfaceTypeComposer', () => {
         """desc1"""
         interface IUser { 
           """desc2"""
-          name(a: Int): String
+          name(a: String): String
+          field: ISubField
+        }
+
+        interface ISubField { 
+          subField: Int
         }
       `);
       expect(t.toSDL()).toMatchInlineSnapshot(`
         "\\"\\"\\"desc1\\"\\"\\"
         interface IUser {
           \\"\\"\\"desc2\\"\\"\\"
-          name(a: Int): String
+          name(a: String): String
+          field: ISubField
         }"
       `);
+
       expect(t.toSDL({ omitDescriptions: true })).toMatchInlineSnapshot(`
         "interface IUser {
-          name(a: Int): String
+          name(a: String): String
+          field: ISubField
         }"
+      `);
+
+      expect(
+        t.toSDL({
+          omitDescriptions: true,
+          deep: true,
+        })
+      ).toMatchInlineSnapshot(`
+        "interface IUser {
+          name(a: String): String
+          field: ISubField
+        }
+
+        scalar String
+
+        interface ISubField {
+          subField: Int
+        }"
+      `);
+
+      expect(
+        t.toSDL({
+          omitDescriptions: true,
+          deep: true,
+          exclude: ['ISubField'],
+        })
+      ).toMatchInlineSnapshot(`
+        "interface IUser {
+          name(a: String): String
+          field: ISubField
+        }
+
+        scalar String"
       `);
     });
   });

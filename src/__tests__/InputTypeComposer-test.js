@@ -182,8 +182,12 @@ describe('InputTypeComposer', () => {
             '..',
           ]);
 
-        expect(schemaComposer.getITC('Type').toSDL({ deep: true, omitDescriptions: true }))
-          .toEqual(dedent`
+        expect(
+          schemaComposer.getITC('Type').toSDL({
+            deep: true,
+            omitDescriptions: true,
+          })
+        ).toEqual(dedent`
           input Type {
             field1: [SubType]!
             field3: Int
@@ -753,8 +757,12 @@ describe('InputTypeComposer', () => {
         type B { f2: User }
       `);
 
-      expect(sc1.getITC('Filter').toSDL({ deep: true, omitDescriptions: true }))
-        .toMatchInlineSnapshot(`
+      expect(
+        sc1.getITC('Filter').toSDL({
+          deep: true,
+          omitDescriptions: true,
+        })
+      ).toMatchInlineSnapshot(`
         "input Filter {
           a: Int
           b: Filter
@@ -769,6 +777,22 @@ describe('InputTypeComposer', () => {
         }
 
         scalar Float"
+      `);
+
+      expect(
+        sc1.getITC('Filter').toSDL({
+          deep: true,
+          omitDescriptions: true,
+          exclude: ['LonLat'],
+        })
+      ).toMatchInlineSnapshot(`
+        "input Filter {
+          a: Int
+          b: Filter
+          geo: LonLat
+        }
+
+        scalar Int"
       `);
     });
   });

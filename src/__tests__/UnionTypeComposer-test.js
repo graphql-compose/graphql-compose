@@ -651,7 +651,12 @@ describe('UnionTypeComposer', () => {
         type B { f2: LonLat }
       `);
 
-      expect(sc1.getUTC('C').toSDL({ deep: true, omitDescriptions: true })).toMatchInlineSnapshot(`
+      expect(
+        sc1.getUTC('C').toSDL({
+          deep: true,
+          omitDescriptions: true,
+        })
+      ).toMatchInlineSnapshot(`
         "union C = A | B
 
         type A {
@@ -670,6 +675,20 @@ describe('UnionTypeComposer', () => {
         }
 
         scalar Float"
+      `);
+
+      expect(
+        sc1.getUTC('C').toSDL({
+          deep: true,
+          omitDescriptions: true,
+          exclude: ['Int', 'B'],
+        })
+      ).toMatchInlineSnapshot(`
+        "union C = A | B
+
+        type A {
+          f1: Int
+        }"
       `);
     });
   });

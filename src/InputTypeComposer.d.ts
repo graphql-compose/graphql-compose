@@ -308,7 +308,7 @@ export class InputTypeComposer<TContext = any> {
   /**
    * Returns all types which are used inside the current type
    */
-  public getNestedTCs(): Set<NamedTypeComposer<any>>;
+  public getNestedTCs(opts?: { exclude?: string[] }): Set<NamedTypeComposer<any>>;
 
   /**
    * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
@@ -317,6 +317,7 @@ export class InputTypeComposer<TContext = any> {
     opts?: SchemaPrinterOptions & {
       deep?: boolean;
       sortTypes?: boolean;
+      exclude?: string[];
     }
   ): string;
 }

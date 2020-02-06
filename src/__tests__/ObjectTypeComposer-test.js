@@ -1792,10 +1792,10 @@ describe('ObjectTypeComposer', () => {
           f1: String
           f2: Int
           f3: User
-          f4(f: Filter): Boolean 
+          f4(f: Filter): Int 
         }
 
-        input Filter { a: Int b: Filter }
+        input Filter { a: Boolean b: Filter }
 
         interface I1 { f1: String }
         interface I2 { f2: Int }
@@ -1808,25 +1808,29 @@ describe('ObjectTypeComposer', () => {
         type B { f2: User }
       `);
 
-      expect(sc1.getOTC('User').toSDL({ deep: true, omitDescriptions: true }))
-        .toMatchInlineSnapshot(`
+      expect(
+        sc1.getOTC('User').toSDL({
+          deep: true,
+          omitDescriptions: true,
+        })
+      ).toMatchInlineSnapshot(`
         "type User implements I1 & I2 {
           f1: String
           f2: Int
           f3: User
-          f4(f: Filter): Boolean
+          f4(f: Filter): Int
         }
 
         scalar String
 
         scalar Int
 
-        scalar Boolean
-
         input Filter {
-          a: Int
+          a: Boolean
           b: Filter
         }
+
+        scalar Boolean
 
         interface I1 {
           f1: String
@@ -1835,6 +1839,23 @@ describe('ObjectTypeComposer', () => {
         interface I2 {
           f2: Int
         }"
+      `);
+
+      expect(
+        sc1.getOTC('User').toSDL({
+          deep: true,
+          omitDescriptions: true,
+          exclude: ['I2', 'I1', 'Filter', 'Int'],
+        })
+      ).toMatchInlineSnapshot(`
+        "type User implements I1 & I2 {
+          f1: String
+          f2: Int
+          f3: User
+          f4(f: Filter): Int
+        }
+
+        scalar String"
       `);
     });
   });
