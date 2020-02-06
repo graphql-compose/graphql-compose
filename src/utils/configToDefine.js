@@ -87,13 +87,13 @@ export function defineFieldMap(
     );
     const argsConfig = fieldConfig.args;
     if (!argsConfig) {
-      field.args = [];
+      field.args = ([]: any);
     } else {
       invariant(
         isPlainObj(argsConfig),
         `${config.name}.${fieldName} args must be an object with argument names as keys.`
       );
-      field.args = Object.keys(argsConfig).map(argName => {
+      field.args = (Object.keys(argsConfig).map(argName => {
         const arg = argsConfig[argName];
         return {
           name: argName,
@@ -103,7 +103,7 @@ export function defineFieldMap(
           // $FlowFixMe
           astNode: fieldNodeAst?.arguments?.find(a => a.name.value === argName),
         };
-      });
+      }): any);
     }
     resultFieldMap[fieldName] = field;
   }

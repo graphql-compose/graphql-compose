@@ -346,7 +346,7 @@ export class InputTypeComposer<TContext> {
 
     this.setField(fieldName, {
       ...prevFieldConfig,
-      ...partialFieldConfig,
+      ...(partialFieldConfig: any),
       extensions: {
         ...(prevFieldConfig.extensions || {}),
         ...(partialFieldConfig.extensions || {}),
@@ -372,7 +372,7 @@ export class InputTypeComposer<TContext> {
     const { type, ...rest } = this.getField(fieldName);
     return ({
       type: type.getType(),
-      ...rest,
+      ...(rest: any),
     }: any);
   }
 
@@ -640,7 +640,7 @@ export class InputTypeComposer<TContext> {
     const current = this.getExtensions();
     this.setExtensions({
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }
@@ -689,7 +689,7 @@ export class InputTypeComposer<TContext> {
     const current = this.getFieldExtensions(fieldName);
     this.setFieldExtensions(fieldName, {
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }

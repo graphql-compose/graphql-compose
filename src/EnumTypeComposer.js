@@ -149,7 +149,7 @@ export class EnumTypeComposer<TContext> {
 
     this._gqcFields = {};
     this._gqType.getValues().forEach(({ name, isDeprecated, ...config }) => {
-      this._gqcFields[name] = { extensions: ({}: any), ...config };
+      this._gqcFields[name] = { extensions: ({}: any), ...(config: any) };
     });
 
     // alive proper Flow type casting in autosuggestions for class with Generics
@@ -451,7 +451,7 @@ export class EnumTypeComposer<TContext> {
     const current = this.getExtensions();
     this.setExtensions({
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }
@@ -500,7 +500,7 @@ export class EnumTypeComposer<TContext> {
     const current = this.getFieldExtensions(fieldName);
     this.setFieldExtensions(fieldName, {
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }

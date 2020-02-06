@@ -22,7 +22,7 @@ import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { ThunkComposer } from '../ThunkComposer';
 import type { TypeAsString } from '../TypeMapper';
-import { SchemaComposer } from '../SchemaComposer';
+import type { SchemaComposer } from '../SchemaComposer';
 import deprecate from './deprecate';
 
 export type AnyTypeComposer<TContext> =

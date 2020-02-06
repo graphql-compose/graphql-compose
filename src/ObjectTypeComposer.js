@@ -518,7 +518,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
     this.setField(fieldName, {
       ...prevFieldConfig,
-      ...partialFieldConfig,
+      ...(partialFieldConfig: any),
       extensions: {
         ...(prevFieldConfig.extensions || {}),
         ...(partialFieldConfig.extensions || {}),
@@ -537,7 +537,7 @@ export class ObjectTypeComposer<TSource, TContext> {
           ...ac,
           type: ac.type.getType(),
         })),
-      ...rest,
+      ...(rest: any),
     }: any);
   }
 
@@ -1332,7 +1332,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     const current = this.getExtensions();
     this.setExtensions({
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }
@@ -1387,7 +1387,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     const current = this.getFieldExtensions(fieldName);
     this.setFieldExtensions(fieldName, {
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }
@@ -1451,7 +1451,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     const current = this.getFieldArgExtensions(fieldName, argName);
     this.setFieldArgExtensions(fieldName, argName, {
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }

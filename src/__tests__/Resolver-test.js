@@ -274,7 +274,7 @@ describe('Resolver', () => {
 
     it('should have wrapArgs() method', () => {
       const newResolver = resolver.wrapArgs(prevArgs => {
-        return { ...prevArgs, arg1: 'String' };
+        return { ...(prevArgs: any), arg1: 'String' };
       });
 
       expect(newResolver.getArgType('arg1')).toBe(GraphQLString);

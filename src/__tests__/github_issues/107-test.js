@@ -79,7 +79,7 @@ describe('github issue #107 merge Schema types on GQL', () => {
         type: schemaComposer.createObjectTC(`type Tag { id: Int, title: String}`),
         resolve: () => ({ id: 1, title: 'Some tag' }),
       },
-      ...RemoteQueryTC.getFields(),
+      ...(RemoteQueryTC.getFields(): any),
     });
 
     expect(schemaComposer.Query.getFieldNames()).toEqual(['tag', 'users']);
@@ -167,7 +167,7 @@ describe('github issue #107 merge Schema types on GQL', () => {
           },
           author: {
             type: RemoteUserTC,
-            args: { ...remoteUsersFC.args },
+            args: ({ ...remoteUsersFC.args }: any),
             resolve: (source, args, context, info) => {
               if (!remoteUsersFC.resolve) return null;
               const users: any = remoteUsersFC.resolve(source, args, context, info);

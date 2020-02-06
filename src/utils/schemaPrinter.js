@@ -42,7 +42,7 @@ import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { UnionTypeComposer } from '../UnionTypeComposer';
-import { type NamedTypeComposer } from './typeHelpers';
+import type { NamedTypeComposer } from './typeHelpers';
 
 type Options = {
   /**

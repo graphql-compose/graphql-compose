@@ -61,11 +61,11 @@ import {
   type SchemaComposerPrinterOptions,
 } from './utils/schemaPrinter';
 
-type ExtraSchemaConfig = {
-  types?: GraphQLNamedType[] | null,
-  directives?: GraphQLDirective[] | null,
-  astNode?: SchemaDefinitionNode | null,
-};
+type ExtraSchemaConfig = {|
+  +types?: GraphQLNamedType[] | null,
+  +directives?: GraphQLDirective[] | null,
+  +astNode?: SchemaDefinitionNode | null,
+|};
 
 type GraphQLToolsResolveMethods<TContext> = {
   [typeName: string]: {
@@ -128,7 +128,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   }
 
   buildSchema(extraConfig?: ExtraSchemaConfig): GraphQLSchema {
-    const roots = {};
+    const roots: {| query?: any, mutation?: any, subscription?: any |} = ({}: any);
 
     if (this.has('Query')) {
       const tc = this.getOTC('Query');

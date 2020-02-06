@@ -279,10 +279,10 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
   getArgConfig(argName: string): GraphQLArgumentConfig {
     const ac = this.getArg(argName);
-    return {
+    return ({
       ...ac,
       type: ac.type.getType(),
-    };
+    }: any);
   }
 
   getArgType(argName: string): GraphQLInputType {
@@ -357,7 +357,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
     this.setArg(argName, {
       ...prevArgConfig,
-      ...partialArgConfig,
+      ...(partialArgConfig: any),
     });
 
     return this;
@@ -366,7 +366,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   addArgs(
     newArgs: ObjectTypeComposerArgumentConfigMapDefinition<ArgsMap>
   ): Resolver<TSource, TContext, TArgs> {
-    this.setArgs({ ...this.getArgs(), ...newArgs });
+    this.setArgs({ ...this.getArgs(), ...(newArgs: any) });
     return this;
   }
 
@@ -767,7 +767,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     return this.wrap(
       (newResolver, prevResolver) => {
         // clone prevArgs, to avoid changing args in callback
-        const prevArgs = { ...prevResolver.getArgs() };
+        const prevArgs: any = { ...prevResolver.getArgs() };
         const newArgs = cb(prevArgs) || prevArgs;
         newResolver.setArgs((newArgs: any));
         return newResolver;
@@ -880,7 +880,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     if (this.projection) {
       oldOpts.projection = { ...this.projection };
     }
-    return new Resolver({ ...oldOpts, ...opts }, this.schemaComposer);
+    return new Resolver({ ...oldOpts, ...(opts: any) }, this.schemaComposer);
   }
 
   /**

@@ -285,7 +285,7 @@ export class ScalarTypeComposer<TContext> {
     const current = this.getExtensions();
     this.setExtensions({
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }
