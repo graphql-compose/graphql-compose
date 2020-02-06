@@ -27,7 +27,8 @@
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true
+      "runtimeArgs": ["--nolazy"], // tells v8 to compile your code ahead of time, so that breakpoints work correctly
+      "disableOptimisticBPs": true // also helps that breakpoints work correctly
     }
   ]
 }

@@ -19,12 +19,20 @@ import { ThunkComposer } from './ThunkComposer';
 import { Resolver, type ResolverDefinition } from './Resolver';
 import { isFunction } from './utils/is';
 import { inspect, forEachKey } from './utils/misc';
+import { dedent } from './utils/dedent';
 import {
   getGraphQLType,
   isTypeComposer,
   isNamedTypeComposer,
-  isComposeType,
+  isComposeNamedType,
   getComposeTypeName,
+  isOutputTypeDefinitionString,
+  isInputTypeDefinitionString,
+  isScalarTypeDefinitionString,
+  isEnumTypeDefinitionString,
+  isInterfaceTypeDefinitionString,
+  isUnionTypeDefinitionString,
+  cloneTypeTo,
   type AnyType,
   type NamedTypeComposer,
 } from './utils/typeHelpers';
@@ -47,13 +55,17 @@ import {
   type SchemaDefinitionNode,
   type GraphQLResolveInfo,
 } from './graphql';
-import DefaultDirective from './directive/default';
+import {
+  printSchemaComposer,
+  type SchemaPrinterOptions,
+  type SchemaComposerPrinterOptions,
+} from './utils/schemaPrinter';
 
-type ExtraSchemaConfig = {
-  types?: GraphQLNamedType[] | null,
-  directives?: GraphQLDirective[] | null,
-  astNode?: SchemaDefinitionNode | null,
-};
+type ExtraSchemaConfig = {|
+  +types?: GraphQLNamedType[] | null,
+  +directives?: GraphQLDirective[] | null,
+  +astNode?: SchemaDefinitionNode | null,
+|};
 
 type GraphQLToolsResolveMethods<TContext> = {
   [typeName: string]: {
@@ -70,13 +82,12 @@ export const BUILT_IN_DIRECTIVES = [
   GraphQLSkipDirective,
   GraphQLIncludeDirective,
   GraphQLDeprecatedDirective,
-  DefaultDirective,
 ];
 
 export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer<TContext>> {
   typeMapper: TypeMapper<TContext>;
   _schemaMustHaveTypes: Array<AnyType<TContext>> = [];
-  _directives: Array<GraphQLDirective> = BUILT_IN_DIRECTIVES;
+  _directives: Array<GraphQLDirective> = [...BUILT_IN_DIRECTIVES];
 
   constructor(schema?: GraphQLSchema): SchemaComposer<TContext> {
     super();
@@ -117,7 +128,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   }
 
   buildSchema(extraConfig?: ExtraSchemaConfig): GraphQLSchema {
-    const roots = {};
+    const roots: {| query?: any, mutation?: any, subscription?: any |} = ({}: any);
 
     if (this.has('Query')) {
       const tc = this.getOTC('Query');
@@ -138,16 +149,17 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     }
 
     if (!roots.query) {
-      throw new Error(
-        'Can not build schema. Must be initialized Query type. See https://github.com/graphql/graphql-js/issues/448'
-      );
+      throw new Error(dedent`
+        Can not build schema. Must be initialized Query type. 
+        See: https://github.com/graphql/graphql-js/issues/448
+      `);
     }
 
     if (Object.keys(roots).length === 0) {
-      throw new Error(
-        'Can not build schema. Must be initialized at least one ' +
-          'of the following types: Query, Mutation, Subscription.'
-      );
+      throw new Error(dedent`
+        Can not build schema. Must be initialized at least one of the following types: 
+          Query, Mutation, Subscription.
+      `);
     }
 
     const types = [
@@ -193,6 +205,26 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     });
   }
 
+  /**
+   * Clone schema with deep clonning of all its types.
+   * Except Scalar types which will be the same for both schemas.
+   */
+  clone(): SchemaComposer<any> {
+    const sc = new SchemaComposer();
+
+    const cloneMap = new Map();
+    this.forEach((type, key) => {
+      sc.set(key, (cloneTypeTo(type, sc, cloneMap): any));
+    });
+
+    sc._schemaMustHaveTypes = this._schemaMustHaveTypes.map(
+      t => (cloneTypeTo(t, sc, cloneMap): any)
+    );
+    sc._directives = [...this._directives];
+
+    return sc;
+  }
+
   merge(schema: GraphQLSchema | SchemaComposer<any>): SchemaComposer<TContext> {
     let sc;
     if (schema instanceof SchemaComposer) {
@@ -223,7 +255,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       }
 
       let typeName;
-      if (isComposeType(type)) {
+      if (isComposeNamedType(type)) {
         typeName = getComposeTypeName(type);
       }
 
@@ -317,7 +349,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
         });
         return;
       }
-      throw new Error(`Cannot add resolver to the following type ${inspect(tc)}`);
+      throw new Error(dedent`
+        Cannot add resolver to the following type: 
+          ${inspect(tc)}
+      `);
     });
   }
 
@@ -365,7 +400,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     if (this.has(typeOrSDL)) {
       return this.get(typeOrSDL);
     }
-    const tc = this.createTempTC(typeOrSDL);
+    const tc = isNamedTypeComposer(typeOrSDL) ? typeOrSDL : this.createTempTC(typeOrSDL);
     const typeName = tc.getTypeName();
     this.set(typeName, tc);
     this.set(typeOrSDL, tc);
@@ -404,7 +439,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       return UnionTypeComposer.createTemp(type, this);
     }
 
-    throw new Error(`Cannot create as TypeComposer the following value: ${inspect(type)}.`);
+    throw new Error(dedent`
+      Cannot create as TypeComposer the following value: 
+        ${inspect(type)}.
+    `);
   }
 
   /* @deprecated 8.0.0 */
@@ -592,11 +630,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       return UnionTypeComposer.create(type, this);
     }
 
-    throw new Error(
-      `Type with name ${inspect(
-        typeOrName
-      )} cannot be obtained as any Composer helper. Put something strange?`
-    );
+    throw new Error(dedent`
+      Type with name ${inspect(typeOrName)} cannot be obtained as any Composer helper.
+      Put something strange?
+    `);
   }
 
   /* @deprecated 8.0.0 */
@@ -605,6 +642,42 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       'Use schemaComposer.add() method instead. From v7 all types in storage saved as TypeComposers.'
     );
     return this.add(typeOrSDL);
+  }
+
+  isObjectType(type: string | AnyType<any> | GraphQLType): boolean {
+    if (typeof type === 'string' && isOutputTypeDefinitionString(type)) return true;
+    if (!this.has(type)) return false;
+    return this.getAnyTC(type) instanceof ObjectTypeComposer;
+  }
+
+  isInputObjectType(type: string | AnyType<any> | GraphQLType): boolean {
+    if (typeof type === 'string' && isInputTypeDefinitionString(type)) return true;
+    if (!this.has(type)) return false;
+    return this.getAnyTC(type) instanceof InputTypeComposer;
+  }
+
+  isScalarType(type: string | AnyType<any> | GraphQLType): boolean {
+    if (typeof type === 'string' && isScalarTypeDefinitionString(type)) return true;
+    if (!this.has(type)) return false;
+    return this.getAnyTC(type) instanceof ScalarTypeComposer;
+  }
+
+  isEnumType(type: string | AnyType<any> | GraphQLType): boolean {
+    if (typeof type === 'string' && isEnumTypeDefinitionString(type)) return true;
+    if (!this.has(type)) return false;
+    return this.getAnyTC(type) instanceof EnumTypeComposer;
+  }
+
+  isInterfaceType(type: string | AnyType<any> | GraphQLType): boolean {
+    if (typeof type === 'string' && isInterfaceTypeDefinitionString(type)) return true;
+    if (!this.has(type)) return false;
+    return this.getAnyTC(type) instanceof InterfaceTypeComposer;
+  }
+
+  isUnionType(type: string | AnyType<any> | GraphQLType): boolean {
+    if (typeof type === 'string' && isUnionTypeDefinitionString(type)) return true;
+    if (!this.has(type)) return false;
+    return this.getAnyTC(type) instanceof UnionTypeComposer;
   }
 
   /**
@@ -617,7 +690,6 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     super.clear();
     this._schemaMustHaveTypes = [];
     this._directives = BUILT_IN_DIRECTIVES;
-    this.typeMapper._initScalars();
   }
 
   add(typeOrSDL: mixed): string {
@@ -645,11 +717,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   addDirective(directive: GraphQLDirective): SchemaComposer<TContext> {
     if (!(directive instanceof GraphQLDirective)) {
-      throw new Error(
-        `You should provide GraphQLDirective to schemaComposer.addDirective(), but recieved ${inspect(
-          directive
-        )}`
-      );
+      throw new Error(dedent`
+        You should provide GraphQLDirective to schemaComposer.addDirective(), but recieved: 
+          ${inspect(directive)}
+      `);
     }
     if (!this.hasDirective(directive)) {
       this._directives.push(directive);
@@ -713,4 +784,48 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   inspect() {
     return 'SchemaComposer';
   }
+
+  /**
+   * Prints SDL for any type in schema by its name.
+   *
+   * Can print all used sub-types if provided `deep: true` option.
+   * Also you may omit some sub-types via `exclude: string[]` option.
+   */
+  getTypeSDL(
+    typeName: string,
+    opts?: SchemaPrinterOptions & {
+      deep?: ?boolean,
+      sortTypes?: ?boolean,
+      exclude?: ?(string[]),
+    }
+  ): string {
+    return this.getAnyTC(typeName).toSDL(opts);
+  }
+
+  /**
+   * Return schema as a SDL string.
+   * This SDL can be used with graphql-tools and Apollo Federation.
+   *
+   * @param {Object} options
+   * @param {String[]} options.include - add to SDL only provided types
+   * @param {String[]} options.exclude - do not add provided types to SDL
+   * @param {Boolean} options.omitDescriptions - do not add descriptions to SDL
+   * @param {Boolean} options.omitDirectiveDefinitions - do not add directives definitions to SDL
+   * @param {Boolean} options.commentDescriptions - print descriptions like comments, starting with #
+   * @param {Boolean} options.sortAll - sort fields, args, values, interfaces by its names. Useful for snapshot testing.
+   * @param {Boolean} options.sortFields - sort fields by name
+   * @param {Boolean} options.sortArgs - sort args by name
+   * @param {Boolean} options.sortInterfaces  - sort interfaces by name
+   * @param {Boolean} options.sortUnions - sort union types by name
+   * @param {Boolean} options.sortEnums - sort enum values by name
+   */
+  toSDL(options?: SchemaComposerPrinterOptions): string {
+    return printSchemaComposer(this, options);
+  }
+
+  /**
+   * TODO: for Apollo Federation
+   * see https://github.com/graphql-compose/graphql-compose/issues/214#issuecomment-546723693
+   */
+  // getResolveMethods(): GraphQLToolsResolveMethods<TContext> {}
 }

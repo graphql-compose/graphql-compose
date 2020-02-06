@@ -16,6 +16,7 @@ import { ListComposer } from '../ListComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ThunkComposer } from '../ThunkComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
+import { dedent } from '../utils/dedent';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -137,12 +138,73 @@ describe('InputTypeComposer', () => {
       }
     });
 
-    it('removeField()', () => {
-      itc.removeField('input1');
-      expect(itc.getFieldNames()).not.toContain('input1');
-      expect(itc.getFieldNames()).toContain('input2');
-      itc.removeField(['input2', 'input3']);
-      expect(itc.getFieldNames()).not.toContain('input2');
+    describe('removeField()', () => {
+      it('should remove one field', () => {
+        itc.removeField('input1');
+        expect(itc.getFieldNames()).not.toContain('input1');
+        expect(itc.getFieldNames()).toContain('input2');
+      });
+
+      it('should remove list of fields', () => {
+        itc.removeField(['input2', 'input3']);
+        expect(itc.getFieldNames()).not.toContain('input2');
+      });
+
+      it('should remove field via dot-notation', () => {
+        schemaComposer.addTypeDefs(`
+          input Type {
+            field1: [SubType]!
+            field2: Int
+            field3: Int
+          }
+
+          input SubType {
+            subField1: SubSubType!
+            subField2: Int
+            subField3: Int
+          }
+
+          input SubSubType {
+            subSubField1: Int
+            subSubField2: Int
+          }
+        `);
+
+        schemaComposer
+          .getITC('Type')
+          .removeField([
+            'field1.subField1.subSubField1',
+            'field1.subField1.nonexistent',
+            'field1.nonexistent.nonexistent',
+            'field1.subField3',
+            'field2',
+            '',
+            '..',
+          ]);
+
+        expect(
+          schemaComposer.getITC('Type').toSDL({
+            deep: true,
+            omitDescriptions: true,
+          })
+        ).toEqual(dedent`
+          input Type {
+            field1: [SubType]!
+            field3: Int
+          }
+
+          input SubType {
+            subField1: SubSubType!
+            subField2: Int
+          }
+
+          input SubSubType {
+            subSubField2: Int
+          }
+
+          scalar Int
+        `);
+      });
     });
 
     it('removeOtherFields()', () => {
@@ -381,7 +443,7 @@ describe('InputTypeComposer', () => {
       const itc1 = schemaComposer.createInputTC(
         `
         input TestTypeTplInput {
-          f1: String @default(value: "new")
+          f1: String
           # Description for some required Int field
           f2: Int!
         }
@@ -390,7 +452,6 @@ describe('InputTypeComposer', () => {
       expect(itc1).toBeInstanceOf(InputTypeComposer);
       expect(itc1.getTypeName()).toBe('TestTypeTplInput');
       expect(itc1.getFieldType('f1')).toBe(GraphQLString);
-      expect((itc1.getField('f1'): any).defaultValue).toBe('new');
       expect(itc1.getFieldType('f2')).toBeInstanceOf(GraphQLNonNull);
       expect((itc1.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });
@@ -589,6 +650,30 @@ describe('InputTypeComposer', () => {
       expect(tc1.getFieldDirectiveByName('field', 'f2')).toEqual(undefined);
       expect(tc1.getFieldDirectiveById('field', 333)).toEqual(undefined);
     });
+
+    it('check directive set-methods', () => {
+      const tc1 = schemaComposer.createInputTC(`
+        input My1 @d0(a: true) {
+          field: Int @f0(a: false) @f1(b: "3") @f0(a: true)
+        }
+      `);
+      expect(tc1.toSDL()).toBe(dedent`
+        input My1 @d0(a: true) {
+          field: Int @f0(a: false) @f1(b: "3") @f0(a: true)
+        }
+      `);
+      tc1.setDirectives([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      tc1.setFieldDirectives('field', [{ args: { b: '6' }, name: 'd1' }]);
+      expect(tc1.toSDL()).toBe(dedent`
+        input My1 @d0(a: false) @d1(b: "3") @d0(a: true) {
+          field: Int @d1(b: "6")
+        }
+      `);
+    });
   });
 
   describe('merge()', () => {
@@ -617,6 +702,162 @@ describe('InputTypeComposer', () => {
       expect(() => filterITC.merge((schemaComposer.createScalarTC('Scalar'): any))).toThrow(
         'Cannot merge ScalarTypeComposer'
       );
+    });
+  });
+
+  describe('misc methods', () => {
+    it('getNestedTCs()', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        input Filter { a: Int b: Filter, geo: LonLat }
+        input LonLat { lon: Float lat: Float}
+
+        input OtherInput1 { b: Int }
+        union C = A | B
+        type A { f1: Int }
+        type B { f2: User }
+      `);
+
+      expect(
+        Array.from(
+          sc1
+            .getITC('Filter')
+            .getNestedTCs()
+            .values()
+        ).map(t => t.getTypeName())
+      ).toEqual(['Int', 'Filter', 'LonLat', 'Float']);
+    });
+
+    it('toSDL()', () => {
+      const t = schemaComposer.createInputTC(`
+        """desc1"""
+        input Filter { 
+          """desc2"""
+          name: String
+        }
+      `);
+      expect(t.toSDL()).toMatchInlineSnapshot(`
+        "\\"\\"\\"desc1\\"\\"\\"
+        input Filter {
+          \\"\\"\\"desc2\\"\\"\\"
+          name: String
+        }"
+      `);
+    });
+
+    it('toSDL({ deep: true })', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        input Filter { a: Int b: Filter, geo: LonLat }
+        input LonLat { lon: Float lat: Float}
+
+        input OtherInput1 { b: Int }
+        union C = A | B
+        type A { f1: Int }
+        type B { f2: User }
+      `);
+
+      expect(
+        sc1.getITC('Filter').toSDL({
+          deep: true,
+          omitDescriptions: true,
+        })
+      ).toMatchInlineSnapshot(`
+        "input Filter {
+          a: Int
+          b: Filter
+          geo: LonLat
+        }
+
+        scalar Int
+
+        input LonLat {
+          lon: Float
+          lat: Float
+        }
+
+        scalar Float"
+      `);
+
+      expect(
+        sc1.getITC('Filter').toSDL({
+          deep: true,
+          omitDescriptions: true,
+          exclude: ['LonLat'],
+        })
+      ).toMatchInlineSnapshot(`
+        "input Filter {
+          a: Int
+          b: Filter
+          geo: LonLat
+        }
+
+        scalar Int"
+      `);
+    });
+  });
+
+  describe('clone()', () => {
+    it('should clone type', () => {
+      itc.setExtension('ext1', 123);
+      itc.setFieldExtension('input1', 'ext2', 456);
+      const cloned = itc.clone('ClonedInput');
+      expect(cloned.getTypeName()).toEqual('ClonedInput');
+      expect(itc.getType()).not.toBe(cloned.getType());
+
+      // field config should be different
+      cloned.setField('input3', 'String');
+      expect(cloned.hasField('input3')).toBeTruthy();
+      expect(itc.hasField('input3')).toBeFalsy();
+
+      // extensions should be different
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(itc.getExtension('ext1')).toBe(123);
+      expect(cloned.getFieldExtension('input1', 'ext2')).toBe(456);
+      cloned.setFieldExtension('input1', 'ext2', 600);
+      expect(cloned.getFieldExtension('input1', 'ext2')).toBe(600);
+      expect(itc.getFieldExtension('input1', 'ext2')).toBe(456);
+
+      expect(() => {
+        const wrongArgs: any = [];
+        itc.clone(...wrongArgs);
+      }).toThrowError(/You should provide new type name/);
+    });
+  });
+
+  describe('cloneTo()', () => {
+    it('should clone type with subtypes to another Schema', () => {
+      itc.setExtension('ext1', 123);
+      itc.setFieldExtension('input1', 'ext2', 456);
+      itc.setField('complex', `input InnerType { a: String }`);
+      const sc2 = new SchemaComposer();
+      const cloned = itc.cloneTo(sc2);
+
+      expect(itc.getTypeName()).toEqual(cloned.getTypeName());
+      expect(itc).not.toBe(cloned);
+      expect(itc.getType()).not.toBe(cloned.getType());
+      expect(itc.getField('complex')).not.toBe(cloned.getField('complex'));
+      expect(itc.getFieldType('complex')).not.toBe(cloned.getFieldType('complex'));
+      expect(itc.getFieldTC('complex')).not.toBe(cloned.getFieldTC('complex'));
+
+      expect(sc2.getITC(itc.getTypeName())).not.toBe(itc);
+
+      // field config should be different
+      cloned.setField('input3', 'String');
+      expect(cloned.hasField('input3')).toBeTruthy();
+      expect(itc.hasField('input3')).toBeFalsy();
+
+      // extensions should be different
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(itc.getExtension('ext1')).toBe(123);
+      expect(cloned.getFieldExtension('input1', 'ext2')).toBe(456);
+      cloned.setFieldExtension('input1', 'ext2', 600);
+      expect(cloned.getFieldExtension('input1', 'ext2')).toBe(600);
+      expect(itc.getFieldExtension('input1', 'ext2')).toBe(456);
     });
   });
 });

@@ -20,14 +20,7 @@ import {
   ResolverMiddleware,
 } from './Resolver';
 import { SchemaComposer } from './SchemaComposer';
-import {
-  ObjMap,
-  Thunk,
-  Extensions,
-  ExtensionsDirective,
-  DirectiveArgs,
-  ObjMapReadOnly,
-} from './utils/definitions';
+import { ObjMap, Thunk, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 import { ProjectionType } from './utils/projection';
 import { TypeDefinitionString, TypeAsString } from './TypeMapper';
 import {
@@ -42,23 +35,25 @@ import {
   ComposeInputType,
   ComposeNamedOutputType,
   ComposeNamedInputType,
+  NamedTypeComposer,
 } from './utils/typeHelpers';
 import { ThunkComposer } from './ThunkComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { ListComposer } from './ListComposer';
 import { TypeInPath } from './utils/typeByPath';
+import { SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type ObjectTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
   | TypeDefinitionString
   | ObjectTypeComposerAsObjectDefinition<TSource, TContext>
-  | Readonly<ObjectTypeComposer<TSource, TContext>>
-  | Readonly<GraphQLObjectType>;
+  | ObjectTypeComposer<TSource, TContext>
+  | GraphQLObjectType;
 
 export type ObjectTypeComposerAsObjectDefinition<TSource, TContext> = {
   name: string;
-  interfaces?: null | Thunk<ReadonlyArray<InterfaceTypeComposerDefinition<any, TContext>>>;
+  interfaces?: null | Thunk<Array<InterfaceTypeComposerDefinition<any, TContext>>>;
   fields?: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>;
   isTypeOf?: null | GraphQLIsTypeOfFn<TSource, TContext>;
   description?: string | null;
@@ -69,18 +64,18 @@ export type ObjectTypeComposerAsObjectDefinition<TSource, TContext> = {
 export type ObjectTypeComposerFieldConfigMap<TSource, TContext> = ObjMap<
   ObjectTypeComposerFieldConfig<TSource, TContext>
 >;
-export type ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext> = ObjMapReadOnly<
+export type ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext> = ObjMap<
   Thunk<ObjectTypeComposerFieldConfigDefinition<TSource, TContext>>
 >;
 
 export type ObjectTypeComposerFieldConfigDefinition<TSource, TContext, TArgs = ArgsMap> =
   | ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs>
   | ComposeOutputTypeDefinition<TContext>
-  | Readonly<Resolver<any, TContext, any>>
-  | Readonly<ComposeOutputType<TContext>>;
+  | Resolver<any, TContext, any>
+  | ComposeOutputType<TContext>;
 
 export type ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs = ArgsMap> = {
-  type: Thunk<ComposeOutputTypeDefinition<TContext> | Readonly<Resolver<any, TContext, any>>>;
+  type: Thunk<ComposeOutputTypeDefinition<TContext> | Resolver<any, TContext, any>>;
   args?: ObjectTypeComposerArgumentConfigMapDefinition<TArgs>;
   resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>;
   subscribe?: GraphQLFieldResolver<TSource, TContext>;
@@ -107,11 +102,11 @@ export type ObjectTypeComposerFieldConfig<TSource, TContext, TArgs = ArgsMap> = 
 export type ArgsMap = { [argName: string]: any };
 
 export type ObjectTypeComposerArgumentConfigMap<TArgs = ArgsMap> = {
-  [argName in keyof TArgs]: ObjectTypeComposerArgumentConfig
+  [argName in keyof TArgs]: ObjectTypeComposerArgumentConfig;
 };
 
 export type ObjectTypeComposerArgumentConfigMapDefinition<TArgs = ArgsMap> = {
-  [argName in keyof TArgs]: Thunk<ObjectTypeComposerArgumentConfigDefinition>
+  [argName in keyof TArgs]: Thunk<ObjectTypeComposerArgumentConfigDefinition>;
 };
 
 export type ObjectTypeComposerArgumentConfigAsObjectDefinition = {
@@ -237,7 +232,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   public setField<TArgs = ArgsMap>(
     fieldName: string,
     fieldConfig: Thunk<
-      | Readonly<ComposeOutputType<TContext>>
+      | ComposeOutputType<TContext>
       | ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
     >
   ): this;
@@ -254,6 +249,15 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     newFields: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>
   ): this;
 
+  /**
+   * Remove fields from type by name or array of names.
+   * You also may pass name in dot-notation, in such case will be removed nested field.
+   *
+   * @example
+   *     removeField('field1'); // remove 1 field
+   *     removeField(['field1', 'field2']); // remove 2 fields
+   *     removeField('field1.subField1'); // remove 1 nested field
+   */
   public removeField(fieldNameOrArray: string | string[]): this;
 
   public removeOtherFields(fieldNameOrArray: string | string[]): this;
@@ -309,9 +313,17 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
 
+  /**
+   * -----------------------------------------------
+   * Field Args methods
+   * -----------------------------------------------
+   */
+
   public getFieldArgs<TArgs = ArgsMap>(
     fieldName: string
   ): ObjectTypeComposerArgumentConfigMap<TArgs>;
+
+  public getFieldArgNames(fieldName: string): string[];
 
   public hasFieldArg(fieldName: string, argName: string): boolean;
 
@@ -358,6 +370,10 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     argConfig: ObjectTypeComposerArgumentConfigDefinition
   ): this;
 
+  public removeFieldArg(fieldName: string, argNameOrArray: string | string[]): this;
+
+  public removeFieldOtherArgs(fieldName: string, argNameOrArray: string | string[]): this;
+
   public isFieldArgPlural(fieldName: string, argName: string): boolean;
 
   public makeFieldArgPlural(fieldName: string, argNameOrArray: string | string[]): this;
@@ -398,6 +414,15 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   public clone<TCloneSource = TSource>(
     newTypeNameOrTC: string | ObjectTypeComposer<any, any>
   ): ObjectTypeComposer<TCloneSource, TContext>;
+
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    cloneMap?: Map<any, any>
+  ): ObjectTypeComposer<any, TCtx>;
 
   public getIsTypeOf(): GraphQLIsTypeOfFn<TSource, TContext> | null | void;
 
@@ -506,9 +531,9 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public getInterfaces(): Array<InterfaceTypeComposerThunked<TSource, TContext>>;
 
-  public setInterfaces(
-    interfaces: ReadonlyArray<InterfaceTypeComposerDefinition<any, TContext>>
-  ): this;
+  public getInterfacesTypes(): GraphQLInterfaceType[];
+
+  public setInterfaces(interfaces: Array<InterfaceTypeComposerDefinition<any, TContext>>): this;
 
   public hasInterface(iface: InterfaceTypeComposerDefinition<any, TContext>): boolean;
 
@@ -519,7 +544,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public addInterfaces(
-    ifaces: ReadonlyArray<
+    ifaces: Array<
       InterfaceTypeComposerDefinition<any, TContext> | InterfaceTypeComposerThunked<any, TContext>
     >
   ): ObjectTypeComposer<TSource, TContext>;
@@ -600,6 +625,8 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public getDirectives(): ExtensionsDirective[];
 
+  public setDirectives(directives: ExtensionsDirective[]): this;
+
   public getDirectiveNames(): string[];
 
   public getDirectiveByName(directiveName: string): DirectiveArgs | void;
@@ -608,6 +635,8 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public getFieldDirectives(fieldName: string): ExtensionsDirective[];
 
+  public setFieldDirectives(fieldName: string, directives: ExtensionsDirective[]): this;
+
   public getFieldDirectiveNames(fieldName: string): string[];
 
   public getFieldDirectiveByName(fieldName: string, directiveName: string): DirectiveArgs | void;
@@ -615,6 +644,12 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   public getFieldDirectiveById(fieldName: string, idx: number): DirectiveArgs | void;
 
   public getFieldArgDirectives(fieldName: string, argName: string): ExtensionsDirective[];
+
+  public setFieldArgDirectives(
+    fieldName: string,
+    argName: string,
+    directives: ExtensionsDirective[]
+  ): this;
 
   public getFieldArgDirectiveNames(fieldName: string, argName: string): string[];
 
@@ -638,9 +673,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public addRelation<TRelationSource = any, TArgs = ArgsMap>(
     fieldName: string,
-    ObjectTypeComposerRelationOpts: Readonly<
-      ObjectTypeComposerRelationOpts<TRelationSource, TSource, TContext, TArgs>
-    >
+    opts: ObjectTypeComposerRelationOpts<TRelationSource, TSource, TContext, TArgs>
   ): this;
 
   public getRelations(): ObjectTypeComposerRelationThunkMap<any, TContext>;
@@ -657,4 +690,20 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   public getRecordId(source: TSource, args?: ArgsMap, context?: TContext): string | number;
 
   public get(path: string | string[]): TypeInPath<TContext> | void;
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  public getNestedTCs(opts?: { exclude?: string[] }): Set<NamedTypeComposer<any>>;
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  public toSDL(
+    opts?: SchemaPrinterOptions & {
+      deep?: boolean;
+      sortTypes?: boolean;
+      exclude?: string[];
+    }
+  ): string;
 }

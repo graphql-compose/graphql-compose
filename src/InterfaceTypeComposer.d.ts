@@ -22,6 +22,7 @@ import {
   ObjectTypeComposerFieldConfigDefinition,
   ObjectTypeComposerFieldConfigAsObjectDefinition,
   ObjectTypeComposerArgumentConfigMapDefinition,
+  ObjectTypeComposerArgumentConfigDefinition,
 } from './ObjectTypeComposer';
 import {
   Thunk,
@@ -36,17 +37,19 @@ import {
   ComposeNamedOutputType,
   ComposeOutputType,
   ComposeNamedInputType,
+  NamedTypeComposer,
 } from './utils/typeHelpers';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { TypeInPath } from './utils/typeByPath';
+import { SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type InterfaceTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
   | TypeDefinitionString
   | InterfaceTypeComposerAsObjectDefinition<TSource, TContext>
   | GraphQLInterfaceType
-  | Readonly<InterfaceTypeComposerThunked<any, TContext>>;
+  | InterfaceTypeComposerThunked<any, TContext>;
 
 export type InterfaceTypeComposerAsObjectDefinition<TSource, TContext> = {
   name: string;
@@ -119,7 +122,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public setField(
     name: string,
     fieldConfig: Thunk<
-      | Readonly<ComposeOutputType<TContext>>
+      | ComposeOutputType<TContext>
       | ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
     >
   ): this;
@@ -129,6 +132,15 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
    */
   public addFields(newValues: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>): this;
 
+  /**
+   * Remove fields from type by name or array of names.
+   * You also may pass name in dot-notation, in such case will be removed nested field.
+   *
+   * @example
+   *     removeField('field1'); // remove 1 field
+   *     removeField(['field1', 'field2']); // remove 2 fields
+   *     removeField('field1.subField1'); // remove 1 nested field
+   */
   public removeField(nameOrArray: string | string[]): this;
 
   public removeOtherFields(fieldNameOrArray: string | string[]): this;
@@ -172,6 +184,8 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     fieldName: string
   ): ObjectTypeComposerArgumentConfigMap<TArgs>;
 
+  public getFieldArgNames(fieldName: string): string[];
+
   public hasFieldArg(fieldName: string, argName: string): boolean;
 
   public getFieldArg(fieldName: string, argName: string): ObjectTypeComposerArgumentConfig;
@@ -214,7 +228,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public setFieldArg(
     fieldName: string,
     argName: string,
-    argConfig: ObjectTypeComposerArgumentConfig
+    argConfig: ObjectTypeComposerArgumentConfigDefinition
   ): this;
 
   public isFieldArgPlural(fieldName: string, argName: string): boolean;
@@ -255,6 +269,15 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
    * settings from this type.
    */
   public clone(newTypeNameOrTC: string | InterfaceTypeComposer<any, any>): this;
+
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    cloneMap?: Map<any, any>
+  ): InterfaceTypeComposer<any, TCtx>;
 
   public merge(
     type:
@@ -383,6 +406,8 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public getDirectives(): ExtensionsDirective[];
 
+  public setDirectives(directives: ExtensionsDirective[]): this;
+
   public getDirectiveNames(): string[];
 
   public getDirectiveByName(directiveName: string): DirectiveArgs | void;
@@ -391,6 +416,8 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public getFieldDirectives(fieldName: string): ExtensionsDirective[];
 
+  public setFieldDirectives(fieldName: string, directives: ExtensionsDirective[]): this;
+
   public getFieldDirectiveNames(fieldName: string): string[];
 
   public getFieldDirectiveByName(fieldName: string, directiveName: string): DirectiveArgs | void;
@@ -398,6 +425,12 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   public getFieldDirectiveById(fieldName: string, idx: number): DirectiveArgs | void;
 
   public getFieldArgDirectives(fieldName: string, argName: string): ExtensionsDirective[];
+
+  public setFieldArgDirectives(
+    fieldName: string,
+    argName: string,
+    directives: ExtensionsDirective[]
+  ): this;
 
   public getFieldArgDirectiveNames(fieldName: string, argName: string): string[];
 
@@ -420,4 +453,20 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
    */
 
   public get(path: string | string[]): TypeInPath<TContext> | void;
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  public getNestedTCs(opts?: { exclude?: string[] }): Set<NamedTypeComposer<any>>;
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  public toSDL(
+    opts?: SchemaPrinterOptions & {
+      deep?: boolean;
+      sortTypes?: boolean;
+      exclude?: string[];
+    }
+  ): string;
 }

@@ -4,6 +4,7 @@ import { NamedTypeComposer } from './utils/typeHelpers';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { inspect } from './utils/misc';
+import { SchemaComposer } from './SchemaComposer';
 
 export class ThunkComposer<
   T extends NamedTypeComposer<any> = NamedTypeComposer<any>,
@@ -25,4 +26,13 @@ export class ThunkComposer<
   public getTypePlural(): ListComposer<ThunkComposer<T, G>>;
 
   public getTypeNonNull(): NonNullComposer<ThunkComposer<T, G>>;
+
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all wrapped types.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    cloneMap?: Map<any, any>
+  ): ThunkComposer<NamedTypeComposer<TCtx>, G>;
 }

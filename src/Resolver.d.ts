@@ -18,7 +18,7 @@ import {
   ObjectTypeComposerArgumentConfigDefinition,
   ArgsMap,
 } from './ObjectTypeComposer';
-import { Thunk } from './utils/definitions';
+import { Thunk, Extensions } from './utils/definitions';
 import { ProjectionType } from './utils/projection';
 import {
   ComposeOutputTypeDefinition,
@@ -33,9 +33,9 @@ export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 
 export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
   type?: Thunk<
-    | Readonly<ComposeOutputType<TContext>>
+    | ComposeOutputType<TContext>
     | ComposeOutputTypeDefinition<TContext>
-    | Readonly<Resolver<any, TContext, any>>
+    | Resolver<any, TContext, any>
   >;
   resolve?: ResolverRpCb<TSource, TContext, TArgs>;
   args?: ObjectTypeComposerArgumentConfigMapDefinition<TArgs>;
@@ -43,7 +43,9 @@ export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
   displayName?: string;
   kind?: ResolverKinds;
   description?: string;
+  projection?: ProjectionType;
   parent?: Resolver<any, TContext, any>;
+  extensions?: Extensions;
 };
 
 export type ResolverResolveParams<TSource, TContext, TArgs = ArgsMap> = {
@@ -134,6 +136,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
   public kind: ResolverKinds | void;
   public description: string | void;
   public parent: Resolver<TSource, TContext, any> | void;
+  public extensions: Extensions | void;
   public resolve: (
     resolveParams: Partial<ResolverResolveParams<TSource, TContext, TArgs>>
   ) => Promise<any> | any;
@@ -163,9 +166,9 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
 
   public setType<TNewReturn>(
     composeType: Thunk<
-      | Readonly<ComposeOutputType<TContext>>
+      | ComposeOutputType<TContext>
       | ComposeOutputTypeDefinition<TContext>
-      | Readonly<Resolver<any, TContext, any>>
+      | Resolver<any, TContext, any>
     >
   ): Resolver<TSource, TContext, TArgs, TNewReturn>;
 
@@ -334,9 +337,23 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
 
   public get(path: string | string[]): any;
 
+  /**
+   * Clone this Resolver with overriding of some options.
+   * Internally it just copies all properties.
+   * But for `args` and `projection` it recreates objects with the same type & values (it allows to add or remove properties without affection old Resolver).
+   */
   public clone<TNewSource = TSource, TNewArgs = TArgs>(
     opts?: Partial<ResolverDefinition<TNewSource, TContext, TNewArgs>>
   ): Resolver<TNewSource, TContext, TNewArgs>;
+
+  /**
+   * Clone this resolver to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    cloneMap?: Map<any, any>
+  ): Resolver<any, TCtx, any>;
 
   /**
    * -----------------------------------------------

@@ -23,6 +23,8 @@ import {
   ExtensionsDirective,
   DirectiveArgs,
 } from './utils/definitions';
+import { NamedTypeComposer } from './utils/typeHelpers';
+import { SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type UnionTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -32,7 +34,7 @@ export type UnionTypeComposerDefinition<TSource, TContext> =
 
 export type UnionTypeComposerAsObjectDefinition<TSource, TContext> = {
   name: string;
-  types?: Thunk<ReadonlyArray<ObjectTypeComposerDefinition<any, TContext>> | null>;
+  types?: Thunk<Array<ObjectTypeComposerDefinition<any, TContext>> | null>;
   resolveType?: GraphQLTypeResolver<TSource, TContext> | null;
   description?: string | null;
   extensions?: Extensions;
@@ -48,7 +50,7 @@ export type UnionTypeComposerResolversMapDefinition<TSource, TContext> =
       ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>,
       UnionTypeComposerResolverCheckFn<TSource, TContext>
     >
-  | Readonly<UnionTypeComposerResolversMap<TSource, TContext>>;
+  | UnionTypeComposerResolversMap<TSource, TContext>;
 
 export type UnionTypeComposerResolverCheckFn<TSource, TContext> = (
   value: TSource,
@@ -98,12 +100,14 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   public getTypes(): Array<ObjectTypeComposerThunked<TSource, TContext>>;
 
+  public getTypeComposers(): Array<ObjectTypeComposer<TSource, TContext>>;
+
   public getTypeNames(): string[];
 
   public clearTypes(): this;
 
   public setTypes(
-    types: ReadonlyArray<
+    types: Array<
       ObjectTypeComposerThunked<TSource, TContext> | ObjectTypeComposerDefinition<any, TContext>
     >
   ): this;
@@ -113,7 +117,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public addTypes(
-    types: ReadonlyArray<
+    types: Array<
       ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>
     >
   ): this;
@@ -150,6 +154,15 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   public clone(
     newTypeNameOrTC: string | UnionTypeComposer<any, any>
   ): UnionTypeComposer<TSource, TContext>;
+
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    cloneMap?: Map<any, any>
+  ): UnionTypeComposer<any, TCtx>;
 
   public merge(type: GraphQLUnionType | UnionTypeComposer<any, any>): this;
 
@@ -218,6 +231,8 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   public getDirectives(): ExtensionsDirective[];
 
+  public setDirectives(directives: ExtensionsDirective[]): this;
+
   public getDirectiveNames(): string[];
 
   public getDirectiveByName(directiveName: string): DirectiveArgs | void;
@@ -229,4 +244,20 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
    * Misc methods
    * -----------------------------------------------
    */
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  public getNestedTCs(opts?: { exclude?: string[] }): Set<NamedTypeComposer<any>>;
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  public toSDL(
+    opts?: SchemaPrinterOptions & {
+      deep?: boolean;
+      sortTypes?: boolean;
+      exclude?: string[];
+    }
+  ): string;
 }

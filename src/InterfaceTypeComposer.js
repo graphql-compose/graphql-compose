@@ -15,9 +15,10 @@ import type {
   GraphQLTypeResolver,
 } from './graphql';
 import { InputTypeComposer } from './InputTypeComposer';
+import { UnionTypeComposer } from './UnionTypeComposer';
+import { EnumTypeComposer } from './EnumTypeComposer';
 import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
-import { TypeMapper } from './TypeMapper';
 import type {
   ObjectTypeComposerFieldConfigMap,
   ObjectTypeComposerFieldConfig,
@@ -26,6 +27,7 @@ import type {
   ObjectTypeComposerFieldConfigMapDefinition,
   ObjectTypeComposerArgumentConfigMapDefinition,
   ObjectTypeComposerArgumentConfig,
+  ObjectTypeComposerArgumentConfigDefinition,
   ObjectTypeComposerArgumentConfigMap,
   ArgsMap,
 } from './ObjectTypeComposer';
@@ -41,7 +43,14 @@ import type {
 } from './utils/definitions';
 import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath, type TypeInPath } from './utils/typeByPath';
-import { getGraphQLType, unwrapOutputTC, unwrapInputTC } from './utils/typeHelpers';
+import {
+  getGraphQLType,
+  unwrapOutputTC,
+  unwrapInputTC,
+  isTypeNameString,
+  cloneTypeTo,
+  type NamedTypeComposer,
+} from './utils/typeHelpers';
 import { defineFieldMap, convertObjectFieldMapToConfig } from './utils/configToDefine';
 import { graphqlVersion } from './utils/graphqlVersion';
 import type {
@@ -49,6 +58,8 @@ import type {
   ComposeNamedOutputType,
   ComposeOutputType,
 } from './utils/typeHelpers';
+import { printInterface, type SchemaPrinterOptions } from './utils/schemaPrinter';
+import { getInterfaceTypeDefinitionNode } from './utils/definitionNode';
 
 export type InterfaceTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -78,7 +89,7 @@ export type InterfaceTypeComposerResolverCheckFn<TSource, TContext> = (
 
 export type InterfaceTypeComposerThunked<TReturn, TContext> =
   | InterfaceTypeComposer<TReturn, TContext>
-  | ThunkComposer<InterfaceTypeComposer<TReturn, TContext>, GraphQLInterfaceType>;
+  | ThunkComposer<InterfaceTypeComposer<any, any>, GraphQLInterfaceType>;
 
 export class InterfaceTypeComposer<TSource, TContext> {
   schemaComposer: SchemaComposer<TContext>;
@@ -119,7 +130,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
     if (isString(typeDef)) {
       const typeName: string = typeDef;
-      if (TypeMapper.isTypeNameString(typeName)) {
+      if (isTypeNameString(typeName)) {
         IFTC = new InterfaceTypeComposer(
           new GraphQLInterfaceType({
             name: typeName,
@@ -266,9 +277,34 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return this;
   }
 
+  /**
+   * Remove fields from type by name or array of names.
+   * You also may pass name in dot-notation, in such case will be removed nested field.
+   *
+   * @example
+   *     removeField('field1'); // remove 1 field
+   *     removeField(['field1', 'field2']); // remove 2 fields
+   *     removeField('field1.subField1'); // remove 1 nested field
+   */
   removeField(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => delete this._gqcFields[fieldName]);
+    fieldNames.forEach(fieldName => {
+      const names = fieldName.split('.');
+      const name = names.shift();
+      if (names.length === 0) {
+        // single field
+        delete this._gqcFields[name];
+      } else {
+        // nested field
+        // eslint-disable-next-line no-lonely-if
+        if (this.hasField(name)) {
+          const subTC = this.getFieldTC(name);
+          if (subTC instanceof ObjectTypeComposer || subTC instanceof EnumTypeComposer) {
+            subTC.removeField(names.join('.'));
+          }
+        }
+      }
+    });
     return this;
   }
 
@@ -312,10 +348,10 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
     this.setField(fieldName, {
       ...prevFieldConfig,
-      ...partialFieldConfig,
+      ...(partialFieldConfig: any),
       extensions: {
         ...(prevFieldConfig.extensions || {}),
-        ...(partialFieldConfig.extensions || {}),
+        ...((partialFieldConfig.extensions: any) || {}),
       },
     });
     return this;
@@ -331,7 +367,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
           ...ac,
           type: ac.type.getType(),
         })),
-      ...rest,
+      ...(rest: any),
     }: any);
   }
 
@@ -491,6 +527,10 @@ export class InterfaceTypeComposer<TSource, TContext> {
     }
   }
 
+  getFieldArgNames(fieldName: string): string[] {
+    return Object.keys(this.getFieldArgs(fieldName));
+  }
+
   hasFieldArg(fieldName: string, argName: string): boolean {
     try {
       const fieldArgs = this.getFieldArgs(fieldName);
@@ -583,7 +623,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   setFieldArg(
     fieldName: string,
     argName: string,
-    argConfig: ObjectTypeComposerArgumentConfig
+    argConfig: ObjectTypeComposerArgumentConfigDefinition
   ): InterfaceTypeComposer<TSource, TContext> {
     const fc = this.getField(fieldName);
     fc.args = fc.args || {};
@@ -685,17 +725,19 @@ export class InterfaceTypeComposer<TSource, TContext> {
   // -----------------------------------------------
 
   getType(): GraphQLInterfaceType {
+    this._gqType.astNode = getInterfaceTypeDefinitionNode(this);
     if (graphqlVersion >= 14) {
       this._gqType._fields = () =>
         defineFieldMap(
           this._gqType,
-          mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name))
+          mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name)),
+          this._gqType.astNode
         );
     } else {
       (this._gqType: any)._typeConfig.fields = () => {
         return mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name));
       };
-      delete this._gqType._fields; // clear builded fields in type
+      this._gqType._fields = {}; // clear builded fields in type
     }
     return this._gqType;
   }
@@ -755,6 +797,53 @@ export class InterfaceTypeComposer<TSource, TContext> {
     cloned._gqcTypeResolvers = new Map(this._gqcTypeResolvers);
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
+
+    return cloned;
+  }
+
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    cloneMap?: Map<any, any> = new Map()
+  ): InterfaceTypeComposer<any, any> {
+    if (!anotherSchemaComposer) {
+      throw new Error('You should provide SchemaComposer for InterfaceTypeComposer.cloneTo()');
+    }
+
+    if (cloneMap.has(this)) return (cloneMap.get(this): any);
+    const cloned = InterfaceTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
+    cloneMap.set(this, cloned);
+
+    cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
+      ...fieldConfig,
+      type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, cloneMap),
+      args: mapEachKey(fieldConfig.args, argConfig => ({
+        ...argConfig,
+        type: cloneTypeTo(argConfig.type, anotherSchemaComposer, cloneMap),
+        extensions: { ...argConfig.extensions },
+      })),
+      extensions: { ...fieldConfig.extensions },
+    }));
+    cloned._gqcExtensions = { ...this._gqcExtensions };
+    cloned.setDescription(this.getDescription());
+
+    // clone this._gqcTypeResolvers
+    const typeResolversMap = this.getTypeResolvers();
+    if (typeResolversMap.size > 0) {
+      const clonedTypeResolvers: InterfaceTypeComposerResolversMap<any> = new Map();
+      typeResolversMap.forEach((fn, tc) => {
+        const clonedTC: ObjectTypeComposer<any, any> | GraphQLObjectType = (cloneTypeTo(
+          tc,
+          anotherSchemaComposer,
+          cloneMap
+        ): any);
+        clonedTypeResolvers.set(clonedTC, fn);
+      });
+      cloned.setTypeResolvers(clonedTypeResolvers);
+    }
 
     return cloned;
   }
@@ -1013,7 +1102,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const current = this.getExtensions();
     this.setExtensions({
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }
@@ -1068,7 +1157,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const current = this.getFieldExtensions(fieldName);
     this.setFieldExtensions(fieldName, {
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }
@@ -1132,7 +1221,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const current = this.getFieldArgExtensions(fieldName, argName);
     this.setFieldArgExtensions(fieldName, argName, {
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }
@@ -1190,6 +1279,11 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return [];
   }
 
+  setDirectives(directives: Array<ExtensionsDirective>): InterfaceTypeComposer<TSource, TContext> {
+    this.setExtension('directives', directives);
+    return this;
+  }
+
   getDirectiveNames(): string[] {
     return this.getDirectives().map(d => d.name);
   }
@@ -1214,6 +1308,14 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return [];
   }
 
+  setFieldDirectives(
+    fieldName: string,
+    directives: Array<ExtensionsDirective>
+  ): InterfaceTypeComposer<TSource, TContext> {
+    this.setFieldExtension(fieldName, 'directives', directives);
+    return this;
+  }
+
   getFieldDirectiveNames(fieldName: string): string[] {
     return this.getFieldDirectives(fieldName).map(d => d.name);
   }
@@ -1236,6 +1338,15 @@ export class InterfaceTypeComposer<TSource, TContext> {
       return directives;
     }
     return [];
+  }
+
+  setFieldArgDirectives(
+    fieldName: string,
+    argName: string,
+    directives: Array<ExtensionsDirective>
+  ): InterfaceTypeComposer<TSource, TContext> {
+    this.setFieldArgExtension(fieldName, argName, 'directives', directives);
+    return this;
   }
 
   getFieldArgDirectiveNames(fieldName: string, argName: string): string[] {
@@ -1266,5 +1377,69 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   get(path: string | string[]): TypeInPath<TContext> | void {
     return typeByPath(this, path);
+  }
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  getNestedTCs(
+    opts: {
+      exclude?: string[],
+    } = {},
+    passedTypes: Set<NamedTypeComposer<any>> = new Set()
+  ): Set<NamedTypeComposer<any>> {
+    const exclude = Array.isArray(opts.exclude) ? (opts: any).exclude : [];
+    this.getFieldNames().forEach(fieldName => {
+      const tc = this.getFieldTC(fieldName);
+      if (!passedTypes.has(tc) && !exclude.includes(tc.getTypeName())) {
+        passedTypes.add(tc);
+        if (tc instanceof ObjectTypeComposer || tc instanceof UnionTypeComposer) {
+          tc.getNestedTCs(opts, passedTypes);
+        }
+      }
+
+      this.getFieldArgNames(fieldName).forEach(argName => {
+        const itc = this.getFieldArgTC(fieldName, argName);
+        if (!passedTypes.has(itc) && !exclude.includes(itc.getTypeName())) {
+          passedTypes.add(itc);
+          if (itc instanceof InputTypeComposer) {
+            itc.getNestedTCs(opts, passedTypes);
+          }
+        }
+      });
+    });
+
+    return passedTypes;
+  }
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  toSDL(
+    opts?: SchemaPrinterOptions & {
+      deep?: ?boolean,
+      sortTypes?: ?boolean,
+      exclude?: ?(string[]),
+    }
+  ): string {
+    const { deep, ...innerOpts } = opts || {};
+    const exclude = Array.isArray((innerOpts: any).exclude) ? (innerOpts: any).exclude : [];
+    if (deep) {
+      let r = '';
+      r += printInterface(this.getType(), innerOpts);
+
+      let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
+      if (opts?.sortAll || opts?.sortTypes) {
+        nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
+      }
+      nestedTypes.forEach(t => {
+        if (t !== this && !exclude.includes(t.getTypeName())) {
+          r += `\n\n${t.toSDL(innerOpts)}`;
+        }
+      });
+      return r;
+    }
+
+    return printInterface(this.getType(), innerOpts);
   }
 }

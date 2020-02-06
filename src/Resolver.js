@@ -34,8 +34,9 @@ import { typeByPath, type TypeInPath } from './utils/typeByPath';
 import {
   unwrapOutputTC,
   unwrapInputTC,
-  changeUnwrappedTC,
+  replaceTC,
   isComposeInputType,
+  cloneTypeTo,
 } from './utils/typeHelpers';
 import type {
   ComposeOutputType,
@@ -44,7 +45,7 @@ import type {
   ComposeNamedInputType,
   ComposeInputTypeDefinition,
 } from './utils/typeHelpers';
-import type { Thunk } from './utils/definitions';
+import type { Thunk, Extensions } from './utils/definitions';
 import { GraphQLJSON } from './type';
 import { NonNullComposer } from './NonNullComposer';
 import { ListComposer } from './ListComposer';
@@ -63,7 +64,9 @@ export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
   displayName?: string,
   kind?: ResolverKinds,
   description?: string,
+  projection?: ProjectionType,
   parent?: Resolver<any, TContext, any>,
+  extensions?: Extensions,
 };
 
 export type ResolverResolveParams<TSource, TContext, TArgs = ArgsMap> = {
@@ -150,7 +153,9 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   displayName: string | void;
   kind: ResolverKinds | void;
   description: string | void;
+  projection: ProjectionType;
   parent: Resolver<TSource, TContext, any> | void;
+  extensions: Extensions | void;
   resolve: (
     resolveParams: $Shape<ResolverResolveParams<TSource, TContext, TArgs>>
   ) => Promise<any> | any;
@@ -174,6 +179,8 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     this.parent = opts.parent;
     this.kind = opts.kind;
     this.description = opts.description || '';
+    this.projection = opts.projection || {};
+    this.extensions = opts.extensions;
 
     if (opts.type) {
       this.setType(opts.type);
@@ -272,10 +279,10 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
   getArgConfig(argName: string): GraphQLArgumentConfig {
     const ac = this.getArg(argName);
-    return {
+    return ({
       ...ac,
       type: ac.type.getType(),
-    };
+    }: any);
   }
 
   getArgType(argName: string): GraphQLInputType {
@@ -350,7 +357,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
     this.setArg(argName, {
       ...prevArgConfig,
-      ...partialArgConfig,
+      ...(partialArgConfig: any),
     });
 
     return this;
@@ -359,7 +366,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   addArgs(
     newArgs: ObjectTypeComposerArgumentConfigMapDefinition<ArgsMap>
   ): Resolver<TSource, TContext, TArgs> {
-    this.setArgs({ ...this.getArgs(), ...newArgs });
+    this.setArgs({ ...this.getArgs(), ...(newArgs: any) });
     return this;
   }
 
@@ -408,9 +415,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     const tc = this.getArgTC(argName);
     if (!(tc instanceof InputTypeComposer)) {
       throw new Error(
-        `Resolver(${this.name}).getArgITC('${argName}') must be InputTypeComposer, but recieved ${
-          tc.constructor.name
-        }. Maybe you need to use 'getArgTC()' method which returns any type composer?`
+        `Resolver(${this.name}).getArgITC('${argName}') must be InputTypeComposer, but recieved ${tc.constructor.name}. Maybe you need to use 'getArgTC()' method which returns any type composer?`
       );
     }
     return tc;
@@ -501,7 +506,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
     const argTC = this.getArg(argName).type;
 
-    const clonnedTC = changeUnwrappedTC(argTC, unwrappedTC => {
+    const clonnedTC = replaceTC(argTC, unwrappedTC => {
       if (!(unwrappedTC instanceof InputTypeComposer)) {
         throw new Error(
           `Cannot clone arg ${inspect(argName)} for resolver ${inspect(this.name)}. ` +
@@ -694,7 +699,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
       let name;
       if (mw.name) {
         name = mw.name;
-      } else if (mw.constructor && mw.constructor.name) {
+      } else if ((mw: any).constructor && mw.constructor.name) {
         name = mw.constructor.name;
       } else {
         name = 'middleware';
@@ -762,7 +767,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     return this.wrap(
       (newResolver, prevResolver) => {
         // clone prevArgs, to avoid changing args in callback
-        const prevArgs = { ...prevResolver.getArgs() };
+        const prevArgs: any = { ...prevResolver.getArgs() };
         const newArgs = cb(prevArgs) || prevArgs;
         newResolver.setArgs((newArgs: any));
         return newResolver;
@@ -820,6 +825,9 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     const resolve = this.getResolve();
     return (source: TSource, args: TArgs, context: TContext, info: GraphQLResolveInfo) => {
       let projection = getProjectionFromAST(info);
+      if (this.projection) {
+        projection = ((deepmerge(projection, this.projection): any): ProjectionType);
+      }
       if (opts.projection) {
         projection = ((deepmerge(projection, opts.projection): any): ProjectionType);
       }
@@ -869,7 +877,54 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     }
     oldOpts.displayName = undefined;
     oldOpts.args = { ...this.args };
-    return new Resolver({ ...oldOpts, ...opts }, this.schemaComposer);
+    if (this.projection) {
+      oldOpts.projection = { ...this.projection };
+    }
+    return new Resolver({ ...oldOpts, ...(opts: any) }, this.schemaComposer);
+  }
+
+  /**
+   * Clone this resolver to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    cloneMap?: Map<any, any> = new Map()
+  ): Resolver<any, any, any> {
+    if (!anotherSchemaComposer) {
+      throw new Error('You should provide SchemaComposer for InterfaceTypeComposer.cloneTo()');
+    }
+
+    if (cloneMap.has(this)) return (cloneMap.get(this): any);
+    const cloned = new Resolver(
+      {
+        name: this.name,
+        displayName: this.displayName,
+        kind: this.kind,
+        description: this.description,
+        projection: { ...this.projection },
+        extensions: { ...this.extensions },
+        resolve: this.resolve,
+      },
+      anotherSchemaComposer
+    );
+    cloneMap.set(this, cloned);
+
+    if (this.type) {
+      cloned.type = (this.type.cloneTo(anotherSchemaComposer, cloneMap): any);
+    }
+
+    if (this.parent) {
+      cloned.parent = this.parent.cloneTo(anotherSchemaComposer, cloneMap);
+    }
+
+    cloned.args = (mapEachKey((this.args: any), argConfig => ({
+      ...argConfig,
+      type: cloneTypeTo(argConfig.type, anotherSchemaComposer, cloneMap),
+      extensions: { ...argConfig.extensions },
+    })): any);
+
+    return cloned;
   }
 
   // -----------------------------------------------

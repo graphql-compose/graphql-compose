@@ -52,7 +52,7 @@ You may add 3rd part GraphQL types to `graphql-compose`. And make it very easy:
 import { ObjectTypeComposer, schemaComposer } from 'graphql-compose';
 import { GraphQLUpload } from 'apollo-upload-server';
 
-schemaComposer.set('Upload', GraphQLUpload);
+schemaComposer.add(GraphQLUpload);
 ```
 
 ### 3. Writing you first mutation with file uploads

@@ -12,7 +12,7 @@ import {
   GraphQLInputObjectType,
   graphql,
 } from '../graphql';
-import { schemaComposer, SchemaComposer } from '..';
+import { schemaComposer, SchemaComposer, sc } from '..';
 import { Resolver } from '../Resolver';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
@@ -24,6 +24,7 @@ import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { ThunkComposer } from '../ThunkComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
+import { dedent } from '../utils/dedent';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -134,7 +135,7 @@ describe('ObjectTypeComposer', () => {
 
       it('accept fieldConfig as function', () => {
         tc.setFields({
-          input4: () => ({
+          input4: (): { type: string, args: { [key: string]: string }, resolve: Function } => ({
             type: 'String',
             args: { a: 'Int' },
             resolve: () => 123,
@@ -192,6 +193,55 @@ describe('ObjectTypeComposer', () => {
       it('should remove list of fields', () => {
         tc.removeField(['field1', 'field2']);
         expect(tc.getFieldNames()).toEqual(expect.arrayContaining([]));
+      });
+
+      it('should remove field via dot-notation', () => {
+        sc.addTypeDefs(`
+          type Type {
+            field1: [SubType]!
+            field2: Int
+            field3: Int
+          }
+
+          type SubType {
+            subField1: SubSubType!
+            subField2: Int
+            subField3: Int
+          }
+
+          type SubSubType {
+            subSubField1: Int
+            subSubField2: Int
+          }
+        `);
+
+        sc.getOTC('Type').removeField([
+          'field1.subField1.subSubField1',
+          'field1.subField1.nonexistent',
+          'field1.nonexistent.nonexistent',
+          'field1.subField3',
+          'field2',
+          '',
+          '..',
+        ]);
+
+        expect(sc.getOTC('Type').toSDL({ deep: true, omitDescriptions: true })).toEqual(dedent`
+          type Type {
+            field1: [SubType]!
+            field3: Int
+          }
+
+          type SubType {
+            subField1: SubSubType!
+            subField2: Int
+          }
+
+          type SubSubType {
+            subSubField2: Int
+          }
+
+          scalar Int
+        `);
       });
     });
 
@@ -280,6 +330,71 @@ describe('ObjectTypeComposer', () => {
           'must be InputTypeComposer'
         );
       });
+
+      it('setFieldArgs()', () => {
+        tc.setField('fieldForArgs', {
+          type: 'Int',
+        });
+        expect(tc.getFieldArgs('fieldForArgs')).toEqual({});
+        tc.setFieldArgs('fieldForArgs', { a: 'Int', b: { type: 'String' } });
+        expect(tc.getFieldArgTypeName('fieldForArgs', 'a')).toEqual('Int');
+        expect(tc.getFieldArgTypeName('fieldForArgs', 'b')).toEqual('String');
+        expect(tc.setFieldArg('fieldForArgs', 'a', { type: 'Boolean' }));
+        expect(tc.getFieldArgTypeName('fieldForArgs', 'a')).toEqual('Boolean');
+        expect(tc.getFieldArgTypeName('fieldForArgs', 'b')).toEqual('String');
+      });
+
+      it('addFieldArgs()', () => {
+        tc.setField('fieldForArgs', {
+          type: 'Int',
+          args: { x: 'Int' },
+        });
+        expect(tc.getFieldArgs('fieldForArgs')).toMatchObject({ x: {} });
+        tc.addFieldArgs('fieldForArgs', { a: 'Int', b: { type: 'String' } });
+        expect(tc.getFieldArgTypeName('fieldForArgs', 'a')).toEqual('Int');
+        expect(tc.getFieldArgTypeName('fieldForArgs', 'b')).toEqual('String');
+        expect(tc.getFieldArgs('fieldForArgs')).toMatchObject({ x: {}, a: {}, b: {} });
+      });
+
+      describe('removeFieldArg()', () => {
+        it('should remove one arg', () => {
+          tc.setField('fieldWithArgs', {
+            type: 'Int',
+            args: { a: 'Int', b: 'Int', c: 'Int' },
+          });
+          tc.removeFieldArg('fieldWithArgs', 'b');
+          expect(tc.getFieldArgNames('fieldWithArgs')).toEqual(['a', 'c']);
+        });
+
+        it('should remove list of args', () => {
+          tc.setField('fieldWithArgs', {
+            type: 'Int',
+            args: { a: 'Int', b: 'Int', c: 'Int' },
+          });
+          tc.removeFieldArg('fieldWithArgs', ['b', 'c']);
+          expect(tc.getFieldArgNames('fieldWithArgs')).toEqual(['a']);
+        });
+      });
+
+      describe('removeFieldOtherArgs()', () => {
+        it('should remove one field', () => {
+          tc.setField('fieldWithArgs', {
+            type: 'Int',
+            args: { a: 'Int', b: 'Int', c: 'Int' },
+          });
+          tc.removeFieldOtherArgs('fieldWithArgs', 'b');
+          expect(tc.getFieldArgNames('fieldWithArgs')).toEqual(['b']);
+        });
+
+        it('should remove list of fields', () => {
+          tc.setField('fieldWithArgs', {
+            type: 'Int',
+            args: { a: 'Int', b: 'Int', c: 'Int' },
+          });
+          tc.removeFieldOtherArgs('fieldWithArgs', ['b', 'c']);
+          expect(tc.getFieldArgNames('fieldWithArgs')).toEqual(['b', 'c']);
+        });
+      });
     });
 
     describe('extendField()', () => {
@@ -308,7 +423,6 @@ describe('ObjectTypeComposer', () => {
           description: 'this is field #3',
           extensions: { second: true },
         });
-        // $FlowFixMe
         expect(tc.getFieldConfig('field3').extensions).toEqual({
           first: true,
           second: true,
@@ -677,16 +791,184 @@ describe('ObjectTypeComposer', () => {
   });
 
   describe('clone()', () => {
-    it('should clone projection for fields', () => {
-      tc.setField('field3', {
-        type: GraphQLString,
-        projection: { field1: true, field2: true },
-      });
+    it('should clone type', () => {
+      const cloned = tc.clone('NewObject');
+      expect(cloned).not.toBe(tc);
+      expect(cloned.getTypeName()).toBe('NewObject');
+      expect(cloned.getFieldNames()).toEqual(tc.getFieldNames());
+    });
 
-      const tc2 = tc.clone('newObject');
-      const fc = tc2.getField('field3');
-      expect(fc.projection).toEqual({ field1: true, field2: true });
-      expect(fc.type.getType()).toBe(GraphQLString);
+    it('field types should not be cloned', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      tc.setField('user', UserTC);
+      const cloned = tc.clone('NewObject');
+      expect(cloned.getField('user').type).toBe(UserTC);
+    });
+
+    it('field config should be different', () => {
+      const cloned = tc.clone('NewObject');
+      cloned.setField('field4', 'String');
+      expect(cloned.hasField('field4')).toBeTruthy();
+      expect(tc.hasField('field4')).toBeFalsy();
+    });
+
+    it('field args should be different', () => {
+      tc.setField('field3', {
+        type: 'String',
+        args: { a1: 'Int' },
+      });
+      const cloned = tc.clone('NewObject');
+
+      cloned.setFieldArg('field3', 'a2', 'String');
+      expect(cloned.hasFieldArg('field3', 'a2')).toBeTruthy();
+      expect(tc.hasFieldArg('field3', 'a2')).toBeFalsy();
+    });
+
+    it('interfaces should be the same', () => {
+      const iftc = schemaComposer.createInterfaceTC(`interface A { field1: String }`);
+      tc.addInterface(iftc);
+      const cloned = tc.clone('NewObject');
+      expect(cloned.getInterfaces()).toEqual(tc.getInterfaces());
+    });
+
+    it('extensions should be different', () => {
+      tc.setExtension('ext1', 123);
+      tc.setFieldExtension('field2', 'ext2', 456);
+      const cloned = tc.clone('NewObject');
+
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(tc.getExtension('ext1')).toBe(123);
+      expect(cloned.getFieldExtension('field2', 'ext2')).toBe(456);
+      cloned.setFieldExtension('field2', 'ext2', 600);
+      expect(cloned.getFieldExtension('field2', 'ext2')).toBe(600);
+      expect(tc.getFieldExtension('field2', 'ext2')).toBe(456);
+    });
+
+    it('resolvers should be cloned with only current type replacement', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      tc.setField('user', UserTC);
+      tc.addResolver({
+        name: 'findMany',
+        type: [tc],
+      });
+      tc.addResolver({
+        name: 'findUser',
+        type: UserTC,
+      });
+      const cloned = tc.clone('NewObject');
+
+      const findMany = tc.getResolver('findMany');
+      const findManyCloned = cloned.getResolver('findMany');
+      expect(findMany).not.toBe(findManyCloned);
+      // replace type even it wrapped with List or any other modifier
+      expect(findMany.type.getTypeName()).toBe('[Readable]');
+      expect(findManyCloned.type.getTypeName()).toBe('[NewObject]');
+
+      // other types should stay as is
+      const findUser = tc.getResolver('findUser');
+      const findUserCloned = cloned.getResolver('findUser');
+      expect(findUser).not.toBe(findUserCloned);
+      expect(findUser.type).toBe(findUserCloned.type);
+      expect(findUserCloned.type.getTypeName()).toBe('User');
+    });
+  });
+
+  describe('cloneTo()', () => {
+    let anotherSchemaComposer;
+    beforeEach(() => {
+      anotherSchemaComposer = new SchemaComposer();
+    });
+
+    it('should clone type', () => {
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+      expect(cloned).not.toBe(tc);
+      expect(cloned.getTypeName()).toBe(tc.getTypeName());
+      expect(cloned.getFieldNames()).toEqual(tc.getFieldNames());
+    });
+
+    it('field types should be cloned too', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      tc.setField('user', UserTC);
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+      expect(cloned.getField('user').type).not.toBe(UserTC);
+      expect(cloned.getFieldTypeName('user')).toBe(tc.getFieldTypeName('user'));
+    });
+
+    it('field config should be different', () => {
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+      cloned.setField('field4', 'String');
+      expect(cloned.hasField('field4')).toBeTruthy();
+      expect(tc.hasField('field4')).toBeFalsy();
+    });
+
+    it('field args should be different', () => {
+      tc.setField('field3', {
+        type: 'String',
+        args: { a1: 'Int' },
+      });
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+
+      cloned.setFieldArg('field3', 'a2', 'String');
+      expect(cloned.hasFieldArg('field3', 'a2')).toBeTruthy();
+      expect(tc.hasFieldArg('field3', 'a2')).toBeFalsy();
+    });
+
+    it('interfaces should be different', () => {
+      const iftc = schemaComposer.createInterfaceTC(`interface A { field1: String }`);
+      tc.addInterface(iftc);
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+
+      const ifaceA: InterfaceTypeComposer<any, any> = (tc.getInterfaces()[0]: any);
+      const ifaceACloned: InterfaceTypeComposer<any, any> = (cloned.getInterfaces()[0]: any);
+      expect(ifaceA).not.toBe(ifaceACloned);
+      expect(ifaceA.getTypeName()).toBe(ifaceACloned.getTypeName());
+      expect(ifaceA.getFieldNames()).toEqual(ifaceACloned.getFieldNames());
+    });
+
+    it('extensions should be different', () => {
+      tc.setExtension('ext1', 123);
+      tc.setFieldExtension('field2', 'ext2', 456);
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(tc.getExtension('ext1')).toBe(123);
+      expect(cloned.getFieldExtension('field2', 'ext2')).toBe(456);
+      cloned.setFieldExtension('field2', 'ext2', 600);
+      expect(cloned.getFieldExtension('field2', 'ext2')).toBe(600);
+      expect(tc.getFieldExtension('field2', 'ext2')).toBe(456);
+    });
+
+    it('resolvers should be cloned with all subtypes', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      tc.setField('user', UserTC);
+      tc.addResolver({
+        name: 'findMany',
+        type: [tc],
+      });
+      tc.addResolver({
+        name: 'findUser',
+        type: UserTC,
+      });
+      const cloned = tc.cloneTo(anotherSchemaComposer);
+
+      const findMany = tc.getResolver('findMany');
+      const findManyCloned = cloned.getResolver('findMany');
+      expect(findMany).not.toBe(findManyCloned);
+      // replace type even it wrapped with List or any other modifier
+      expect(findMany.type.getTypeName()).toBe('[Readable]');
+      expect(findManyCloned.type.getTypeName()).toBe('[Readable]');
+      expect((findMany: any).type.ofType).not.toBe((findManyCloned: any).type.ofType);
+
+      // other types also should be cloned
+      const findUser = tc.getResolver('findUser');
+      const findUserCloned = cloned.getResolver('findUser');
+      expect(findUser).not.toBe(findUserCloned);
+      expect(findUser.type).not.toBe(findUserCloned.type);
+      expect(findUserCloned.type.getTypeName()).toBe('User');
     });
   });
 
@@ -743,6 +1025,17 @@ describe('ObjectTypeComposer', () => {
       };
       tc.addResolver(ResolverDefinition);
       expect(tc.getResolver('myResolver3').resolve((undefined: any))).toEqual({});
+    });
+
+    it('addResolver() should add extensions', () => {
+      const resolverOpts = {
+        name: 'myResolver4',
+        extensions: {
+          journalDescription: 123,
+        },
+      };
+      tc.addResolver(resolverOpts);
+      expect(tc.getResolver('myResolver4').extensions).toEqual({ journalDescription: 123 });
     });
 
     it('removeResolver() should work', () => {
@@ -1180,7 +1473,11 @@ describe('ObjectTypeComposer', () => {
       schemaComposer.Query.addFields({
         check: {
           type: '[MyUnion]',
-          resolve: () => [{ kind: 'A', a: 1 }, { kind: 'B', b: 2 }, { kind: 'C', c: 3 }],
+          resolve: () => [
+            { kind: 'A', a: 1 },
+            { kind: 'B', b: 2 },
+            { kind: 'C', c: 3 },
+          ],
         },
       });
       const res = await graphql(
@@ -1258,7 +1555,7 @@ describe('ObjectTypeComposer', () => {
   });
 
   describe('directive methods', () => {
-    it('type level directive methods', () => {
+    it('type level directive get-methods', () => {
       const tc1 = schemaComposer.createObjectTC(`
         type My1 @d0(a: false) @d1(b: "3") @d0(a: true) { 
           field: Int
@@ -1315,6 +1612,34 @@ describe('ObjectTypeComposer', () => {
       expect(tc1.getFieldArgDirectiveById('field', 'arg', 1)).toEqual({ b: '3' });
       expect(tc1.getFieldArgDirectiveByName('field', 'arg', 'a2')).toEqual(undefined);
       expect(tc1.getFieldArgDirectiveById('field', 'arg', 333)).toEqual(undefined);
+    });
+
+    it('check directive set-methods', () => {
+      const tc1 = schemaComposer.createObjectTC(`
+        type My1 @d0(a: true) {
+          field: Int @d2(a: false, b: true)
+          field2(ok: Int = 15 @d5(a: 5)): Int
+        }
+      `);
+      expect(tc1.toSDL()).toBe(dedent`
+        type My1 @d0(a: true) {
+          field: Int @d2(a: false, b: true)
+          field2(ok: Int = 15 @d5(a: 5)): Int
+        }
+      `);
+      tc1.setDirectives([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      tc1.setFieldDirectives('field', [{ args: { b: '6' }, name: 'd1' }]);
+      tc1.setFieldArgDirectives('field2', 'ok', [{ args: { b: '7' }, name: 'd1' }]);
+      expect(tc1.toSDL()).toBe(dedent`
+        type My1 @d0(a: false) @d1(b: "3") @d0(a: true) {
+          field: Int @d1(b: "6")
+          field2(ok: Int = 15 @d1(b: "7")): Int
+        }
+      `);
     });
   });
 
@@ -1388,6 +1713,150 @@ describe('ObjectTypeComposer', () => {
       expect(() => otc.merge((schemaComposer.createScalarTC('Scalar'): any))).toThrow(
         'Cannot merge ScalarTypeComposer'
       );
+    });
+  });
+
+  describe('misc methods', () => {
+    it('getNestedTCs()', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        type User implements I1 & I2 {
+          f1: String
+          f2: Int
+          f3: User
+          f4(f: Filter): Boolean 
+        }
+
+        input Filter { a: Int b: Filter }
+
+        interface I1 { f1: String }
+        interface I2 { f2: Int }
+
+        type OtherType1 { a: Int }
+        input OtherInput1 { b: Int }
+
+        union C = A | B
+        type A { f1: Int }
+        type B { f2: User }
+      `);
+
+      expect(
+        Array.from(
+          sc1
+            .getITC('Filter')
+            .getNestedTCs()
+            .values()
+        ).map(t => t.getTypeName())
+      ).toEqual(['Int', 'Filter']);
+
+      expect(
+        Array.from(
+          sc1
+            .getOTC('User')
+            .getNestedTCs()
+            .values()
+        ).map(t => t.getTypeName())
+      ).toEqual(['String', 'Int', 'User', 'Boolean', 'Filter', 'I1', 'I2']);
+
+      expect(
+        Array.from(
+          sc1
+            .getUTC('C')
+            .getNestedTCs()
+            .values()
+        ).map(t => t.getTypeName())
+      ).toEqual(['A', 'Int', 'B', 'User', 'String', 'Boolean', 'Filter', 'I1', 'I2']);
+    });
+
+    it('toSDL()', () => {
+      const t = schemaComposer.createObjectTC(`
+        """desc1"""
+        type User { 
+          """desc2"""
+          name(a: Int): String
+        }
+      `);
+      expect(t.toSDL()).toMatchInlineSnapshot(`
+        "\\"\\"\\"desc1\\"\\"\\"
+        type User {
+          \\"\\"\\"desc2\\"\\"\\"
+          name(a: Int): String
+        }"
+      `);
+    });
+
+    it('toSDL({ deep: true })', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        type User implements I1 & I2 {
+          f1: String
+          f2: Int
+          f3: User
+          f4(f: Filter): Int 
+        }
+
+        input Filter { a: Boolean b: Filter }
+
+        interface I1 { f1: String }
+        interface I2 { f2: Int }
+
+        type OtherType1 { a: Int }
+        input OtherInput1 { b: Int }
+
+        union C = A | B
+        type A { f1: Int }
+        type B { f2: User }
+      `);
+
+      expect(
+        sc1.getOTC('User').toSDL({
+          deep: true,
+          omitDescriptions: true,
+        })
+      ).toMatchInlineSnapshot(`
+        "type User implements I1 & I2 {
+          f1: String
+          f2: Int
+          f3: User
+          f4(f: Filter): Int
+        }
+
+        scalar String
+
+        scalar Int
+
+        input Filter {
+          a: Boolean
+          b: Filter
+        }
+
+        scalar Boolean
+
+        interface I1 {
+          f1: String
+        }
+
+        interface I2 {
+          f2: Int
+        }"
+      `);
+
+      expect(
+        sc1.getOTC('User').toSDL({
+          deep: true,
+          omitDescriptions: true,
+          exclude: ['I2', 'I1', 'Filter', 'Int'],
+        })
+      ).toMatchInlineSnapshot(`
+        "type User implements I1 & I2 {
+          f1: String
+          f2: Int
+          f3: User
+          f4(f: Filter): Int
+        }
+
+        scalar String"
+      `);
     });
   });
 });

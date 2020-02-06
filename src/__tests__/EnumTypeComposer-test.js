@@ -6,6 +6,7 @@ import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { GraphQLEnumType } from '../graphql';
 import { graphqlVersion } from '../utils/graphqlVersion';
+import { dedent } from '../utils/dedent';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -284,15 +285,30 @@ describe('EnumTypeComposer', () => {
 
   describe('clone()', () => {
     it('should clone type', () => {
-      const etc2 = etc.clone('ClonedEnum');
-      expect(etc2.getTypeName()).toEqual('ClonedEnum');
-      expect(etc.getType()).not.toBe(etc2.getType());
-      expect(etc.getField('VAL1')).not.toBe(etc2.getField('VAL1'));
+      const cloned = etc.clone('ClonedEnum');
+      expect(etc).not.toBe(cloned);
+      expect(cloned.getTypeName()).toEqual('ClonedEnum');
+      expect(etc.getType()).not.toBe(cloned.getType());
+      expect(etc.getField('VAL1')).not.toBe(cloned.getField('VAL1'));
 
       expect(() => {
         const wrongArgs: any = [];
         etc.clone(...wrongArgs);
       }).toThrowError(/You should provide newTypeName/);
+    });
+  });
+
+  describe('cloneTo()', () => {
+    it('should clone type to another Schema', () => {
+      const sc2 = new SchemaComposer();
+      const cloned = etc.cloneTo(sc2);
+
+      expect(etc.getTypeName()).toEqual(cloned.getTypeName());
+      expect(etc).not.toBe(cloned);
+      expect(etc.getType()).not.toBe(cloned.getType());
+      expect(etc.getField('VAL1')).not.toBe(cloned.getField('VAL1'));
+
+      expect(sc2.getETC(etc.getTypeName())).not.toBe(etc);
     });
   });
 
@@ -334,6 +350,30 @@ describe('EnumTypeComposer', () => {
       expect(tc1.getFieldDirectiveByName('AAA', 'f2')).toEqual(undefined);
       expect(tc1.getFieldDirectiveById('AAA', 333)).toEqual(undefined);
     });
+
+    it('check directive set-methods', () => {
+      const tc1 = schemaComposer.createEnumTC(`
+        enum My1 @d0(a: true) {
+          AAA @f0(a: false) @f1(b: "3") @f0(a: true)
+        }
+      `);
+      expect(tc1.toSDL()).toBe(dedent`
+        enum My1 @d0(a: true) {
+          AAA @f0(a: false) @f1(b: "3") @f0(a: true)
+        }
+      `);
+      tc1.setDirectives([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      tc1.setFieldDirectives('AAA', [{ args: { b: '6' }, name: 'd1' }]);
+      expect(tc1.toSDL()).toBe(dedent`
+        enum My1 @d0(a: false) @d1(b: "3") @d0(a: true) {
+          AAA @d1(b: "6")
+        }
+      `);
+    });
   });
 
   describe('merge()', () => {
@@ -366,6 +406,33 @@ describe('EnumTypeComposer', () => {
       expect(() => sortETC.merge((schemaComposer.createScalarTC('Scalar'): any))).toThrow(
         'Cannot merge ScalarTypeComposer'
       );
+    });
+  });
+
+  describe('misc methods', () => {
+    it('toSDL()', () => {
+      const t = schemaComposer.createEnumTC(`
+        """desc1"""
+        enum Sort { 
+          """desc2"""
+          ASC
+          DESC
+        }
+      `);
+      expect(t.toSDL()).toMatchInlineSnapshot(`
+        "\\"\\"\\"desc1\\"\\"\\"
+        enum Sort {
+          \\"\\"\\"desc2\\"\\"\\"
+          ASC
+          DESC
+        }"
+      `);
+      expect(t.toSDL({ omitDescriptions: true })).toMatchInlineSnapshot(`
+        "enum Sort {
+          ASC
+          DESC
+        }"
+      `);
     });
   });
 });

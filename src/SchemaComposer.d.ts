@@ -18,6 +18,7 @@ import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
 import { Resolver, ResolverDefinition } from './Resolver';
 import { NamedTypeComposer, AnyType } from './utils/typeHelpers';
+import { SchemaComposerPrinterOptions, SchemaPrinterOptions } from './utils/schemaPrinter';
 
 type ExtraSchemaConfig = {
   types?: GraphQLNamedType[] | null;
@@ -89,6 +90,12 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    * where will be removed all fields with empty object types (without sub-fields).
    */
   public removeEmptyTypes(tc: ObjectTypeComposer<any, TContext>, passedTypes: Set<string>): void;
+
+  /**
+   * Clone schema with deep clonning of all its types.
+   * Except Scalar types which will be the same for both schemas.
+   */
+  public clone<TCtx = TContext>(): SchemaComposer<TCtx>;
 
   /**
    * Load all types from GraphQLSchema and merge with current SchemaComposer's types.
@@ -248,6 +255,18 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   public getAnyTC(typeName: string | AnyType<any> | GraphQLType): NamedTypeComposer<TContext>;
 
+  public isObjectType(type: string | AnyType<any> | GraphQLType): boolean;
+
+  public isInputType(type: string | AnyType<any> | GraphQLType): boolean;
+
+  public isScalarType(type: string | AnyType<any> | GraphQLType): boolean;
+
+  public isEnumType(type: string | AnyType<any> | GraphQLType): boolean;
+
+  public isInterfaceType(type: string | AnyType<any> | GraphQLType): boolean;
+
+  public isUnionType(type: string | AnyType<any> | GraphQLType): boolean;
+
   /**
    * -----------------------------------------------
    * Storage methods
@@ -309,4 +328,38 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    * Misc methods
    * -----------------------------------------------
    */
+
+  /**
+   * Prints SDL for any type in schema by its name.
+   *
+   * Can print all used sub-types if provided `deep: true` option.
+   * Also you may omit some sub-types via `exclude: string[]` option.
+   */
+  public getTypeSDL(
+    typeName: string,
+    opts?: SchemaPrinterOptions & {
+      deep?: boolean;
+      sortTypes?: boolean;
+      exclude?: string[] | null;
+    }
+  ): string;
+
+  /**
+   * Return schema as a SDL string.
+   * This SDL can be used with graphql-tools and Apollo Federation.
+   *
+   * @param {Object} options
+   * @param {String[]} options.include - add to SDL only provided types
+   * @param {String[]} options.exclude - do not add provided types to SDL
+   * @param {Boolean} options.omitDescriptions - do not add descriptions to SDL
+   * @param {Boolean} options.omitDirectiveDefinitions - do not add directives definitions to SDL
+   * @param {Boolean} options.commentDescriptions - print descriptions like comments, starting with #
+   * @param {Boolean} options.sortAll - sort fields, args, values, interfaces by its names. Useful for snapshot testing.
+   * @param {Boolean} options.sortFields - sort fields by name
+   * @param {Boolean} options.sortArgs - sort args by name
+   * @param {Boolean} options.sortInterfaces  - sort interfaces by name
+   * @param {Boolean} options.sortUnions - sort union types by name
+   * @param {Boolean} options.sortEnums - sort enum values by name
+   */
+  public toSDL(options?: SchemaComposerPrinterOptions): string;
 }

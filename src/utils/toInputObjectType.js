@@ -5,11 +5,14 @@ import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { ThunkComposer } from '../ThunkComposer';
-import { TypeMapper } from '../TypeMapper';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import type { InputTypeComposer } from '../InputTypeComposer';
 import type { SchemaComposer } from '../SchemaComposer';
-import type { ComposeOutputType, ComposeInputType } from './typeHelpers';
+import {
+  isSomeInputTypeComposer,
+  type ComposeOutputType,
+  type ComposeInputType,
+} from './typeHelpers';
 import { inspect } from './misc';
 import { UnionTypeComposer } from '../UnionTypeComposer';
 
@@ -89,7 +92,7 @@ export function convertInputObjectField(
     return null;
   }
 
-  if (!TypeMapper.isInputType(tc)) {
+  if (!isSomeInputTypeComposer(tc)) {
     if (tc instanceof ObjectTypeComposer || tc instanceof InterfaceTypeComposer) {
       const typeOpts = {
         prefix: opts.prefix || '',

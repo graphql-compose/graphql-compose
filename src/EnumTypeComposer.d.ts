@@ -12,13 +12,9 @@ import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
-import {
-  ObjMap,
-  Extensions,
-  ExtensionsDirective,
-  DirectiveArgs,
-  ObjMapReadOnly,
-} from './utils/definitions';
+import { ObjMap, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
+import { NamedTypeComposer } from './utils/typeHelpers';
+import { SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type EnumTypeComposerDefinition =
   | TypeAsString
@@ -50,7 +46,7 @@ export type EnumTypeComposerValueConfigDefinition = {
 };
 
 export type EnumTypeComposerValueConfigMap = ObjMap<EnumTypeComposerValueConfig>;
-export type EnumTypeComposerValueConfigMapDefinition = ObjMapReadOnly<
+export type EnumTypeComposerValueConfigMapDefinition = ObjMap<
   EnumTypeComposerValueConfigDefinition
 >;
 
@@ -159,6 +155,15 @@ export class EnumTypeComposer<TContext = any> {
    */
   public clone(newTypeNameOrTC: string | EnumTypeComposer<any>): EnumTypeComposer<TContext>;
 
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    cloneMap?: Map<any, any>
+  ): EnumTypeComposer<TCtx>;
+
   public merge(type: GraphQLEnumType | EnumTypeComposer<any>): this;
 
   /**
@@ -207,6 +212,8 @@ export class EnumTypeComposer<TContext = any> {
 
   public getDirectives(): ExtensionsDirective[];
 
+  public setDirectives(directives: ExtensionsDirective[]): this;
+
   public getDirectiveNames(): string[];
 
   public getDirectiveByName(directiveName: string): DirectiveArgs | void;
@@ -215,9 +222,22 @@ export class EnumTypeComposer<TContext = any> {
 
   public getFieldDirectives(fieldName: string): ExtensionsDirective[];
 
+  public setFieldDirectives(fieldName: string, directives: ExtensionsDirective[]): this;
+
   public getFieldDirectiveNames(fieldName: string): string[];
 
   public getFieldDirectiveByName(fieldName: string, directiveName: string): DirectiveArgs | void;
 
   public getFieldDirectiveById(fieldName: string, idx: number): DirectiveArgs | void;
+
+  /**
+   * -----------------------------------------------
+   * Misc methods
+   * -----------------------------------------------
+   */
+
+  /**
+   * Prints SDL for current type.
+   */
+  public toSDL(opts?: SchemaPrinterOptions): string;
 }

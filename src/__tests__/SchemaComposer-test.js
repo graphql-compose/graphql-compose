@@ -1052,8 +1052,7 @@ describe('SchemaComposer', () => {
       expect(sc.hasDirective('@skip')).toBeTruthy();
       expect(sc.hasDirective('@include')).toBeTruthy();
       expect(sc.hasDirective('@deprecated')).toBeTruthy();
-      expect(sc.hasDirective('@default')).toBeTruthy();
-      expect(sc.getDirectives()).toHaveLength(4);
+      expect(sc.getDirectives()).toHaveLength(3);
     });
 
     it('addDirective()', () => {
@@ -1092,20 +1091,23 @@ describe('SchemaComposer', () => {
       expect(sc.getDirectives()[0]).toBeInstanceOf(GraphQLDirective);
     });
 
-    it('clear() should clear directives and restore defaults', () => {
+    it('clear() should clear directives', () => {
       const sc = new SchemaComposer();
       removeDefaultDirectives(sc);
       sc.addDirective(d1);
       expect(sc.getDirectives()).toHaveLength(1);
-      expect(sc.has('String')).toBeTruthy();
+      expect(sc.has('String')).toBeFalsy();
       sc.clear();
-      expect(sc.has('String')).toBeTruthy();
-      expect(sc.has('Int')).toBeTruthy();
       expect(sc.hasDirective('@skip')).toBe(true);
       expect(sc.hasDirective('@include')).toBe(true);
       expect(sc.hasDirective('@deprecated')).toBe(true);
-      expect(sc.hasDirective('@default')).toBe(true);
-      expect(sc.getDirectives()).toHaveLength(4);
+      expect(sc.getDirectives()).toHaveLength(3);
+
+      expect(sc.has('String')).toBeFalsy();
+      expect(sc.has('Int')).toBeFalsy();
+      sc.createObjectTC(`type Me { name: String, age: Int }`);
+      expect(sc.has('String')).toBeTruthy();
+      expect(sc.has('Int')).toBeTruthy();
     });
 
     it('hasDirective()', () => {
@@ -1238,6 +1240,274 @@ describe('SchemaComposer', () => {
       expect(() => {
         sc.merge(sc2);
       }).toThrow(/Cannot merge InputTypeComposer.*with ObjectType/);
+    });
+  });
+
+  describe('misc methods', () => {
+    it('toSDL()', () => {
+      const sc = new SchemaComposer();
+      sc.Query.addFields({ existedInQuery: 'String' });
+      sc.Mutation.addFields({ existedInMutation: 'String' });
+      sc.Subscription.addFields({ existedInSubscription: 'String' });
+      sc.createTC(`type User { age: Int }`);
+
+      expect(sc.toSDL()).toMatchInlineSnapshot(`
+        "type Mutation {
+          existedInMutation: String
+        }
+
+        type Query {
+          existedInQuery: String
+        }
+
+        \\"\\"\\"
+        The \`String\` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
+        \\"\\"\\"
+        scalar String
+
+        type Subscription {
+          existedInSubscription: String
+        }"
+      `);
+    });
+
+    describe('getTypeSDL()', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        type User implements IF2 & IF1 {
+          f3(filter: Filter, a: Int): Boolean 
+          f1: Int
+          f2: Boolean
+        }
+        input Filter { b: Int, a: String }
+        input AnotherType { a: String }
+        interface IF1 { f2: Int f1: Int }
+        interface IF2 { f2: Int }
+      `);
+
+      it('just single type', () => {
+        expect(sc1.getTypeSDL('User')).toMatchInlineSnapshot(`
+          "type User implements IF2 & IF1 {
+            f3(filter: Filter, a: Int): Boolean
+            f1: Int
+            f2: Boolean
+          }"
+        `);
+      });
+
+      it('type with nested types and without comments', () => {
+        expect(sc1.getTypeSDL('User', { deep: true, omitDescriptions: true }))
+          .toMatchInlineSnapshot(`
+          "type User implements IF2 & IF1 {
+            f3(filter: Filter, a: Int): Boolean
+            f1: Int
+            f2: Boolean
+          }
+
+          scalar Boolean
+
+          input Filter {
+            b: Int
+            a: String
+          }
+
+          scalar Int
+
+          scalar String
+
+          interface IF2 {
+            f2: Int
+          }
+
+          interface IF1 {
+            f2: Int
+            f1: Int
+          }"
+        `);
+      });
+
+      it('type with nested and sorting for snapshots', () => {
+        expect(sc1.getTypeSDL('User', { sortAll: true, deep: true, omitDescriptions: true }))
+          .toMatchInlineSnapshot(`
+          "type User implements IF1 & IF2 {
+            f1: Int
+            f2: Boolean
+            f3(a: Int, filter: Filter): Boolean
+          }
+
+          scalar Boolean
+
+          input Filter {
+            a: String
+            b: Int
+          }
+
+          interface IF1 {
+            f1: Int
+            f2: Int
+          }
+
+          interface IF2 {
+            f2: Int
+          }
+
+          scalar Int
+
+          scalar String"
+        `);
+      });
+    });
+  });
+
+  describe('is* methods', () => {
+    it('isObjectType', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`type MyType { name: String }`);
+      expect(sc1.isObjectType('MyType')).toBeTruthy();
+      expect(sc1.isObjectType(`type MyType { name: String }`)).toBeTruthy();
+      expect(sc1.isObjectType(sc1.createObjectTC(`type MyType1 { name: String }`))).toBeTruthy();
+      expect(sc1.isObjectType(sc1.get('MyType'))).toBeTruthy();
+      expect(sc1.isObjectType(sc1.get('MyType').getType())).toBeTruthy();
+
+      expect(sc1.isInputObjectType('MyType')).toBeFalsy();
+      expect(sc1.isScalarType('MyType')).toBeFalsy();
+      expect(sc1.isEnumType('MyType')).toBeFalsy();
+      expect(sc1.isInterfaceType('MyType')).toBeFalsy();
+      expect(sc1.isUnionType('MyType')).toBeFalsy();
+    });
+
+    it('isInputType', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`input MyType { name: String }`);
+      expect(sc1.isInputObjectType('MyType')).toBeTruthy();
+      expect(sc1.isInputObjectType(`input MyType { name: String }`)).toBeTruthy();
+      expect(
+        sc1.isInputObjectType(sc1.createInputTC(`input MyType1 { name: String }`))
+      ).toBeTruthy();
+      expect(sc1.isInputObjectType(sc1.get('MyType'))).toBeTruthy();
+      expect(sc1.isInputObjectType(sc1.get('MyType').getType())).toBeTruthy();
+
+      expect(sc1.isObjectType('MyType')).toBeFalsy();
+      expect(sc1.isScalarType('MyType')).toBeFalsy();
+      expect(sc1.isEnumType('MyType')).toBeFalsy();
+      expect(sc1.isInterfaceType('MyType')).toBeFalsy();
+      expect(sc1.isUnionType('MyType')).toBeFalsy();
+    });
+
+    it('isScalarType', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`scalar MyType`);
+      expect(sc1.isScalarType('MyType')).toBeTruthy();
+      expect(sc1.isScalarType(`scalar MyType`)).toBeTruthy();
+      expect(sc1.isScalarType(sc1.createScalarTC(`scalar MyType1`))).toBeTruthy();
+      expect(sc1.isScalarType(sc1.get('MyType'))).toBeTruthy();
+      expect(sc1.isScalarType(sc1.get('MyType').getType())).toBeTruthy();
+
+      expect(sc1.isObjectType('MyType')).toBeFalsy();
+      expect(sc1.isInputObjectType('MyType')).toBeFalsy();
+      expect(sc1.isEnumType('MyType')).toBeFalsy();
+      expect(sc1.isInterfaceType('MyType')).toBeFalsy();
+      expect(sc1.isUnionType('MyType')).toBeFalsy();
+    });
+
+    it('isEnumType', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`enum MyType { A B }`);
+      expect(sc1.isEnumType('MyType')).toBeTruthy();
+      expect(sc1.isEnumType(`enum MyType { A B }`)).toBeTruthy();
+      expect(sc1.isEnumType(sc1.createEnumTC(`enum MyType1 { A B }`))).toBeTruthy();
+      expect(sc1.isEnumType(sc1.get('MyType'))).toBeTruthy();
+      expect(sc1.isEnumType(sc1.get('MyType').getType())).toBeTruthy();
+
+      expect(sc1.isObjectType('MyType')).toBeFalsy();
+      expect(sc1.isInputObjectType('MyType')).toBeFalsy();
+      expect(sc1.isScalarType('MyType')).toBeFalsy();
+      expect(sc1.isInterfaceType('MyType')).toBeFalsy();
+      expect(sc1.isUnionType('MyType')).toBeFalsy();
+    });
+
+    it('isInterfaceType', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`interface MyType { a: Int }`);
+      expect(sc1.isInterfaceType('MyType')).toBeTruthy();
+      expect(sc1.isInterfaceType(`interface MyType { a: Int }`)).toBeTruthy();
+      expect(
+        sc1.isInterfaceType(sc1.createInterfaceTC(`interface MyType1 { a: Int }`))
+      ).toBeTruthy();
+      expect(sc1.isInterfaceType(sc1.get('MyType'))).toBeTruthy();
+      expect(sc1.isInterfaceType(sc1.get('MyType').getType())).toBeTruthy();
+
+      expect(sc1.isObjectType('MyType')).toBeFalsy();
+      expect(sc1.isInputObjectType('MyType')).toBeFalsy();
+      expect(sc1.isScalarType('MyType')).toBeFalsy();
+      expect(sc1.isEnumType('MyType')).toBeFalsy();
+      expect(sc1.isUnionType('MyType')).toBeFalsy();
+    });
+
+    it('isUnionType', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`union MyType = A | B`);
+      expect(sc1.isUnionType('MyType')).toBeTruthy();
+      expect(sc1.isUnionType(`union MyType = A | B`)).toBeTruthy();
+      expect(sc1.isUnionType(sc1.createUnionTC(`union MyType = A | B`))).toBeTruthy();
+      expect(sc1.isUnionType(sc1.get('MyType'))).toBeTruthy();
+      expect(sc1.isUnionType(sc1.get('MyType').getType())).toBeTruthy();
+
+      expect(sc1.isObjectType('MyType')).toBeFalsy();
+      expect(sc1.isInputObjectType('MyType')).toBeFalsy();
+      expect(sc1.isScalarType('MyType')).toBeFalsy();
+      expect(sc1.isEnumType('MyType')).toBeFalsy();
+      expect(sc1.isInterfaceType('MyType')).toBeFalsy();
+    });
+  });
+
+  describe('clone()', () => {
+    let sc1;
+
+    beforeEach(() => {
+      sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        type Query {
+          list: [User]
+        }
+
+        type User {
+          name: String
+          friends: [User]
+        }
+      `);
+    });
+
+    it('should deeply clone all types', () => {
+      const sc2 = sc1.clone();
+      expect(sc2.getOTC('User')).not.toBe(sc1.getOTC('User'));
+      expect(sc2.getOTC('Query')).not.toBe(sc1.getOTC('Query'));
+    });
+
+    it('should clone MustHaveTypes', () => {
+      const a = sc1.createObjectTC(`type A { i: Int }`);
+      sc1.addSchemaMustHaveType(a);
+      const sc2 = sc1.clone();
+      expect(sc2._schemaMustHaveTypes).toHaveLength(1);
+      expect(sc2._schemaMustHaveTypes[0]).not.toBe(sc1._schemaMustHaveTypes[0]);
+    });
+
+    it('directives should be different', () => {
+      const directive = new GraphQLDirective({
+        name: 'D',
+        locations: ['QUERY'],
+      });
+      sc1.addDirective(directive);
+      const sc2 = sc1.clone();
+      expect(sc2.hasDirective(directive)).toBeTruthy();
+
+      const directive2 = new GraphQLDirective({
+        name: 'D2',
+        locations: ['QUERY'],
+      });
+      sc2.addDirective(directive2);
+      expect(sc2.hasDirective(directive2)).toBeTruthy();
+      expect(sc1.hasDirective(directive2)).toBeFalsy();
     });
   });
 });

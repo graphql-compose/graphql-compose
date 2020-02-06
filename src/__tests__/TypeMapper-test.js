@@ -1,5 +1,6 @@
 /* @flow strict */
 
+import { GraphQLSchema } from 'graphql';
 import {
   GraphQLString,
   GraphQLFloat,
@@ -15,6 +16,7 @@ import {
   GraphQLInterfaceType,
 } from '../graphql';
 import { schemaComposer as sc } from '..';
+import { SchemaComposer } from '../SchemaComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
 import { GraphQLDate, GraphQLBuffer, GraphQLJSON, GraphQLJSONObject } from '../type';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
@@ -36,16 +38,41 @@ beforeEach(() => {
 });
 
 describe('TypeMapper', () => {
-  it('should add basic scalar GraphQL types', () => {
-    expect(typeMapper.schemaComposer.get('String').getType()).toBe(GraphQLString);
-    expect(typeMapper.schemaComposer.get('Float').getType()).toBe(GraphQLFloat);
-    expect(typeMapper.schemaComposer.get('Int').getType()).toBe(GraphQLInt);
-    expect(typeMapper.schemaComposer.get('Boolean').getType()).toBe(GraphQLBoolean);
-    expect(typeMapper.schemaComposer.get('ID').getType()).toBe(GraphQLID);
-    expect(typeMapper.schemaComposer.get('JSON').getType()).toBe(GraphQLJSON);
-    expect(typeMapper.schemaComposer.get('JSONObject').getType()).toBe(GraphQLJSONObject);
-    expect(typeMapper.schemaComposer.get('Date').getType()).toBe(GraphQLDate);
-    expect(typeMapper.schemaComposer.get('Buffer').getType()).toBe(GraphQLBuffer);
+  it('should provide default scalar GraphQL types', () => {
+    expect((typeMapper.getBuiltInType('String'): any).getType()).toBe(GraphQLString);
+    expect((typeMapper.getBuiltInType('Float'): any).getType()).toBe(GraphQLFloat);
+    expect((typeMapper.getBuiltInType('Int'): any).getType()).toBe(GraphQLInt);
+    expect((typeMapper.getBuiltInType('Boolean'): any).getType()).toBe(GraphQLBoolean);
+    expect((typeMapper.getBuiltInType('ID'): any).getType()).toBe(GraphQLID);
+    expect((typeMapper.getBuiltInType('JSON'): any).getType()).toBe(GraphQLJSON);
+    expect((typeMapper.getBuiltInType('JSONObject'): any).getType()).toBe(GraphQLJSONObject);
+    expect((typeMapper.getBuiltInType('Date'): any).getType()).toBe(GraphQLDate);
+    expect((typeMapper.getBuiltInType('Buffer'): any).getType()).toBe(GraphQLBuffer);
+  });
+
+  it('should not add basic scalars if they already provided', () => {
+    const CustomJSON = new GraphQLScalarType({
+      name: 'JSON',
+      serialize: () => {},
+    });
+    const CustomDate = new GraphQLScalarType({
+      name: 'Date',
+      serialize: () => {},
+    });
+    const Query = new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        json: { type: CustomJSON },
+        date: { type: CustomDate },
+      },
+    });
+    const schema = new GraphQLSchema({
+      query: Query,
+    });
+
+    const sc2 = new SchemaComposer(schema);
+    expect(sc2.get('JSON').getType()).toBe(CustomJSON);
+    expect(sc2.get('Date').getType()).toBe(CustomDate);
   });
 
   it('should allow to override basic graphql-compose types', () => {
@@ -108,7 +135,7 @@ describe('TypeMapper', () => {
     const tc: any = typeMapper.convertSDLTypeDefinition(
       `
       input InputIntRange {
-        min: Int @default(value: 0)
+        min: Int
         max: Int!
       }
     `
@@ -121,7 +148,6 @@ describe('TypeMapper', () => {
 
     const IntRangeTC: any = new InputTypeComposer(type, sc);
     expect(IntRangeTC.getTypeName()).toBe('InputIntRange');
-    expect(IntRangeTC.getField('min').defaultValue).toBe(0);
     expect(IntRangeTC.getFieldType('min')).toBe(GraphQLInt);
     expect(IntRangeTC.getFieldType('max')).toBeInstanceOf(GraphQLNonNull);
     expect(IntRangeTC.getFieldType('max').ofType).toBe(GraphQLInt);
@@ -415,7 +441,7 @@ describe('TypeMapper', () => {
       });
 
       it('should pass unchanged thunk', () => {
-        const myTypeThunk = () => 'Int';
+        const myTypeThunk = (): string => 'Int';
         const fc: any = typeMapper.convertOutputFieldConfig(myTypeThunk);
         expect(fc.type).toBeInstanceOf(ScalarTypeComposer);
         expect(fc.type.getType()).toBe(GraphQLInt);
@@ -895,7 +921,7 @@ describe('TypeMapper', () => {
     });
 
     it('should pass unchanged thunk', () => {
-      const myTypeThunk = () => 'Int';
+      const myTypeThunk = (): string => 'Int';
       const ac: any = typeMapper.convertArgConfig(myTypeThunk);
       expect(ac.type).toBeInstanceOf(ScalarTypeComposer);
       expect(ac.type.getType()).toBe(GraphQLInt);
@@ -1030,6 +1056,62 @@ describe('TypeMapper', () => {
       const types = TypeAB.getTypes();
       expect(types).toHaveLength(2);
     });
+
+    it('extend Object type', async () => {
+      const ts: any = typeMapper.parseTypesFromString(`
+        type MyType { aaa: Int }
+        extend type MyType @ok { bbb: String! }
+      `);
+      expect(ts.get('MyType').getFieldNames()).toEqual(['aaa', 'bbb']);
+      expect(ts.get('MyType').getDirectiveNames()).toEqual(['ok']);
+    });
+
+    it('extend Input type', async () => {
+      const ts: any = typeMapper.parseTypesFromString(`
+        input In { aaa: Int }
+        extend input In @ok { bbb: String! }
+      `);
+      expect(ts.get('In').getFieldNames()).toEqual(['aaa', 'bbb']);
+      expect(ts.get('In').getDirectiveNames()).toEqual(['ok']);
+    });
+
+    it('extend Interface type', async () => {
+      const ts: any = typeMapper.parseTypesFromString(`
+        interface Iface { aaa: Int }
+        extend interface Iface @ok { bbb: String! }
+      `);
+      expect(ts.get('Iface').getFieldNames()).toEqual(['aaa', 'bbb']);
+      expect(ts.get('Iface').getDirectiveNames()).toEqual(['ok']);
+    });
+
+    it('extend Union type', async () => {
+      const ts: any = typeMapper.parseTypesFromString(`
+        type T1 { aaa: Int }
+        type T2 { aaa: Int }
+        type T3 { aaa: Int }
+        union Un = T1 | T2
+        extend union Un @ok = T3
+      `);
+      expect(ts.get('Un').getTypeNames()).toEqual(['T1', 'T2', 'T3']);
+      expect(ts.get('Un').getDirectiveNames()).toEqual(['ok']);
+    });
+
+    it('extend Enum type', async () => {
+      const ts: any = typeMapper.parseTypesFromString(`
+        enum E { AA BB }
+        extend enum E @ok { CC }
+      `);
+      expect(ts.get('E').getFieldNames()).toEqual(['AA', 'BB', 'CC']);
+      expect(ts.get('E').getDirectiveNames()).toEqual(['ok']);
+    });
+
+    it('extend Scalar type', async () => {
+      const ts: any = typeMapper.parseTypesFromString(`
+        scalar S
+        extend scalar S @ok
+      `);
+      expect(ts.get('S').getDirectiveNames()).toEqual(['ok']);
+    });
   });
 
   describe('convertSDLTypeDefinition()', () => {
@@ -1046,7 +1128,7 @@ describe('TypeMapper', () => {
     it('ObjectType', () => {
       const tc: ObjectTypeComposer<any, any> = (typeMapper.convertSDLTypeDefinition(`
         type My1 @typeDirective(a: false) { 
-          a: Int @default(value: 1)
+          a: Int @cost(value: 1)
           b: Float @unexisted(q: 1, w: true, e: "s")
           c: String @me @they @me
           d(arg: Int = 15 @darg(v: 2) @darg2(w: "3")): Int @ddd
@@ -1058,7 +1140,7 @@ describe('TypeMapper', () => {
       });
 
       expect(tc.getFieldExtensions('a')).toEqual({
-        directives: [{ args: { value: 1 }, name: 'default' }],
+        directives: [{ args: { value: 1 }, name: 'cost' }],
       });
       expect(tc.getFieldExtensions('b')).toEqual({
         directives: [{ args: { e: 's', q: 1, w: true }, name: 'unexisted' }],
@@ -1071,7 +1153,10 @@ describe('TypeMapper', () => {
         ],
       });
       expect(tc.getFieldArgExtensions('d', 'arg')).toEqual({
-        directives: [{ args: { v: 2 }, name: 'darg' }, { args: { w: '3' }, name: 'darg2' }],
+        directives: [
+          { args: { v: 2 }, name: 'darg' },
+          { args: { w: '3' }, name: 'darg2' },
+        ],
       });
       expect(tc.getFieldExtensions('d')).toEqual({ directives: [{ args: {}, name: 'ddd' }] });
     });
@@ -1079,7 +1164,7 @@ describe('TypeMapper', () => {
     it('InterfaceType', () => {
       const tc: InterfaceTypeComposer<any, any> = (typeMapper.convertSDLTypeDefinition(`
         interface My1 @typeDirective(a: false) { 
-          a: Int @default(value: 1)
+          a: Int @cost(value: 1)
           b: Float @unexisted(q: 1, w: true, e: "s")
           c: String @me @they @me
           d(arg: Int = 15 @darg(v: 2) @darg2(w: "3")): Int @ddd
@@ -1091,7 +1176,7 @@ describe('TypeMapper', () => {
       });
 
       expect(tc.getFieldExtensions('a')).toEqual({
-        directives: [{ args: { value: 1 }, name: 'default' }],
+        directives: [{ args: { value: 1 }, name: 'cost' }],
       });
       expect(tc.getFieldExtensions('b')).toEqual({
         directives: [{ args: { e: 's', q: 1, w: true }, name: 'unexisted' }],
@@ -1106,7 +1191,10 @@ describe('TypeMapper', () => {
 
       expect(tc.getFieldArg('d', 'arg').defaultValue).toBe(15);
       expect(tc.getFieldArgExtensions('d', 'arg')).toEqual({
-        directives: [{ args: { v: 2 }, name: 'darg' }, { args: { w: '3' }, name: 'darg2' }],
+        directives: [
+          { args: { v: 2 }, name: 'darg' },
+          { args: { w: '3' }, name: 'darg2' },
+        ],
       });
       expect(tc.getFieldExtensions('d')).toEqual({ directives: [{ args: {}, name: 'ddd' }] });
     });
@@ -1114,7 +1202,7 @@ describe('TypeMapper', () => {
     it('InputType', () => {
       const tc: InputTypeComposer<any> = (typeMapper.convertSDLTypeDefinition(`
         input My1 @typeDirective(a: false) { 
-          a: Int @default(value: 1)
+          a: Int @cost(value: 1)
           b: Float @unexisted(q: 1, w: true, e: "s")
           c: String @me @they @me
         }`): any);
@@ -1125,7 +1213,7 @@ describe('TypeMapper', () => {
       });
 
       expect(tc.getFieldExtensions('a')).toEqual({
-        directives: [{ args: { value: 1 }, name: 'default' }],
+        directives: [{ args: { value: 1 }, name: 'cost' }],
       });
       expect(tc.getFieldExtensions('b')).toEqual({
         directives: [{ args: { e: 's', q: 1, w: true }, name: 'unexisted' }],
@@ -1137,46 +1225,6 @@ describe('TypeMapper', () => {
           { args: {}, name: 'me' },
         ],
       });
-    });
-  });
-
-  describe('static methods', () => {
-    it('check SDL types', () => {
-      const output = 'type Out { name: String! }';
-      const input = 'input Filter { minAge: Int }';
-      const enumType = 'enum Sort { ASC DESC }';
-      const scalar = 'scalar UInt';
-      const iface = 'interface User { name: String }';
-
-      expect(TypeMapper.isTypeDefinitionString(output)).toBeTruthy();
-      expect(TypeMapper.isOutputTypeDefinitionString(output)).toBeTruthy();
-      expect(TypeMapper.isOutputTypeDefinitionString(input)).toBeFalsy();
-
-      expect(TypeMapper.isTypeDefinitionString(input)).toBeTruthy();
-      expect(TypeMapper.isInputTypeDefinitionString(input)).toBeTruthy();
-      expect(TypeMapper.isInputTypeDefinitionString(output)).toBeFalsy();
-
-      expect(TypeMapper.isTypeDefinitionString(enumType)).toBeTruthy();
-      expect(TypeMapper.isEnumTypeDefinitionString(enumType)).toBeTruthy();
-      expect(TypeMapper.isEnumTypeDefinitionString(output)).toBeFalsy();
-
-      expect(TypeMapper.isTypeDefinitionString(scalar)).toBeTruthy();
-      expect(TypeMapper.isScalarTypeDefinitionString(scalar)).toBeTruthy();
-      expect(TypeMapper.isScalarTypeDefinitionString(output)).toBeFalsy();
-
-      expect(TypeMapper.isTypeDefinitionString(iface)).toBeTruthy();
-      expect(TypeMapper.isInterfaceTypeDefinitionString(iface)).toBeTruthy();
-      expect(TypeMapper.isInterfaceTypeDefinitionString(output)).toBeFalsy();
-    });
-
-    it('check type name', () => {
-      expect(TypeMapper.isTypeNameString('aaaa')).toBeTruthy();
-      expect(TypeMapper.isTypeNameString('Aaaaa')).toBeTruthy();
-      expect(TypeMapper.isTypeNameString('A_')).toBeTruthy();
-      expect(TypeMapper.isTypeNameString('_A')).toBeTruthy();
-      expect(TypeMapper.isTypeNameString('A_123')).toBeTruthy();
-      expect(TypeMapper.isTypeNameString('123')).toBeFalsy();
-      expect(TypeMapper.isTypeNameString('A-')).toBeFalsy();
     });
   });
 });

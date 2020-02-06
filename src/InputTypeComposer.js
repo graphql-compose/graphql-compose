@@ -14,7 +14,6 @@ import type {
   DirectiveArgs,
 } from './utils/definitions';
 import { SchemaComposer } from './SchemaComposer';
-import { TypeMapper } from './TypeMapper';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import type { ThunkComposer } from './ThunkComposer';
@@ -27,12 +26,17 @@ import type {
 } from './graphql';
 import { graphqlVersion } from './utils/graphqlVersion';
 import { defineInputFieldMap, convertInputFieldMapToConfig } from './utils/configToDefine';
-import { unwrapInputTC } from './utils/typeHelpers';
-import type {
-  ComposeInputType,
-  ComposeNamedInputType,
-  ComposeInputTypeDefinition,
+import {
+  unwrapInputTC,
+  isTypeNameString,
+  cloneTypeTo,
+  type NamedTypeComposer,
+  type ComposeInputType,
+  type ComposeNamedInputType,
+  type ComposeInputTypeDefinition,
 } from './utils/typeHelpers';
+import { printInputObject, type SchemaPrinterOptions } from './utils/schemaPrinter';
+import { getInputObjectTypeDefinitionNode } from './utils/definitionNode';
 
 export type InputTypeComposerDefinition =
   | TypeAsString
@@ -113,7 +117,7 @@ export class InputTypeComposer<TContext> {
 
     if (isString(typeDef)) {
       const typeName: string = typeDef;
-      if (TypeMapper.isTypeNameString(typeName)) {
+      if (isTypeNameString(typeName)) {
         ITC = new InputTypeComposer(
           new GraphQLInputObjectType({
             name: typeName,
@@ -286,9 +290,34 @@ export class InputTypeComposer<TContext> {
     return field;
   }
 
+  /**
+   * Remove fields from type by name or array of names.
+   * You also may pass name in dot-notation, in such case will be removed nested field.
+   *
+   * @example
+   *     removeField('field1'); // remove 1 field
+   *     removeField(['field1', 'field2']); // remove 2 fields
+   *     removeField('field1.subField1'); // remove 1 nested field
+   */
   removeField(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => delete this._gqcFields[fieldName]);
+    fieldNames.forEach(fieldName => {
+      const names = fieldName.split('.');
+      const name = names.shift();
+      if (names.length === 0) {
+        // single field
+        delete this._gqcFields[name];
+      } else {
+        // nested field
+        // eslint-disable-next-line no-lonely-if
+        if (this.hasField(name)) {
+          const subTC = this.getFieldTC(name);
+          if (subTC instanceof InputTypeComposer) {
+            subTC.removeField(names.join('.'));
+          }
+        }
+      }
+    });
     return this;
   }
 
@@ -317,7 +346,7 @@ export class InputTypeComposer<TContext> {
 
     this.setField(fieldName, {
       ...prevFieldConfig,
-      ...partialFieldConfig,
+      ...(partialFieldConfig: any),
       extensions: {
         ...(prevFieldConfig.extensions || {}),
         ...(partialFieldConfig.extensions || {}),
@@ -343,7 +372,7 @@ export class InputTypeComposer<TContext> {
     const { type, ...rest } = this.getField(fieldName);
     return ({
       type: type.getType(),
-      ...rest,
+      ...(rest: any),
     }: any);
   }
 
@@ -472,18 +501,20 @@ export class InputTypeComposer<TContext> {
   // -----------------------------------------------
 
   getType(): GraphQLInputObjectType {
+    this._gqType.astNode = getInputObjectTypeDefinitionNode(this);
     if (graphqlVersion >= 14) {
       this._gqType._fields = () => {
         return defineInputFieldMap(
           this._gqType,
-          mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name))
+          mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name)),
+          this._gqType.astNode
         );
       };
     } else {
       (this._gqType: any)._typeConfig.fields = () => {
         return mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name));
       };
-      delete this._gqType._fields;
+      delete (this._gqType: any)._fields;
     }
     return this._gqType;
   }
@@ -540,6 +571,33 @@ export class InputTypeComposer<TContext> {
     return cloned;
   }
 
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    cloneMap?: Map<any, any> = new Map()
+  ): InputTypeComposer<any> {
+    if (!anotherSchemaComposer) {
+      throw new Error('You should provide SchemaComposer for InputTypeComposer.cloneTo()');
+    }
+
+    if (cloneMap.has(this)) return (cloneMap.get(this): any);
+    const cloned = InputTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
+    cloneMap.set(this, cloned);
+
+    cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
+      ...fieldConfig,
+      type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, cloneMap),
+      extensions: { ...fieldConfig.extensions },
+    }));
+    cloned._gqcExtensions = { ...this._gqcExtensions };
+    cloned.setDescription(this.getDescription());
+
+    return cloned;
+  }
+
   merge(type: GraphQLInputObjectType | InputTypeComposer<any>): InputTypeComposer<TContext> {
     let tc: ?InputTypeComposer<any>;
     if (type instanceof GraphQLInputObjectType) {
@@ -582,7 +640,7 @@ export class InputTypeComposer<TContext> {
     const current = this.getExtensions();
     this.setExtensions({
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }
@@ -631,7 +689,7 @@ export class InputTypeComposer<TContext> {
     const current = this.getFieldExtensions(fieldName);
     this.setFieldExtensions(fieldName, {
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }
@@ -681,6 +739,11 @@ export class InputTypeComposer<TContext> {
     return [];
   }
 
+  setDirectives(directives: Array<ExtensionsDirective>): InputTypeComposer<TContext> {
+    this.setExtension('directives', directives);
+    return this;
+  }
+
   getDirectiveNames(): string[] {
     return this.getDirectives().map(d => d.name);
   }
@@ -705,6 +768,14 @@ export class InputTypeComposer<TContext> {
     return [];
   }
 
+  setFieldDirectives(
+    fieldName: string,
+    directives: Array<ExtensionsDirective>
+  ): InputTypeComposer<TContext> {
+    this.setFieldExtension(fieldName, 'directives', directives);
+    return this;
+  }
+
   getFieldDirectiveNames(fieldName: string): string[] {
     return this.getFieldDirectives(fieldName).map(d => d.name);
   }
@@ -727,5 +798,58 @@ export class InputTypeComposer<TContext> {
 
   get(path: string | string[]): TypeInPath<TContext> | void {
     return typeByPath(this, path);
+  }
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  getNestedTCs(
+    opts: {
+      exclude?: string[],
+    } = {},
+    passedTypes: Set<NamedTypeComposer<any>> = new Set()
+  ): Set<NamedTypeComposer<any>> {
+    const exclude = Array.isArray(opts.exclude) ? (opts: any).exclude : [];
+    this.getFieldNames().forEach(fieldName => {
+      const itc = this.getFieldTC(fieldName);
+      if (!passedTypes.has(itc) && !exclude.includes(itc.getTypeName())) {
+        passedTypes.add(itc);
+        if (itc instanceof InputTypeComposer) {
+          itc.getNestedTCs(opts, passedTypes);
+        }
+      }
+    });
+    return passedTypes;
+  }
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  toSDL(
+    opts?: SchemaPrinterOptions & {
+      deep?: ?boolean,
+      sortTypes?: ?boolean,
+      exclude?: ?(string[]),
+    }
+  ): string {
+    const { deep, ...innerOpts } = opts || {};
+    const exclude = Array.isArray((innerOpts: any).exclude) ? (innerOpts: any).exclude : [];
+    if (deep) {
+      let r = '';
+      r += printInputObject(this.getType(), innerOpts);
+
+      let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
+      if (opts?.sortAll || opts?.sortTypes) {
+        nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
+      }
+      nestedTypes.forEach(t => {
+        if (t !== this && !exclude.includes(t.getTypeName())) {
+          r += `\n\n${t.toSDL(innerOpts)}`;
+        }
+      });
+      return r;
+    }
+
+    return printInputObject(this.getType(), innerOpts);
   }
 }

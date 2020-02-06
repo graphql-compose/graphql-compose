@@ -11,6 +11,7 @@ import {
   GraphQLObjectType,
   GraphQLEnumType,
   GraphQLList,
+  type GraphQLInputType,
 } from '../graphql';
 import schemaComposer from '../__mocks__/schemaComposer';
 import { Resolver } from '../Resolver';
@@ -20,7 +21,14 @@ import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { ThunkComposer } from '../ThunkComposer';
-// import { Resolver, ObjectTypeComposer, InputTypeComposer, EnumTypeComposer } from '..';
+import { SchemaComposer } from '../SchemaComposer';
+
+declare var console: {
+  log: any,
+  dir: any,
+  time: any,
+  timeEnd: any,
+};
 
 describe('Resolver', () => {
   let resolver: Resolver<any, any, any>;
@@ -266,7 +274,7 @@ describe('Resolver', () => {
 
     it('should have wrapArgs() method', () => {
       const newResolver = resolver.wrapArgs(prevArgs => {
-        return { ...prevArgs, arg1: 'String' };
+        return { ...(prevArgs: any), arg1: 'String' };
       });
 
       expect(newResolver.getArgType('arg1')).toBe(GraphQLString);
@@ -432,9 +440,10 @@ describe('Resolver', () => {
 
     it('should work with arg as thunk', () => {
       resolver.setArgs({
-        a: () => 'String',
-        b: () => schemaComposer.createInputTC(`input ArgAsThunk1 { b: Int }`),
-        c: () =>
+        a: (): string => 'String',
+        b: (): InputTypeComposer<any> =>
+          schemaComposer.createInputTC(`input ArgAsThunk1 { b: Int }`),
+        c: (): GraphQLInputType =>
           GraphQLNonNull(schemaComposer.createInputTC(`input ArgAsThunk2 { b: Int }`).getType()),
       });
       expect(resolver.getArgType('a')).toBe(GraphQLString);
@@ -476,11 +485,24 @@ describe('Resolver', () => {
       expect(rp).toHaveProperty('projection');
     });
 
+    it('should pass resolver `projection` property', () => {
+      let rp: any = {};
+      const r = new Resolver({ name: 'find123' }, schemaComposer);
+      r.projection.someField = 1;
+      r.resolve = resolveParams => {
+        rp = resolveParams;
+      };
+      const fc: any = r.getFieldConfig();
+      fc.resolve();
+      expect(rp).toHaveProperty('projection');
+      expect(rp.projection).toEqual({ someField: 1 });
+    });
+
     it('should resolve args configs as thunk', () => {
       let rp;
       resolver.setArgs({
         arg1: 'String',
-        arg2: () => 'String',
+        arg2: (): string => 'String',
         arg3: {
           type: () => 'String',
         },
@@ -1198,6 +1220,72 @@ describe('Resolver', () => {
       const res = await r.withMiddlewares([mw1, mw2]).resolve(({}: any));
       expect(res).toBe('users result');
       expect(log).toEqual(['m1.before', 'm2.before', 'call User.find()', 'm2.after', 'm1.after']);
+    });
+  });
+
+  describe('clone()', () => {
+    it('should clone resolver', () => {
+      const cloned = resolver.clone({ name: 'newFind' });
+      expect(cloned).not.toBe(resolver);
+      expect(cloned.name).toBe('newFind');
+    });
+
+    it('resolver type should not be cloned', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      resolver.setType(UserTC);
+      const cloned = resolver.clone({ name: 'newFind' });
+      expect(cloned.getTypeComposer()).toBe(UserTC);
+    });
+
+    it('args config should be different', () => {
+      const cloned = resolver.clone({ name: 'newFind' });
+      cloned.setArg('arg123', 'String');
+      expect(cloned.hasArg('arg123')).toBeTruthy();
+      expect(resolver.hasArg('arg123')).toBeFalsy();
+    });
+
+    it('projection config should be different', () => {
+      resolver.projection = { field1: true };
+      const cloned = resolver.clone({ name: 'newFind' });
+      cloned.projection.field2 = true;
+      expect(cloned.projection).toEqual({ field1: true, field2: true });
+      expect(resolver.projection).toEqual({ field1: true });
+    });
+  });
+
+  describe('cloneTo()', () => {
+    let anotherSchemaComposer;
+    beforeEach(() => {
+      anotherSchemaComposer = new SchemaComposer();
+    });
+
+    it('should clone resolver', () => {
+      const cloned = resolver.cloneTo(anotherSchemaComposer);
+      expect(cloned).not.toBe(resolver);
+      expect(cloned.name).toBe('find');
+    });
+
+    it('resolver type should be cloned', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      resolver.setType(UserTC);
+      const cloned = resolver.cloneTo(anotherSchemaComposer);
+      expect(cloned.getTypeComposer()).not.toBe(UserTC);
+      expect(cloned.getTypeName()).toBe('User');
+    });
+
+    it('args config should be different', () => {
+      const cloned = resolver.cloneTo(anotherSchemaComposer);
+      cloned.setArg('arg123', 'String');
+      expect(cloned.hasArg('arg123')).toBeTruthy();
+      expect(resolver.hasArg('arg123')).toBeFalsy();
+    });
+
+    it('projection config should be different', () => {
+      resolver.projection = { field1: true };
+      const cloned = resolver.cloneTo(anotherSchemaComposer);
+      cloned.projection.field2 = true;
+      expect(cloned.projection).toEqual({ field1: true, field2: true });
+      expect(resolver.projection).toEqual({ field1: true });
     });
   });
 });

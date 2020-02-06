@@ -51,6 +51,16 @@ describe('GraphQLDate', () => {
       expect(date).toBeInstanceOf(Date);
       expect(date.toJSON()).toEqual(ast.value);
     });
+
+    it('parse a ast literal with tz', async () => {
+      const ast = {
+        kind: Kind.STRING,
+        value: '2015-07-24T10:56:42.744+06:00',
+      };
+      const date: any = GraphQLDate.parseLiteral(ast);
+      expect(date).toBeInstanceOf(Date);
+      expect(date.toJSON()).toEqual('2015-07-24T04:56:42.744Z');
+    });
   });
 
   it('parse a ast literal of integer kind', async () => {

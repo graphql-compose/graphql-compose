@@ -14,11 +14,12 @@ import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { TypeAsString } from './TypeMapper';
 import { Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
+import { SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type ScalarTypeComposerDefinition =
   | TypeAsString
-  | Readonly<ScalarTypeComposerAsObjectDefinition>
-  | Readonly<GraphQLScalarType>;
+  | ScalarTypeComposerAsObjectDefinition
+  | GraphQLScalarType;
 
 export type ScalarTypeComposerAsObjectDefinition = GraphQLScalarTypeConfig<any, any> & {
   extensions?: Extensions;
@@ -95,6 +96,19 @@ export class ScalarTypeComposer<TContext = any> {
    */
   public clone(newTypeNameOrTC: string | ScalarTypeComposer<any>): ScalarTypeComposer<TContext>;
 
+  /**
+   * Copy this scalar type to another SchemaComposer.
+   *
+   * Scalar types cannot be cloned.
+   * It will be very strange if we clone for example Boolean or Date types.
+   *
+   * This methods exists for compatibility with other TypeComposers.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    cloneMap?: Map<any, any>
+  ): ScalarTypeComposer<TCtx>;
+
   public merge(type: GraphQLScalarType | ScalarTypeComposer<any>): this;
 
   /**
@@ -127,9 +141,22 @@ export class ScalarTypeComposer<TContext = any> {
 
   public getDirectives(): ExtensionsDirective[];
 
+  public setDirectives(directives: ExtensionsDirective[]): this;
+
   public getDirectiveNames(): string[];
 
   public getDirectiveByName(directiveName: string): DirectiveArgs | void;
 
   public getDirectiveById(idx: number): DirectiveArgs | void;
+
+  /**
+   * -----------------------------------------------
+   * Misc methods
+   * -----------------------------------------------
+   */
+
+  /**
+   * Prints SDL for current type.
+   */
+  public toSDL(opts?: SchemaPrinterOptions): string;
 }

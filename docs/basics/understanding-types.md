@@ -9,7 +9,7 @@ With `graphql-compose` you need to create types under some `schemaComposer` inst
 import { schemaComposer } from 'graphql-compose';
 ```
 
-But if you need to create several GrasphQL schemas in your app, you may import `SchemaComposer` class and create `schemaComposer` instances as much as you need:
+But if you need to create several GraphQL schemas in your app, you may import `SchemaComposer` class and create `schemaComposer` instances as much as you need:
 
 ```js
 import { SchemaComposer } from 'graphql-compose';

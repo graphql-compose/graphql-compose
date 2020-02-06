@@ -8,6 +8,7 @@ import {
   type NamedTypeComposer,
 } from './utils/typeHelpers';
 import { ListComposer } from './ListComposer';
+import type { SchemaComposer } from './SchemaComposer';
 
 export class NonNullComposer<+T: AnyTypeComposer<any>> {
   +ofType: T;
@@ -45,5 +46,16 @@ export class NonNullComposer<+T: AnyTypeComposer<any>> {
 
   getTypeNonNull(): NonNullComposer<T> {
     return this;
+  }
+
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all wrapped types.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    cloneMap?: Map<any, any> = new Map()
+  ): NonNullComposer<AnyTypeComposer<any>> {
+    return new NonNullComposer((this.ofType: any).cloneTo(anotherSchemaComposer, cloneMap));
   }
 }

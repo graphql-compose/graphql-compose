@@ -1,8 +1,9 @@
 {
-  "prettier.eslintIntegration": true,
-  "eslint.validate": [
-    "javascript",
-  ],
+  "eslint.validate": ["javascript"],
   "javascript.validate.enable": false,
   "javascript.autoClosingTags": false,
+  "eslint.autoFixOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
 }

@@ -23,6 +23,7 @@ import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { ThunkComposer } from '../ThunkComposer';
 import { graphqlVersion } from '../utils/graphqlVersion';
+import { dedent } from '../utils/dedent';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -134,7 +135,7 @@ describe('InterfaceTypeComposer', () => {
 
       it('accept fieldConfig as function', () => {
         iftc.setFields({
-          input4: () => ({ type: 'String' }),
+          input4: (): { type: string } => ({ type: 'String' }),
         });
         // show provide unwrapped/unhoisted type for graphql
         if (graphqlVersion >= 14) {
@@ -170,6 +171,58 @@ describe('InterfaceTypeComposer', () => {
       it('should remove list of fields', () => {
         iftc.removeField(['field1', 'field2']);
         expect(iftc.getFieldNames()).toEqual(expect.arrayContaining([]));
+      });
+
+      it('should remove field via dot-notation', () => {
+        schemaComposer.addTypeDefs(`
+          interface IFace {
+            field1: [SubType!]
+            field2: Int
+            field3: Int
+          }
+          
+          type SubType {
+            subField1: SubSubType
+            subField2: Int
+            subField3: Int
+          }
+
+          type SubSubType {
+            subSubField1: Int
+            subSubField2: Int
+          }
+        `);
+
+        schemaComposer
+          .getIFTC('IFace')
+          .removeField([
+            'field1.subField1.subSubField1',
+            'field1.subField1.nonexistent',
+            'field1.nonexistent.nonexistent',
+            'field1.subField3',
+            'field2',
+            '',
+            '..',
+          ]);
+
+        expect(schemaComposer.getIFTC('IFace').toSDL({ deep: true, omitDescriptions: true }))
+          .toEqual(dedent`
+          interface IFace {
+            field1: [SubType!]
+            field3: Int
+          }
+
+          type SubType {
+            subField1: SubSubType
+            subField2: Int
+          }
+
+          type SubSubType {
+            subSubField2: Int
+          }
+
+          scalar Int
+        `);
       });
     });
 
@@ -516,16 +569,121 @@ describe('InterfaceTypeComposer', () => {
   });
 
   describe('clone()', () => {
-    it('should clone projection for fields', () => {
-      iftc.setField('field3', {
-        type: GraphQLString,
-        projection: { field1: true, field2: true },
-      });
+    it('should clone type', () => {
+      const cloned = iftc.clone('NewObject');
+      expect(cloned).not.toBe(iftc);
+      expect(cloned.getTypeName()).toBe('NewObject');
+    });
 
-      const iftc2 = iftc.clone('newObject');
-      const fc = iftc2.getField('field3');
-      expect(fc.projection).toEqual({ field1: true, field2: true });
-      expect(fc.type.getType()).toBe(GraphQLString);
+    it('field config should be different', () => {
+      const cloned = iftc.clone('NewObject');
+      cloned.setField('field4', 'String');
+      expect(cloned.hasField('field4')).toBeTruthy();
+      expect(iftc.hasField('field4')).toBeFalsy();
+    });
+
+    it('field args should be different', () => {
+      iftc.setField('field3', {
+        type: 'String',
+        args: { a1: 'Int' },
+      });
+      const cloned = iftc.clone('NewObject');
+      cloned.setFieldArg('field3', 'a2', 'String');
+      expect(cloned.hasFieldArg('field3', 'a2')).toBeTruthy();
+      expect(iftc.hasFieldArg('field3', 'a2')).toBeFalsy();
+    });
+
+    it('extensions should be different', () => {
+      iftc.setExtension('ext1', 123);
+      iftc.setFieldExtension('field1', 'ext2', 456);
+      const cloned = iftc.clone('NewObject');
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(iftc.getExtension('ext1')).toBe(123);
+      expect(cloned.getFieldExtension('field1', 'ext2')).toBe(456);
+      cloned.setFieldExtension('field1', 'ext2', 600);
+      expect(cloned.getFieldExtension('field1', 'ext2')).toBe(600);
+      expect(iftc.getFieldExtension('field1', 'ext2')).toBe(456);
+    });
+
+    it('typeResolvers should be the same', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      iftc.addTypeResolver(UserTC, () => true);
+      const cloned = iftc.clone('NewObject');
+
+      const clonedUserTC = cloned
+        .getTypeResolvers()
+        .keys()
+        .next().value;
+      expect(clonedUserTC).toBe(UserTC);
+    });
+  });
+
+  describe('cloneTo()', () => {
+    let anotherSchemaComposer;
+
+    beforeEach(() => {
+      anotherSchemaComposer = new SchemaComposer();
+    });
+
+    it('should clone type', () => {
+      const cloned = iftc.cloneTo(anotherSchemaComposer);
+      expect(cloned).not.toBe(iftc);
+      expect(cloned.getTypeName()).toBe(iftc.getTypeName());
+    });
+
+    it('should clone field complex type', () => {
+      const ComplexTC = schemaComposer.createObjectTC(`type Complex { a: String }`);
+      iftc.setField('field3', {
+        type: ComplexTC,
+        args: { a1: 'Int' },
+      });
+      const cloned = iftc.cloneTo(anotherSchemaComposer);
+      const fc = cloned.getField('field3');
+      expect(fc.type.getTypeName()).toBe('Complex');
+      expect(fc.type).not.toBe(ComplexTC);
+      expect(fc.type.getType()).not.toBe(ComplexTC.getType());
+    });
+
+    it('field config should be different', () => {
+      const cloned = iftc.cloneTo(anotherSchemaComposer);
+      cloned.setField('field4', 'String');
+      expect(cloned.hasField('field4')).toBeTruthy();
+      expect(iftc.hasField('field4')).toBeFalsy();
+    });
+
+    it('field args should be different', () => {
+      const cloned = iftc.cloneTo(anotherSchemaComposer);
+      cloned.setFieldArg('field1', 'a2', 'String');
+      expect(cloned.hasFieldArg('field1', 'a2')).toBeTruthy();
+      expect(iftc.hasFieldArg('field1', 'a2')).toBeFalsy();
+    });
+
+    it('extensions should be different', () => {
+      iftc.setExtension('ext1', 123);
+      iftc.setFieldExtension('field1', 'ext2', 456);
+      const cloned = iftc.cloneTo(anotherSchemaComposer);
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(iftc.getExtension('ext1')).toBe(123);
+      expect(cloned.getFieldExtension('field1', 'ext2')).toBe(456);
+      cloned.setFieldExtension('field1', 'ext2', 600);
+      expect(cloned.getFieldExtension('field1', 'ext2')).toBe(600);
+      expect(iftc.getFieldExtension('field1', 'ext2')).toBe(456);
+    });
+
+    it('typeResolvers should be different', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      iftc.addTypeResolver(UserTC, () => true);
+      const cloned = iftc.cloneTo(anotherSchemaComposer);
+      const clonedUserTC: any = cloned
+        .getTypeResolvers()
+        .keys()
+        .next().value;
+      expect(clonedUserTC).not.toBe(UserTC);
+      expect(clonedUserTC.getTypeName()).toBe(UserTC.getTypeName());
     });
   });
 
@@ -838,7 +996,11 @@ describe('InterfaceTypeComposer', () => {
         schemaComposer.Query.addFields({
           check: {
             type: '[F]',
-            resolve: () => [{ f: 'A', a: 1 }, { f: 'B', b: 2 }, { f: 'C', c: 3 }],
+            resolve: () => [
+              { f: 'A', a: 1 },
+              { f: 'B', b: 2 },
+              { f: 'C', c: 3 },
+            ],
           },
         });
         const res = await graphql(
@@ -975,6 +1137,34 @@ describe('InterfaceTypeComposer', () => {
       expect(tc1.getFieldArgDirectiveByName('field', 'arg', 'a2')).toEqual(undefined);
       expect(tc1.getFieldArgDirectiveById('field', 'arg', 333)).toEqual(undefined);
     });
+
+    it('check directive set-methods', () => {
+      const tc1 = schemaComposer.createInterfaceTC(`
+        interface My1 @d0(a: true) {
+          field: Int @d2(a: false, b: true)
+          field2(ok: Int = 15 @d5(a: 5)): Int
+        }
+      `);
+      expect(tc1.toSDL()).toBe(dedent`
+        interface My1 @d0(a: true) {
+          field: Int @d2(a: false, b: true)
+          field2(ok: Int = 15 @d5(a: 5)): Int
+        }
+      `);
+      tc1.setDirectives([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      tc1.setFieldDirectives('field', [{ args: { b: '6' }, name: 'd1' }]);
+      tc1.setFieldArgDirectives('field2', 'ok', [{ args: { b: '7' }, name: 'd1' }]);
+      expect(tc1.toSDL()).toBe(dedent`
+        interface My1 @d0(a: false) @d1(b: "3") @d0(a: true) {
+          field: Int @d1(b: "6")
+          field2(ok: Int = 15 @d1(b: "7")): Int
+        }
+      `);
+    });
   });
 
   describe('merge()', () => {
@@ -1027,6 +1217,71 @@ describe('InterfaceTypeComposer', () => {
       expect(() => iface.merge((schemaComposer.createScalarTC('Scalar'): any))).toThrow(
         'Cannot merge ScalarTypeComposer'
       );
+    });
+  });
+
+  describe('misc methods', () => {
+    it('toSDL()', () => {
+      const t = schemaComposer.createInterfaceTC(`
+        """desc1"""
+        interface IUser { 
+          """desc2"""
+          name(a: String): String
+          field: ISubField
+        }
+
+        interface ISubField { 
+          subField: Int
+        }
+      `);
+      expect(t.toSDL()).toMatchInlineSnapshot(`
+        "\\"\\"\\"desc1\\"\\"\\"
+        interface IUser {
+          \\"\\"\\"desc2\\"\\"\\"
+          name(a: String): String
+          field: ISubField
+        }"
+      `);
+
+      expect(t.toSDL({ omitDescriptions: true })).toMatchInlineSnapshot(`
+        "interface IUser {
+          name(a: String): String
+          field: ISubField
+        }"
+      `);
+
+      expect(
+        t.toSDL({
+          omitDescriptions: true,
+          deep: true,
+        })
+      ).toMatchInlineSnapshot(`
+        "interface IUser {
+          name(a: String): String
+          field: ISubField
+        }
+
+        scalar String
+
+        interface ISubField {
+          subField: Int
+        }"
+      `);
+
+      expect(
+        t.toSDL({
+          omitDescriptions: true,
+          deep: true,
+          exclude: ['ISubField'],
+        })
+      ).toMatchInlineSnapshot(`
+        "interface IUser {
+          name(a: String): String
+          field: ISubField
+        }
+
+        scalar String"
+      `);
     });
   });
 });

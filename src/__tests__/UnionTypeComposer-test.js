@@ -6,6 +6,7 @@ import { UnionTypeComposer } from '../UnionTypeComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
+import { dedent } from '../utils/dedent';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -196,12 +197,90 @@ describe('UnionTypeComposer', () => {
   });
 
   describe('clone()', () => {
-    it('should create new Union', () => {
-      const utc2 = utc.clone('NewObject');
-      utc2.addType('AAA');
+    it('should clone type', () => {
+      const cloned = utc.clone('NewObject');
+      expect(cloned).not.toBe(utc);
+      expect(cloned.getTypeName()).toBe('NewObject');
+    });
 
-      expect(utc2.getTypes()).toHaveLength(3);
-      expect(utc.getTypes()).toHaveLength(2);
+    it('type unions should be different but have same type instances', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      utc.addTypeResolver(UserTC, () => true);
+      const cloned = utc.clone('NewObject');
+      cloned.addType('AAA');
+      expect(cloned.getTypes()).toHaveLength(4);
+      expect(utc.getTypes()).toHaveLength(3);
+      expect(cloned.hasType(UserTC)).toBeTruthy();
+    });
+
+    it('extensions should be different', () => {
+      utc.setExtension('ext1', 123);
+      const cloned = utc.clone('NewObject');
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(utc.getExtension('ext1')).toBe(123);
+    });
+
+    it('typeResolvers should be the same', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      utc.addTypeResolver(UserTC, () => true);
+      const cloned = utc.clone('NewObject');
+      const clonedUserTC = cloned
+        .getTypeResolvers()
+        .keys()
+        .next().value;
+      expect(clonedUserTC).toBe(UserTC);
+    });
+  });
+
+  describe('cloneTo()', () => {
+    let anotherSchemaComposer;
+
+    beforeEach(() => {
+      anotherSchemaComposer = new SchemaComposer();
+    });
+
+    it('should clone type', () => {
+      const cloned = utc.cloneTo(anotherSchemaComposer);
+      expect(cloned).not.toBe(utc);
+      expect(cloned.getTypeName()).toBe(utc.getTypeName());
+    });
+
+    it('type unions should be different & have cloned type instances', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      utc.addTypeResolver(UserTC, () => true);
+      const cloned = utc.cloneTo(anotherSchemaComposer);
+      cloned.addType('AAA');
+      expect(cloned.getTypes()).toHaveLength(4);
+      expect(utc.getTypes()).toHaveLength(3);
+
+      const ClonedUserTC = anotherSchemaComposer.getOTC('User');
+      expect(cloned.getTypes()).toEqual(expect.arrayContaining([ClonedUserTC]));
+      expect(cloned.getTypes()).toEqual(expect.not.arrayContaining([UserTC]));
+    });
+
+    it('extensions should be different', () => {
+      utc.setExtension('ext1', 123);
+      const cloned = utc.cloneTo(anotherSchemaComposer);
+      expect(cloned.getExtension('ext1')).toBe(123);
+      cloned.setExtension('ext1', 300);
+      expect(cloned.getExtension('ext1')).toBe(300);
+      expect(utc.getExtension('ext1')).toBe(123);
+    });
+
+    it('typeResolvers should be different', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
+      utc.addTypeResolver(UserTC, () => true);
+      const cloned = utc.cloneTo(anotherSchemaComposer);
+      const clonedUserTC: any = cloned
+        .getTypeResolvers()
+        .keys()
+        .next().value;
+      // different type instances
+      expect(clonedUserTC).not.toBe(UserTC);
+      // but have same typename
+      expect(clonedUserTC.getTypeName()).toBe(UserTC.getTypeName());
     });
   });
 
@@ -481,6 +560,27 @@ describe('UnionTypeComposer', () => {
       expect(tc1.getDirectiveByName('d2')).toEqual(undefined);
       expect(tc1.getDirectiveById(333)).toEqual(undefined);
     });
+
+    it('check directive set-methods', () => {
+      schemaComposer.addTypeDefs(`
+        type My2 { f: Int }
+        type My3 { f: Int }
+      `);
+      const tc1 = schemaComposer.createUnionTC(`
+        union My1 @d1(b: "3") = My2 | My3 
+      `);
+      expect(tc1.toSDL()).toBe(dedent`
+        union My1 @d1(b: "3") = My2 | My3
+      `);
+      tc1.setDirectives([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      expect(tc1.toSDL()).toBe(dedent`
+        union My1 @d0(a: false) @d1(b: "3") @d0(a: true) = My2 | My3
+      `);
+    });
   });
 
   describe('merge()', () => {
@@ -510,6 +610,86 @@ describe('UnionTypeComposer', () => {
       expect(() => resultUTC.merge((schemaComposer.createScalarTC('Scalar'): any))).toThrow(
         'Cannot merge ScalarTypeComposer'
       );
+    });
+  });
+
+  describe('misc methods', () => {
+    it('getNestedTCs()', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        type LonLat { lon: Float lat: Float}
+        input OtherInput1 { b: Int }
+        union C = A | B
+        type A { f1: Int }
+        type B { f2: LonLat }
+      `);
+
+      expect(
+        Array.from(
+          sc1
+            .getUTC('C')
+            .getNestedTCs()
+            .values()
+        ).map(t => t.getTypeName())
+      ).toEqual(['A', 'Int', 'B', 'LonLat', 'Float']);
+    });
+
+    it('toSDL()', () => {
+      const t = schemaComposer.createUnionTC(`
+        union C = A | B
+      `);
+      expect(t.toSDL()).toMatchInlineSnapshot(`"union C = A | B"`);
+    });
+
+    it('toSDL({ deep: true })', () => {
+      const sc1 = new SchemaComposer();
+      sc1.addTypeDefs(`
+        type LonLat { lon: Float lat: Float}
+        input OtherInput1 { b: Int }
+        union C = A | B
+        type A { f1: Int }
+        type B { f2: LonLat }
+      `);
+
+      expect(
+        sc1.getUTC('C').toSDL({
+          deep: true,
+          omitDescriptions: true,
+        })
+      ).toMatchInlineSnapshot(`
+        "union C = A | B
+
+        type A {
+          f1: Int
+        }
+
+        scalar Int
+
+        type B {
+          f2: LonLat
+        }
+
+        type LonLat {
+          lon: Float
+          lat: Float
+        }
+
+        scalar Float"
+      `);
+
+      expect(
+        sc1.getUTC('C').toSDL({
+          deep: true,
+          omitDescriptions: true,
+          exclude: ['Int', 'B'],
+        })
+      ).toMatchInlineSnapshot(`
+        "union C = A | B
+
+        type A {
+          f1: Int
+        }"
+      `);
     });
   });
 });

@@ -17,7 +17,6 @@ import {
 } from './ObjectTypeComposer';
 import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
-import { TypeMapper } from './TypeMapper';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { ThunkComposer } from './ThunkComposer';
@@ -29,8 +28,17 @@ import type {
   DirectiveArgs,
 } from './utils/definitions';
 import { convertObjectTypeArrayAsThunk } from './utils/configToDefine';
-import { getGraphQLType, getComposeTypeName } from './utils/typeHelpers';
+import {
+  getGraphQLType,
+  getComposeTypeName,
+  unwrapOutputTC,
+  isTypeNameString,
+  cloneTypeTo,
+  type NamedTypeComposer,
+} from './utils/typeHelpers';
 import { graphqlVersion } from './utils/graphqlVersion';
+import { printUnion, type SchemaPrinterOptions } from './utils/schemaPrinter';
+import { getUnionTypeDefinitionNode } from './utils/definitionNode';
 
 export type UnionTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -105,7 +113,7 @@ export class UnionTypeComposer<TSource, TContext> {
 
     if (isString(typeDef)) {
       const typeName: string = typeDef;
-      if (TypeMapper.isTypeNameString(typeName)) {
+      if (isTypeNameString(typeName)) {
         UTC = new UnionTypeComposer(
           new GraphQLUnionType({
             name: typeName,
@@ -206,6 +214,10 @@ export class UnionTypeComposer<TSource, TContext> {
     return Array.from(this._gqcTypeMap.values());
   }
 
+  getTypeComposers(): Array<ObjectTypeComposer<TSource, TContext>> {
+    return (this.getTypes().map((t: any) => unwrapOutputTC(t)): any);
+  }
+
   getTypeNames(): string[] {
     return Array.from(this._gqcTypeMap.keys());
   }
@@ -271,6 +283,7 @@ export class UnionTypeComposer<TSource, TContext> {
   // -----------------------------------------------
 
   getType(): GraphQLUnionType {
+    this._gqType.astNode = getUnionTypeDefinitionNode(this);
     const prepareTypes = () => {
       try {
         return this.getTypes().map(tc => tc.getType());
@@ -336,6 +349,49 @@ export class UnionTypeComposer<TSource, TContext> {
     cloned._gqcTypeMap = new Map(this._gqcTypeMap);
     cloned._gqcTypeResolvers = new Map(this._gqcTypeResolvers);
     cloned.setDescription(this.getDescription());
+
+    return cloned;
+  }
+
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    cloneMap?: Map<any, any> = new Map()
+  ): UnionTypeComposer<any, any> {
+    if (!anotherSchemaComposer) {
+      throw new Error('You should provide SchemaComposer for ObjectTypeComposer.cloneTo()');
+    }
+
+    if (cloneMap.has(this)) return this;
+    const cloned = UnionTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
+    cloneMap.set(this, cloned);
+
+    cloned._gqcExtensions = { ...this._gqcExtensions };
+    cloned.setDescription(this.getDescription());
+
+    // clone this._gqcTypeResolvers
+    const typeResolversMap = this.getTypeResolvers();
+    if (typeResolversMap.size > 0) {
+      const clonedTypeResolvers: UnionTypeComposerResolversMap<any, any> = new Map();
+      typeResolversMap.forEach((fn, tc) => {
+        const clonedTC: ObjectTypeComposerThunked<any, any> = (cloneTypeTo(
+          tc,
+          anotherSchemaComposer,
+          cloneMap
+        ): any);
+        clonedTypeResolvers.set(clonedTC, fn);
+      });
+      cloned.setTypeResolvers(clonedTypeResolvers);
+    }
+
+    // this._gqcTypeMap
+    const types = this.getTypes();
+    if (types.length > 0) {
+      cloned.setTypes(types.map(tc => (cloneTypeTo(tc, anotherSchemaComposer, cloneMap): any)));
+    }
 
     return cloned;
   }
@@ -561,7 +617,7 @@ export class UnionTypeComposer<TSource, TContext> {
     const current = this.getExtensions();
     this.setExtensions({
       ...current,
-      ...extensions,
+      ...(extensions: any),
     });
     return this;
   }
@@ -607,6 +663,11 @@ export class UnionTypeComposer<TSource, TContext> {
     return [];
   }
 
+  setDirectives(directives: Array<ExtensionsDirective>): UnionTypeComposer<TSource, TContext> {
+    this.setExtension('directives', directives);
+    return this;
+  }
+
   getDirectiveNames(): string[] {
     return this.getDirectives().map(d => d.name);
   }
@@ -630,4 +691,56 @@ export class UnionTypeComposer<TSource, TContext> {
   // get(path: string | string[]): any {
   //   return typeByPath(this, path);
   // }
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  getNestedTCs(
+    opts: {
+      exclude?: string[],
+    } = {},
+    passedTypes: Set<NamedTypeComposer<any>> = new Set()
+  ): Set<NamedTypeComposer<any>> {
+    const exclude = Array.isArray(opts.exclude) ? (opts: any).exclude : [];
+    this.getTypeComposers().forEach(tc => {
+      if (!passedTypes.has(tc) && !exclude.includes(tc.getTypeName())) {
+        passedTypes.add(tc);
+        if (tc instanceof ObjectTypeComposer) {
+          tc.getNestedTCs(opts, passedTypes);
+        }
+      }
+    });
+    return passedTypes;
+  }
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  toSDL(
+    opts?: SchemaPrinterOptions & {
+      deep?: ?boolean,
+      sortTypes?: ?boolean,
+      exclude?: ?(string[]),
+    }
+  ): string {
+    const { deep, ...innerOpts } = opts || {};
+    const exclude = Array.isArray((innerOpts: any).exclude) ? (innerOpts: any).exclude : [];
+    if (deep) {
+      let r = '';
+      r += printUnion(this.getType(), innerOpts);
+
+      let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
+      if (opts?.sortAll || opts?.sortTypes) {
+        nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
+      }
+      nestedTypes.forEach(t => {
+        if (t !== this && !exclude.includes(t.getTypeName())) {
+          r += `\n\n${t.toSDL(innerOpts)}`;
+        }
+      });
+      return r;
+    }
+
+    return printUnion(this.getType(), innerOpts);
+  }
 }

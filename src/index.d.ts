@@ -36,11 +36,12 @@ export * from './utils/typeHelpers';
 export * from './utils/is';
 export * from './utils/definitions';
 export * from './utils/graphqlVersion';
+export * from './utils/schemaPrinter';
 export { toDottedObject } from './utils/toDottedObject';
 export { deepmerge } from './utils/deepmerge';
 export { filterByDotPaths } from './utils/filterByDotPaths';
 export { pluralize } from './utils/pluralize';
-export * from './utils/schemaVisitor';
+export { dedent } from './utils/dedent';
 
 export {
   ObjectTypeComposerThunked,

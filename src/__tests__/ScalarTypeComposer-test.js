@@ -5,6 +5,7 @@ import { GraphQLScalarType } from '../graphql';
 import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
+import { dedent } from '../utils/dedent';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -139,6 +140,18 @@ describe('ScalarTypeComposer', () => {
     });
   });
 
+  describe('cloneTo()', () => {
+    it('scalar types must be the same', () => {
+      const sc2 = new SchemaComposer();
+      const cloned = stc.cloneTo(sc2);
+
+      expect(stc).toBe(cloned);
+      expect(stc.getTypeName()).toEqual(cloned.getTypeName());
+      expect(stc.getType()).toBe(cloned.getType());
+      expect(sc2.getSTC(stc.getTypeName())).toBe(stc);
+    });
+  });
+
   describe('directive methods', () => {
     it('type level directive methods', () => {
       const tc1 = schemaComposer.createScalarTC(`
@@ -156,6 +169,23 @@ describe('ScalarTypeComposer', () => {
       expect(tc1.getDirectiveById(1)).toEqual({ b: '3' });
       expect(tc1.getDirectiveByName('d2')).toEqual(undefined);
       expect(tc1.getDirectiveById(333)).toEqual(undefined);
+    });
+
+    it('check directive set-methods', () => {
+      const tc1 = schemaComposer.createScalarTC(`
+        scalar My1 @d1(b: "3")
+      `);
+      expect(tc1.toSDL()).toBe(dedent`
+        scalar My1 @d1(b: "3")
+      `);
+      tc1.setDirectives([
+        { args: { a: false }, name: 'd0' },
+        { args: { b: '3' }, name: 'd1' },
+        { args: { a: true }, name: 'd0' },
+      ]);
+      expect(tc1.toSDL()).toBe(dedent`
+        scalar My1 @d0(a: false) @d1(b: "3") @d0(a: true)
+      `);
     });
   });
 
@@ -186,6 +216,20 @@ describe('ScalarTypeComposer', () => {
       expect(() => scalar1.merge((schemaComposer.createObjectTC('Scalar'): any))).toThrow(
         'Cannot merge ObjectTypeComposer'
       );
+    });
+  });
+
+  describe('misc methods', () => {
+    it('toSDL()', () => {
+      const t = schemaComposer.createScalarTC(`
+        """desc1"""
+        scalar UInt
+      `);
+      expect(t.toSDL()).toMatchInlineSnapshot(`
+        "\\"\\"\\"desc1\\"\\"\\"
+        scalar UInt"
+      `);
+      expect(t.toSDL({ omitDescriptions: true })).toMatchInlineSnapshot(`"scalar UInt"`);
     });
   });
 });

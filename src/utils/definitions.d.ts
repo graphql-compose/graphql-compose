@@ -1,7 +1,12 @@
 export type ObjMap<T> = { [key: string]: T };
 export type ObjMapReadOnly<T> = Readonly<{ [key: string]: Readonly<T> }>;
-export type Thunk<T> = (() => T) | T;
 export type MaybePromise<T> = Promise<T> | T;
+
+// Workaround for fixing "Maximum call stack size exceeded" in Typescript
+// See https://github.com/microsoft/TypeScript/issues/31230 for more details
+// Try to return back these checks in TS 3.8:
+// export type Thunk<T> = (() => T) | T;
+export type Thunk<T> = (() => any) | T;
 
 export type DirectiveArgs = { [key: string]: any };
 export type ExtensionsDirective = {

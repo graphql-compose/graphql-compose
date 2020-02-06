@@ -4,14 +4,7 @@ import {
   GraphQLInputType,
   GraphQLInputFieldConfig,
 } from './graphql';
-import {
-  Thunk,
-  ObjMap,
-  Extensions,
-  ExtensionsDirective,
-  DirectiveArgs,
-  ObjMapReadOnly,
-} from './utils/definitions';
+import { Thunk, ObjMap, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 import { SchemaComposer } from './SchemaComposer';
 import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { TypeInPath } from './utils/typeByPath';
@@ -19,16 +12,18 @@ import {
   ComposeInputTypeDefinition,
   ComposeInputType,
   ComposeNamedInputType,
+  NamedTypeComposer,
 } from './utils/typeHelpers';
 import { ThunkComposer } from './ThunkComposer';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
+import { SchemaPrinterOptions } from './utils/schemaPrinter';
 
 export type InputTypeComposerDefinition =
   | TypeAsString
   | TypeDefinitionString
   | InputTypeComposerAsObjectDefinition
-  | Readonly<GraphQLInputObjectType>;
+  | GraphQLInputObjectType;
 
 export type InputTypeComposerAsObjectDefinition = {
   name: string;
@@ -38,14 +33,14 @@ export type InputTypeComposerAsObjectDefinition = {
 };
 
 export type InputTypeComposerFieldConfigMap = ObjMap<InputTypeComposerFieldConfig>;
-export type InputTypeComposerFieldConfigMapDefinition = ObjMapReadOnly<
+export type InputTypeComposerFieldConfigMapDefinition = ObjMap<
   Thunk<InputTypeComposerFieldConfigDefinition>
 >;
 
 export type InputTypeComposerFieldConfigDefinition =
   | InputTypeComposerFieldConfigAsObjectDefinition
   | ComposeInputTypeDefinition
-  | Readonly<ComposeInputType>;
+  | ComposeInputType;
 
 export type InputTypeComposerFieldConfigAsObjectDefinition = {
   type: Thunk<ComposeInputTypeDefinition>;
@@ -108,7 +103,7 @@ export class InputTypeComposer<TContext = any> {
 
   public setField(
     fieldName: string,
-    fieldConfig: Thunk<InputTypeComposerFieldConfigDefinition | Readonly<ComposeInputType>>
+    fieldConfig: Thunk<InputTypeComposerFieldConfigDefinition | ComposeInputType>
   ): this;
 
   /**
@@ -123,6 +118,15 @@ export class InputTypeComposer<TContext = any> {
 
   public getField(fieldName: string): InputTypeComposerFieldConfig;
 
+  /**
+   * Remove fields from type by name or array of names.
+   * You also may pass name in dot-notation, in such case will be removed nested field.
+   *
+   * @example
+   *     removeField('field1'); // remove 1 field
+   *     removeField(['field1', 'field2']); // remove 2 fields
+   *     removeField('field1.subField1'); // remove 1 nested field
+   */
   public removeField(fieldNameOrArray: string | string[]): this;
 
   public removeOtherFields(fieldNameOrArray: string | string[]): this;
@@ -211,6 +215,15 @@ export class InputTypeComposer<TContext = any> {
    */
   public clone(newTypeNameOrTC: string | InputTypeComposer<any>): InputTypeComposer<TContext>;
 
+  /**
+   * Clone this type to another SchemaComposer.
+   * Also will be clonned all sub-types.
+   */
+  public cloneTo<TCtx = any>(
+    anotherSchemaComposer: SchemaComposer<TCtx>,
+    cloneMap?: Map<any, any>
+  ): InputTypeComposer<TCtx>;
+
   public merge(type: GraphQLInputObjectType | InputTypeComposer<any>): this;
 
   /**
@@ -266,6 +279,8 @@ export class InputTypeComposer<TContext = any> {
 
   public getDirectives(): ExtensionsDirective[];
 
+  public setDirectives(directives: ExtensionsDirective[]): this;
+
   public getDirectiveNames(): string[];
 
   public getDirectiveByName(directiveName: string): DirectiveArgs | void;
@@ -273,6 +288,8 @@ export class InputTypeComposer<TContext = any> {
   public getDirectiveById(idx: number): DirectiveArgs | void;
 
   public getFieldDirectives(fieldName: string): ExtensionsDirective[];
+
+  public setFieldDirectives(fieldName: string, directives: ExtensionsDirective[]): this;
 
   public getFieldDirectiveNames(fieldName: string): string[];
 
@@ -285,5 +302,22 @@ export class InputTypeComposer<TContext = any> {
    * Misc methods
    * -----------------------------------------------
    */
+
   public get(path: string | string[]): TypeInPath<TContext> | void;
+
+  /**
+   * Returns all types which are used inside the current type
+   */
+  public getNestedTCs(opts?: { exclude?: string[] }): Set<NamedTypeComposer<any>>;
+
+  /**
+   * Prints SDL for current type. Or print with all used types if `deep: true` option was provided.
+   */
+  public toSDL(
+    opts?: SchemaPrinterOptions & {
+      deep?: boolean;
+      sortTypes?: boolean;
+      exclude?: string[];
+    }
+  ): string;
 }
