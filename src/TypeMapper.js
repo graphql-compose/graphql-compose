@@ -56,7 +56,6 @@ import {
 } from './graphql';
 import type { GraphQLType, GraphQLInputType } from './graphql';
 import { GraphQLDate, GraphQLBuffer, GraphQLJSON, GraphQLJSONObject } from './type';
-import { createThunkedObjectProxy } from './utils/createThunkedObjectProxy';
 
 import type {
   InputTypeComposerFieldConfigMap,
@@ -341,10 +340,9 @@ export class TypeMapper<TContext> {
   }
 
   convertOutputFieldConfig<TSource>(
-    composeFC: Thunk<
+    composeFC:
       | ObjectTypeComposerFieldConfigDefinition<TSource, TContext>
-      | $ReadOnly<Resolver<any, TContext>>
-    >,
+      | $ReadOnly<Resolver<any, TContext>>,
     fieldName?: string = '',
     typeName?: string = ''
   ): ObjectTypeComposerFieldConfig<TSource, TContext> {
@@ -360,13 +358,6 @@ export class TypeMapper<TContext> {
           resolve: composeFC.getFieldResolver(),
           description: composeFC.getDescription(),
         };
-      }
-
-      // use proxy for evaluation on demand
-      if (isFunction(composeFC)) {
-        return (createThunkedObjectProxy(() =>
-          this.convertOutputFieldConfig(composeFC(), fieldName, typeName)
-        ): any);
       }
 
       // convert type when its provided as composeIFC
@@ -414,7 +405,7 @@ export class TypeMapper<TContext> {
   }
 
   convertArgConfig(
-    composeAC: Thunk<ObjectTypeComposerArgumentConfigDefinition>,
+    composeAC: ObjectTypeComposerArgumentConfigDefinition,
     argName?: string = '',
     fieldName?: string = '',
     typeName?: string = ''
@@ -422,13 +413,6 @@ export class TypeMapper<TContext> {
     try {
       if (!composeAC) {
         throw new Error(`You provide empty argument config ${inspect(composeAC)}`);
-      }
-
-      // use proxy for evaluation on demand
-      if (isFunction(composeAC)) {
-        return (createThunkedObjectProxy(() =>
-          this.convertArgConfig(composeAC(), argName, fieldName, typeName)
-        ): any);
       }
 
       // convert type when its provided as composeAC
@@ -556,20 +540,13 @@ export class TypeMapper<TContext> {
   }
 
   convertInputFieldConfig(
-    composeIFC: Thunk<InputTypeComposerFieldConfigDefinition>,
+    composeIFC: InputTypeComposerFieldConfigDefinition,
     fieldName?: string = '',
     typeName?: string = ''
   ): InputTypeComposerFieldConfig {
     try {
       if (!composeIFC) {
         throw new Error(`You provide empty input field definition: ${inspect(composeIFC)}`);
-      }
-
-      // use proxy for evaluation on demand
-      if (isFunction(composeIFC)) {
-        return (createThunkedObjectProxy(() =>
-          this.convertInputFieldConfig(composeIFC(), fieldName, typeName)
-        ): any);
       }
 
       // convert type when its provided as composeIFC

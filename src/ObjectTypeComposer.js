@@ -94,14 +94,13 @@ export type ObjectTypeComposerFieldConfigMap<TSource, TContext> = ObjMap<
   ObjectTypeComposerFieldConfig<TSource, TContext>
 >;
 export type ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext> = ObjMapReadOnly<
-  Thunk<ObjectTypeComposerFieldConfigDefinition<TSource, TContext>>
+  ObjectTypeComposerFieldConfigDefinition<TSource, TContext>
 >;
 
 export type ObjectTypeComposerFieldConfigDefinition<TSource, TContext, TArgs = ArgsMap> =
   | ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs>
-  | ComposeOutputTypeDefinition<TContext>
-  | $ReadOnly<Resolver<any, TContext, any>>
-  | $ReadOnly<ComposeOutputType<TContext>>;
+  | Thunk<ComposeOutputTypeDefinition<TContext>>
+  | $ReadOnly<Resolver<any, TContext, any>>;
 
 export type ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs = ArgsMap> = {
   type: Thunk<ComposeOutputTypeDefinition<TContext> | $ReadOnly<Resolver<any, TContext, any>>>,
@@ -135,7 +134,7 @@ export type ObjectTypeComposerArgumentConfigMap<TArgs = ArgsMap> = {
 };
 
 export type ObjectTypeComposerArgumentConfigMapDefinition<TArgs = ArgsMap> = {
-  +[argName: $Keys<TArgs>]: Thunk<ObjectTypeComposerArgumentConfigDefinition>,
+  +[argName: $Keys<TArgs>]: ObjectTypeComposerArgumentConfigDefinition,
 };
 
 export type ObjectTypeComposerArgumentConfigAsObjectDefinition = {
@@ -157,7 +156,7 @@ export type ObjectTypeComposerArgumentConfig = {
 
 export type ObjectTypeComposerArgumentConfigDefinition =
   | ObjectTypeComposerArgumentConfigAsObjectDefinition
-  | ComposeInputTypeDefinition;
+  | Thunk<ComposeInputTypeDefinition>;
 
 // RELATION -----------------------------
 
@@ -385,10 +384,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
   setField(
     fieldName: string,
-    fieldConfig: Thunk<
-      | $ReadOnly<ComposeOutputType<TContext>>
-      | ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
-    >
+    fieldConfig: ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
   ): ObjectTypeComposer<TSource, TContext> {
     this._gqcFields[fieldName] = this.schemaComposer.typeMapper.convertOutputFieldConfig(
       fieldConfig

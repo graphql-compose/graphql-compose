@@ -121,10 +121,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public setField(
     name: string,
-    fieldConfig: Thunk<
-      | ComposeOutputType<TContext>
-      | ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
-    >
+    fieldConfig: ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
   ): this;
 
   /**

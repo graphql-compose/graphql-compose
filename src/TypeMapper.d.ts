@@ -78,9 +78,7 @@ declare class TypeMapper<TContext> {
   ): ComposeOutputType<TContext> | void;
 
   public convertOutputFieldConfig<TSource>(
-    composeFC: Thunk<
-      ObjectTypeComposerFieldConfigDefinition<TSource, TContext> | Resolver<any, TContext>
-    >,
+    composeFC: ObjectTypeComposerFieldConfigDefinition<TSource, TContext> | Resolver<any, TContext>,
     fieldName?: string,
     typeName?: string
   ): ObjectTypeComposerFieldConfig<TSource, TContext>;
@@ -91,7 +89,7 @@ declare class TypeMapper<TContext> {
   ): ObjectTypeComposerFieldConfigMap<TSource, TContext>;
 
   public convertArgConfig(
-    composeAC: Thunk<ObjectTypeComposerArgumentConfigDefinition>,
+    composeAC: ObjectTypeComposerArgumentConfigDefinition,
     argName?: string,
     fieldName?: string,
     typeName?: string
@@ -110,7 +108,7 @@ declare class TypeMapper<TContext> {
   ): ComposeInputType | void;
 
   public convertInputFieldConfig(
-    composeIFC: Thunk<InputTypeComposerFieldConfigDefinition>,
+    composeIFC: InputTypeComposerFieldConfigDefinition,
     fieldName?: string,
     typeName?: string
   ): InputTypeComposerFieldConfig;

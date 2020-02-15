@@ -133,17 +133,12 @@ describe('ObjectTypeComposer', () => {
         }
       });
 
-      it('accept fieldConfig as function', () => {
+      it('accept thunked type', () => {
         tc.setFields({
-          input4: (): { type: string, args: { [key: string]: string }, resolve: Function } => ({
-            type: 'String',
-            args: { a: 'Int' },
-            resolve: () => 123,
-          }),
+          input4: () => 'String',
         });
+        expect(tc.getField('input4').type).toBeInstanceOf(ThunkComposer);
         expect(tc.getFieldType('input4')).toBe(GraphQLString);
-        expect(tc.getFieldArgType('input4', 'a')).toBe(GraphQLInt);
-        expect((tc.getField('input4'): any).resolve()).toBe(123);
       });
     });
 
