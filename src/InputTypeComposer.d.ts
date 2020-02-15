@@ -34,13 +34,12 @@ export type InputTypeComposerAsObjectDefinition = {
 
 export type InputTypeComposerFieldConfigMap = ObjMap<InputTypeComposerFieldConfig>;
 export type InputTypeComposerFieldConfigMapDefinition = ObjMap<
-  Thunk<InputTypeComposerFieldConfigDefinition>
+  InputTypeComposerFieldConfigDefinition
 >;
 
 export type InputTypeComposerFieldConfigDefinition =
   | InputTypeComposerFieldConfigAsObjectDefinition
-  | ComposeInputTypeDefinition
-  | ComposeInputType;
+  | Thunk<ComposeInputTypeDefinition>;
 
 export type InputTypeComposerFieldConfigAsObjectDefinition = {
   type: Thunk<ComposeInputTypeDefinition>;
@@ -101,10 +100,7 @@ export class InputTypeComposer<TContext = any> {
 
   public setFields(fields: InputTypeComposerFieldConfigMapDefinition): this;
 
-  public setField(
-    fieldName: string,
-    fieldConfig: Thunk<InputTypeComposerFieldConfigDefinition | ComposeInputType>
-  ): this;
+  public setField(fieldName: string, fieldConfig: InputTypeComposerFieldConfigDefinition): this;
 
   /**
    * Add new fields or replace existed in a GraphQL type

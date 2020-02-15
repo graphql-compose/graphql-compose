@@ -65,14 +65,13 @@ export type ObjectTypeComposerFieldConfigMap<TSource, TContext> = ObjMap<
   ObjectTypeComposerFieldConfig<TSource, TContext>
 >;
 export type ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext> = ObjMap<
-  Thunk<ObjectTypeComposerFieldConfigDefinition<TSource, TContext>>
+  ObjectTypeComposerFieldConfigDefinition<TSource, TContext>
 >;
 
 export type ObjectTypeComposerFieldConfigDefinition<TSource, TContext, TArgs = ArgsMap> =
   | ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs>
-  | ComposeOutputTypeDefinition<TContext>
-  | Resolver<any, TContext, any>
-  | ComposeOutputType<TContext>;
+  | Thunk<ComposeOutputTypeDefinition<TContext>>
+  | Resolver<any, TContext, any>;
 
 export type ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs = ArgsMap> = {
   type: Thunk<ComposeOutputTypeDefinition<TContext> | Resolver<any, TContext, any>>;
@@ -106,7 +105,7 @@ export type ObjectTypeComposerArgumentConfigMap<TArgs = ArgsMap> = {
 };
 
 export type ObjectTypeComposerArgumentConfigMapDefinition<TArgs = ArgsMap> = {
-  [argName in keyof TArgs]: Thunk<ObjectTypeComposerArgumentConfigDefinition>;
+  [argName in keyof TArgs]: ObjectTypeComposerArgumentConfigDefinition;
 };
 
 export type ObjectTypeComposerArgumentConfigAsObjectDefinition = {
@@ -128,7 +127,7 @@ export type ObjectTypeComposerArgumentConfig = {
 
 export type ObjectTypeComposerArgumentConfigDefinition =
   | ObjectTypeComposerArgumentConfigAsObjectDefinition
-  | ComposeInputTypeDefinition;
+  | Thunk<ComposeInputTypeDefinition>;
 
 // RELATION -----------------------------
 
@@ -231,10 +230,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public setField<TArgs = ArgsMap>(
     fieldName: string,
-    fieldConfig: Thunk<
-      | ComposeOutputType<TContext>
-      | ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
-    >
+    fieldConfig: ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
   ): this;
 
   /**

@@ -52,13 +52,11 @@ export type InputTypeComposerAsObjectDefinition = {
 };
 
 export type InputTypeComposerFieldConfigMap = ObjMap<InputTypeComposerFieldConfig>;
-export type InputTypeComposerFieldConfigMapDefinition = ObjMapReadOnly<
-  Thunk<InputTypeComposerFieldConfigDefinition>
->;
+export type InputTypeComposerFieldConfigMapDefinition = ObjMapReadOnly<InputTypeComposerFieldConfigDefinition>;
 
 export type InputTypeComposerFieldConfigDefinition =
   | InputTypeComposerFieldConfigAsObjectDefinition
-  | ComposeInputTypeDefinition
+  | Thunk<ComposeInputTypeDefinition>
   | $ReadOnly<ComposeInputType>;
 
 export type InputTypeComposerFieldConfigAsObjectDefinition = {
@@ -222,7 +220,7 @@ export class InputTypeComposer<TContext> {
 
   setField(
     fieldName: string,
-    fieldConfig: Thunk<InputTypeComposerFieldConfigDefinition | $ReadOnly<ComposeInputType>>
+    fieldConfig: InputTypeComposerFieldConfigDefinition
   ): InputTypeComposer<TContext> {
     this._gqcFields[fieldName] = this.schemaComposer.typeMapper.convertInputFieldConfig(
       fieldConfig,
