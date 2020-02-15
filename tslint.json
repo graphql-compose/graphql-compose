@@ -39,6 +39,7 @@
     "no-reference-import": false,
     "interface-over-type-literal": false,
     "object-literal-sort-keys": false,
-    "member-ordering": false
+    "member-ordering": false,
+    "array-type": false
   }
 }
