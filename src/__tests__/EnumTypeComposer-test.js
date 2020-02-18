@@ -4,7 +4,7 @@ import { schemaComposer, SchemaComposer } from '..';
 import { EnumTypeComposer } from '../EnumTypeComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
-import { GraphQLEnumType } from '../graphql';
+import { GraphQLEnumType, graphql } from '../graphql';
 import { graphqlVersion } from '../utils/graphqlVersion';
 import { dedent } from '../utils/dedent';
 
@@ -19,8 +19,8 @@ describe('EnumTypeComposer', () => {
     const enumType = new GraphQLEnumType({
       name: 'MyEnum',
       values: {
-        VAL1: { value: 'VAL1' },
-        VAL2: { value: 'VAL2' },
+        KEY1: { value: 'VAL1' },
+        KEY2: { value: 'VAL2' },
       },
     });
 
@@ -30,7 +30,7 @@ describe('EnumTypeComposer', () => {
   describe('values manipulation', () => {
     it('getFields()', () => {
       const fieldNames = Object.keys(etc.getFields());
-      expect(fieldNames).toEqual(expect.arrayContaining(['VAL1', 'VAL2']));
+      expect(fieldNames).toEqual(expect.arrayContaining(['KEY1', 'KEY2']));
     });
 
     if (graphqlVersion >= 13) {
@@ -42,7 +42,7 @@ describe('EnumTypeComposer', () => {
 
     describe('getField()', () => {
       it('should return value config', () => {
-        expect(etc.getField('VAL1').value).toBe('VAL1');
+        expect(etc.getField('KEY1').value).toBe('VAL1');
       });
 
       it('should throw error if value does not exist', () => {
@@ -67,41 +67,41 @@ describe('EnumTypeComposer', () => {
 
     it('addFields()', () => {
       etc.addFields({
-        VAL3: {},
-        VAL4: { value: 'VAL4', description: 'Val4 description' },
+        KEY3: {},
+        KEY4: { value: 'VAL4', description: 'KEY4 description' },
       });
-      expect(etc.getType().getValue('VAL1')).toBeDefined();
-      expect(etc.getType().getValue('VAL2')).toBeDefined();
-      expect(etc.getType().getValue('VAL3')).toBeDefined();
-      const valueConfig: any = etc.getType().getValue('VAL4');
+      expect(etc.getType().getValue('KEY1')).toBeDefined();
+      expect(etc.getType().getValue('KEY2')).toBeDefined();
+      expect(etc.getType().getValue('KEY3')).toBeDefined();
+      const valueConfig: any = etc.getType().getValue('KEY4');
       expect(valueConfig.value).toBe('VAL4');
-      expect(valueConfig.description).toBe('Val4 description');
+      expect(valueConfig.description).toBe('KEY4 description');
     });
 
     describe('removeField()', () => {
       it('should remove one field', () => {
-        etc.removeField('VAL1');
-        expect(etc.getFieldNames()).toEqual(expect.arrayContaining(['VAL2']));
+        etc.removeField('KEY1');
+        expect(etc.getFieldNames()).toEqual(expect.arrayContaining(['KEY2']));
       });
 
       it('should remove list of fields', () => {
-        etc.removeField(['VAL1', 'VAL2']);
+        etc.removeField(['KEY1', 'KEY2']);
         expect(etc.getFieldNames()).toEqual([]);
       });
     });
 
     describe('removeOtherFields()', () => {
       it('should remove one field', () => {
-        etc.removeOtherFields('VAL1');
-        expect(etc.getFieldNames()).toEqual(['VAL1']);
+        etc.removeOtherFields('KEY1');
+        expect(etc.getFieldNames()).toEqual(['KEY1']);
       });
 
       it('should remove list of fields', () => {
-        etc.setField('VAL3', {});
-        expect(etc.getFieldNames()).toEqual(expect.arrayContaining(['VAL3']));
+        etc.setField('KEY3', {});
+        expect(etc.getFieldNames()).toEqual(expect.arrayContaining(['KEY3']));
 
-        etc.removeOtherFields(['VAL1', 'VAL2']);
-        expect(etc.getFieldNames()).toEqual(['VAL1', 'VAL2']);
+        etc.removeOtherFields(['KEY1', 'KEY2']);
+        expect(etc.getFieldNames()).toEqual(['KEY1', 'KEY2']);
       });
     });
 
@@ -289,7 +289,7 @@ describe('EnumTypeComposer', () => {
       expect(etc).not.toBe(cloned);
       expect(cloned.getTypeName()).toEqual('ClonedEnum');
       expect(etc.getType()).not.toBe(cloned.getType());
-      expect(etc.getField('VAL1')).not.toBe(cloned.getField('VAL1'));
+      expect(etc.getField('KEY1')).not.toBe(cloned.getField('KEY1'));
 
       expect(() => {
         const wrongArgs: any = [];
@@ -306,7 +306,7 @@ describe('EnumTypeComposer', () => {
       expect(etc.getTypeName()).toEqual(cloned.getTypeName());
       expect(etc).not.toBe(cloned);
       expect(etc.getType()).not.toBe(cloned.getType());
-      expect(etc.getField('VAL1')).not.toBe(cloned.getField('VAL1'));
+      expect(etc.getField('KEY1')).not.toBe(cloned.getField('KEY1'));
 
       expect(sc2.getETC(etc.getTypeName())).not.toBe(etc);
     });
@@ -406,6 +406,30 @@ describe('EnumTypeComposer', () => {
       expect(() => sortETC.merge((schemaComposer.createScalarTC('Scalar'): any))).toThrow(
         'Cannot merge ScalarTypeComposer'
       );
+    });
+  });
+
+  describe('graphql query tests', () => {
+    it('should provide correct value to resolver args', async () => {
+      let serverValue;
+      schemaComposer.Query.addFields({
+        test: {
+          type: etc,
+          args: { a: etc },
+          resolve: (_, args) => {
+            serverValue = args.a;
+            return args.a;
+          },
+        },
+      });
+
+      const schema = schemaComposer.buildSchema();
+
+      const res = await graphql({ schema, source: '{ test(a: KEY1) }' });
+      // test server value
+      expect(serverValue).toBe('VAL1');
+      // test returned client KEY
+      expect(res.data?.test).toEqual('KEY1');
     });
   });
 
