@@ -846,6 +846,19 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
           resolveMethods[typename][fieldName] = fc.resolve;
         });
       },
+      ENUM_TYPE: (tc: EnumTypeComposer<any>) => {
+        const typename = tc.getTypeName();
+        if (exclude.includes(typename)) return;
+        let hasDifferentIntervalVals = false;
+        const internalVals = {};
+        forEachKey(tc.getFields(), (fc, fieldName) => {
+          if (fc.value !== fieldName) hasDifferentIntervalVals = true;
+          internalVals[fieldName] = fc.value;
+        });
+        if (hasDifferentIntervalVals) {
+          resolveMethods[typename] = internalVals;
+        }
+      },
     });
 
     return resolveMethods;

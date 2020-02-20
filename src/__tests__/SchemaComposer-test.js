@@ -1004,6 +1004,28 @@ describe('SchemaComposer', () => {
       const outResolveMap2 = sc.getResolveMethods({ exclude: ['Post'] });
       expect(Object.keys(outResolveMap2)).toEqual(['Query']);
     });
+
+    describe('should export Enum internals with different keys & values', () => {
+      const sc = new SchemaComposer();
+      sc.Query.addFields({
+        e1: sc.createEnumTC({
+          name: 'E1',
+          values: {
+            K1: { value: 'V1' },
+            K2: { value: 'V2' },
+          },
+        }),
+        e2: sc.createEnumTC({
+          name: 'E2',
+          values: {
+            K1: { value: 'K1' },
+            K2: { value: 'K2' },
+          },
+        }),
+      });
+
+      expect(sc.getResolveMethods()).toEqual({ E1: { K1: 'V1', K2: 'V2' } });
+    });
   });
 
   describe('createTC helper methods', () => {
