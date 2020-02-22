@@ -357,6 +357,8 @@ export class TypeMapper<TContext> {
           args: composeFC.getArgs(),
           resolve: composeFC.getFieldResolver(),
           description: composeFC.getDescription(),
+          extensions: composeFC.extensions,
+          projection: composeFC.projection,
         };
       }
 
