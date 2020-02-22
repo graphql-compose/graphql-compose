@@ -178,6 +178,7 @@ export type ObjectTypeComposerRelationOptsWithResolver<
   +description?: string | null,
   +deprecationReason?: string | null,
   +catchErrors?: boolean,
+  +extensions?: Extensions,
 };
 
 export type ObjectTypeComposerRelationArgsMapperFn<TSource, TContext, TArgs = ArgsMap> = (
@@ -1720,6 +1721,10 @@ export class ObjectTypeComposer<TSource, TContext> {
       args: argsConfig,
       resolve,
       projection: opts.projection,
+      extensions: {
+        ...resolver.extensions,
+        ...(opts: any).extensions,
+      },
     };
   }
 

@@ -149,6 +149,7 @@ export type ObjectTypeComposerRelationOptsWithResolver<
   description?: string | null;
   deprecationReason?: string | null;
   catchErrors?: boolean;
+  extensions?: Extensions;
 };
 
 export type ObjectTypeComposerRelationArgsMapperFn<TSource, TContext, TArgs = ArgsMap> = (
