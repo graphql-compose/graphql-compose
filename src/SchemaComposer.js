@@ -150,20 +150,6 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       roots.subscription = tc.getType();
     }
 
-    if (!roots.query) {
-      throw new Error(dedent`
-        Can not build schema. Must be initialized Query type. 
-        See: https://github.com/graphql/graphql-js/issues/448
-      `);
-    }
-
-    if (Object.keys(roots).length === 0) {
-      throw new Error(dedent`
-        Can not build schema. Must be initialized at least one of the following types: 
-          Query, Mutation, Subscription.
-      `);
-    }
-
     const types = [
       ...this._schemaMustHaveTypes.map(t => (getGraphQLType(t): any)), // additional types, eg. used in Interfaces
       ...(extraConfig && Array.isArray(extraConfig.types) ? [...extraConfig.types] : []),
