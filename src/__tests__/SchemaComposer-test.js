@@ -245,15 +245,6 @@ describe('SchemaComposer', () => {
   });
 
   describe('buildSchema()', () => {
-    it('should throw error, if root fields not defined', () => {
-      const sc = new SchemaComposer();
-      sc.clear();
-
-      expect(() => {
-        sc.buildSchema();
-      }).toThrowError();
-    });
-
     it('should accept additional types', () => {
       const sc = new SchemaComposer();
       sc.Query.addFields({ time: 'Int' });
@@ -279,14 +270,6 @@ describe('SchemaComposer', () => {
           `,
         })
       ).toEqual({ data: { num: null } });
-    });
-
-    it('should throw error if only Mutation provided', async () => {
-      const sc = new SchemaComposer();
-      sc.Mutation.addFields({ num: 'Int' });
-      expect(() => {
-        sc.buildSchema();
-      }).toThrow('Must be initialized Query type');
     });
   });
 
