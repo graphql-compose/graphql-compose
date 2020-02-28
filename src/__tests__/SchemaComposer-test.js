@@ -245,7 +245,6 @@ describe('SchemaComposer', () => {
   });
 
   describe('buildSchema()', () => {
-
     it('should accept additional types', () => {
       const sc = new SchemaComposer();
       sc.Query.addFields({ time: 'Int' });
