@@ -594,7 +594,7 @@ describe('UnionTypeComposer', () => {
         ],
       });
       resultUTC.merge(result2);
-      expect(resultUTC.getTypeNames()).toEqual(['Article', 'Comment', 'User']);
+      expect(resultUTC.getTypeNames()).toEqual(['Article', 'User', 'Comment']);
     });
 
     it('should merge with UnionTypeComposer', () => {
@@ -602,7 +602,7 @@ describe('UnionTypeComposer', () => {
       const sc2 = new SchemaComposer();
       const result2 = sc2.createUnionTC(`union Result2 = User | Comment`);
       resultUTC.merge(result2);
-      expect(resultUTC.getTypeNames()).toEqual(['Article', 'Comment', 'User']);
+      expect(resultUTC.getTypeNames()).toEqual(['Article', 'User', 'Comment']);
     });
 
     it('should throw error on wrong type', () => {

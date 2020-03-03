@@ -79,7 +79,7 @@ export type UnionTypeComposerThunked<TReturn, TContext> =
 export class UnionTypeComposer<TSource, TContext> {
   schemaComposer: SchemaComposer<TContext>;
   _gqType: GraphQLUnionType;
-  _gqcTypeMap: Map<string, ObjectTypeComposerThunked<any, TContext>>;
+  _gqcTypes: Set<ObjectTypeComposerThunked<any, TContext>>;
   _gqcTypeResolvers: UnionTypeComposerResolversMap<TSource, TContext>;
   _gqcExtensions: Extensions | void;
 
@@ -188,9 +188,9 @@ export class UnionTypeComposer<TSource, TContext> {
       types = this._gqType._types || (this._gqType: any)._typeConfig.types;
     }
     types = convertObjectTypeArrayAsThunk(types, this.schemaComposer);
-    this._gqcTypeMap = new Map();
+    this._gqcTypes = new Set();
     types.forEach(type => {
-      this._gqcTypeMap.set(type.getTypeName(), type);
+      this._gqcTypes.add(type);
     });
 
     if (!this._gqcTypeResolvers) {
@@ -207,11 +207,16 @@ export class UnionTypeComposer<TSource, TContext> {
 
   hasType(name: ObjectTypeComposerDefinition<any, TContext>): boolean {
     const typeName = getComposeTypeName(name);
-    return this._gqcTypeMap.has(typeName);
+    for (const type of this._gqcTypes) {
+      if (type.getTypeName() === typeName) {
+        return true;
+      }
+    }
+    return false;
   }
 
   getTypes(): Array<ObjectTypeComposerThunked<TSource, TContext>> {
-    return Array.from(this._gqcTypeMap.values());
+    return Array.from(this._gqcTypes.values());
   }
 
   getTypeComposers(): Array<ObjectTypeComposer<TSource, TContext>> {
@@ -219,11 +224,11 @@ export class UnionTypeComposer<TSource, TContext> {
   }
 
   getTypeNames(): string[] {
-    return Array.from(this._gqcTypeMap.keys());
+    return this.getTypes().map(t => t.getTypeName());
   }
 
   clearTypes(): UnionTypeComposer<TSource, TContext> {
-    this._gqcTypeMap.clear();
+    this._gqcTypes.clear();
     return this;
   }
 
@@ -232,11 +237,8 @@ export class UnionTypeComposer<TSource, TContext> {
       ObjectTypeComposerThunked<TSource, TContext> | ObjectTypeComposerDefinition<any, TContext>
     >
   ): UnionTypeComposer<TSource, TContext> {
-    this.clearTypes();
     const tcs = convertObjectTypeArrayAsThunk(types, this.schemaComposer);
-    tcs.forEach(tc => {
-      this._gqcTypeMap.set(tc.getTypeName(), tc);
-    });
+    this._gqcTypes = new Set(tcs);
     return this;
   }
 
@@ -244,7 +246,10 @@ export class UnionTypeComposer<TSource, TContext> {
     type: ObjectTypeComposerThunked<any, TContext> | ObjectTypeComposerDefinition<any, TContext>
   ): UnionTypeComposer<TSource, TContext> {
     const tc = this._convertObjectType(type);
-    this._gqcTypeMap.set(tc.getTypeName(), tc);
+    // firstly remove type by name, cause Union may contain another thunk with the same name
+    this.removeType(tc.getTypeName());
+
+    this._gqcTypes.add(tc);
     return this;
   }
 
@@ -263,18 +268,22 @@ export class UnionTypeComposer<TSource, TContext> {
   removeType(nameOrArray: string | string[]): UnionTypeComposer<TSource, TContext> {
     const typeNames = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
     typeNames.forEach(typeName => {
-      this._gqcTypeMap.delete(typeName);
+      for (const type of this._gqcTypes) {
+        if (type.getTypeName() === typeName) {
+          this._gqcTypes.delete(type);
+        }
+      }
     });
     return this;
   }
 
   removeOtherTypes(nameOrArray: string | string[]): UnionTypeComposer<TSource, TContext> {
     const keepTypeNames = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
-    this._gqcTypeMap.forEach((v, i) => {
-      if (keepTypeNames.indexOf(i) === -1) {
-        this._gqcTypeMap.delete(i);
+    for (const type of this._gqcTypes) {
+      if (keepTypeNames.indexOf(type.getTypeName()) === -1) {
+        this._gqcTypes.delete(type);
       }
-    });
+    }
     return this;
   }
 
@@ -346,7 +355,7 @@ export class UnionTypeComposer<TSource, TContext> {
         : UnionTypeComposer.create(newTypeNameOrTC, this.schemaComposer);
 
     cloned._gqcExtensions = { ...this._gqcExtensions };
-    cloned._gqcTypeMap = new Map(this._gqcTypeMap);
+    cloned._gqcTypes = new Set(this._gqcTypes);
     cloned._gqcTypeResolvers = new Map(this._gqcTypeResolvers);
     cloned.setDescription(this.getDescription());
 
