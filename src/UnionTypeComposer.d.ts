@@ -68,7 +68,7 @@ export type UnionTypeComposerThunked<TReturn, TContext> =
 export class UnionTypeComposer<TSource = any, TContext = any> {
   public schemaComposer: SchemaComposer<TContext>;
   protected _gqType: GraphQLUnionType;
-  protected _gqcTypeMap: Map<string, ObjectTypeComposerThunked<any, TContext>>;
+  protected _gqcTypes: Set<ObjectTypeComposerThunked<any, TContext>>;
   protected _gqcTypeResolvers: UnionTypeComposerResolversMap<TSource, TContext>;
   protected _gqcExtensions: Extensions | void;
 
