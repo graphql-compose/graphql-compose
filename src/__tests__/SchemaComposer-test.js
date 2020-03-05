@@ -22,6 +22,7 @@ import {
   GraphQLList,
   GraphQLSchema,
 } from '../graphql';
+import { dedent } from '../utils/dedent';
 
 describe('SchemaComposer', () => {
   it('should implements `add` method', () => {
@@ -1292,8 +1293,8 @@ describe('SchemaComposer', () => {
       sc.Subscription.addFields({ existedInSubscription: 'String' });
       sc.createTC(`type User { age: Int }`);
 
-      expect(sc.toSDL()).toMatchInlineSnapshot(`
-        "type Mutation {
+      expect(sc.toSDL()).toBe(dedent`
+        type Mutation {
           existedInMutation: String
         }
 
@@ -1301,14 +1302,14 @@ describe('SchemaComposer', () => {
           existedInQuery: String
         }
 
-        \\"\\"\\"
+        """
         The \`String\` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
-        \\"\\"\\"
+        """
         scalar String
 
         type Subscription {
           existedInSubscription: String
-        }"
+        }
       `);
     });
 
@@ -1327,19 +1328,18 @@ describe('SchemaComposer', () => {
       `);
 
       it('just single type', () => {
-        expect(sc1.getTypeSDL('User')).toMatchInlineSnapshot(`
-          "type User implements IF2 & IF1 {
+        expect(sc1.getTypeSDL('User')).toBe(dedent`
+          type User implements IF2 & IF1 {
             f3(filter: Filter, a: Int): Boolean
             f1: Int
             f2: Boolean
-          }"
+          }
         `);
       });
 
       it('type with nested types and without comments', () => {
-        expect(sc1.getTypeSDL('User', { deep: true, omitDescriptions: true }))
-          .toMatchInlineSnapshot(`
-          "type User implements IF2 & IF1 {
+        expect(sc1.getTypeSDL('User', { deep: true, omitDescriptions: true })).toEqual(dedent`
+          type User implements IF2 & IF1 {
             f3(filter: Filter, a: Int): Boolean
             f1: Int
             f2: Boolean
@@ -1352,25 +1352,25 @@ describe('SchemaComposer', () => {
             a: String
           }
 
-          scalar Int
-
-          scalar String
+          interface IF1 {
+            f2: Int
+            f1: Int
+          }
 
           interface IF2 {
             f2: Int
           }
 
-          interface IF1 {
-            f2: Int
-            f1: Int
-          }"
+          scalar Int
+
+          scalar String
         `);
       });
 
       it('type with nested and sorting for snapshots', () => {
         expect(sc1.getTypeSDL('User', { sortAll: true, deep: true, omitDescriptions: true }))
-          .toMatchInlineSnapshot(`
-          "type User implements IF1 & IF2 {
+          .toBe(dedent`
+          type User implements IF1 & IF2 {
             f1: Int
             f2: Boolean
             f3(a: Int, filter: Filter): Boolean
@@ -1394,7 +1394,7 @@ describe('SchemaComposer', () => {
 
           scalar Int
 
-          scalar String"
+          scalar String
         `);
       });
     });

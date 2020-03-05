@@ -312,7 +312,6 @@ export class InputTypeComposer<TContext = any> {
   public toSDL(
     opts?: SchemaPrinterOptions & {
       deep?: boolean;
-      sortTypes?: boolean;
       exclude?: string[];
     }
   ): string;

@@ -1411,7 +1411,6 @@ export class InterfaceTypeComposer<TSource, TContext> {
   toSDL(
     opts?: SchemaPrinterOptions & {
       deep?: ?boolean,
-      sortTypes?: ?boolean,
       exclude?: ?(string[]),
     }
   ): string {
@@ -1422,9 +1421,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
       r += printInterface(this.getType(), innerOpts);
 
       let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
-      if (opts?.sortAll || opts?.sortTypes) {
-        nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
-      }
+      nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
       nestedTypes.forEach(t => {
         if (t !== this && !exclude.includes(t.getTypeName())) {
           r += `\n\n${t.toSDL(innerOpts)}`;

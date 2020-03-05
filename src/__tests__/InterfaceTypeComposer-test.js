@@ -212,16 +212,16 @@ describe('InterfaceTypeComposer', () => {
             field3: Int
           }
 
-          type SubType {
-            subField1: SubSubType
-            subField2: Int
-          }
+          scalar Int
 
           type SubSubType {
             subSubField2: Int
           }
 
-          scalar Int
+          type SubType {
+            subField1: SubSubType
+            subField2: Int
+          }
         `);
       });
     });
@@ -1234,20 +1234,20 @@ describe('InterfaceTypeComposer', () => {
           subField: Int
         }
       `);
-      expect(t.toSDL()).toMatchInlineSnapshot(`
-        "\\"\\"\\"desc1\\"\\"\\"
+      expect(t.toSDL()).toBe(dedent`
+        """desc1"""
         interface IUser {
-          \\"\\"\\"desc2\\"\\"\\"
+          """desc2"""
           name(a: String): String
           field: ISubField
-        }"
+        }
       `);
 
-      expect(t.toSDL({ omitDescriptions: true })).toMatchInlineSnapshot(`
-        "interface IUser {
+      expect(t.toSDL({ omitDescriptions: true })).toBe(dedent`
+        interface IUser {
           name(a: String): String
           field: ISubField
-        }"
+        }
       `);
 
       expect(
@@ -1255,17 +1255,17 @@ describe('InterfaceTypeComposer', () => {
           omitDescriptions: true,
           deep: true,
         })
-      ).toMatchInlineSnapshot(`
-        "interface IUser {
+      ).toBe(dedent`
+        interface IUser {
           name(a: String): String
           field: ISubField
         }
 
-        scalar String
-
         interface ISubField {
           subField: Int
-        }"
+        }
+        
+        scalar String
       `);
 
       expect(
@@ -1274,13 +1274,13 @@ describe('InterfaceTypeComposer', () => {
           deep: true,
           exclude: ['ISubField'],
         })
-      ).toMatchInlineSnapshot(`
-        "interface IUser {
+      ).toBe(dedent`
+        interface IUser {
           name(a: String): String
           field: ISubField
         }
 
-        scalar String"
+        scalar String
       `);
     });
   });

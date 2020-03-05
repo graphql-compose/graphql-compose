@@ -443,19 +443,19 @@ describe('EnumTypeComposer', () => {
           DESC
         }
       `);
-      expect(t.toSDL()).toMatchInlineSnapshot(`
-        "\\"\\"\\"desc1\\"\\"\\"
+      expect(t.toSDL()).toEqual(dedent`
+        """desc1"""
         enum Sort {
-          \\"\\"\\"desc2\\"\\"\\"
+          """desc2"""
           ASC
           DESC
-        }"
+        }
       `);
-      expect(t.toSDL({ omitDescriptions: true })).toMatchInlineSnapshot(`
-        "enum Sort {
+      expect(t.toSDL({ omitDescriptions: true })).toEqual(dedent`
+        enum Sort {
           ASC
           DESC
-        }"
+        }
       `);
     });
   });

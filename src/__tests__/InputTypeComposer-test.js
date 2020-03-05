@@ -193,16 +193,16 @@ describe('InputTypeComposer', () => {
             field3: Int
           }
 
-          input SubType {
-            subField1: SubSubType!
-            subField2: Int
-          }
+          scalar Int
 
           input SubSubType {
             subSubField2: Int
           }
 
-          scalar Int
+          input SubType {
+            subField1: SubSubType!
+            subField2: Int
+          }
         `);
       });
     });
@@ -736,12 +736,12 @@ describe('InputTypeComposer', () => {
           name: String
         }
       `);
-      expect(t.toSDL()).toMatchInlineSnapshot(`
-        "\\"\\"\\"desc1\\"\\"\\"
+      expect(t.toSDL()).toEqual(dedent`
+        """desc1"""
         input Filter {
-          \\"\\"\\"desc2\\"\\"\\"
+          """desc2"""
           name: String
-        }"
+        }
       `);
     });
 
@@ -762,12 +762,14 @@ describe('InputTypeComposer', () => {
           deep: true,
           omitDescriptions: true,
         })
-      ).toMatchInlineSnapshot(`
-        "input Filter {
+      ).toEqual(dedent`
+        input Filter {
           a: Int
           b: Filter
           geo: LonLat
         }
+
+        scalar Float
 
         scalar Int
 
@@ -775,8 +777,6 @@ describe('InputTypeComposer', () => {
           lon: Float
           lat: Float
         }
-
-        scalar Float"
       `);
 
       expect(
@@ -785,14 +785,14 @@ describe('InputTypeComposer', () => {
           omitDescriptions: true,
           exclude: ['LonLat'],
         })
-      ).toMatchInlineSnapshot(`
-        "input Filter {
+      ).toBe(dedent`
+        input Filter {
           a: Int
           b: Filter
           geo: LonLat
         }
 
-        scalar Int"
+        scalar Int
       `);
     });
   });

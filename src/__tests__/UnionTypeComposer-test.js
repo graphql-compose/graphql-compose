@@ -638,7 +638,7 @@ describe('UnionTypeComposer', () => {
       const t = schemaComposer.createUnionTC(`
         union C = A | B
       `);
-      expect(t.toSDL()).toMatchInlineSnapshot(`"union C = A | B"`);
+      expect(t.toSDL()).toBe(`union C = A | B`);
     });
 
     it('toSDL({ deep: true })', () => {
@@ -656,25 +656,25 @@ describe('UnionTypeComposer', () => {
           deep: true,
           omitDescriptions: true,
         })
-      ).toMatchInlineSnapshot(`
-        "union C = A | B
+      ).toBe(dedent`
+        union C = A | B
 
         type A {
           f1: Int
         }
 
-        scalar Int
-
         type B {
           f2: LonLat
         }
+
+        scalar Float
+        
+        scalar Int
 
         type LonLat {
           lon: Float
           lat: Float
         }
-
-        scalar Float"
       `);
 
       expect(
@@ -683,12 +683,12 @@ describe('UnionTypeComposer', () => {
           omitDescriptions: true,
           exclude: ['Int', 'B'],
         })
-      ).toMatchInlineSnapshot(`
-        "union C = A | B
+      ).toBe(dedent`
+        union C = A | B
 
         type A {
           f1: Int
-        }"
+        }
       `);
     });
   });
