@@ -796,6 +796,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    * @param {Object} options
    * @param {String[]} options.include - add to SDL only provided types
    * @param {String[]} options.exclude - do not add provided types to SDL
+   * @param {Boolean} options.omitScalars - do not add Scalar types to SDL
    * @param {Boolean} options.omitDescriptions - do not add descriptions to SDL
    * @param {Boolean} options.omitDirectiveDefinitions - do not add directives definitions to SDL
    * @param {Boolean} options.commentDescriptions - print descriptions like comments, starting with #

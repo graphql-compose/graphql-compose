@@ -1,4 +1,5 @@
 import { SchemaComposer } from '../../SchemaComposer';
+import { dedent } from '../dedent';
 
 describe('schemaPrinter', () => {
   describe('printSchemaComposer()', () => {
@@ -21,8 +22,8 @@ describe('schemaPrinter', () => {
         sc.toSDL({
           omitDescriptions: true,
         })
-      ).toMatchInlineSnapshot(`
-        "directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
+      ).toBe(dedent`
+        directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
 
         scalar _FieldSet
 
@@ -32,9 +33,9 @@ describe('schemaPrinter', () => {
           me: User
         }
 
-        type User @key(fields: \\"id\\") {
+        type User @key(fields: "id") {
           id: ID!
-        }"
+        }
       `);
     });
 
@@ -44,16 +45,16 @@ describe('schemaPrinter', () => {
           omitDescriptions: true,
           omitDirectiveDefinitions: true,
         })
-      ).toMatchInlineSnapshot(`
-        "scalar ID
+      ).toBe(dedent`
+        scalar ID
 
         type Query {
           me: User
         }
 
-        type User @key(fields: \\"id\\") {
+        type User @key(fields: "id") {
           id: ID!
-        }"
+        }
       `);
     });
 
@@ -63,14 +64,14 @@ describe('schemaPrinter', () => {
           omitDescriptions: true,
           exclude: ['User'],
         })
-      ).toMatchInlineSnapshot(`
-        "directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
+      ).toBe(dedent`
+        directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
 
         scalar _FieldSet
 
         type Query {
           me: User
-        }"
+        }
       `);
     });
 
@@ -80,16 +81,16 @@ describe('schemaPrinter', () => {
           omitDescriptions: true,
           include: ['User'],
         })
-      ).toMatchInlineSnapshot(`
-        "directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
+      ).toBe(dedent`
+        directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
 
         scalar _FieldSet
 
         scalar ID
 
-        type User @key(fields: \\"id\\") {
+        type User @key(fields: "id") {
           id: ID!
-        }"
+        }
       `);
     });
 
@@ -100,14 +101,32 @@ describe('schemaPrinter', () => {
           include: ['User'],
           exclude: ['User', 'ID'],
         })
-      ).toMatchInlineSnapshot(`
-        "directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
+      ).toBe(dedent`
+        directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
 
         scalar _FieldSet
 
-        type User @key(fields: \\"id\\") {
+        type User @key(fields: "id") {
           id: ID!
-        }"
+        }
+      `);
+    });
+
+    it('should print schema in SDL without scalars', () => {
+      expect(
+        sc.toSDL({
+          omitScalars: true,
+        })
+      ).toBe(dedent`
+        directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
+
+        type Query {
+          me: User
+        }
+
+        type User @key(fields: "id") {
+          id: ID!
+        }
       `);
     });
   });

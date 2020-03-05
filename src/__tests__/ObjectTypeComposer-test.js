@@ -1839,6 +1839,33 @@ describe('ObjectTypeComposer', () => {
       expect(
         sc1.getOTC('User').toSDL({
           deep: true,
+          omitScalars: true,
+        })
+      ).toBe(dedent`
+        type User implements I1 & I2 {
+          f1: String
+          f2: Int
+          f3: User
+          f4(f: Filter): Int
+        }
+
+        input Filter {
+          a: Boolean
+          b: Filter
+        }
+
+        interface I1 {
+          f1: String
+        }
+
+        interface I2 {
+          f2: Int
+        }
+      `);
+
+      expect(
+        sc1.getOTC('User').toSDL({
+          deep: true,
           omitDescriptions: true,
           exclude: ['I2', 'I1', 'Filter', 'Int'],
         })

@@ -63,6 +63,13 @@ type Options = {
   omitDescriptions?: ?boolean,
 
   /**
+   * Do not print Scalars for types
+   *
+   * Default: false
+   */
+  omitScalars?: boolean | null,
+
+  /**
    * Sort fields, args and interfaces.
    * Useful for snapshot testing.
    *
@@ -258,6 +265,7 @@ export function printType(type: GraphQLNamedType, options?: Options): string {
 }
 
 export function printScalar(type: GraphQLScalarType, options?: Options): string {
+  if (options?.omitScalars) return '';
   return `${printDescription(type, options)}scalar ${type.name}${printNodeDirectives(
     type.astNode
   )}`;

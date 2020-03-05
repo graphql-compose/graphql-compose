@@ -839,7 +839,8 @@ export class InputTypeComposer<TContext> {
       nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
       nestedTypes.forEach(t => {
         if (t !== this && !exclude.includes(t.getTypeName())) {
-          r += `\n\n${t.toSDL(innerOpts)}`;
+          const sdl = t.toSDL(innerOpts);
+          if (sdl) r += `\n\n${sdl}`;
         }
       });
       return r;

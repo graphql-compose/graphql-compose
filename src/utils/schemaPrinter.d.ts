@@ -38,6 +38,13 @@ type Options = {
   omitDescriptions?: boolean;
 
   /**
+   * Do not print Scalars for types
+   *
+   * Default: false
+   */
+  omitScalars?: boolean | null;
+
+  /**
    * Sort fields, args and interfaces.
    * Useful for snapshot testing.
    *
