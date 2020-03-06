@@ -226,16 +226,16 @@ describe('ObjectTypeComposer', () => {
             field3: Int
           }
 
-          scalar Int
+          type SubType {
+            subField1: SubSubType!
+            subField2: Int
+          }
 
           type SubSubType {
             subSubField2: Int
           }
 
-          type SubType {
-            subField1: SubSubType!
-            subField2: Int
-          }
+          scalar Int
         `);
       });
     });
@@ -1771,12 +1771,12 @@ describe('ObjectTypeComposer', () => {
           name(a: Int): String
         }
       `);
-      expect(t.toSDL()).toBe(dedent`
-        """desc1"""
+      expect(t.toSDL()).toMatchInlineSnapshot(`
+        "\\"\\"\\"desc1\\"\\"\\"
         type User {
-          """desc2"""
+          \\"\\"\\"desc2\\"\\"\\"
           name(a: Int): String
-        }
+        }"
       `);
     });
 
@@ -1808,32 +1808,32 @@ describe('ObjectTypeComposer', () => {
           deep: true,
           omitDescriptions: true,
         })
-      ).toBe(dedent`
-        type User implements I1 & I2 {
+      ).toMatchInlineSnapshot(`
+        "type User implements I1 & I2 {
           f1: String
           f2: Int
           f3: User
           f4(f: Filter): Int
         }
 
-        scalar Boolean
-        
+        scalar String
+
+        scalar Int
+
         input Filter {
           a: Boolean
           b: Filter
         }
-        
+
+        scalar Boolean
+
         interface I1 {
           f1: String
         }
-        
+
         interface I2 {
           f2: Int
-        }
-
-        scalar Int
-        
-        scalar String
+        }"
       `);
 
       expect(
@@ -1869,15 +1869,15 @@ describe('ObjectTypeComposer', () => {
           omitDescriptions: true,
           exclude: ['I2', 'I1', 'Filter', 'Int'],
         })
-      ).toBe(dedent`
-        type User implements I1 & I2 {
+      ).toMatchInlineSnapshot(`
+        "type User implements I1 & I2 {
           f1: String
           f2: Int
           f3: User
           f4(f: Filter): Int
         }
 
-        scalar String
+        scalar String"
       `);
     });
   });

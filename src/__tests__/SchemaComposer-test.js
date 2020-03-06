@@ -1352,18 +1352,18 @@ describe('SchemaComposer', () => {
             a: String
           }
 
-          interface IF1 {
-            f2: Int
-            f1: Int
-          }
+          scalar Int
+
+          scalar String
 
           interface IF2 {
             f2: Int
           }
 
-          scalar Int
-
-          scalar String
+          interface IF1 {
+            f2: Int
+            f1: Int
+          }
         `);
       });
 

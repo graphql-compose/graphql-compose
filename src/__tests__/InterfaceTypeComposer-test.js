@@ -212,16 +212,16 @@ describe('InterfaceTypeComposer', () => {
             field3: Int
           }
 
-          scalar Int
+          type SubType {
+            subField1: SubSubType
+            subField2: Int
+          }
 
           type SubSubType {
             subSubField2: Int
           }
 
-          type SubType {
-            subField1: SubSubType
-            subField2: Int
-          }
+          scalar Int
         `);
       });
     });
@@ -1261,11 +1261,11 @@ describe('InterfaceTypeComposer', () => {
           field: ISubField
         }
 
+        scalar String
+
         interface ISubField {
           subField: Int
         }
-        
-        scalar String
       `);
 
       expect(

@@ -193,16 +193,16 @@ describe('InputTypeComposer', () => {
             field3: Int
           }
 
-          scalar Int
+          input SubType {
+            subField1: SubSubType!
+            subField2: Int
+          }
 
           input SubSubType {
             subSubField2: Int
           }
 
-          input SubType {
-            subField1: SubSubType!
-            subField2: Int
-          }
+          scalar Int
         `);
       });
     });
@@ -769,14 +769,14 @@ describe('InputTypeComposer', () => {
           geo: LonLat
         }
 
-        scalar Float
-
         scalar Int
 
         input LonLat {
           lon: Float
           lat: Float
         }
+
+        scalar Float
       `);
 
       expect(

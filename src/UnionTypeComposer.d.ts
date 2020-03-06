@@ -256,6 +256,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   public toSDL(
     opts?: SchemaPrinterOptions & {
       deep?: boolean;
+      sortTypes?: boolean;
       exclude?: string[];
     }
   ): string;

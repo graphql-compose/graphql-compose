@@ -1803,6 +1803,7 @@ export class ObjectTypeComposer<TSource, TContext> {
   toSDL(
     opts?: SchemaPrinterOptions & {
       deep?: ?boolean,
+      sortTypes?: ?boolean,
       exclude?: ?(string[]),
     }
   ): string {
@@ -1813,7 +1814,9 @@ export class ObjectTypeComposer<TSource, TContext> {
       r += printObject(this.getType(), innerOpts);
 
       let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
-      nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
+      if (opts?.sortAll || opts?.sortTypes) {
+        nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
+      }
       nestedTypes.forEach(t => {
         if (t !== this && !exclude.includes(t.getTypeName())) {
           const sdl = t.toSDL(innerOpts);

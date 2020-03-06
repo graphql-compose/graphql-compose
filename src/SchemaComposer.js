@@ -783,6 +783,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     typeName: string,
     opts?: SchemaPrinterOptions & {
       deep?: ?boolean,
+      sortTypes?: ?boolean,
       exclude?: ?(string[]),
     }
   ): string {

@@ -663,18 +663,18 @@ describe('UnionTypeComposer', () => {
           f1: Int
         }
 
+        scalar Int
+
         type B {
           f2: LonLat
         }
-
-        scalar Float
-        
-        scalar Int
 
         type LonLat {
           lon: Float
           lat: Float
         }
+
+        scalar Float
       `);
 
       expect(

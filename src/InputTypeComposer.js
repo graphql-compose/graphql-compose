@@ -826,6 +826,7 @@ export class InputTypeComposer<TContext> {
   toSDL(
     opts?: SchemaPrinterOptions & {
       deep?: ?boolean,
+      sortTypes?: ?boolean,
       exclude?: ?(string[]),
     }
   ): string {
@@ -836,7 +837,9 @@ export class InputTypeComposer<TContext> {
       r += printInputObject(this.getType(), innerOpts);
 
       let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
-      nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
+      if (opts?.sortAll || opts?.sortTypes) {
+        nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
+      }
       nestedTypes.forEach(t => {
         if (t !== this && !exclude.includes(t.getTypeName())) {
           const sdl = t.toSDL(innerOpts);
