@@ -23,6 +23,7 @@ import {
   GraphQLSchema,
 } from '../graphql';
 import { dedent } from '../utils/dedent';
+import { graphqlVersion } from '../utils/graphqlVersion';
 
 describe('SchemaComposer', () => {
   it('should implements `add` method', () => {
@@ -96,6 +97,43 @@ describe('SchemaComposer', () => {
         }
       `);
       expect(sc.Query.getFieldTypeName('field')).toBe('Int');
+    });
+  });
+
+  describe('schema description property', () => {
+    it('should get description', () => {
+      if (graphqlVersion >= 15) {
+        const sc = new SchemaComposer(
+          // $FlowFixMe `description` was added only in graphql@15.0.0
+          new GraphQLSchema({
+            description: 'My schema',
+          })
+        );
+        expect(sc.getDescription()).toBe('My schema');
+      }
+    });
+
+    it('should set description', () => {
+      if (graphqlVersion >= 15) {
+        const sc = new SchemaComposer();
+        sc.setDescription('ABC');
+        const schema = sc.buildSchema();
+        // $FlowFixMe `description` was added only in graphql@15.0.0
+        expect(schema.description).toBe('ABC');
+      }
+    });
+
+    it('should import description from SDL', () => {
+      if (graphqlVersion >= 15) {
+        const sc = new SchemaComposer(`
+          """Schema description"""
+          schema {
+            query: Query
+          }
+          type Query
+        `);
+        expect(sc.getDescription()).toBe('Schema description');
+      }
     });
   });
 
