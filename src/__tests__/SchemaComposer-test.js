@@ -649,7 +649,7 @@ describe('SchemaComposer', () => {
       const sc = new SchemaComposer();
       const t = new GraphQLObjectType({
         name: 'NativeType',
-        fields: (() => {}: any),
+        fields: () => ({}),
       });
       const typeName = sc.add(t);
       expect(typeName).toBe('NativeType');

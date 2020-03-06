@@ -36,6 +36,10 @@
 .*/node_modules/uglify.*
 .*/node_modules/yargs.*
 
+# Redundant argument. This argument doesn't change any lint settings.
+#   flowlint uninitialized-instance-property:off
+.*/node_modules/graphql/error/GraphQLError.js.flow
+
 [include]
 
 [libs]

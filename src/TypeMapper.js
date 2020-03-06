@@ -3,7 +3,7 @@
 
 import { parse, parseType } from 'graphql/language/parser';
 import { Kind } from 'graphql/language';
-import { getDescription } from 'graphql/utilities/buildASTSchema';
+import { getDescription } from 'graphql/utilities';
 import keyValMap from 'graphql/jsutils/keyValMap';
 import invariant from 'graphql/jsutils/invariant';
 import { getArgumentValues, getDirectiveValues } from 'graphql/execution/values';
