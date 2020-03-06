@@ -68,6 +68,7 @@ type ExtraSchemaConfig = {|
   +types?: GraphQLNamedType[] | null,
   +directives?: GraphQLDirective[] | null,
   +astNode?: SchemaDefinitionNode | null,
+  +description?: string | null,
 |};
 
 type GraphQLToolsResolveMethods<TContext> = {
@@ -91,6 +92,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   typeMapper: TypeMapper<TContext>;
   _schemaMustHaveTypes: Array<AnyType<TContext>> = [];
   _directives: Array<GraphQLDirective> = [...BUILT_IN_DIRECTIVES];
+  _description: ?string;
 
   /**
    * Create SchemaComposer from
@@ -100,14 +102,15 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    *
    * @param {undefined | GraphQLSchema | string} schema
    */
-  constructor(schema?: GraphQLSchema | string): SchemaComposer<TContext> {
+  constructor(schemaOrSDL?: GraphQLSchema | string): SchemaComposer<TContext> {
     super();
     this.typeMapper = new TypeMapper(this);
 
-    // convert SDL to GraphQLSchema
-    if (typeof schema === 'string') {
-      // eslint-disable-next-line no-param-reassign
-      schema = buildSchema(schema);
+    let schema;
+    if (typeof schemaOrSDL === 'string') {
+      schema = buildSchema(schemaOrSDL);
+    } else {
+      schema = schemaOrSDL;
     }
 
     if (schema instanceof GraphQLSchema) {
@@ -126,6 +129,8 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       schema.getDirectives().forEach(directive => {
         this.addDirective(directive);
       });
+      // $FlowFixMe `description` was added only in graphql@15.0.0
+      if (schema.description) this.setDescription(schema.description);
     }
 
     // alive proper Flow type casting in autosuggestions for class with Generics
@@ -175,7 +180,14 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       ...(extraConfig && Array.isArray(extraConfig.directives) ? [...extraConfig.directives] : []),
     ];
 
-    return new GraphQLSchema({ ...roots, ...extraConfig, types, directives });
+    // $FlowFixMe `description` was added only in graphql@15.0.0
+    return new GraphQLSchema({
+      description: this.getDescription(),
+      ...roots,
+      ...extraConfig,
+      types,
+      directives,
+    });
   }
 
   addSchemaMustHaveType(type: AnyType<TContext>): SchemaComposer<TContext> {
@@ -283,6 +295,15 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       this.addDirective(directive);
     });
 
+    return this;
+  }
+
+  getDescription(): string {
+    return this._description || '';
+  }
+
+  setDescription(description: string): SchemaComposer<TContext> {
+    this._description = description;
     return this;
   }
 

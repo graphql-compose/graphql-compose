@@ -24,6 +24,7 @@ type ExtraSchemaConfig = {
   types?: GraphQLNamedType[] | null;
   directives?: GraphQLDirective[] | null;
   astNode?: SchemaDefinitionNode | null;
+  description?: string | null;
 };
 
 type GraphQLToolsResolveMethods<TContext> = {
@@ -44,6 +45,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   public typeMapper: TypeMapper<TContext>;
   protected _schemaMustHaveTypes: Array<AnyType<TContext>>;
   protected _directives: GraphQLDirective[];
+  protected _description: string | null | undefined;
 
   /**
    * Create SchemaComposer from
@@ -53,7 +55,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    *
    * @param {undefined | GraphQLSchema | string} schema
    */
-  public constructor(schema?: GraphQLSchema | string);
+  public constructor(schemaOrSDL?: GraphQLSchema | string);
 
   /**
    * Returns `ObjectTypeComposer` of `Query` root type.
@@ -117,6 +119,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    *     const newSchema = schemaComposer.buildSchema();
    */
   public merge(schema: GraphQLSchema | SchemaComposer<any>): this;
+
+  public getDescription(): string;
+
+  public setDescription(description: string): this;
 
   /**
    * -----------------------------------------------
