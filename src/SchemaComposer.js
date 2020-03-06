@@ -51,6 +51,7 @@ import {
   GraphQLNonNull,
   GraphQLList,
   defaultFieldResolver,
+  buildSchema,
   type GraphQLType,
   type GraphQLNamedType,
   type SchemaDefinitionNode,
@@ -91,9 +92,23 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   _schemaMustHaveTypes: Array<AnyType<TContext>> = [];
   _directives: Array<GraphQLDirective> = [...BUILT_IN_DIRECTIVES];
 
-  constructor(schema?: GraphQLSchema): SchemaComposer<TContext> {
+  /**
+   * Create SchemaComposer from
+   *  - scratch
+   *  - or from SDL
+   *  - or from GraphQLSchema instance
+   *
+   * @param {undefined | GraphQLSchema | string} schema
+   */
+  constructor(schema?: GraphQLSchema | string): SchemaComposer<TContext> {
     super();
     this.typeMapper = new TypeMapper(this);
+
+    // convert SDL to GraphQLSchema
+    if (typeof schema === 'string') {
+      // eslint-disable-next-line no-param-reassign
+      schema = buildSchema(schema);
+    }
 
     if (schema instanceof GraphQLSchema) {
       forEachKey(schema.getTypeMap(), (v, k) => {
