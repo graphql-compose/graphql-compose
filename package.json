@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/graphql-compose/graphql-compose",
   "peerDependencies": {
-    "graphql": "~0.13.0 || ^14.0.0"
+    "graphql": "^14.2.0 || ^15.0.0-rc2"
   },
   "devDependencies": {
     "@babel/cli": "7.8.4",
@@ -52,7 +52,7 @@
     "eslint-plugin-import": "2.20.1",
     "eslint-plugin-prettier": "3.1.2",
     "flow-bin": "0.120.1",
-    "graphql": "14.6.0",
+    "graphql": "15.0.0-rc.2",
     "jest": "25.1.0",
     "prettier": "1.19.1",
     "rimraf": "3.0.2",
