@@ -45,7 +45,15 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   protected _schemaMustHaveTypes: Array<AnyType<TContext>>;
   protected _directives: GraphQLDirective[];
 
-  public constructor(schema?: GraphQLSchema);
+  /**
+   * Create SchemaComposer from
+   *  - scratch
+   *  - or from SDL
+   *  - or from GraphQLSchema instance
+   *
+   * @param {undefined | GraphQLSchema | string} schema
+   */
+  public constructor(schema?: GraphQLSchema | string);
 
   /**
    * Returns `ObjectTypeComposer` of `Query` root type.

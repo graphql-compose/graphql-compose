@@ -88,6 +88,15 @@ describe('SchemaComposer', () => {
         expect(sc.Query).toBe(sc.get('OoopsQuery'));
       });
     });
+
+    it('should accept SDL', () => {
+      const sc = new SchemaComposer(`
+        type Query {
+          field: Int
+        }
+      `);
+      expect(sc.Query.getFieldTypeName('field')).toBe('Int');
+    });
   });
 
   describe('getOrCreateOTC()', () => {
