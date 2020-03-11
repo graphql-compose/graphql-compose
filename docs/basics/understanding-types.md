@@ -77,7 +77,7 @@ const AuthorTC = schemaComposer.createObjectTC({
     firstName: 'String',
     lastName: 'String',
     posts: {
-      type: () => [PostTC], // arrow function fot `type` helps to solve hoisting problems and keep ability to list all fields
+      type: () => [PostTC], // arrow function for `type` helps to solve hoisting problems and keep ability to list all fields
       args: {
         limit: { type: 'Int', defaultValue: 20 },
         skip: 'Int', // shortand to `{ type: 'Int' }`
