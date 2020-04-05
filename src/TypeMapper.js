@@ -399,7 +399,7 @@ export class TypeMapper<TContext> {
     typeName?: string = ''
   ): ObjectTypeComposerFieldConfigMap<TSource, TContext> {
     const fields: ObjectTypeComposerFieldConfigMap<TSource, TContext> = {};
-    Object.keys(composeFields).forEach(name => {
+    Object.keys(composeFields).forEach((name) => {
       fields[name] = this.convertOutputFieldConfig(composeFields[name], name, typeName);
     });
 
@@ -455,7 +455,7 @@ export class TypeMapper<TContext> {
   ): ObjectTypeComposerArgumentConfigMap<any> {
     const argsConfigMap = {};
     if (composeArgsConfigMap) {
-      Object.keys(composeArgsConfigMap).forEach(argName => {
+      Object.keys(composeArgsConfigMap).forEach((argName) => {
         argsConfigMap[argName] = this.convertArgConfig(
           composeArgsConfigMap[argName],
           argName,
@@ -587,7 +587,7 @@ export class TypeMapper<TContext> {
     typeName?: string = ''
   ): InputTypeComposerFieldConfigMap {
     const fields: InputTypeComposerFieldConfigMap = {};
-    Object.keys(composeFields).forEach(name => {
+    Object.keys(composeFields).forEach((name) => {
       fields[name] = this.convertInputFieldConfig(composeFields[name], name, typeName);
     });
 
@@ -632,7 +632,7 @@ export class TypeMapper<TContext> {
 
     const types = this.parseTypes(astDocument);
     const typeStorage = new TypeStorage();
-    types.forEach(type => {
+    types.forEach((type) => {
       typeStorage.set(type.getTypeName(), type);
     });
     return typeStorage;
@@ -745,7 +745,7 @@ export class TypeMapper<TContext> {
       return {};
     }
     const result = {};
-    values.forEach(value => {
+    values.forEach((value) => {
       const key = value.name.value;
       let val;
       const typeName = this.getNamedTypeAST(value.type).name.value;
@@ -795,8 +795,8 @@ export class TypeMapper<TContext> {
     if (!def.fields) return {};
     return keyValMap(
       def.fields,
-      field => field.name.value,
-      field => {
+      (field) => field.name.value,
+      (field) => {
         const fc: ObjectTypeComposerFieldConfig<any, any, any> = {
           type: this.typeFromASTOutput(field.type),
           description: getDescription(field),
@@ -823,8 +823,8 @@ export class TypeMapper<TContext> {
     if (!def.fields) return {};
     return keyValMap(
       def.fields,
-      field => field.name.value,
-      field => {
+      (field) => field.name.value,
+      (field) => {
         const fc: InputTypeComposerFieldConfigAsObjectDefinition = {
           type: this.typeFromASTInput(field.type),
           description: getDescription(field),
@@ -864,8 +864,8 @@ export class TypeMapper<TContext> {
     if (!def.values) return {};
     return keyValMap(
       def.values,
-      enumValue => enumValue.name.value,
-      enumValue => {
+      (enumValue) => enumValue.name.value,
+      (enumValue) => {
         const ec: EnumTypeComposerValueConfigDefinition = {
           description: getDescription(enumValue),
           deprecationReason: this.getDeprecationReason(enumValue.directives),
@@ -900,7 +900,7 @@ export class TypeMapper<TContext> {
   makeDirectiveDef(def: DirectiveDefinitionNode): GraphQLDirective {
     const locations = def.locations.map(({ value }) => (value: any));
     const args = {};
-    (def.arguments || []).forEach(value => {
+    (def.arguments || []).forEach((value) => {
       const key = value.name.value;
       let val;
       const wrappedType = this.typeFromAST(value.type);
@@ -972,7 +972,7 @@ export class TypeMapper<TContext> {
       tc = this.schemaComposer.createScalarTC({
         name: def.name.value,
         description: getDescription(def),
-        serialize: v => v,
+        serialize: (v) => v,
         astNode: def,
       });
     }
@@ -985,7 +985,7 @@ export class TypeMapper<TContext> {
   makeImplementedInterfaces(
     def: ObjectTypeDefinitionNode | ObjectTypeExtensionNode
   ): Array<InterfaceTypeComposerThunked<any, TContext>> {
-    return (def.interfaces || []).map(iface => {
+    return (def.interfaces || []).map((iface) => {
       const name = this.getNamedTypeAST(iface).name.value;
       if (this.schemaComposer.hasInstance(name, InterfaceTypeComposer)) {
         return this.schemaComposer.getIFTC(name);
@@ -1027,7 +1027,7 @@ export class TypeMapper<TContext> {
     const tc = this.schemaComposer.createUnionTC({
       name: def.name.value,
       description: getDescription(def),
-      types: (types || []).map(ref => this.getNamedTypeAST(ref).name.value),
+      types: (types || []).map((ref) => this.getNamedTypeAST(ref).name.value),
       astNode: def,
     });
     if (def.directives) {
@@ -1043,7 +1043,7 @@ export class TypeMapper<TContext> {
       subscription: 'Subscription',
     };
 
-    def.operationTypes.forEach(d => {
+    def.operationTypes.forEach((d) => {
       if (d.operation) {
         const validTypeName = validNames[d.operation];
         const actualTypeName = d.type.name.value;
@@ -1081,7 +1081,7 @@ export class TypeMapper<TContext> {
   getDeprecationReason(directives: ?$ReadOnlyArray<DirectiveNode>): ?string {
     const deprecatedAST =
       directives &&
-      find(directives, directive => directive.name.value === GraphQLDeprecatedDirective.name);
+      find(directives, (directive) => directive.name.value === GraphQLDeprecatedDirective.name);
     if (!deprecatedAST) {
       return;
     }
@@ -1091,15 +1091,15 @@ export class TypeMapper<TContext> {
 
   parseDirectives(directives: $ReadOnlyArray<DirectiveNode>): Array<ExtensionsDirective> {
     const result = [];
-    directives.forEach(directive => {
+    directives.forEach((directive) => {
       const name = directive.name.value;
       const directiveDef = this.schemaComposer._getDirective(name);
       const args = directiveDef
         ? getArgumentValues(directiveDef, directive)
         : (keyValMap(
             directive.arguments || [],
-            arg => arg.name.value,
-            arg => GraphQLJSON.parseLiteral(arg.value)
+            (arg) => arg.name.value,
+            (arg) => GraphQLJSON.parseLiteral(arg.value)
           ): any);
       result.push({ name, args });
     });
@@ -1137,7 +1137,7 @@ export class TypeMapper<TContext> {
   makeExtendUnionDef(def: UnionTypeExtensionNode): UnionTypeComposer<any, TContext> {
     const types: ?$ReadOnlyArray<NamedTypeNode> = def.types;
     const tc = this.schemaComposer.getOrCreateUTC(def.name.value);
-    tc.addTypes((types || []).map(ref => this.getNamedTypeAST(ref).name.value));
+    tc.addTypes((types || []).map((ref) => this.getNamedTypeAST(ref).name.value));
     if (def.directives) {
       tc.setExtension('directives', this.parseDirectives(def.directives));
     }

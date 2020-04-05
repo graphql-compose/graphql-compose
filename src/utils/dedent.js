@@ -46,7 +46,7 @@ export function dedent(strings: string | Array<string>, ...values: Array<string>
   // now strip indentation
   const lines = result.split('\n');
   let mindent: number | null = null;
-  lines.forEach(l => {
+  lines.forEach((l) => {
     const m = l.match(/^(\s+)\S+/);
     if (m) {
       const indent = m[1].length;
@@ -61,7 +61,7 @@ export function dedent(strings: string | Array<string>, ...values: Array<string>
 
   if (mindent !== null) {
     const m = mindent; // appease Flow
-    result = lines.map(l => (l[0] === ' ' ? l.slice(m) : l)).join('\n');
+    result = lines.map((l) => (l[0] === ' ' ? l.slice(m) : l)).join('\n');
   }
 
   return (

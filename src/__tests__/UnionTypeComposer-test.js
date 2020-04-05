@@ -226,10 +226,7 @@ describe('UnionTypeComposer', () => {
       const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
       utc.addTypeResolver(UserTC, () => true);
       const cloned = utc.clone('NewObject');
-      const clonedUserTC = cloned
-        .getTypeResolvers()
-        .keys()
-        .next().value;
+      const clonedUserTC = cloned.getTypeResolvers().keys().next().value;
       expect(clonedUserTC).toBe(UserTC);
     });
   });
@@ -273,10 +270,7 @@ describe('UnionTypeComposer', () => {
       const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
       utc.addTypeResolver(UserTC, () => true);
       const cloned = utc.cloneTo(anotherSchemaComposer);
-      const clonedUserTC: any = cloned
-        .getTypeResolvers()
-        .keys()
-        .next().value;
+      const clonedUserTC: any = cloned.getTypeResolvers().keys().next().value;
       // different type instances
       expect(clonedUserTC).not.toBe(UserTC);
       // but have same typename
@@ -331,7 +325,7 @@ describe('UnionTypeComposer', () => {
       `,
         schemaComposer
       );
-      utc.addTypeResolver(PersonTC, value => {
+      utc.addTypeResolver(PersonTC, (value) => {
         return value.hasOwnProperty('age');
       });
 
@@ -341,7 +335,7 @@ describe('UnionTypeComposer', () => {
       `,
         schemaComposer
       );
-      utc.addTypeResolver(KindRedTC, value => {
+      utc.addTypeResolver(KindRedTC, (value) => {
         return value.kind === 'red';
       });
 
@@ -351,7 +345,7 @@ describe('UnionTypeComposer', () => {
       `,
         schemaComposer
       );
-      utc.addTypeResolver(KindBlueTC, value => {
+      utc.addTypeResolver(KindBlueTC, (value) => {
         return value.kind === 'blue';
       });
     });
@@ -502,7 +496,7 @@ describe('UnionTypeComposer', () => {
         const aTC = schemaComposer.createObjectTC('type A { a: Int }');
         const bTC = schemaComposer.createObjectTC('type B { b: Int }');
         const utc1 = schemaComposer.createUnionTC(`union U = A | B`);
-        const resolveType = value => {
+        const resolveType = (value) => {
           if (value) {
             if (value.a) return 'A';
             else if (value.b) return 'B';
@@ -625,12 +619,7 @@ describe('UnionTypeComposer', () => {
       `);
 
       expect(
-        Array.from(
-          sc1
-            .getUTC('C')
-            .getNestedTCs()
-            .values()
-        ).map(t => t.getTypeName())
+        Array.from(sc1.getUTC('C').getNestedTCs().values()).map((t) => t.getTypeName())
       ).toEqual(['A', 'Int', 'B', 'LonLat', 'Float']);
     });
 

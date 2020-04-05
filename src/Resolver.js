@@ -372,7 +372,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
   removeArg(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    argNames.forEach(argName => {
+    argNames.forEach((argName) => {
       delete this.args[argName];
     });
     return this;
@@ -380,7 +380,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
   removeOtherArgs(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
     const keepArgNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    Object.keys(this.args).forEach(argName => {
+    Object.keys(this.args).forEach((argName) => {
       if (keepArgNames.indexOf(argName) === -1) {
         delete this.args[argName];
       }
@@ -390,7 +390,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
   reorderArgs(names: string[]): Resolver<TSource, TContext, TArgs> {
     const orderedArgs = {};
-    names.forEach(name => {
+    names.forEach((name) => {
       if (this.args[name]) {
         orderedArgs[name] = this.args[name];
         delete this.args[name];
@@ -427,7 +427,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
   makeArgNonNull(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    argNames.forEach(argName => {
+    argNames.forEach((argName) => {
       if (this.hasArg(argName)) {
         const argTC = this.getArg(argName).type;
         if (!(argTC instanceof NonNullComposer)) {
@@ -445,7 +445,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
   makeArgNullable(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    argNames.forEach(argName => {
+    argNames.forEach((argName) => {
       if (this.hasArg(argName)) {
         const argTC = this.getArg(argName).type;
         if (argTC instanceof NonNullComposer) {
@@ -470,7 +470,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
   makeArgPlural(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    argNames.forEach(argName => {
+    argNames.forEach((argName) => {
       const ac = this.args[argName];
       if (ac && !(ac.type instanceof ListComposer)) {
         ac.type = new ListComposer(ac.type);
@@ -481,7 +481,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
   makeArgNonPlural(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    argNames.forEach(argName => {
+    argNames.forEach((argName) => {
       const ac = this.args[argName];
       if (ac) {
         if (ac.type instanceof ListComposer) {
@@ -506,7 +506,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
     const argTC = this.getArg(argName).type;
 
-    const clonnedTC = replaceTC(argTC, unwrappedTC => {
+    const clonnedTC = replaceTC(argTC, (unwrappedTC) => {
       if (!(unwrappedTC instanceof InputTypeComposer)) {
         throw new Error(
           `Cannot clone arg ${inspect(argName)} for resolver ${inspect(this.name)}. ` +
@@ -574,7 +574,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     const resolveNext = resolver.getResolve();
     const query = opts.query;
     if (query && isFunction(query)) {
-      resolver.setResolve(async resolveParams => {
+      resolver.setResolve(async (resolveParams) => {
         const value = objectPath.get(resolveParams, ['args', 'filter', name]);
         if (value !== null && value !== undefined) {
           if (!resolveParams.rawQuery) {
@@ -640,7 +640,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     if (isFunction(value)) {
       sortETC.extendField(name, { value: name });
       const getValue: Function = value;
-      resolver.setResolve(resolveParams => {
+      resolver.setResolve((resolveParams) => {
         const v = objectPath.get(resolveParams, ['args', 'sort']);
         if (v === name) {
           const newSortValue = getValue(resolveParams);
@@ -695,7 +695,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     }
 
     let resolver = this;
-    middlewares.reverse().forEach(mw => {
+    middlewares.reverse().forEach((mw) => {
       let name;
       if (mw.name) {
         name = mw.name;
@@ -706,7 +706,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
       }
       const newResolver = this.clone({ name, parent: resolver });
       const resolve = resolver.getResolve();
-      newResolver.setResolve(rp =>
+      newResolver.setResolve((rp) =>
         mw(
           (source, args, context, info) => {
             return resolve({ ...rp, source, args, context, info });
@@ -777,7 +777,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   }
 
   wrapCloneArg(argName: string, newTypeName: string): Resolver<TSource, TContext, TArgs> {
-    return this.wrap(newResolver => newResolver.cloneArg(argName, newTypeName), {
+    return this.wrap((newResolver) => newResolver.cloneArg(argName, newTypeName), {
       name: 'cloneFilterArg',
     });
   }
@@ -808,7 +808,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   ): GraphQLFieldConfig<TSource, TContext, TArgs> {
     return {
       type: this.getType(),
-      args: mapEachKey((this.getArgs(): any), ac => ({
+      args: mapEachKey((this.getArgs(): any), (ac) => ({
         ...ac,
         type: ac.type.getType(),
       })),
@@ -918,7 +918,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
       cloned.parent = this.parent.cloneTo(anotherSchemaComposer, cloneMap);
     }
 
-    cloned.args = (mapEachKey((this.args: any), argConfig => ({
+    cloned.args = (mapEachKey((this.args: any), (argConfig) => ({
       ...argConfig,
       type: cloneTypeTo(argConfig.type, anotherSchemaComposer, cloneMap),
       extensions: { ...argConfig.extensions },
@@ -965,7 +965,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   debugExecTime(): Resolver<TSource, TContext, TArgs> {
     /* eslint-disable no-console */
     return this.wrapResolve(
-      next => async rp => {
+      (next) => async (rp) => {
         const name = `Execution time for ${this.getNestedName()}`;
         console.time(name);
         const res = await next(rp);
@@ -983,7 +983,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   ): Resolver<TSource, TContext, TArgs> {
     /* eslint-disable no-console */
     return this.wrapResolve(
-      next => rp => {
+      (next) => (rp) => {
         console.log(`ResolverResolveParams for ${this.getNestedName()}:`);
         const data = filterByDotPaths(rp, filterPaths, {
           // is hidden (use debugParams(["info"])) or debug({ params: ["info"]})
@@ -1016,7 +1016,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   ): Resolver<TSource, TContext, TArgs> {
     /* eslint-disable no-console */
     return this.wrapResolve(
-      next => async rp => {
+      (next) => async (rp) => {
         try {
           const res = await next(rp);
           console.log(`Resolved Payload for ${this.getNestedName()}:`);

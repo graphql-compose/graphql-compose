@@ -28,7 +28,7 @@ const remoteSchema = new GraphQLSchema({
                     msg: { type: GraphQLString },
                   },
                 }),
-                resolve: source => ({
+                resolve: (source) => ({
                   msg: source.age >= 20 ? `allowed` : 'disallowed',
                 }),
               },

@@ -126,7 +126,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       if (m) this.set('Mutation', this.get(m));
       const s = schema.getSubscriptionType();
       if (s) this.set('Subscription', this.get(s));
-      schema.getDirectives().forEach(directive => {
+      schema.getDirectives().forEach((directive) => {
         this.addDirective(directive);
       });
       // $FlowFixMe `description` was added only in graphql@15.0.0
@@ -171,7 +171,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     }
 
     const types = [
-      ...this._schemaMustHaveTypes.map(t => (getGraphQLType(t): any)), // additional types, eg. used in Interfaces
+      ...this._schemaMustHaveTypes.map((t) => (getGraphQLType(t): any)), // additional types, eg. used in Interfaces
       ...(extraConfig && Array.isArray(extraConfig.types) ? [...extraConfig.types] : []),
     ];
 
@@ -199,7 +199,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     tc: ObjectTypeComposer<any, TContext>,
     passedTypes: Set<string> = new Set()
   ): void {
-    tc.getFieldNames().forEach(fieldName => {
+    tc.getFieldNames().forEach((fieldName) => {
       const fieldTC = tc.getFieldTC(fieldName);
       const typeName = fieldTC.getTypeName();
       if (!passedTypes.has(typeName)) {
@@ -233,7 +233,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     });
 
     sc._schemaMustHaveTypes = this._schemaMustHaveTypes.map(
-      t => (cloneTypeTo(t, sc, cloneMap): any)
+      (t) => (cloneTypeTo(t, sc, cloneMap): any)
     );
     sc._directives = [...this._directives];
 
@@ -291,7 +291,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       }
     });
 
-    sc.getDirectives().forEach(directive => {
+    sc.getDirectives().forEach((directive) => {
       this.addDirective(directive);
     });
 
@@ -347,7 +347,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   addResolveMethods(typesFieldsResolve: GraphQLToolsResolveMethods<TContext>): void {
     const typeNames = Object.keys(typesFieldsResolve);
-    typeNames.forEach(typeName => {
+    typeNames.forEach((typeName) => {
       const tc = this.get(typeName);
       if (tc instanceof ScalarTypeComposer) {
         const maybeScalar: any = typesFieldsResolve[typeName];
@@ -366,7 +366,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       } else if (tc instanceof ObjectTypeComposer) {
         const fieldsResolve = typesFieldsResolve[typeName];
         const fieldNames = Object.keys(fieldsResolve);
-        fieldNames.forEach(fieldName => {
+        fieldNames.forEach((fieldName) => {
           tc.extendField(fieldName, {
             resolve: fieldsResolve[fieldName],
           });
@@ -753,7 +753,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   }
 
   removeDirective(directive: GraphQLDirective): SchemaComposer<TContext> {
-    this._directives = this._directives.filter(o => o !== directive);
+    this._directives = this._directives.filter((o) => o !== directive);
     return this;
   }
 
@@ -766,7 +766,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    */
   _getDirective(name: string): ?GraphQLDirective {
     const directives = this.getDirectives();
-    return directives.find(d => d.name === name);
+    return directives.find((d) => d.name === name);
   }
 
   getDirective(name: string): GraphQLDirective {
@@ -782,9 +782,9 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
     if (typeof directive === 'string') {
       const name = directive.startsWith('@') ? directive.slice(1) : directive;
-      return !!this._directives.find(o => o.name === name);
+      return !!this._directives.find((o) => o.name === name);
     } else if (directive instanceof GraphQLDirective) {
-      return !!this._directives.find(o => o === directive);
+      return !!this._directives.find((o) => o === directive);
     }
 
     return false;

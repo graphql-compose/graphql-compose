@@ -15,9 +15,9 @@ describe('check how works parse methods in GraphQLScalarType', () => {
   beforeEach(() => {
     typeConfig = {
       name: 'Custom',
-      serialize: jest.fn(value => value),
-      parseValue: jest.fn(value => value),
-      parseLiteral: jest.fn(ast => (ast: any).value),
+      serialize: jest.fn((value) => value),
+      parseValue: jest.fn((value) => value),
+      parseLiteral: jest.fn((ast) => (ast: any).value),
     };
     const CustomType = new GraphQLScalarType(typeConfig);
 

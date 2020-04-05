@@ -281,7 +281,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
    */
   removeField(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const names = fieldName.split('.');
       const name = names.shift();
       if (names.length === 0) {
@@ -303,7 +303,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   removeOtherFields(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
     const keepFieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    Object.keys(this._gqcFields).forEach(fieldName => {
+    Object.keys(this._gqcFields).forEach((fieldName) => {
       if (keepFieldNames.indexOf(fieldName) === -1) {
         delete this._gqcFields[fieldName];
       }
@@ -314,7 +314,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   reorderFields(names: string[]): InterfaceTypeComposer<TSource, TContext> {
     const orderedFields = {};
     const fields = this._gqcFields;
-    names.forEach(name => {
+    names.forEach((name) => {
       if (fields[name]) {
         orderedFields[name] = fields[name];
         delete fields[name];
@@ -356,7 +356,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
       type: type.getType(),
       args:
         args &&
-        mapEachKey(args, ac => ({
+        mapEachKey(args, (ac) => ({
           ...ac,
           type: ac.type.getType(),
         })),
@@ -413,7 +413,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   makeFieldNonNull(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
       if (fc && !(fc.type instanceof NonNullComposer)) {
         fc.type = new NonNullComposer(fc.type);
@@ -424,7 +424,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   makeFieldNullable(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
       if (fc && fc.type instanceof NonNullComposer) {
         fc.type = fc.type.ofType;
@@ -443,7 +443,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   makeFieldPlural(fieldNameOrArray: string | string[]): InterfaceTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
       if (fc && !(fc.type instanceof ListComposer)) {
         fc.type = new ListComposer(fc.type);
@@ -456,7 +456,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     fieldNameOrArray: string | string[]
   ): InterfaceTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
       if (fc) {
         if (fc.type instanceof ListComposer) {
@@ -485,7 +485,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
       }
       this.extendField(fields, { deprecationReason: 'deprecated' });
     } else if (Array.isArray(fields)) {
-      fields.forEach(field => {
+      fields.forEach((field) => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
             `Cannot deprecate unexisted field '${field}' from interface type '${this.getTypeName()}'`
@@ -495,7 +495,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
       });
     } else {
       const fieldMap: Object = (fields: any);
-      Object.keys(fieldMap).forEach(field => {
+      Object.keys(fieldMap).forEach((field) => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
             `Cannot deprecate unexisted field '${field}' from interface type '${this.getTypeName()}'`
@@ -644,7 +644,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const args = this.getField(fieldName).args;
     if (!args) return this;
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    argNames.forEach(argName => {
+    argNames.forEach((argName) => {
       const ac = args[argName];
       if (ac && !(ac.type instanceof ListComposer)) {
         ac.type = new ListComposer(ac.type);
@@ -660,7 +660,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const args = this.getField(fieldName).args;
     if (!args) return this;
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    argNames.forEach(argName => {
+    argNames.forEach((argName) => {
       const ac = args[argName];
       if (ac) {
         if (ac.type instanceof ListComposer) {
@@ -688,7 +688,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const args = this.getField(fieldName).args;
     if (!args) return this;
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    argNames.forEach(argName => {
+    argNames.forEach((argName) => {
       const ac = args[argName];
       if (ac && !(ac.type instanceof NonNullComposer)) {
         ac.type = new NonNullComposer(ac.type);
@@ -704,7 +704,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const args = this.getField(fieldName).args;
     if (!args) return this;
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    argNames.forEach(argName => {
+    argNames.forEach((argName) => {
       const ac = args[argName];
       if (ac && ac.type instanceof NonNullComposer) {
         ac.type = ac.type.ofType;
@@ -779,9 +779,9 @@ export class InterfaceTypeComposer<TSource, TContext> {
         ? newTypeNameOrTC
         : InterfaceTypeComposer.create(newTypeNameOrTC, this.schemaComposer);
 
-    cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
+    cloned._gqcFields = mapEachKey(this._gqcFields, (fieldConfig) => ({
       ...fieldConfig,
-      args: mapEachKey(fieldConfig.args, argConfig => ({
+      args: mapEachKey(fieldConfig.args, (argConfig) => ({
         ...argConfig,
         extensions: { ...argConfig.extensions },
       })),
@@ -810,10 +810,10 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const cloned = InterfaceTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
     cloneMap.set(this, cloned);
 
-    cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
+    cloned._gqcFields = mapEachKey(this._gqcFields, (fieldConfig) => ({
       ...fieldConfig,
       type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, cloneMap),
-      args: mapEachKey(fieldConfig.args, argConfig => ({
+      args: mapEachKey(fieldConfig.args, (argConfig) => ({
         ...argConfig,
         type: cloneTypeTo(argConfig.type, anotherSchemaComposer, cloneMap),
         extensions: { ...argConfig.extensions },
@@ -1278,11 +1278,11 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   getDirectiveNames(): string[] {
-    return this.getDirectives().map(d => d.name);
+    return this.getDirectives().map((d) => d.name);
   }
 
   getDirectiveByName(directiveName: string): ?DirectiveArgs {
-    const directive = this.getDirectives().find(d => d.name === directiveName);
+    const directive = this.getDirectives().find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
   }
@@ -1310,11 +1310,11 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   getFieldDirectiveNames(fieldName: string): string[] {
-    return this.getFieldDirectives(fieldName).map(d => d.name);
+    return this.getFieldDirectives(fieldName).map((d) => d.name);
   }
 
   getFieldDirectiveByName(fieldName: string, directiveName: string): ?DirectiveArgs {
-    const directive = this.getFieldDirectives(fieldName).find(d => d.name === directiveName);
+    const directive = this.getFieldDirectives(fieldName).find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
   }
@@ -1343,7 +1343,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   getFieldArgDirectiveNames(fieldName: string, argName: string): string[] {
-    return this.getFieldArgDirectives(fieldName, argName).map(d => d.name);
+    return this.getFieldArgDirectives(fieldName, argName).map((d) => d.name);
   }
 
   getFieldArgDirectiveByName(
@@ -1352,7 +1352,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     directiveName: string
   ): ?DirectiveArgs {
     const directive = this.getFieldArgDirectives(fieldName, argName).find(
-      d => d.name === directiveName
+      (d) => d.name === directiveName
     );
     if (!directive) return undefined;
     return directive.args;
@@ -1382,7 +1382,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     passedTypes: Set<NamedTypeComposer<any>> = new Set()
   ): Set<NamedTypeComposer<any>> {
     const exclude = Array.isArray(opts.exclude) ? (opts: any).exclude : [];
-    this.getFieldNames().forEach(fieldName => {
+    this.getFieldNames().forEach((fieldName) => {
       const tc = this.getFieldTC(fieldName);
       if (!passedTypes.has(tc) && !exclude.includes(tc.getTypeName())) {
         passedTypes.add(tc);
@@ -1391,7 +1391,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
         }
       }
 
-      this.getFieldArgNames(fieldName).forEach(argName => {
+      this.getFieldArgNames(fieldName).forEach((argName) => {
         const itc = this.getFieldArgTC(fieldName, argName);
         if (!passedTypes.has(itc) && !exclude.includes(itc.getTypeName())) {
           passedTypes.add(itc);
@@ -1425,7 +1425,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
       if (opts?.sortAll || opts?.sortTypes) {
         nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
       }
-      nestedTypes.forEach(t => {
+      nestedTypes.forEach((t) => {
         if (t !== this && !exclude.includes(t.getTypeName())) {
           const sdl = t.toSDL(innerOpts);
           if (sdl) r += `\n\n${sdl}`;

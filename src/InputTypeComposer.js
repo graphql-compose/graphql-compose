@@ -247,7 +247,7 @@ export class InputTypeComposer<TContext> {
   addNestedFields(
     newFields: InputTypeComposerFieldConfigMapDefinition
   ): InputTypeComposer<TContext> {
-    Object.keys(newFields).forEach(fieldName => {
+    Object.keys(newFields).forEach((fieldName) => {
       const fc = newFields[fieldName];
       const names = fieldName.split('.');
       const name = names.shift();
@@ -299,7 +299,7 @@ export class InputTypeComposer<TContext> {
    */
   removeField(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const names = fieldName.split('.');
       const name = names.shift();
       if (names.length === 0) {
@@ -321,7 +321,7 @@ export class InputTypeComposer<TContext> {
 
   removeOtherFields(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
     const keepFieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    Object.keys(this._gqcFields).forEach(fieldName => {
+    Object.keys(this._gqcFields).forEach((fieldName) => {
       if (keepFieldNames.indexOf(fieldName) === -1) {
         delete this._gqcFields[fieldName];
       }
@@ -356,7 +356,7 @@ export class InputTypeComposer<TContext> {
   reorderFields(names: string[]): InputTypeComposer<TContext> {
     const orderedFields = {};
     const fields = this._gqcFields;
-    names.forEach(name => {
+    names.forEach((name) => {
       if (fields[name]) {
         orderedFields[name] = fields[name];
         delete fields[name];
@@ -428,7 +428,7 @@ export class InputTypeComposer<TContext> {
 
   makeFieldNonNull(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
       if (fc && !(fc.type instanceof NonNullComposer)) {
         fc.type = new NonNullComposer(fc.type);
@@ -444,7 +444,7 @@ export class InputTypeComposer<TContext> {
 
   makeFieldNullable(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
       if (fc && fc.type instanceof NonNullComposer) {
         fc.type = fc.type.ofType;
@@ -467,7 +467,7 @@ export class InputTypeComposer<TContext> {
 
   makeFieldPlural(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
       if (fc && !(fc.type instanceof ListComposer)) {
         fc.type = new ListComposer(fc.type);
@@ -478,7 +478,7 @@ export class InputTypeComposer<TContext> {
 
   makeFieldNonPlural(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
       if (fc) {
         if (fc.type instanceof ListComposer) {
@@ -559,7 +559,7 @@ export class InputTypeComposer<TContext> {
         ? newTypeNameOrTC
         : InputTypeComposer.create(newTypeNameOrTC, this.schemaComposer);
 
-    cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
+    cloned._gqcFields = mapEachKey(this._gqcFields, (fieldConfig) => ({
       ...fieldConfig,
       extensions: { ...fieldConfig.extensions },
     }));
@@ -585,7 +585,7 @@ export class InputTypeComposer<TContext> {
     const cloned = InputTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
     cloneMap.set(this, cloned);
 
-    cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
+    cloned._gqcFields = mapEachKey(this._gqcFields, (fieldConfig) => ({
       ...fieldConfig,
       type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, cloneMap),
       extensions: { ...fieldConfig.extensions },
@@ -743,11 +743,11 @@ export class InputTypeComposer<TContext> {
   }
 
   getDirectiveNames(): string[] {
-    return this.getDirectives().map(d => d.name);
+    return this.getDirectives().map((d) => d.name);
   }
 
   getDirectiveByName(directiveName: string): ?DirectiveArgs {
-    const directive = this.getDirectives().find(d => d.name === directiveName);
+    const directive = this.getDirectives().find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
   }
@@ -775,11 +775,11 @@ export class InputTypeComposer<TContext> {
   }
 
   getFieldDirectiveNames(fieldName: string): string[] {
-    return this.getFieldDirectives(fieldName).map(d => d.name);
+    return this.getFieldDirectives(fieldName).map((d) => d.name);
   }
 
   getFieldDirectiveByName(fieldName: string, directiveName: string): ?DirectiveArgs {
-    const directive = this.getFieldDirectives(fieldName).find(d => d.name === directiveName);
+    const directive = this.getFieldDirectives(fieldName).find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
   }
@@ -808,7 +808,7 @@ export class InputTypeComposer<TContext> {
     passedTypes: Set<NamedTypeComposer<any>> = new Set()
   ): Set<NamedTypeComposer<any>> {
     const exclude = Array.isArray(opts.exclude) ? (opts: any).exclude : [];
-    this.getFieldNames().forEach(fieldName => {
+    this.getFieldNames().forEach((fieldName) => {
       const itc = this.getFieldTC(fieldName);
       if (!passedTypes.has(itc) && !exclude.includes(itc.getTypeName())) {
         passedTypes.add(itc);
@@ -840,7 +840,7 @@ export class InputTypeComposer<TContext> {
       if (opts?.sortAll || opts?.sortTypes) {
         nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
       }
-      nestedTypes.forEach(t => {
+      nestedTypes.forEach((t) => {
         if (t !== this && !exclude.includes(t.getTypeName())) {
           const sdl = t.toSDL(innerOpts);
           if (sdl) r += `\n\n${sdl}`;

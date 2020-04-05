@@ -170,7 +170,7 @@ describe('Resolver', () => {
     });
 
     it('should have wrapType() method', () => {
-      const newResolver = resolver.wrapType(prevType => {
+      const newResolver = resolver.wrapType((prevType) => {
         return 'String';
       });
       expect(newResolver.getType()).toBe(GraphQLString);
@@ -273,7 +273,7 @@ describe('Resolver', () => {
     });
 
     it('should have wrapArgs() method', () => {
-      const newResolver = resolver.wrapArgs(prevArgs => {
+      const newResolver = resolver.wrapArgs((prevArgs) => {
         return { ...(prevArgs: any), arg1: 'String' };
       });
 
@@ -464,7 +464,7 @@ describe('Resolver', () => {
 
     it('should combine all resolve args to resolveParams', () => {
       let rp;
-      resolver.resolve = resolveParams => {
+      resolver.resolve = (resolveParams) => {
         rp = resolveParams;
       };
       const fc: any = resolver.getFieldConfig();
@@ -477,7 +477,7 @@ describe('Resolver', () => {
 
     it('should create `projection` property', () => {
       let rp;
-      resolver.resolve = resolveParams => {
+      resolver.resolve = (resolveParams) => {
         rp = resolveParams;
       };
       const fc: any = resolver.getFieldConfig();
@@ -489,7 +489,7 @@ describe('Resolver', () => {
       let rp: any = {};
       const r = new Resolver({ name: 'find123' }, schemaComposer);
       r.projection.someField = 1;
-      r.resolve = resolveParams => {
+      r.resolve = (resolveParams) => {
         rp = resolveParams;
       };
       const fc: any = r.getFieldConfig();
@@ -523,7 +523,7 @@ describe('Resolver', () => {
 
     it('should set internal name', () => {
       expect(resolver.wrap().name).toBe('wrap');
-      expect(resolver.wrap(r => r, { name: 'crazyWrap' }).name).toBe('crazyWrap');
+      expect(resolver.wrap((r) => r, { name: 'crazyWrap' }).name).toBe('crazyWrap');
     });
 
     it('should keep ref to source resolver in parent property', () => {
@@ -659,7 +659,7 @@ describe('Resolver', () => {
     it('should prepare resolveParams.rawQuery when `resolve` called', async () => {
       let rpSnap;
       const resolve = resolver.resolve;
-      resolver.resolve = rp => {
+      resolver.resolve = (rp) => {
         rpSnap = rp;
         return resolve(rp);
       };
@@ -749,7 +749,7 @@ describe('Resolver', () => {
 
   it('should return nested name for Resolver', () => {
     const r1 = new Resolver({ name: 'find' }, schemaComposer);
-    const r2 = r1.wrapResolve(next => resolveParams => {
+    const r2 = r1.wrapResolve((next) => (resolveParams) => {
       // eslint-disable-line
       return 'function code';
     });
@@ -760,7 +760,7 @@ describe('Resolver', () => {
 
   it('should on toString() call provide debug info with source code', () => {
     const r1 = new Resolver({ name: 'find' }, schemaComposer);
-    const r2 = r1.wrapResolve(next => resolveParams => {
+    const r2 = r1.wrapResolve((next) => (resolveParams) => {
       // eslint-disable-line
       return 'function code';
     });
@@ -809,13 +809,13 @@ describe('Resolver', () => {
     it('should prepare sort value when `resolve` called', () => {
       let rpSnap;
       const resolve = resolver.resolve;
-      resolver.resolve = rp => {
+      resolver.resolve = (rp) => {
         rpSnap = rp;
         return resolve(rp);
       };
       let whereSnap;
       const query = {
-        where: condition => {
+        where: (condition) => {
           whereSnap = condition;
         },
       };
@@ -823,7 +823,7 @@ describe('Resolver', () => {
       const newResolver = resolver.addSortArg({
         name: 'PRICE_ASC',
         description: 'Asc sort by non-null price',
-        value: resolveParams => {
+        value: (resolveParams) => {
           resolveParams.query.where({ price: { $gt: 0 } }); // eslint-disable-line no-param-reassign
           return { price: 1 };
         },
@@ -1031,7 +1031,7 @@ describe('Resolver', () => {
         await r1
           .debugPayload()
           .resolve((undefined: any))
-          .catch(e => {});
+          .catch((e) => {});
 
         expect(console.log.mock.calls[0]).toEqual(['Rejected Payload for User.find():']);
         expect(console.log.mock.calls[1]).toEqual([err]);

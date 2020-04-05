@@ -154,7 +154,7 @@ export class ScalarTypeComposer<TContext> {
   }
 
   setParseValue(fn: ?GraphQLScalarValueParser<any>) {
-    this._gqcParseValue = fn || (value => value);
+    this._gqcParseValue = fn || ((value) => value);
   }
 
   getParseValue(): GraphQLScalarValueParser<any> | void {
@@ -337,11 +337,11 @@ export class ScalarTypeComposer<TContext> {
   }
 
   getDirectiveNames(): string[] {
-    return this.getDirectives().map(d => d.name);
+    return this.getDirectives().map((d) => d.name);
   }
 
   getDirectiveByName(directiveName: string): ?DirectiveArgs {
-    const directive = this.getDirectives().find(d => d.name === directiveName);
+    const directive = this.getDirectives().find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
   }

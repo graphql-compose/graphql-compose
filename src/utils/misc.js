@@ -37,7 +37,7 @@ export function omit(obj: Object, keys: string | string[]) {
 
   const result = { ...obj };
   if (Array.isArray(keys)) {
-    keys.forEach(k => {
+    keys.forEach((k) => {
       delete result[k];
     });
   } else {
@@ -54,7 +54,7 @@ export function only(obj: Object, keys: string | string[]) {
 
   const result = {};
   if (Array.isArray(keys)) {
-    keys.forEach(k => {
+    keys.forEach((k) => {
       if ({}.hasOwnProperty.call(obj, k)) {
         result[k] = obj[k];
       }
@@ -73,7 +73,7 @@ function inspectObject(value: Object): string {
   }
 
   const props = `{ ${Object.keys(value)
-    .map(k => `${k}: ${inspect((value: any)[k])}`)
+    .map((k) => `${k}: ${inspect((value: any)[k])}`)
     .join(', ')} }`;
 
   return name ? `${name}(${props})` : props;
@@ -109,7 +109,7 @@ export function forEachKey<V>(
   obj: { [key: string]: V } | ObjMap<V>,
   callback: (value: V, key: string) => void
 ): void {
-  Object.keys(obj).forEach(key => {
+  Object.keys(obj).forEach((key) => {
     callback(obj[key], key);
   });
 }
@@ -128,7 +128,7 @@ export function mapEachKey<V, NewV, NonObjectValue>(
 ): ObjMap<NewV> | NonObjectValue {
   if (!isObject(obj)) return obj;
   const result = {};
-  Object.keys((obj: any)).forEach(key => {
+  Object.keys((obj: any)).forEach((key) => {
     result[key] = callback((obj: any)[key], key);
   });
   return result;

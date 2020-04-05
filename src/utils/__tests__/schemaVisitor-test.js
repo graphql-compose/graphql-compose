@@ -175,7 +175,7 @@ describe('schemaVisitor', () => {
       // BUT visitor should visit type AAA only once
       let catchCount = 0;
       visitSchema(schemaComposer, {
-        TYPE: tc => {
+        TYPE: (tc) => {
           if (tc.getTypeName() === 'AAA') catchCount += 1;
         },
       });

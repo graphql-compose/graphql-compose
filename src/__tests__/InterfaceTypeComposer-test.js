@@ -612,10 +612,7 @@ describe('InterfaceTypeComposer', () => {
       iftc.addTypeResolver(UserTC, () => true);
       const cloned = iftc.clone('NewObject');
 
-      const clonedUserTC = cloned
-        .getTypeResolvers()
-        .keys()
-        .next().value;
+      const clonedUserTC = cloned.getTypeResolvers().keys().next().value;
       expect(clonedUserTC).toBe(UserTC);
     });
   });
@@ -678,10 +675,7 @@ describe('InterfaceTypeComposer', () => {
       const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
       iftc.addTypeResolver(UserTC, () => true);
       const cloned = iftc.cloneTo(anotherSchemaComposer);
-      const clonedUserTC: any = cloned
-        .getTypeResolvers()
-        .keys()
-        .next().value;
+      const clonedUserTC: any = cloned.getTypeResolvers().keys().next().value;
       expect(clonedUserTC).not.toBe(UserTC);
       expect(clonedUserTC.getTypeName()).toBe(UserTC.getTypeName());
     });
@@ -861,7 +855,7 @@ describe('InterfaceTypeComposer', () => {
         type Person { age: Int, field1: String, field2: String }
       `);
       PersonTC.addInterface(iftc);
-      iftc.addTypeResolver(PersonTC, value => {
+      iftc.addTypeResolver(PersonTC, (value) => {
         return value.hasOwnProperty('age');
       });
 
@@ -869,7 +863,7 @@ describe('InterfaceTypeComposer', () => {
         type KindRed { kind: String, field1: String, field2: String, red: String }
       `);
       KindRedTC.addInterface(iftc);
-      iftc.addTypeResolver(KindRedTC, value => {
+      iftc.addTypeResolver(KindRedTC, (value) => {
         return value.kind === 'red';
       });
 
@@ -877,7 +871,7 @@ describe('InterfaceTypeComposer', () => {
         type KindBlue { kind: String, field1: String, field2: String, blue: String }
       `);
       KindBlueTC.addInterface(iftc);
-      iftc.addTypeResolver(KindBlueTC, value => {
+      iftc.addTypeResolver(KindBlueTC, (value) => {
         return value.kind === 'blue';
       });
     });
@@ -982,7 +976,7 @@ describe('InterfaceTypeComposer', () => {
         const iftc1 = schemaComposer.createInterfaceTC(`interface F { f: Int }`);
         const aTC = schemaComposer.createObjectTC('type A implements F { a: Int, f: Int }');
         const bTC = schemaComposer.createObjectTC('type B implements F { b: Int, f: Int }');
-        const resolveType = value => {
+        const resolveType = (value) => {
           if (value) {
             if (value.a) return 'A';
             else if (value.b) return 'B';

@@ -412,7 +412,7 @@ export class ObjectTypeComposer<TSource, TContext> {
   addNestedFields(
     newFields: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>
   ): ObjectTypeComposer<TSource, TContext> {
-    Object.keys(newFields).forEach(fieldName => {
+    Object.keys(newFields).forEach((fieldName) => {
       const fc = newFields[fieldName];
       const names = fieldName.split('.');
       const name = names.shift();
@@ -455,7 +455,7 @@ export class ObjectTypeComposer<TSource, TContext> {
    */
   removeField(fieldNameOrArray: string | string[]): ObjectTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const names = fieldName.split('.');
       const name = names.shift();
       if (names.length === 0) {
@@ -477,7 +477,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
   removeOtherFields(fieldNameOrArray: string | string[]): ObjectTypeComposer<TSource, TContext> {
     const keepFieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    Object.keys(this._gqcFields).forEach(fieldName => {
+    Object.keys(this._gqcFields).forEach((fieldName) => {
       if (keepFieldNames.indexOf(fieldName) === -1) {
         delete this._gqcFields[fieldName];
       }
@@ -488,7 +488,7 @@ export class ObjectTypeComposer<TSource, TContext> {
   reorderFields(names: string[]): ObjectTypeComposer<TSource, TContext> {
     const orderedFields = {};
     const fields = this._gqcFields;
-    names.forEach(name => {
+    names.forEach((name) => {
       if (fields[name]) {
         orderedFields[name] = fields[name];
         delete fields[name];
@@ -530,7 +530,7 @@ export class ObjectTypeComposer<TSource, TContext> {
       type: type.getType(),
       args:
         args &&
-        mapEachKey(args, ac => ({
+        mapEachKey(args, (ac) => ({
           ...ac,
           type: ac.type.getType(),
         })),
@@ -587,7 +587,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
   makeFieldNonNull(fieldNameOrArray: string | string[]): ObjectTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
       if (fc && !(fc.type instanceof NonNullComposer)) {
         fc.type = new NonNullComposer(fc.type);
@@ -598,7 +598,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
   makeFieldNullable(fieldNameOrArray: string | string[]): ObjectTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
       if (fc && fc.type instanceof NonNullComposer) {
         fc.type = fc.type.ofType;
@@ -617,7 +617,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
   makeFieldPlural(fieldNameOrArray: string | string[]): ObjectTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
       if (fc && !(fc.type instanceof ListComposer)) {
         fc.type = new ListComposer(fc.type);
@@ -628,7 +628,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
   makeFieldNonPlural(fieldNameOrArray: string | string[]): ObjectTypeComposer<TSource, TContext> {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    fieldNames.forEach(fieldName => {
+    fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
       if (fc) {
         if (fc.type instanceof ListComposer) {
@@ -657,7 +657,7 @@ export class ObjectTypeComposer<TSource, TContext> {
       }
       this.extendField(fields, { deprecationReason: 'deprecated' });
     } else if (Array.isArray(fields)) {
-      fields.forEach(field => {
+      fields.forEach((field) => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
             `Cannot deprecate unexisted field '${field}' from type '${this.getTypeName()}'`
@@ -667,7 +667,7 @@ export class ObjectTypeComposer<TSource, TContext> {
       });
     } else {
       const fieldMap: Object = (fields: any);
-      Object.keys(fieldMap).forEach(field => {
+      Object.keys(fieldMap).forEach((field) => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
             `Cannot deprecate unexisted field '${field}' from type '${this.getTypeName()}'`
@@ -816,7 +816,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     const args = this._gqcFields[fieldName] && this._gqcFields[fieldName].args;
     if (args) {
-      argNames.forEach(argName => delete args[argName]);
+      argNames.forEach((argName) => delete args[argName]);
     }
     return this;
   }
@@ -828,7 +828,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     const keepArgNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     const args = this._gqcFields[fieldName] && this._gqcFields[fieldName].args;
     if (args) {
-      Object.keys(args).forEach(argName => {
+      Object.keys(args).forEach((argName) => {
         if (keepArgNames.indexOf(argName) === -1) {
           delete args[argName];
         }
@@ -852,7 +852,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     const args = this.getField(fieldName).args;
     if (!args) return this;
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    argNames.forEach(argName => {
+    argNames.forEach((argName) => {
       const ac = args[argName];
       if (ac && !(ac.type instanceof ListComposer)) {
         ac.type = new ListComposer(ac.type);
@@ -868,7 +868,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     const args = this.getField(fieldName).args;
     if (!args) return this;
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    argNames.forEach(argName => {
+    argNames.forEach((argName) => {
       const ac = args[argName];
       if (ac) {
         if (ac.type instanceof ListComposer) {
@@ -896,7 +896,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     const args = this.getField(fieldName).args;
     if (!args) return this;
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    argNames.forEach(argName => {
+    argNames.forEach((argName) => {
       const ac = args[argName];
       if (ac && !(ac.type instanceof NonNullComposer)) {
         ac.type = new NonNullComposer(ac.type);
@@ -912,7 +912,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     const args = this.getField(fieldName).args;
     if (!args) return this;
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
-    argNames.forEach(argName => {
+    argNames.forEach((argName) => {
       const ac = args[argName];
       if (ac && ac.type instanceof NonNullComposer) {
         ac.type = ac.type.ofType;
@@ -990,9 +990,9 @@ export class ObjectTypeComposer<TSource, TContext> {
         ? newTypeNameOrTC
         : ObjectTypeComposer.create(newTypeNameOrTC, this.schemaComposer);
 
-    cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
+    cloned._gqcFields = mapEachKey(this._gqcFields, (fieldConfig) => ({
       ...fieldConfig,
-      args: mapEachKey(fieldConfig.args, argConfig => ({
+      args: mapEachKey(fieldConfig.args, (argConfig) => ({
         ...argConfig,
         extensions: { ...argConfig.extensions },
       })),
@@ -1003,10 +1003,10 @@ export class ObjectTypeComposer<TSource, TContext> {
     cloned._gqcGetRecordIdFn = this._gqcGetRecordIdFn;
     cloned.setDescription(this.getDescription());
 
-    this.getResolvers().forEach(resolver => {
+    this.getResolvers().forEach((resolver) => {
       const newResolver = resolver.clone();
       // in clonned resolvers we also replace cloned ObjectTypeComposer
-      newResolver.type = replaceTC(newResolver.type, tc => {
+      newResolver.type = replaceTC(newResolver.type, (tc) => {
         return tc === this ? cloned : tc;
       });
       cloned.addResolver(newResolver);
@@ -1031,10 +1031,10 @@ export class ObjectTypeComposer<TSource, TContext> {
     const cloned = ObjectTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
     cloneMap.set(this, cloned);
 
-    cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
+    cloned._gqcFields = mapEachKey(this._gqcFields, (fieldConfig) => ({
       ...fieldConfig,
       type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, cloneMap),
-      args: mapEachKey(fieldConfig.args, argConfig => ({
+      args: mapEachKey(fieldConfig.args, (argConfig) => ({
         ...argConfig,
         type: cloneTypeTo(argConfig.type, anotherSchemaComposer, cloneMap),
         extensions: { ...argConfig.extensions },
@@ -1042,14 +1042,14 @@ export class ObjectTypeComposer<TSource, TContext> {
       extensions: { ...fieldConfig.extensions },
     }));
 
-    cloned._gqcInterfaces = (this._gqcInterfaces.map(i =>
+    cloned._gqcInterfaces = (this._gqcInterfaces.map((i) =>
       i.cloneTo(anotherSchemaComposer, cloneMap)
     ): any);
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned._gqcGetRecordIdFn = this._gqcGetRecordIdFn;
     cloned.setDescription(this.getDescription());
 
-    this.getResolvers().forEach(resolver => {
+    this.getResolvers().forEach((resolver) => {
       const clonnedResolver = resolver.cloneTo(anotherSchemaComposer, cloneMap);
       cloned.addResolver(clonnedResolver);
     });
@@ -1258,7 +1258,7 @@ export class ObjectTypeComposer<TSource, TContext> {
   }
 
   getInterfacesTypes(): Array<GraphQLInterfaceType> {
-    return this._gqcInterfaces.map(i => i.getType());
+    return this._gqcInterfaces.map((i) => i.getType());
   }
 
   setInterfaces(
@@ -1270,7 +1270,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
   hasInterface(iface: InterfaceTypeComposerDefinition<any, TContext>): boolean {
     const typeName = getComposeTypeName(iface);
-    return !!this._gqcInterfaces.find(i => i.getTypeName() === typeName);
+    return !!this._gqcInterfaces.find((i) => i.getTypeName() === typeName);
   }
 
   addInterface(
@@ -1296,7 +1296,7 @@ export class ObjectTypeComposer<TSource, TContext> {
         `ObjectTypeComposer[${this.getTypeName()}].addInterfaces() accepts only array`
       );
     }
-    ifaces.forEach(iface => this.addInterface(iface));
+    ifaces.forEach((iface) => this.addInterface(iface));
     return this;
   }
 
@@ -1304,7 +1304,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     iface: InterfaceTypeComposerDefinition<any, TContext>
   ): ObjectTypeComposer<TSource, TContext> {
     const typeName = getComposeTypeName(iface);
-    this._gqcInterfaces = this._gqcInterfaces.filter(i => i.getTypeName() !== typeName);
+    this._gqcInterfaces = this._gqcInterfaces.filter((i) => i.getTypeName() !== typeName);
     return this;
   }
 
@@ -1512,11 +1512,11 @@ export class ObjectTypeComposer<TSource, TContext> {
   }
 
   getDirectiveNames(): string[] {
-    return this.getDirectives().map(d => d.name);
+    return this.getDirectives().map((d) => d.name);
   }
 
   getDirectiveByName(directiveName: string): ?DirectiveArgs {
-    const directive = this.getDirectives().find(d => d.name === directiveName);
+    const directive = this.getDirectives().find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
   }
@@ -1544,11 +1544,11 @@ export class ObjectTypeComposer<TSource, TContext> {
   }
 
   getFieldDirectiveNames(fieldName: string): string[] {
-    return this.getFieldDirectives(fieldName).map(d => d.name);
+    return this.getFieldDirectives(fieldName).map((d) => d.name);
   }
 
   getFieldDirectiveByName(fieldName: string, directiveName: string): ?DirectiveArgs {
-    const directive = this.getFieldDirectives(fieldName).find(d => d.name === directiveName);
+    const directive = this.getFieldDirectives(fieldName).find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
   }
@@ -1577,7 +1577,7 @@ export class ObjectTypeComposer<TSource, TContext> {
   }
 
   getFieldArgDirectiveNames(fieldName: string, argName: string): string[] {
-    return this.getFieldArgDirectives(fieldName, argName).map(d => d.name);
+    return this.getFieldArgDirectives(fieldName, argName).map((d) => d.name);
   }
 
   getFieldArgDirectiveByName(
@@ -1586,7 +1586,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     directiveName: string
   ): ?DirectiveArgs {
     const directive = this.getFieldArgDirectives(fieldName, argName).find(
-      d => d.name === directiveName
+      (d) => d.name === directiveName
     );
     if (!directive) return undefined;
     return directive.args;
@@ -1678,7 +1678,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     //       is any other value, then put it to args prototype for resolve
     const optsArgs = opts.prepareArgs || {};
 
-    Object.keys(optsArgs).forEach(argName => {
+    Object.keys(optsArgs).forEach((argName) => {
       const argMapVal = optsArgs[argName];
       if (argMapVal !== undefined) {
         delete argsConfig[argName];
@@ -1705,7 +1705,7 @@ export class ObjectTypeComposer<TSource, TContext> {
         ? fieldConfig.resolve(source, newArgs, context, info)
         : null;
       return catchErrors
-        ? Promise.resolve(payload).catch(e => {
+        ? Promise.resolve(payload).catch((e) => {
             // eslint-disable-next-line
             console.log(`GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`);
             console.log(e); // eslint-disable-line
@@ -1767,7 +1767,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     passedTypes: Set<NamedTypeComposer<any>> = new Set()
   ): Set<NamedTypeComposer<any>> {
     const exclude = Array.isArray(opts.exclude) ? (opts: any).exclude : [];
-    this.getFieldNames().forEach(fieldName => {
+    this.getFieldNames().forEach((fieldName) => {
       const tc = this.getFieldTC(fieldName);
       if (!passedTypes.has(tc) && !exclude.includes(tc.getTypeName())) {
         passedTypes.add(tc);
@@ -1776,7 +1776,7 @@ export class ObjectTypeComposer<TSource, TContext> {
         }
       }
 
-      this.getFieldArgNames(fieldName).forEach(argName => {
+      this.getFieldArgNames(fieldName).forEach((argName) => {
         const itc = this.getFieldArgTC(fieldName, argName);
         if (!passedTypes.has(itc) && !exclude.includes(itc.getTypeName())) {
           passedTypes.add(itc);
@@ -1787,7 +1787,7 @@ export class ObjectTypeComposer<TSource, TContext> {
       });
     });
 
-    this.getInterfaces().forEach(t => {
+    this.getInterfaces().forEach((t) => {
       const iftc = t instanceof ThunkComposer ? t.ofType : t;
       if (!passedTypes.has(iftc) && !exclude.includes(iftc.getTypeName())) {
         passedTypes.add(iftc);
@@ -1817,7 +1817,7 @@ export class ObjectTypeComposer<TSource, TContext> {
       if (opts?.sortAll || opts?.sortTypes) {
         nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
       }
-      nestedTypes.forEach(t => {
+      nestedTypes.forEach((t) => {
         if (t !== this && !exclude.includes(t.getTypeName())) {
           const sdl = t.toSDL(innerOpts);
           if (sdl) r += `\n\n${sdl}`;

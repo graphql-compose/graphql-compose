@@ -38,7 +38,7 @@ export function toInputObjectType<TContext>(
   tc.setInputTypeComposer(inputTypeComposer);
 
   const fieldNames = tc.getFieldNames();
-  fieldNames.forEach(fieldName => {
+  fieldNames.forEach((fieldName) => {
     const fieldOpts = {
       ...opts,
       fieldName,
@@ -102,8 +102,9 @@ export function convertInputObjectField(
     } else {
       // eslint-disable-next-line
       console.error(
-        `graphql-compose: can not convert field '${opts.outputTypeName || ''}.${opts.fieldName ||
-          ''}' to InputType` +
+        `graphql-compose: can not convert field '${opts.outputTypeName || ''}.${
+          opts.fieldName || ''
+        }' to InputType` +
           '\nIt should be ObjectType or InterfaceType, but got \n' +
           inspect(tc)
       );

@@ -123,7 +123,7 @@ export function getUnionTypeDefinitionNode(
     name: { kind: 'Name', value: tc.getTypeName() },
     description: getDescriptionNode(tc.getDescription()),
     directives: getDirectiveNodes(tc.getDirectives()),
-    types: tc.getTypeNames().map(value => ({
+    types: tc.getTypeNames().map((value) => ({
       kind: 'NamedType',
       name: { kind: 'Name', value },
     })),
@@ -161,13 +161,13 @@ function toValueNode(value: mixed): ValueNode {
       } else if (Array.isArray(value)) {
         return ({
           kind: 'ListValue',
-          values: value.map(v => toValueNode(v)),
+          values: value.map((v) => toValueNode(v)),
         }: ListValueNode);
       } else {
         return ({
           kind: 'ObjectValue',
           fields: Object.keys(value).map(
-            k =>
+            (k) =>
               ({
                 kind: 'ObjectField',
                 name: { kind: 'Name', value: k },
@@ -189,7 +189,7 @@ function getArgumentNodes(data: DirectiveArgs): $ReadOnlyArray<ArgumentNode> | v
   const keys = Object.keys(data);
   if (!keys.length) return;
   const args: Array<ArgumentNode> = [];
-  keys.forEach(k => {
+  keys.forEach((k) => {
     args.push(
       ({
         kind: 'Argument',
@@ -204,7 +204,7 @@ function getArgumentNodes(data: DirectiveArgs): $ReadOnlyArray<ArgumentNode> | v
 function getDirectiveNodes(values: ExtensionsDirective[]): $ReadOnlyArray<DirectiveNode> | void {
   if (!values || !values.length) return;
   return values.map(
-    v =>
+    (v) =>
       ({
         kind: 'Directive',
         name: { kind: 'Name', value: v.name },
@@ -217,7 +217,7 @@ function getInterfaceNodes(
   ifaces: InterfaceTypeComposerThunked<any, any>[]
 ): $ReadOnlyArray<NamedTypeNode> {
   return ifaces
-    .map(iface => {
+    .map((iface) => {
       if (!iface || !iface.getTypeName) return;
       return ({
         kind: 'NamedType',
@@ -259,7 +259,7 @@ function getArgumentsDefinitionNodes(
   const argNames = tc.getFieldArgNames(fieldName);
   if (!argNames.length) return;
   return argNames
-    .map(argName => {
+    .map((argName) => {
       const ac = tc.getFieldArg(fieldName, argName);
       const type = getTypeNode(ac.type);
       if (!type) return;
@@ -281,7 +281,7 @@ function getFieldDefinitionNodes(
   const fieldNames = tc.getFieldNames();
   if (!fieldNames.length) return;
   return fieldNames
-    .map(fieldName => {
+    .map((fieldName) => {
       const fc = tc.getField(fieldName);
       const type = getTypeNode(fc.type);
       if (!type) return;
@@ -303,7 +303,7 @@ function getInputValueDefinitionNodes(
   const fieldNames = tc.getFieldNames();
   if (!fieldNames.length) return;
   return fieldNames
-    .map(fieldName => {
+    .map((fieldName) => {
       const fc = tc.getField(fieldName);
       const type = getTypeNode(fc.type);
       if (!type) return;
@@ -324,7 +324,7 @@ function getEnumValueDefinitionNodes(
 ): $ReadOnlyArray<EnumValueDefinitionNode> | void {
   const fieldNames = tc.getFieldNames();
   if (!fieldNames.length) return;
-  return fieldNames.map(fieldName => {
+  return fieldNames.map((fieldName) => {
     const fc = tc.getField(fieldName);
     return ({
       kind: 'EnumValueDefinition',

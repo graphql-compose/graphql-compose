@@ -719,12 +719,7 @@ describe('InputTypeComposer', () => {
       `);
 
       expect(
-        Array.from(
-          sc1
-            .getITC('Filter')
-            .getNestedTCs()
-            .values()
-        ).map(t => t.getTypeName())
+        Array.from(sc1.getITC('Filter').getNestedTCs().values()).map((t) => t.getTypeName())
       ).toEqual(['Int', 'Filter', 'LonLat', 'Float']);
     });
 

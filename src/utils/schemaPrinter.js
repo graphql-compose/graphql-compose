@@ -102,7 +102,7 @@ export function printSchemaComposer(
 
   const includeTypes = new Set();
   if (Array.isArray(include) && include.length) {
-    include.forEach(s => {
+    include.forEach((s) => {
       if (s && typeof s === 'string') {
         includeTypes.add(sc.getAnyTC(s));
       }
@@ -115,19 +115,19 @@ export function printSchemaComposer(
 
   const res = [];
   if (!omitDirectiveDefinitions) {
-    const directives = sc._directives.filter(d => !BUILT_IN_DIRECTIVES.includes(d));
-    res.push(...directives.map(d => printDirective(d, innerOpts)));
+    const directives = sc._directives.filter((d) => !BUILT_IN_DIRECTIVES.includes(d));
+    res.push(...directives.map((d) => printDirective(d, innerOpts)));
     // directives may have specific types in arguments, so add them to includeTypes
-    directives.forEach(d => {
+    directives.forEach((d) => {
       if (!Array.isArray(d.args)) return;
-      d.args.forEach(ac => {
+      d.args.forEach((ac) => {
         includeTypes.add(sc.getAnyTC(ac.type));
       });
     });
   }
 
   const printTypeSet: Set<NamedTypeComposer<any>> = new Set();
-  includeTypes.forEach(tc => {
+  includeTypes.forEach((tc) => {
     if (
       tc instanceof ObjectTypeComposer ||
       tc instanceof InputTypeComposer ||
@@ -144,7 +144,7 @@ export function printSchemaComposer(
     tc1.getTypeName().localeCompare(tc2.getTypeName())
   );
 
-  res.push(...printTypes.map(tc => tc.toSDL(innerOpts)));
+  res.push(...printTypes.map((tc) => tc.toSDL(innerOpts)));
 
   return res.filter(Boolean).join('\n\n');
 }
@@ -157,7 +157,7 @@ export function printSchemaComposer(
  *
  */
 export function printSchema(schema: GraphQLSchema, options?: Options): string {
-  return printFilteredSchema(schema, n => !isSpecifiedDirective(n), isDefinedType, options);
+  return printFilteredSchema(schema, (n) => !isSpecifiedDirective(n), isDefinedType, options);
 }
 
 export function printIntrospectionSchema(schema: GraphQLSchema, options?: Options): string {
@@ -182,8 +182,8 @@ export function printFilteredSchema(
 
   return `${[printSchemaDefinition(schema)]
     .concat(
-      directives.map(directive => printDirective(directive, options)),
-      types.map(type => printType(type, options))
+      directives.map((directive) => printDirective(directive, options)),
+      types.map((type) => printType(type, options))
     )
     .filter(Boolean)
     .join('\n\n')}\n`;
@@ -279,11 +279,11 @@ export function printImplementedInterfaces(
   if (!interfaces.length) return '';
   if (options?.sortAll || options?.sortInterfaces) {
     return ` implements ${interfaces
-      .map(i => i.name)
+      .map((i) => i.name)
       .sort()
       .join(' & ')}`;
   }
-  return ` implements ${interfaces.map(i => i.name).join(' & ')}`;
+  return ` implements ${interfaces.map((i) => i.name).join(' & ')}`;
 }
 
 export function printObject(type: GraphQLObjectType, options?: Options): string {
@@ -381,7 +381,7 @@ export function printArgs(
       : _args;
 
   // If every arg does not have a description, print them on one line.
-  if (args.every(arg => !arg.description)) {
+  if (args.every((arg) => !arg.description)) {
     return `(${args.map(printInputValue).join(', ')})`;
   }
 
@@ -418,10 +418,10 @@ export function printNodeDirectives(
 ): string {
   if (!node || !node.directives || !node.directives.length) return '';
   return ` ${node.directives
-    .map(d => {
+    .map((d) => {
       let args = '';
       if (d.arguments && d.arguments.length) {
-        args = `(${d.arguments.map(a => `${a.name.value}: ${print(a.value)}`).join(', ')})`;
+        args = `(${d.arguments.map((a) => `${a.name.value}: ${print(a.value)}`).join(', ')})`;
       }
       return `@${d.name.value}${args}`;
     })
@@ -470,7 +470,7 @@ export function printDescriptionWithComments(
   const prefix = indentation && !firstInBlock ? '\n' : '';
   const comment = description
     .split('\n')
-    .map(line => indentation + (line !== '' ? `# ${line}` : '#'))
+    .map((line) => indentation + (line !== '' ? `# ${line}` : '#'))
     .join('\n');
 
   return `${prefix + comment}\n`;

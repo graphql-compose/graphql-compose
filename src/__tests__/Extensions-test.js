@@ -555,7 +555,7 @@ describe('Extensions', () => {
   }
 
   function testFieldExtensions(instance) {
-    ['id', 'name', 'nonExistingType', 'thunkedFieldType'].forEach(fieldName => {
+    ['id', 'name', 'nonExistingType', 'thunkedFieldType'].forEach((fieldName) => {
       expect(instance.getFieldExtensions(fieldName)).toEqual({});
       instance.setFieldExtensions(fieldName, {
         tags: ['generated'],
@@ -629,7 +629,7 @@ describe('Extensions', () => {
   }
 
   function testFieldArgExtensions(instance, fieldName) {
-    ['argId', 'argName', 'argNonExistingType', 'argThunked'].forEach(argName => {
+    ['argId', 'argName', 'argNonExistingType', 'argThunked'].forEach((argName) => {
       expect(instance.getFieldArgExtensions(fieldName, argName)).toEqual({});
       instance.setFieldArgExtensions(fieldName, argName, {
         tags: ['generated'],

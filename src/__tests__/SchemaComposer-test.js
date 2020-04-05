@@ -149,7 +149,7 @@ describe('SchemaComposer', () => {
 
     it('should create TC if not exists with onCreate', () => {
       const sc = new SchemaComposer();
-      const UserTC = sc.getOrCreateOTC('User', tc => {
+      const UserTC = sc.getOrCreateOTC('User', (tc) => {
         tc.setDescription('User model');
       });
       expect(UserTC.getDescription()).toBe('User model');
@@ -157,10 +157,10 @@ describe('SchemaComposer', () => {
 
     it('should return already created TC without onCreate', () => {
       const sc = new SchemaComposer();
-      const UserTC = sc.getOrCreateOTC('User', tc => {
+      const UserTC = sc.getOrCreateOTC('User', (tc) => {
         tc.setDescription('User model');
       });
-      const UserTC2 = sc.getOrCreateOTC('User', tc => {
+      const UserTC2 = sc.getOrCreateOTC('User', (tc) => {
         tc.setDescription('updated description');
       });
       expect(UserTC).toBe(UserTC2);
@@ -180,7 +180,7 @@ describe('SchemaComposer', () => {
 
     it('should create ITC if not exists with onCreate', () => {
       const sc = new SchemaComposer();
-      const UserITC = sc.getOrCreateITC('UserInput', tc => {
+      const UserITC = sc.getOrCreateITC('UserInput', (tc) => {
         tc.setDescription('User input');
       });
       expect(UserITC.getDescription()).toBe('User input');
@@ -188,10 +188,10 @@ describe('SchemaComposer', () => {
 
     it('should return already created ITC without onCreate', () => {
       const sc = new SchemaComposer();
-      const UserITC = sc.getOrCreateITC('UserInput', tc => {
+      const UserITC = sc.getOrCreateITC('UserInput', (tc) => {
         tc.setDescription('User input');
       });
-      const UserITC2 = sc.getOrCreateITC('UserInput', tc => {
+      const UserITC2 = sc.getOrCreateITC('UserInput', (tc) => {
         tc.setDescription('updated description');
       });
       expect(UserITC).toBe(UserITC2);
@@ -211,7 +211,7 @@ describe('SchemaComposer', () => {
 
     it('should create UTC if not exists with onCreate', () => {
       const sc = new SchemaComposer();
-      const UIntTC = sc.getOrCreateSTC('Uint', tc => {
+      const UIntTC = sc.getOrCreateSTC('Uint', (tc) => {
         tc.setDescription('Unsigned int');
       });
       expect(UIntTC.getDescription()).toBe('Unsigned int');
@@ -219,10 +219,10 @@ describe('SchemaComposer', () => {
 
     it('should return already created STC without onCreate', () => {
       const sc = new SchemaComposer();
-      const UIntTC = sc.getOrCreateSTC('UInt', tc => {
+      const UIntTC = sc.getOrCreateSTC('UInt', (tc) => {
         tc.setDescription('Positive int');
       });
-      const UIntTC2 = sc.getOrCreateSTC('UInt', tc => {
+      const UIntTC2 = sc.getOrCreateSTC('UInt', (tc) => {
         tc.setDescription('updated description');
       });
       expect(UIntTC).toBe(UIntTC2);
@@ -242,7 +242,7 @@ describe('SchemaComposer', () => {
 
     it('should create ETC if not exists with onCreate', () => {
       const sc = new SchemaComposer();
-      const UserETC = sc.getOrCreateETC('UserEnum', tc => {
+      const UserETC = sc.getOrCreateETC('UserEnum', (tc) => {
         tc.setDescription('User enum');
       });
       expect(UserETC.getDescription()).toBe('User enum');
@@ -250,10 +250,10 @@ describe('SchemaComposer', () => {
 
     it('should return already created ETC without onCreate', () => {
       const sc = new SchemaComposer();
-      const UserETC = sc.getOrCreateETC('UserEnum', tc => {
+      const UserETC = sc.getOrCreateETC('UserEnum', (tc) => {
         tc.setDescription('User enum');
       });
-      const UserETC2 = sc.getOrCreateETC('UserEnum', tc => {
+      const UserETC2 = sc.getOrCreateETC('UserEnum', (tc) => {
         tc.setDescription('updated description');
       });
       expect(UserETC).toBe(UserETC2);
@@ -273,7 +273,7 @@ describe('SchemaComposer', () => {
 
     it('should create IFTC if not exists with onCreate', () => {
       const sc = new SchemaComposer();
-      const UserIFTC = sc.getOrCreateIFTC('UserInterface', tc => {
+      const UserIFTC = sc.getOrCreateIFTC('UserInterface', (tc) => {
         tc.setDescription('User interface');
       });
       expect(UserIFTC.getDescription()).toBe('User interface');
@@ -281,10 +281,10 @@ describe('SchemaComposer', () => {
 
     it('should return already created IFTC without onCreate', () => {
       const sc = new SchemaComposer();
-      const UserIFTC = sc.getOrCreateIFTC('UserInterface', tc => {
+      const UserIFTC = sc.getOrCreateIFTC('UserInterface', (tc) => {
         tc.setDescription('User interface');
       });
-      const UserIFTC2 = sc.getOrCreateIFTC('UserInterface', tc => {
+      const UserIFTC2 = sc.getOrCreateIFTC('UserInterface', (tc) => {
         tc.setDescription('updated description');
       });
       expect(UserIFTC).toBe(UserIFTC2);
@@ -870,18 +870,12 @@ describe('SchemaComposer', () => {
 
       // Post type should be the same instance
       const Post = sc.getOTC('Post').getType();
-      const PostInAuthor = sc
-        .getOTC('Author')
-        .getFieldTC('posts')
-        .getType();
+      const PostInAuthor = sc.getOTC('Author').getFieldTC('posts').getType();
       expect(Post).toBe(PostInAuthor);
 
       // Author type should be the same instance
       const Author = sc.getOTC('Author').getType();
-      const AuthorInPost = sc
-        .getOTC('Post')
-        .getFieldTC('author')
-        .getType();
+      const AuthorInPost = sc.getOTC('Post').getFieldTC('author').getType();
       expect(Author).toBe(AuthorInPost);
     });
 
@@ -1133,7 +1127,7 @@ describe('SchemaComposer', () => {
     });
 
     function removeDefaultDirectives(sc) {
-      BUILT_IN_DIRECTIVES.forEach(d => sc.removeDirective(d));
+      BUILT_IN_DIRECTIVES.forEach((d) => sc.removeDirective(d));
     }
 
     it('has default directives', () => {

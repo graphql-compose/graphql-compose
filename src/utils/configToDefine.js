@@ -63,7 +63,7 @@ export function defineFieldMap(
     const fieldConfig = fieldMap[fieldName];
     // $FlowFixMe
     const fieldNodeAst: ?FieldDefinitionNode = parentAstNode?.fields?.find(
-      f => f.name.value === fieldName
+      (f) => f.name.value === fieldName
     );
     invariant(
       isPlainObj(fieldConfig),
@@ -93,7 +93,7 @@ export function defineFieldMap(
         isPlainObj(argsConfig),
         `${config.name}.${fieldName} args must be an object with argument names as keys.`
       );
-      field.args = (Object.keys(argsConfig).map(argName => {
+      field.args = (Object.keys(argsConfig).map((argName) => {
         const arg = argsConfig[argName];
         return {
           name: argName,
@@ -101,7 +101,7 @@ export function defineFieldMap(
           type: arg.type,
           defaultValue: arg.defaultValue,
           // $FlowFixMe
-          astNode: fieldNodeAst?.arguments?.find(a => a.name.value === argName),
+          astNode: fieldNodeAst?.arguments?.find((a) => a.name.value === argName),
         };
       }): any);
     }
@@ -118,12 +118,12 @@ export function convertObjectFieldMapToConfig(
   const isThunk = isFunction(fieldMap);
   const _fields: any = isThunk ? (fieldMap: any)() : fieldMap;
   if (!isObject(_fields)) return {};
-  Object.keys(_fields).forEach(n => {
+  Object.keys(_fields).forEach((n) => {
     const { name, isDeprecated, ...fc } = _fields[n];
     const args = {};
     if (Array.isArray(fc.args)) {
       // `fc.args` is an Array in `GraphQLFieldMap`
-      fc.args.forEach(arg => {
+      fc.args.forEach((arg) => {
         const { name: argName, ...ac } = arg;
         args[argName] = {
           ...ac,
@@ -137,7 +137,7 @@ export function convertObjectFieldMapToConfig(
       fc.args = (args: any);
     } else if (isObject(fc.args)) {
       // `fc.args` is Object in `ObjectTypeComposerFieldConfigMapDefinition`
-      Object.keys(fc.args).forEach(argName => {
+      Object.keys(fc.args).forEach((argName) => {
         args[argName] = {
           ...(isObject(fc.args[argName]) ? fc.args[argName] : null),
           type: isThunk
@@ -175,7 +175,7 @@ export function defineEnumValues(
     isPlainObj(valueMap),
     `${type.name} values must be an object with value names as keys.`
   );
-  return Object.keys(valueMap).map(valueName => {
+  return Object.keys(valueMap).map((valueName) => {
     const value = valueMap[valueName];
     invariant(
       isPlainObj(value),
@@ -192,7 +192,7 @@ export function defineEnumValues(
       isDeprecated: Boolean(value.deprecationReason),
       deprecationReason: value.deprecationReason,
       // $FlowFixMe
-      astNode: parentAstNode?.values?.find(v => v.name.value === valueName),
+      astNode: parentAstNode?.values?.find((v) => v.name.value === valueName),
       value: value.hasOwnProperty('value') ? value.value : valueName,
       extensions: undefined,
     };
@@ -215,7 +215,7 @@ export function defineInputFieldMap(
       ...fieldMap[fieldName],
       name: fieldName,
       // $FlowFixMe
-      astNode: parentAstNode?.fields?.find(f => f.name.value === fieldName),
+      astNode: parentAstNode?.fields?.find((f) => f.name.value === fieldName),
     };
     invariant(
       !field.hasOwnProperty('resolve'),
@@ -234,7 +234,7 @@ export function convertInputFieldMapToConfig(
   const fields = {};
   const isThunk = isFunction(fieldMap);
   const _fields: any = isThunk ? (fieldMap: any)() : fieldMap;
-  Object.keys(_fields).forEach(n => {
+  Object.keys(_fields).forEach((n) => {
     const { name, isDeprecated, ...fc } = _fields[n];
     fields[n] = {
       ...fc,
@@ -262,7 +262,7 @@ export function convertObjectTypeArrayAsThunk(
   const t: any = isThunk ? (types: any)() : types;
   if (!Array.isArray(t)) return [];
 
-  return t.map(type => {
+  return t.map((type) => {
     if (type instanceof ObjectTypeComposer || type instanceof ThunkComposer) {
       return type;
     }
@@ -293,7 +293,7 @@ export function convertInterfaceArrayAsThunk(
   const isThunk = isFunction(types);
   const t: any = isThunk ? (types: any)() : types;
   if (!Array.isArray(t)) return [];
-  return t.map(type => {
+  return t.map((type) => {
     if (type instanceof InterfaceTypeComposer || type instanceof ThunkComposer) {
       return type;
     }

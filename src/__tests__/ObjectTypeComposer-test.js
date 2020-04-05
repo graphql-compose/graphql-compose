@@ -1076,7 +1076,7 @@ describe('ObjectTypeComposer', () => {
       });
       expect(await tc.getResolver('findById').resolve(({}: any))).toBe('123');
 
-      tc.wrapResolverResolve('findById', next => async rp => {
+      tc.wrapResolverResolve('findById', (next) => async (rp) => {
         const prev = await next(rp);
         return `${prev}456`;
       });
@@ -1091,7 +1091,7 @@ describe('ObjectTypeComposer', () => {
       expect(await tc.getResolver('update').resolve(({}: any))).toBe('123');
       const prevResolver = tc.getResolver('update');
 
-      tc.wrapResolver('update', resolver => {
+      tc.wrapResolver('update', (resolver) => {
         resolver.resolve = () => '456'; // eslint-disable-line
         return resolver;
       });
@@ -1111,7 +1111,7 @@ describe('ObjectTypeComposer', () => {
       });
       expect(await tc.getResolver('update').resolve(({}: any))).toBe('123');
 
-      tc.wrapResolverAs('updateExt', 'update', resolver => {
+      tc.wrapResolverAs('updateExt', 'update', (resolver) => {
         resolver.resolve = () => '456'; // eslint-disable-line
         resolver.addArgs({ c: 'Boolean' });
         return resolver;
@@ -1457,11 +1457,11 @@ describe('ObjectTypeComposer', () => {
 
     it('integration test', async () => {
       const tc1 = schemaComposer.createObjectTC('type A { a: Int }');
-      tc1.setIsTypeOf(source => {
+      tc1.setIsTypeOf((source) => {
         return source && source.kind === 'A';
       });
       const tc2 = schemaComposer.createObjectTC('type B { b: Int }');
-      tc2.setIsTypeOf(source => {
+      tc2.setIsTypeOf((source) => {
         return source && source.kind === 'B';
       });
       schemaComposer.createUnionTC('union MyUnion = A | B');
@@ -1736,30 +1736,15 @@ describe('ObjectTypeComposer', () => {
       `);
 
       expect(
-        Array.from(
-          sc1
-            .getITC('Filter')
-            .getNestedTCs()
-            .values()
-        ).map(t => t.getTypeName())
+        Array.from(sc1.getITC('Filter').getNestedTCs().values()).map((t) => t.getTypeName())
       ).toEqual(['Int', 'Filter']);
 
       expect(
-        Array.from(
-          sc1
-            .getOTC('User')
-            .getNestedTCs()
-            .values()
-        ).map(t => t.getTypeName())
+        Array.from(sc1.getOTC('User').getNestedTCs().values()).map((t) => t.getTypeName())
       ).toEqual(['String', 'Int', 'User', 'Boolean', 'Filter', 'I1', 'I2']);
 
       expect(
-        Array.from(
-          sc1
-            .getUTC('C')
-            .getNestedTCs()
-            .values()
-        ).map(t => t.getTypeName())
+        Array.from(sc1.getUTC('C').getNestedTCs().values()).map((t) => t.getTypeName())
       ).toEqual(['A', 'Int', 'B', 'User', 'String', 'Boolean', 'Filter', 'I1', 'I2']);
     });
 

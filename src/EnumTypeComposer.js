@@ -191,7 +191,7 @@ export class EnumTypeComposer<TContext> {
    */
   setFields(values: EnumTypeComposerValueConfigMapDefinition): EnumTypeComposer<TContext> {
     this._gqcFields = {};
-    Object.keys(values).forEach(valueName => {
+    Object.keys(values).forEach((valueName) => {
       this.setField(valueName, values[valueName]);
     });
     return this;
@@ -215,7 +215,7 @@ export class EnumTypeComposer<TContext> {
    * Add new fields or replace existed in a GraphQL type
    */
   addFields(newValues: EnumTypeComposerValueConfigMapDefinition): EnumTypeComposer<TContext> {
-    Object.keys(newValues).forEach(valueName => {
+    Object.keys(newValues).forEach((valueName) => {
       this.setField(valueName, newValues[valueName]);
     });
     return this;
@@ -223,7 +223,7 @@ export class EnumTypeComposer<TContext> {
 
   removeField(nameOrArray: string | string[]): EnumTypeComposer<TContext> {
     const valueNames = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
-    valueNames.forEach(valueName => {
+    valueNames.forEach((valueName) => {
       delete this._gqcFields[valueName];
     });
     return this;
@@ -231,7 +231,7 @@ export class EnumTypeComposer<TContext> {
 
   removeOtherFields(fieldNameOrArray: string | string[]): EnumTypeComposer<TContext> {
     const keepFieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
-    Object.keys(this._gqcFields).forEach(fieldName => {
+    Object.keys(this._gqcFields).forEach((fieldName) => {
       if (keepFieldNames.indexOf(fieldName) === -1) {
         delete this._gqcFields[fieldName];
       }
@@ -242,7 +242,7 @@ export class EnumTypeComposer<TContext> {
   reorderFields(names: string[]): EnumTypeComposer<TContext> {
     const orderedFields = {};
     const fields = this._gqcFields;
-    names.forEach(name => {
+    names.forEach((name) => {
       if (fields[name]) {
         orderedFields[name] = fields[name];
         delete fields[name];
@@ -284,7 +284,7 @@ export class EnumTypeComposer<TContext> {
       }
       this.extendField(fields, { deprecationReason: 'deprecated' });
     } else if (Array.isArray(fields)) {
-      fields.forEach(field => {
+      fields.forEach((field) => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
             `Cannot deprecate unexisted value '${field}' from enum '${this.getTypeName()}'`
@@ -294,7 +294,7 @@ export class EnumTypeComposer<TContext> {
       });
     } else {
       const fieldMap: Object = (fields: any);
-      Object.keys(fieldMap).forEach(field => {
+      Object.keys(fieldMap).forEach((field) => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
             `Cannot deprecate unexisted value '${field}' from enum '${this.getTypeName()}'`
@@ -321,9 +321,9 @@ export class EnumTypeComposer<TContext> {
         this._gqType.astNode
       );
       this._gqType._valueLookup = new Map(
-        this._gqType._values.map(enumValue => [enumValue.value, enumValue])
+        this._gqType._values.map((enumValue) => [enumValue.value, enumValue])
       );
-      this._gqType._nameLookup = keyMap(this._gqType._values, value => value.name);
+      this._gqType._nameLookup = keyMap(this._gqType._values, (value) => value.name);
     } else {
       // clear builded fields in type
       delete (this._gqType: any)._valueLookup;
@@ -380,7 +380,7 @@ export class EnumTypeComposer<TContext> {
         ? newTypeNameOrTC
         : EnumTypeComposer.create(newTypeNameOrTC, this.schemaComposer);
 
-    cloned._gqcFields = mapEachKey(this._gqcFields, fieldConfig => ({
+    cloned._gqcFields = mapEachKey(this._gqcFields, (fieldConfig) => ({
       ...fieldConfig,
       extensions: { ...fieldConfig.extensions },
     }));
@@ -556,11 +556,11 @@ export class EnumTypeComposer<TContext> {
   }
 
   getDirectiveNames(): string[] {
-    return this.getDirectives().map(d => d.name);
+    return this.getDirectives().map((d) => d.name);
   }
 
   getDirectiveByName(directiveName: string): ?DirectiveArgs {
-    const directive = this.getDirectives().find(d => d.name === directiveName);
+    const directive = this.getDirectives().find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
   }
@@ -588,11 +588,11 @@ export class EnumTypeComposer<TContext> {
   }
 
   getFieldDirectiveNames(fieldName: string): string[] {
-    return this.getFieldDirectives(fieldName).map(d => d.name);
+    return this.getFieldDirectives(fieldName).map((d) => d.name);
   }
 
   getFieldDirectiveByName(fieldName: string, directiveName: string): ?DirectiveArgs {
-    const directive = this.getFieldDirectives(fieldName).find(d => d.name === directiveName);
+    const directive = this.getFieldDirectives(fieldName).find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
   }

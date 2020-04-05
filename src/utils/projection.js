@@ -93,7 +93,7 @@ export function getFlatProjectionFromAST(
 ) {
   const projection = getProjectionFromAST(info, fieldNodes) || {};
   const flatProjection = {};
-  Object.keys(projection).forEach(key => {
+  Object.keys(projection).forEach((key) => {
     flatProjection[key] = !!projection[key];
   });
   return flatProjection;
@@ -116,7 +116,7 @@ export function extendByFieldProjection(
   }
 
   let proj = projection;
-  Object.keys(proj).forEach(key => {
+  Object.keys(proj).forEach((key) => {
     const field = (type: any).getFields()[key];
     if (!field) return;
 

@@ -189,7 +189,7 @@ export class UnionTypeComposer<TSource, TContext> {
     }
     types = convertObjectTypeArrayAsThunk(types, this.schemaComposer);
     this._gqcTypes = new Set();
-    types.forEach(type => {
+    types.forEach((type) => {
       this._gqcTypes.add(type);
     });
 
@@ -224,7 +224,7 @@ export class UnionTypeComposer<TSource, TContext> {
   }
 
   getTypeNames(): string[] {
-    return this.getTypes().map(t => t.getTypeName());
+    return this.getTypes().map((t) => t.getTypeName());
   }
 
   clearTypes(): UnionTypeComposer<TSource, TContext> {
@@ -261,13 +261,13 @@ export class UnionTypeComposer<TSource, TContext> {
     if (!Array.isArray(types)) {
       throw new Error(`UnionTypeComposer[${this.getTypeName()}].addType() accepts only array`);
     }
-    types.forEach(type => this.addType(type));
+    types.forEach((type) => this.addType(type));
     return this;
   }
 
   removeType(nameOrArray: string | string[]): UnionTypeComposer<TSource, TContext> {
     const typeNames = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
-    typeNames.forEach(typeName => {
+    typeNames.forEach((typeName) => {
       for (const type of this._gqcTypes) {
         if (type.getTypeName() === typeName) {
           this._gqcTypes.delete(type);
@@ -295,7 +295,7 @@ export class UnionTypeComposer<TSource, TContext> {
     this._gqType.astNode = getUnionTypeDefinitionNode(this);
     const prepareTypes = () => {
       try {
-        return this.getTypes().map(tc => tc.getType());
+        return this.getTypes().map((tc) => tc.getType());
       } catch (e) {
         e.message = `UnionError[${this.getTypeName()}]: ${e.message}`;
         throw e;
@@ -399,7 +399,7 @@ export class UnionTypeComposer<TSource, TContext> {
     // this._gqcTypeMap
     const types = this.getTypes();
     if (types.length > 0) {
-      cloned.setTypes(types.map(tc => (cloneTypeTo(tc, anotherSchemaComposer, cloneMap): any)));
+      cloned.setTypes(types.map((tc) => (cloneTypeTo(tc, anotherSchemaComposer, cloneMap): any)));
     }
 
     return cloned;
@@ -678,11 +678,11 @@ export class UnionTypeComposer<TSource, TContext> {
   }
 
   getDirectiveNames(): string[] {
-    return this.getDirectives().map(d => d.name);
+    return this.getDirectives().map((d) => d.name);
   }
 
   getDirectiveByName(directiveName: string): ?DirectiveArgs {
-    const directive = this.getDirectives().find(d => d.name === directiveName);
+    const directive = this.getDirectives().find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
   }
@@ -711,7 +711,7 @@ export class UnionTypeComposer<TSource, TContext> {
     passedTypes: Set<NamedTypeComposer<any>> = new Set()
   ): Set<NamedTypeComposer<any>> {
     const exclude = Array.isArray(opts.exclude) ? (opts: any).exclude : [];
-    this.getTypeComposers().forEach(tc => {
+    this.getTypeComposers().forEach((tc) => {
       if (!passedTypes.has(tc) && !exclude.includes(tc.getTypeName())) {
         passedTypes.add(tc);
         if (tc instanceof ObjectTypeComposer) {
@@ -742,7 +742,7 @@ export class UnionTypeComposer<TSource, TContext> {
       if (opts?.sortAll || opts?.sortTypes) {
         nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
       }
-      nestedTypes.forEach(t => {
+      nestedTypes.forEach((t) => {
         if (t !== this && !exclude.includes(t.getTypeName())) {
           const sdl = t.toSDL(innerOpts);
           if (sdl) r += `\n\n${sdl}`;

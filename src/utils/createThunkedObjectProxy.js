@@ -9,7 +9,7 @@ export function createThunkedObjectProxy<T: {}>(thunk: () => T): T {
     if (!isResolved) {
       isResolved = true;
       const tmp = isFunction(thunk) ? thunk() : thunk;
-      Object.keys(tmp).forEach(k => {
+      Object.keys(tmp).forEach((k) => {
         data[k] = tmp[k];
       });
     }

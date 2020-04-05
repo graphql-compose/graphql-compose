@@ -68,11 +68,11 @@ describe('github issue #142: Add schema definition in `graphql-tools` way', () =
     },
 
     Author: {
-      posts: author => filter(posts, { authorId: author.id }),
+      posts: (author) => filter(posts, { authorId: author.id }),
     },
 
     Post: {
-      author: post => find(authors, { id: post.authorId }),
+      author: (post) => find(authors, { id: post.authorId }),
     },
   };
 

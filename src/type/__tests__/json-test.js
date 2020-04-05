@@ -52,7 +52,7 @@ describe('GraphQLJSON', () => {
   });
 
   describe('parseValue', () => {
-    it('should support parsing values', done => {
+    it('should support parsing values', (done) => {
       graphql(schema, 'query ($arg: JSON) { value(arg: $arg) }', null, null, {
         arg: FIXTURE,
       }).then(({ data }: any) => {
@@ -63,7 +63,7 @@ describe('GraphQLJSON', () => {
   });
 
   describe('parseLiteral', () => {
-    it('should support parsing literals', done => {
+    it('should support parsing literals', (done) => {
       graphql(
         schema,
         `
