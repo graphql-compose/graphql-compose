@@ -134,9 +134,9 @@ const schema = new GraphQLSchema({
 Or do the same via `graphql-compose`:
 
 ```js
-import { GQC } from 'graphql-compose';
+import { schemaComposer } from 'graphql-compose';
 
-GQC.rootQuery().addFields({
+schemaComposer.Query.addFields({
   person: {
     type: PersonTC,
     args: {
@@ -147,7 +147,7 @@ GQC.rootQuery().addFields({
   },
 }
 
-const schema = GQC.buildSchema(); // returns GraphQLSchema
+const schema = schemaComposer.buildSchema(); // returns GraphQLSchema
 ```
 
 ## Building schema asynchronously
@@ -172,11 +172,11 @@ export const buildAsyncSchema = async (): Promise<GraphQLSchema> => {
     },
   });
 
-  GQC.rootQuery().addFields({
+  schemaComposer.Query.addFields({
     person: PeopleTC.getResolver('findById'),
   });
 
-  const schema = GQC.buildSchema();
+  const schema = schemaComposer.buildSchema();
   return schema;
 };
 ```

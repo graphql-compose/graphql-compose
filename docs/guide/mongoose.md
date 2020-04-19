@@ -21,24 +21,24 @@ Lets add a working example from the preview `UserTC` we have created
 ```js
 // schema.js
 
-import { GQC } from 'graphql-compose';
+import { schemaComposer } from 'graphql-compose';
 import { UserTC } from './user.js';
 
-GQC.rootQuery().addFields({
+schemaComposer.Query.addFields({
   ...
 });
 
-GQC.rootMutation().addFields({
-  userCreate: UserTC.get('$createOne'),
-  userUpdateById: UserTC.get('$updateById'),
-  userUpdateOne: UserTC.get('$updateOne'),
-  userUpdateMany: UserTC.get('$updateMany'),
+schemaComposer.Mutation.addFields({
+  userCreate: UserTC.getResolver('createOne'),
+  userUpdateById: UserTC.getResolver('updateById'),
+  userUpdateOne: UserTC.getResolver('updateOne'),
+  userUpdateMany: UserTC.getResolver('updateMany'),
 
   // let add restriction for remove operations
   ...adminAccess({
-    userRemoveById: UserTC.get('$removeById'),
-    userRemoveOne: UserTC.get('$removeOne'),
-    userRemoveMany: UserTC.get('$removeMany'),
+    userRemoveById: UserTC.getResolver('removeById'),
+    userRemoveOne: UserTC.getResolver('removeOne'),
+    userRemoveMany: UserTC.getResolver('removeMany'),
   }),
 });
 
@@ -55,7 +55,7 @@ function adminAccess(resolvers) {
   return resolvers;
 }
 
-export default GQC.buildSchema();
+export default schemaComposer.buildSchema();
 ```
 
 ### Custom mutations
@@ -83,7 +83,7 @@ UserTC.addResolver({
 });
 
 // so now you may add you custom mutation to schema
-GQC.rootMutation().addFields({
-  customUserUpdate: UserTC.get('$myCustomUpdate'),
+schemaComposer.Mutation.addFields({
+  customUserUpdate: UserTC.getResolver('myCustomUpdate'),
 });
 ```

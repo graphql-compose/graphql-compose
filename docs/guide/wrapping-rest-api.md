@@ -132,11 +132,11 @@ Planet.getResolver('findMany');
 Now with Types and Resolvers created it's time to put them into Schema.
 
 ```js
-import { GQC } from 'graphql-compose';
+import { schemaComposer } from 'graphql-compose';
 import fetch from 'node-fetch';
 import { PersonGraphQLType } from './Person';
 
-GQC.rootQuery().addFields({
+schemaComposer.Query.addFields({
   person: {
     type: PersonTC,
     args: {
@@ -150,7 +150,7 @@ GQC.rootQuery().addFields({
   },
 };
 
-export const schema = GQC.buildSchema(); // returns `GraphQLSchema`
+export const schema = schemaComposer.buildSchema(); // returns `GraphQLSchema`
 ```
 
 Check out our article describing each step in detail and suggesting some interesting tricks:

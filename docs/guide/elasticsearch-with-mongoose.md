@@ -228,9 +228,9 @@ Sorry bad docs in `graphql-compose`. Really do not have time to write it. So try
 ### 1.7 Add needed resolvers to schema [BUILD GRAPHQL SCHEMA]
 
 ```js
-import { GQC } from 'graphql-compose';
+import { schemaComposer } from 'graphql-compose';
 
-GQC.rootQuery().addFields({
+schemaComposer.Query.addFields({
   jobEsConnection: JobEsTC.getResolver('search'),
   jobMongoConnection: JobTC.getResolver('connection'),
   jobMany: JobTC.getResolver('findMany'),
@@ -238,7 +238,7 @@ GQC.rootQuery().addFields({
   jobById: JobTC.getResolver('findById'),
 });
 
-const schema = GQC.buildSchema();
+const schema = schemaComposer.buildSchema();
 
 export default schema;
 ```
@@ -250,11 +250,11 @@ Reindexing you may also add to graphql.
 ### 2.1 Expose Elastic API to graphql schema
 
 ```js
-import { GQC } from 'graphql-compose';
+import { schemaComposer } from 'graphql-compose';
 import { elasticApiFieldConfig } from 'graphql-compose-elasticsearch';
 import elasticClient from 'schema/elasticClient';
 
-export const ElasticTC = GQC.get('ELASTIC');
+export const ElasticTC = schemaComposer.getOTC('ELASTIC');
 
 ElasticTC.addResolver({
   name: 'onlyForAdmins',
@@ -273,7 +273,7 @@ ElasticTC.addFields({
 });
 
 // DONT FORGET TO add elastic to your schema (eg. to ROOT query)
-GQC.rootQuery().addFields({
+schemaComposer.Query.addFields({
   elastic: ElasticTC.getResolver('onlyForAdmins'),
 });
 ```

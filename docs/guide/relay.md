@@ -30,5 +30,5 @@ export const PersonTC = composeWithRelay(composeMongoose(Person));
 ## Add support in RootQuery
 
 ```js
-composeWithRelay(GQC.rootQuery());
+composeWithRelay(schemaComposer.Query;
 ```
