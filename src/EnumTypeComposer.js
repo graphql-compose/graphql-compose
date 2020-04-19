@@ -6,7 +6,7 @@ import { GraphQLEnumType } from './graphql';
 import { isObject, isString } from './utils/is';
 import { inspect, mapEachKey } from './utils/misc';
 import type { EnumValueDefinitionNode } from './graphql';
-import { defineEnumValues } from './utils/configToDefine';
+import { defineEnumValues, convertEnumValuesToConfig } from './utils/configToDefine';
 import { graphqlVersion } from './utils/graphqlVersion';
 import type { TypeAsString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
@@ -147,10 +147,7 @@ export class EnumTypeComposer<TContext> {
     // it avoids recursive type use errors
     this.schemaComposer.set(graphqlType, this);
 
-    this._gqcFields = {};
-    this._gqType.getValues().forEach(({ name, isDeprecated, ...config }) => {
-      this._gqcFields[name] = { extensions: ({}: any), ...(config: any) };
-    });
+    this._gqcFields = convertEnumValuesToConfig(this._gqType.getValues(), this.schemaComposer);
 
     // alive proper Flow type casting in autosuggestions for class with Generics
     /* :: return this; */

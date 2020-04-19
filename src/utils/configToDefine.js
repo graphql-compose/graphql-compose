@@ -29,6 +29,7 @@ import type {
   InputObjectTypeDefinitionNode,
 } from '../graphql';
 import type { InputTypeComposerFieldConfigMap } from '../InputTypeComposer';
+import type { EnumTypeComposerValueConfigMap } from '../EnumTypeComposer';
 import {
   ObjectTypeComposer,
   type ObjectTypeComposerFieldConfigMap,
@@ -133,6 +134,13 @@ export function convertObjectFieldMapToConfig(
               )
             : schemaComposer.typeMapper.convertInputTypeDefinition(ac.type || arg),
         };
+        if (ac?.astNode?.directives) {
+          const directives = schemaComposer.typeMapper.parseDirectives(ac.astNode.directives);
+          if (directives) {
+            if (!args[argName].extensions) args[argName].extensions = {};
+            args[argName].extensions.directives = directives;
+          }
+        }
       });
       fc.args = (args: any);
     } else if (isObject(fc.args)) {
@@ -162,6 +170,14 @@ export function convertObjectFieldMapToConfig(
           )
         : schemaComposer.typeMapper.convertOutputTypeDefinition(fc.type || _fields[n]),
     };
+
+    if (fc?.astNode?.directives) {
+      const directives = schemaComposer.typeMapper.parseDirectives(fc.astNode.directives);
+      if (directives) {
+        if (!fields[n].extensions) fields[n].extensions = {};
+        fields[n].extensions.directives = directives;
+      }
+    }
   });
   return fields;
 }
@@ -197,6 +213,24 @@ export function defineEnumValues(
       extensions: undefined,
     };
   });
+}
+
+export function convertEnumValuesToConfig(
+  values: GraphQLEnumValue[],
+  schemaComposer: SchemaComposer<any>
+): EnumTypeComposerValueConfigMap {
+  const fields = {};
+  values.forEach(({ name, isDeprecated, ...fc }) => {
+    fields[name] = fc;
+    if (fc?.astNode?.directives) {
+      const directives = schemaComposer.typeMapper.parseDirectives(fc.astNode.directives);
+      if (directives) {
+        if (!fields[name].extensions) fields[name].extensions = {};
+        fields[name].extensions.directives = directives;
+      }
+    }
+  });
+  return fields;
 }
 
 export function defineInputFieldMap(
@@ -244,6 +278,13 @@ export function convertInputFieldMapToConfig(
           )
         : schemaComposer.typeMapper.convertInputTypeDefinition(fc.type || _fields[n]),
     };
+    if (fc?.astNode?.directives) {
+      const directives = schemaComposer.typeMapper.parseDirectives(fc.astNode.directives);
+      if (directives) {
+        if (!fields[n].extensions) fields[n].extensions = {};
+        fields[n].extensions.directives = directives;
+      }
+    }
   });
   return fields;
 }

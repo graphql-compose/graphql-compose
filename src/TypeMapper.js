@@ -905,7 +905,14 @@ export class TypeMapper<TContext> {
       let val;
       const wrappedType = this.typeFromAST(value.type);
       if (isSomeInputTypeComposer(wrappedType)) {
-        val = { type: wrappedType.getType(), description: getDescription(value) };
+        val = {
+          type: wrappedType.getType(),
+          description: getDescription(value),
+          defaultValue: valueFromAST(
+            value.defaultValue,
+            ((wrappedType.getType(): any): GraphQLInputType)
+          ),
+        };
       } else {
         throw new Error('Non-input type as an argument.');
       }
