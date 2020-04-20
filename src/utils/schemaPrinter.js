@@ -39,7 +39,6 @@ import { astFromValue } from 'graphql/utilities/astFromValue';
 
 import { BUILT_IN_DIRECTIVES } from '../SchemaComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
-import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { UnionTypeComposer } from '../UnionTypeComposer';
@@ -121,21 +120,12 @@ export function printSchemaComposer(
     // directives may have specific types in arguments, so add them to includeTypes
     directives.forEach((d) => {
       if (!Array.isArray(d.args)) return;
-      d.args
-        .map((ac) => sc.getAnyTC(ac.type))
-        .filter((tc) => {
-          // remove scalars specified in `exclude`
-          // from being added to schema SDL
-          if (tc instanceof ScalarTypeComposer) {
-            const scalarName = tc.getTypeName();
-            return !exclude.includes(scalarName);
-          }
-
-          return true;
-        })
-        .forEach((tc) => {
+      d.args.forEach((ac) => {
+        const tc = sc.getAnyTC(ac.type);
+        if (!exclude.includes(tc.getTypeName())) {
           includeTypes.add(tc);
-        });
+        }
+      });
     });
   }
 
@@ -426,7 +416,7 @@ export function printDirective(directive: GraphQLDirective, options?: Options) {
 
 export function printNodeDirectives(
   node: ?{
-    +directives ?: $ReadOnlyArray<DirectiveNode>,
+    +directives?: $ReadOnlyArray<DirectiveNode>,
   }
 ): string {
   if (!node || !node.directives || !node.directives.length) return '';

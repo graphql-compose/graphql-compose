@@ -29,7 +29,8 @@ describe('github issue #246: Directives are removed from schema in SchemaCompose
     const schemaComposer = new SchemaComposer();
     schemaComposer.addTypeDefs(sdl);
 
-    expect(schemaComposer.toSDL({ omitDescriptions: true, exclude: ['String'] })).toMatchInlineSnapshot(`
+    expect(schemaComposer.toSDL({ omitDescriptions: true, exclude: ['String'] }))
+      .toMatchInlineSnapshot(`
       "directive @test(reason: String = \\"No longer supported\\") on FIELD_DEFINITION | ENUM_VALUE | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
 
       scalar ID
@@ -50,15 +51,14 @@ describe('github issue #246: Directives are removed from schema in SchemaCompose
 
       enum Status {
         OK @test(reason: \\"enum\\")
-      }
-
-      scalar String"
+      }"
     `);
   });
 
   it('via constructor', async () => {
     const schemaComposer = new SchemaComposer(sdl);
-    expect(schemaComposer.toSDL({ omitDescriptions: true })).toMatchInlineSnapshot(`
+    expect(schemaComposer.toSDL({ omitDescriptions: true, exclude: ['String'] }))
+      .toMatchInlineSnapshot(`
       "directive @test(reason: String = \\"No longer supported\\") on FIELD_DEFINITION | ENUM_VALUE | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
 
       scalar ID
@@ -79,9 +79,7 @@ describe('github issue #246: Directives are removed from schema in SchemaCompose
 
       enum Status {
         OK @test(reason: \\"enum\\")
-      }
-
-      scalar String"
+      }"
     `);
   });
 });
