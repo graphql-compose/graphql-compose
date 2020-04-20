@@ -39,6 +39,7 @@ import { astFromValue } from 'graphql/utilities/astFromValue';
 
 import { BUILT_IN_DIRECTIVES } from '../SchemaComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
+import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { UnionTypeComposer } from '../UnionTypeComposer';
@@ -118,11 +119,21 @@ export function printSchemaComposer(
     const directives = sc._directives.filter((d) => !BUILT_IN_DIRECTIVES.includes(d));
     res.push(...directives.map((d) => printDirective(d, innerOpts)));
     // directives may have specific types in arguments, so add them to includeTypes
-    directives.forEach((d) => {
+    directives.forEach(d => {
       if (!Array.isArray(d.args)) return;
-      d.args.forEach((ac) => {
-        includeTypes.add(sc.getAnyTC(ac.type));
-      });
+      d.args.map(ac => sc.getAnyTC(ac.type))
+        .filter(tc => {
+          // remove scalars specified in `exclude`
+          // from being added to schema SDL
+          if (tc instanceof ScalarTypeComposer) {
+            const scalarName = tc.getTypeName()
+            return !exclude.includes(scalarName);
+          }
+
+          return true;
+        }).forEach(tc => {
+          includeTypes.add(tc);
+        });
     });
   }
 
@@ -275,7 +286,7 @@ export function printImplementedInterfaces(
   type: GraphQLObjectType | GraphQLInterfaceType,
   options?: Options
 ): string {
-  const interfaces = type.getInterfaces ? (type: any).getInterfaces() : [];
+  const interfaces = type.getInterfaces ? (type: any).getInterfaces(): [];
   if (!interfaces.length) return '';
   if (options?.sortAll || options?.sortInterfaces) {
     return ` implements ${interfaces
@@ -413,7 +424,7 @@ export function printDirective(directive: GraphQLDirective, options?: Options) {
 
 export function printNodeDirectives(
   node: ?{
-    +directives?: $ReadOnlyArray<DirectiveNode>,
+    +directives ?: $ReadOnlyArray < DirectiveNode >,
   }
 ): string {
   if (!node || !node.directives || !node.directives.length) return '';
