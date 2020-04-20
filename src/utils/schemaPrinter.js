@@ -121,7 +121,10 @@ export function printSchemaComposer(
     directives.forEach((d) => {
       if (!Array.isArray(d.args)) return;
       d.args.forEach((ac) => {
-        includeTypes.add(sc.getAnyTC(ac.type));
+        const tc = sc.getAnyTC(ac.type);
+        if (!exclude.includes(tc.getTypeName())) {
+          includeTypes.add(tc);
+        }
       });
     });
   }
