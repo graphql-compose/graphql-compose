@@ -155,19 +155,25 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     if (this.has('Query')) {
       const tc = this.getOTC('Query');
       this.removeEmptyTypes(tc, new Set());
-      roots.query = tc.getType();
+      if (tc.getFields().length) {
+        roots.query = tc.getType();
+      }
     }
 
     if (this.has('Mutation')) {
       const tc = this.getOTC('Mutation');
       this.removeEmptyTypes(tc, new Set());
-      roots.mutation = tc.getType();
+      if (tc.getFields().length) {
+        roots.mutation = tc.getType();
+      }
     }
 
     if (this.has('Subscription')) {
       const tc = this.getOTC('Subscription');
       this.removeEmptyTypes(tc, new Set());
-      roots.subscription = tc.getType();
+      if (tc.getFields().length) {
+        roots.subscription = tc.getType();
+      }
     }
 
     const types = [
