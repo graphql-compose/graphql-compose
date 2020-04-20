@@ -120,9 +120,9 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    */
   public merge(schema: GraphQLSchema | SchemaComposer<any>): this;
 
-  public getDescription(): string;
+  public getDescription(): string | undefined;
 
-  public setDescription(description: string): this;
+  public setDescription(description: string | undefined): this;
 
   /**
    * -----------------------------------------------

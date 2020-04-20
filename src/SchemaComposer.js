@@ -92,7 +92,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   typeMapper: TypeMapper<TContext>;
   _schemaMustHaveTypes: Array<AnyType<TContext>> = [];
   _directives: Array<GraphQLDirective> = [...BUILT_IN_DIRECTIVES];
-  _description: ?string;
+  _description: string | void;
 
   /**
    * Create SchemaComposer from
@@ -180,9 +180,12 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       ...(extraConfig && Array.isArray(extraConfig.directives) ? [...extraConfig.directives] : []),
     ];
 
+    let description = this.getDescription();
+    if (!description) description = undefined;
+
     // $FlowFixMe `description` was added only in graphql@15.0.0
     return new GraphQLSchema({
-      description: this.getDescription(),
+      description,
       ...roots,
       ...extraConfig,
       types,
@@ -298,11 +301,11 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     return this;
   }
 
-  getDescription(): string {
-    return this._description || '';
+  getDescription(): string | void {
+    return this._description;
   }
 
-  setDescription(description: string): SchemaComposer<TContext> {
+  setDescription(description: string | void): SchemaComposer<TContext> {
     this._description = description;
     return this;
   }

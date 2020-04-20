@@ -1,5 +1,6 @@
 /* @flow strict */
 
+import { printSchema } from 'graphql';
 import { SchemaComposer, BUILT_IN_DIRECTIVES } from '../SchemaComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
@@ -133,6 +134,34 @@ describe('SchemaComposer', () => {
           type Query
         `);
         expect(sc.getDescription()).toBe('Schema description');
+      }
+    });
+
+    it('should not print empty description', () => {
+      if (graphqlVersion >= 15) {
+        const sc = new SchemaComposer(`
+          type Query {
+            a: Int
+          }
+        `);
+        sc.setDescription('Description');
+        expect(printSchema(sc.buildSchema())).toBe(dedent`
+          """Description"""
+          schema {
+            query: Query
+          }
+
+          type Query {
+            a: Int
+          }\n
+        `);
+
+        sc.setDescription('');
+        expect(printSchema(sc.buildSchema())).toBe(dedent`
+          type Query {
+            a: Int
+          }\n
+        `);
       }
     });
   });
