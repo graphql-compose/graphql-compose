@@ -155,15 +155,13 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     if (this.has('Query')) {
       const tc = this.getOTC('Query');
       this.removeEmptyTypes(tc, new Set());
-      if (tc.getFields().length) {
-        roots.query = tc.getType();
-      }
+      roots.query = tc.getType();
     }
 
     if (this.has('Mutation')) {
       const tc = this.getOTC('Mutation');
       this.removeEmptyTypes(tc, new Set());
-      if (tc.getFields().length) {
+      if (tc.getFieldNames().length) {
         roots.mutation = tc.getType();
       }
     }
@@ -171,7 +169,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     if (this.has('Subscription')) {
       const tc = this.getOTC('Subscription');
       this.removeEmptyTypes(tc, new Set());
-      if (tc.getFields().length) {
+      if (tc.getFieldNames().length) {
         roots.subscription = tc.getType();
       }
     }

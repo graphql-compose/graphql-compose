@@ -385,7 +385,7 @@ describe('SchemaComposer', () => {
       sc.removeEmptyTypes(UserTC);
     });
 
-    it('should remove empty ROOT types', () => {
+    it('should remove empty ROOT types: Mutation, Subscription', () => {
       const sc = new SchemaComposer(` 
         type Query {
           a: Int
@@ -396,6 +396,20 @@ describe('SchemaComposer', () => {
       const schema = sc.buildSchema();
       expect(schema._queryType).toBeDefined();
       expect(schema._mutationType).toBeUndefined();
+      expect(schema._subscriptionType).toBeUndefined();
+    });
+
+    it.only('should keep empty ROOT type: Query', () => {
+      const sc = new SchemaComposer(` 
+        type Query
+        type Mutation {
+          a: Int
+        }
+        type Subscription
+      `);
+      const schema = sc.buildSchema();
+      expect(schema._queryType).toBeDefined();
+      expect(schema._mutationType).toBeDefined();
       expect(schema._subscriptionType).toBeUndefined();
     });
   });
