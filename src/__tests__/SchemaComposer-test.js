@@ -399,7 +399,7 @@ describe('SchemaComposer', () => {
       expect(schema._subscriptionType).toBeUndefined();
     });
 
-    it.only('should keep empty ROOT type: Query', () => {
+    it('should keep empty ROOT type: Query', () => {
       const sc = new SchemaComposer(` 
         type Query
         type Mutation {
