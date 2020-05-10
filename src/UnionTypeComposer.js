@@ -621,6 +621,7 @@ export class UnionTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
     const tc = this._convertObjectType(type);
     typeResolversMap.set(tc, checkFn);
+    this.schemaComposer.addSchemaMustHaveType((tc: any));
     this.setTypeResolvers(typeResolversMap);
     return this;
   }

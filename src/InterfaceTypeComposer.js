@@ -1092,6 +1092,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
     typeResolversMap.set(type, checkFn);
     this.setTypeResolvers(typeResolversMap);
+    this.schemaComposer.addSchemaMustHaveType(type);
     return this;
   }
 
