@@ -715,6 +715,20 @@ describe('InterfaceTypeComposer', () => {
       expect(iftc.getTypeNonNull()).toBeInstanceOf(NonNullComposer);
       expect(iftc.getTypeNonNull().getType().ofType).toBe(iftc.getType());
     });
+
+    it('check getters List, NonNull', () => {
+      const UserTC = schemaComposer.createInterfaceTC(`interface UserIface { name: String }`);
+      expect(UserTC.List).toBeInstanceOf(ListComposer);
+      expect(UserTC.List.ofType).toBe(UserTC);
+      expect(UserTC.List.getTypeName()).toBe('[UserIface]');
+      expect(UserTC.NonNull).toBeInstanceOf(NonNullComposer);
+      expect(UserTC.NonNull.ofType).toBe(UserTC);
+      expect(UserTC.NonNull.getTypeName()).toBe('UserIface!');
+      expect(UserTC.NonNull.List).toBeInstanceOf(ListComposer);
+      expect(UserTC.NonNull.List.getTypeName()).toBe('[UserIface!]');
+      expect(UserTC.NonNull.List.NonNull).toBeInstanceOf(NonNullComposer);
+      expect(UserTC.NonNull.List.NonNull.getTypeName()).toBe('[UserIface!]!');
+    });
   });
 
   it('should have chainable methods', () => {

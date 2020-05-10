@@ -429,6 +429,20 @@ describe('InputTypeComposer', () => {
       itc.setDescription('Changed description');
       expect(itc.getDescription()).toBe('Changed description');
     });
+
+    it('check getters List, NonNull', () => {
+      const UserTC = schemaComposer.createInputTC(`input UserInput { name: String }`);
+      expect(UserTC.List).toBeInstanceOf(ListComposer);
+      expect(UserTC.List.ofType).toBe(UserTC);
+      expect(UserTC.List.getTypeName()).toBe('[UserInput]');
+      expect(UserTC.NonNull).toBeInstanceOf(NonNullComposer);
+      expect(UserTC.NonNull.ofType).toBe(UserTC);
+      expect(UserTC.NonNull.getTypeName()).toBe('UserInput!');
+      expect(UserTC.NonNull.List).toBeInstanceOf(ListComposer);
+      expect(UserTC.NonNull.List.getTypeName()).toBe('[UserInput!]');
+      expect(UserTC.NonNull.List.NonNull).toBeInstanceOf(NonNullComposer);
+      expect(UserTC.NonNull.List.NonNull.getTypeName()).toBe('[UserInput!]!');
+    });
   });
 
   describe('static method create()', () => {

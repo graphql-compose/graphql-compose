@@ -196,6 +196,40 @@ export class InputTypeComposer<TContext = any> {
 
   public getTypeNonNull(): NonNullComposer<this>;
 
+  /**
+   * Get Type wrapped in List modifier
+   *
+   * @example
+   *   const UserTC = schemaComposer.createInputTC(`input UserInput { name: String }`);
+   *   schemaComposer.Mutation.addFields({
+   *     add: {
+   *       args: {
+   *         users1: UserTC.List, // in SDL: users1: [UserInput]
+   *         users2: UserTC.NonNull.List, // in SDL: users2: [UserInput!]
+   *         users3: UserTC.NonNull.List.NonNull, // in SDL: users2: [UserInput!]!
+   *       }
+   *     }
+   *   })
+   */
+  public get List(): ListComposer<InputTypeComposer<TContext>>;
+
+  /**
+   * Get Type wrapped in NonNull modifier
+   *
+   * @example
+   *   const UserTC = schemaComposer.createInputTC(`input UserInput { name: String }`);
+   *   schemaComposer.Mutation.addFields({
+   *     add: {
+   *       args: {
+   *         users1: UserTC.List, // in SDL: users1: [UserInput]
+   *         users2: UserTC.NonNull.List, // in SDL: users2: [UserInput!]
+   *         users3: UserTC.NonNull.List.NonNull, // in SDL: users2: [UserInput!]!
+   *       }
+   *     }
+   *   })
+   */
+  public get NonNull(): NonNullComposer<InputTypeComposer<TContext>>;
+
   public getTypeName(): string;
 
   public setTypeName(name: string): this;

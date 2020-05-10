@@ -64,6 +64,20 @@ export class ThunkComposer<T = NamedTypeComposer<any>, G = GraphQLType> {
   }
 
   /**
+   * Get Type wrapped in List modifier
+   */
+  get List(): ListComposer<ThunkComposer<T, G>> {
+    return new ListComposer(this);
+  }
+
+  /**
+   * Get Type wrapped in NonNull modifier
+   */
+  get NonNull(): NonNullComposer<ThunkComposer<T, G>> {
+    return new NonNullComposer(this);
+  }
+
+  /**
    * Clone this type to another SchemaComposer.
    * Also will be clonned all wrapped types.
    */

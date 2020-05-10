@@ -125,6 +125,20 @@ describe('ScalarTypeComposer', () => {
       expect(stc.getTypeNonNull()).toBeInstanceOf(NonNullComposer);
       expect(stc.getTypeNonNull().ofType).toBe(stc);
     });
+
+    it('check getters List, NonNull', () => {
+      const ColorTC = schemaComposer.createScalarTC(`scalar Color`);
+      expect(ColorTC.List).toBeInstanceOf(ListComposer);
+      expect(ColorTC.List.ofType).toBe(ColorTC);
+      expect(ColorTC.List.getTypeName()).toBe('[Color]');
+      expect(ColorTC.NonNull).toBeInstanceOf(NonNullComposer);
+      expect(ColorTC.NonNull.ofType).toBe(ColorTC);
+      expect(ColorTC.NonNull.getTypeName()).toBe('Color!');
+      expect(ColorTC.NonNull.List).toBeInstanceOf(ListComposer);
+      expect(ColorTC.NonNull.List.getTypeName()).toBe('[Color!]');
+      expect(ColorTC.NonNull.List.NonNull).toBeInstanceOf(NonNullComposer);
+      expect(ColorTC.NonNull.List.NonNull.getTypeName()).toBe('[Color!]!');
+    });
   });
 
   describe('clone()', () => {

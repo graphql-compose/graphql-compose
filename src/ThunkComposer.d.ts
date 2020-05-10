@@ -28,6 +28,16 @@ export class ThunkComposer<
   public getTypeNonNull(): NonNullComposer<ThunkComposer<T, G>>;
 
   /**
+   * Get Type wrapped in List modifier
+   */
+  public get List(): ListComposer<ThunkComposer<T, G>>;
+
+  /**
+   * Get Type wrapped in NonNull modifier
+   */
+  public get NonNull(): NonNullComposer<ThunkComposer<T, G>>;
+
+  /**
    * Clone this type to another SchemaComposer.
    * Also will be clonned all wrapped types.
    */

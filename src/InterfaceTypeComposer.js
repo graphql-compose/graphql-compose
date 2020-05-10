@@ -743,6 +743,36 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return new NonNullComposer(this);
   }
 
+  /**
+   * Get Type wrapped in List modifier
+   *
+   * @example
+   *   const UserTC = schemaComposer.createInterfaceTC(`interface UserIface { name: String }`);
+   *   schemaComposer.Query.addFields({
+   *     users1: { type: UserTC.List }, // in SDL: users1: [UserIface]
+   *     users2: { type: UserTC.NonNull.List }, // in SDL: users2: [UserIface!]
+   *     users3: { type: UserTC.NonNull.List.NonNull }, // in SDL: users2: [UserIface!]!
+   *   })
+   */
+  get List(): ListComposer<InterfaceTypeComposer<TSource, TContext>> {
+    return new ListComposer(this);
+  }
+
+  /**
+   * Get Type wrapped in NonNull modifier
+   *
+   * @example
+   *   const UserTC = schemaComposer.createInterfaceTC(`interface UserIface { name: String }`);
+   *   schemaComposer.Query.addFields({
+   *     users1: { type: UserTC.List }, // in SDL: users1: [UserIface]
+   *     users2: { type: UserTC.NonNull.List }, // in SDL: users2: [UserIface!]!
+   *     users3: { type: UserTC.NonNull.List.NonNull }, // in SDL: users2: [UserIface!]!
+   *   })
+   */
+  get NonNull(): NonNullComposer<InterfaceTypeComposer<TSource, TContext>> {
+    return new NonNullComposer(this);
+  }
+
   getTypeName(): string {
     return this._gqType.name;
   }
