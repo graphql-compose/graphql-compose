@@ -81,6 +81,32 @@ export class ScalarTypeComposer<TContext = any> {
 
   public getTypeNonNull(): NonNullComposer<ScalarTypeComposer<TContext>>;
 
+  /**
+   * Get Type wrapped in List modifier
+   *
+   * @example
+   *   const ColorTC = schemaComposer.createScalarTC(`scalar Color`);
+   *   schemaComposer.Query.addFields({
+   *     color1: { type: ColorTC.List }, // in SDL: color1: [Color]
+   *     color2: { type: ColorTC.NonNull.List }, // in SDL: color2: [Color!]
+   *     color3: { type: ColorTC.NonNull.List.NonNull }, // in SDL: color2: [Color!]!
+   *   })
+   */
+  public get List(): ListComposer<ScalarTypeComposer<TContext>>;
+
+  /**
+   * Get Type wrapped in NonNull modifier
+   *
+   * @example
+   *   const ColorTC = schemaComposer.createScalarTC(`scalar Color`);
+   *   schemaComposer.Query.addFields({
+   *     color1: { type: ColorTC.List }, // in SDL: color1: [Color]
+   *     color2: { type: ColorTC.NonNull.List }, // in SDL: color2: [Color!]
+   *     color3: { type: ColorTC.NonNull.List.NonNull }, // in SDL: color2: [Color!]!
+   *   })
+   */
+  public get NonNull(): NonNullComposer<ScalarTypeComposer<TContext>>;
+
   public getTypeName(): string;
 
   public setTypeName(name: string): this;

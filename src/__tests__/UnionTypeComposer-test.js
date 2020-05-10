@@ -299,6 +299,20 @@ describe('UnionTypeComposer', () => {
       utc.setTypeName('NewUnionName');
       expect(utc.getTypeName()).toBe('NewUnionName');
     });
+
+    it('check getters List, NonNull', () => {
+      const UserTC = schemaComposer.createUnionTC(`union User = Admin | Client`);
+      expect(UserTC.List).toBeInstanceOf(ListComposer);
+      expect(UserTC.List.ofType).toBe(UserTC);
+      expect(UserTC.List.getTypeName()).toBe('[User]');
+      expect(UserTC.NonNull).toBeInstanceOf(NonNullComposer);
+      expect(UserTC.NonNull.ofType).toBe(UserTC);
+      expect(UserTC.NonNull.getTypeName()).toBe('User!');
+      expect(UserTC.NonNull.List).toBeInstanceOf(ListComposer);
+      expect(UserTC.NonNull.List.getTypeName()).toBe('[User!]');
+      expect(UserTC.NonNull.List.NonNull).toBeInstanceOf(NonNullComposer);
+      expect(UserTC.NonNull.List.NonNull.getTypeName()).toBe('[User!]!');
+    });
   });
 
   it('should have chainable methods', () => {

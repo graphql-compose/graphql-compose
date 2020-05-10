@@ -44,6 +44,16 @@ describe('ListComposer', () => {
     expect(tc.getTypeNonNull().ofType).toBe(tc);
   });
 
+  it('check getters List, NonNull', () => {
+    const UserTC = schemaComposer.createObjectTC(`type User { name: String }`);
+    expect(UserTC.List).toBeInstanceOf(ListComposer);
+    expect(UserTC.List.ofType).toBe(UserTC);
+    expect(UserTC.List.getTypeName()).toBe('[User]');
+    expect(UserTC.List.List.getTypeName()).toBe('[[User]]');
+    expect(UserTC.List.List.List.getTypeName()).toBe('[[[User]]]');
+    expect(UserTC.List.NonNull.getTypeName()).toBe('[User]!');
+  });
+
   it('getUnwrappedTC() should return NamedTypeComposer', () => {
     const UserTC1 = tc.getUnwrappedTC();
     expect(UserTC1).toBeInstanceOf(ObjectTypeComposer);

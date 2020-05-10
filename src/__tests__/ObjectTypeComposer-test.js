@@ -440,111 +440,127 @@ describe('ObjectTypeComposer', () => {
       });
     });
 
-    it('isFieldNonNull()', () => {
-      tc.setField('fieldNN', 'String');
-      expect(tc.isFieldNonNull('fieldNN')).toBe(false);
-      tc.setField('fieldNN', 'String!');
-      expect(tc.isFieldNonNull('fieldNN')).toBe(true);
-    });
-
-    it('makeFieldNonNull()', () => {
-      tc.setField('fieldNN', 'String');
-      expect(tc.getFieldType('fieldNN')).toBe(GraphQLString);
-
-      // should wrap with GraphQLNonNull
-      tc.makeFieldNonNull('fieldNN');
-      expect(tc.getFieldType('fieldNN')).toBeInstanceOf(GraphQLNonNull);
-      expect((tc.getFieldType('fieldNN'): any).ofType).toBe(GraphQLString);
-
-      // should not wrap twice
-      tc.makeFieldNonNull('fieldNN');
-      expect(tc.getFieldType('fieldNN')).toBeInstanceOf(GraphQLNonNull);
-      expect((tc.getFieldType('fieldNN'): any).ofType).toBe(GraphQLString);
-    });
-
-    it('makeFieldNullable()', () => {
-      tc.setField('fieldNN', 'String!');
-      expect(tc.getFieldType('fieldNN')).toBeInstanceOf(GraphQLNonNull);
-      expect((tc.getFieldType('fieldNN'): any).ofType).toBe(GraphQLString);
-
-      // should unwrap GraphQLNonNull
-      tc.makeFieldNullable('fieldNN');
-      expect(tc.getFieldType('fieldNN')).toBe(GraphQLString);
-
-      // should work for already unwrapped type
-      tc.makeFieldNullable('fieldNN');
-      expect(tc.getFieldType('fieldNN')).toBe(GraphQLString);
-    });
-
-    it('check field Plural methods, wrap/unwrap from ListComposer', () => {
-      tc.setFields({
-        b1: { type: new GraphQLNonNull(GraphQLString) },
-        b2: { type: '[String]' },
-        b3: 'String!',
-        b4: '[String!]!',
+    describe('check modificators', () => {
+      it('isFieldNonNull()', () => {
+        tc.setField('fieldNN', 'String');
+        expect(tc.isFieldNonNull('fieldNN')).toBe(false);
+        tc.setField('fieldNN', 'String!');
+        expect(tc.isFieldNonNull('fieldNN')).toBe(true);
       });
-      expect(tc.isFieldPlural('b1')).toBe(false);
-      expect(tc.isFieldPlural('b2')).toBe(true);
-      expect(tc.isFieldPlural('b3')).toBe(false);
-      expect(tc.isFieldPlural('b4')).toBe(true);
-      expect(tc.isFieldNonNull('b1')).toBe(true);
-      expect(tc.isFieldNonNull('b2')).toBe(false);
-      expect(tc.isFieldNonNull('b3')).toBe(true);
-      expect(tc.isFieldNonNull('b4')).toBe(true);
 
-      tc.makeFieldPlural(['b1', 'b2', 'b3', 'unexisted']);
-      expect(tc.isFieldPlural('b1')).toBe(true);
-      expect(tc.isFieldPlural('b2')).toBe(true);
-      expect(tc.isFieldPlural('b3')).toBe(true);
+      it('makeFieldNonNull()', () => {
+        tc.setField('fieldNN', 'String');
+        expect(tc.getFieldType('fieldNN')).toBe(GraphQLString);
 
-      tc.makeFieldNonNull('b2');
-      expect(tc.isFieldPlural('b2')).toBe(true);
-      expect(tc.isFieldNonNull('b2')).toBe(true);
-      tc.makeFieldNonPlural(['b2', 'b4', 'unexisted']);
-      expect(tc.isFieldPlural('b2')).toBe(false);
-      expect(tc.isFieldNonNull('b2')).toBe(true);
-      expect(tc.isFieldPlural('b4')).toBe(false);
-      tc.makeFieldNullable(['b2', 'b4', 'unexisted']);
-      expect(tc.isFieldNonNull('b2')).toBe(false);
-      expect(tc.isFieldNonNull('b4')).toBe(false);
-    });
+        // should wrap with GraphQLNonNull
+        tc.makeFieldNonNull('fieldNN');
+        expect(tc.getFieldType('fieldNN')).toBeInstanceOf(GraphQLNonNull);
+        expect((tc.getFieldType('fieldNN'): any).ofType).toBe(GraphQLString);
 
-    it('check Plural methods, wrap/unwrap from ListComposer', () => {
-      tc.setFields({
-        f: {
-          type: 'Int',
-          args: {
-            b1: { type: new GraphQLNonNull(GraphQLString) },
-            b2: { type: '[String]' },
-            b3: 'String!',
-            b4: '[String!]!',
+        // should not wrap twice
+        tc.makeFieldNonNull('fieldNN');
+        expect(tc.getFieldType('fieldNN')).toBeInstanceOf(GraphQLNonNull);
+        expect((tc.getFieldType('fieldNN'): any).ofType).toBe(GraphQLString);
+      });
+
+      it('makeFieldNullable()', () => {
+        tc.setField('fieldNN', 'String!');
+        expect(tc.getFieldType('fieldNN')).toBeInstanceOf(GraphQLNonNull);
+        expect((tc.getFieldType('fieldNN'): any).ofType).toBe(GraphQLString);
+
+        // should unwrap GraphQLNonNull
+        tc.makeFieldNullable('fieldNN');
+        expect(tc.getFieldType('fieldNN')).toBe(GraphQLString);
+
+        // should work for already unwrapped type
+        tc.makeFieldNullable('fieldNN');
+        expect(tc.getFieldType('fieldNN')).toBe(GraphQLString);
+      });
+
+      it('check field Plural methods, wrap/unwrap from ListComposer', () => {
+        tc.setFields({
+          b1: { type: new GraphQLNonNull(GraphQLString) },
+          b2: { type: '[String]' },
+          b3: 'String!',
+          b4: '[String!]!',
+        });
+        expect(tc.isFieldPlural('b1')).toBe(false);
+        expect(tc.isFieldPlural('b2')).toBe(true);
+        expect(tc.isFieldPlural('b3')).toBe(false);
+        expect(tc.isFieldPlural('b4')).toBe(true);
+        expect(tc.isFieldNonNull('b1')).toBe(true);
+        expect(tc.isFieldNonNull('b2')).toBe(false);
+        expect(tc.isFieldNonNull('b3')).toBe(true);
+        expect(tc.isFieldNonNull('b4')).toBe(true);
+
+        tc.makeFieldPlural(['b1', 'b2', 'b3', 'unexisted']);
+        expect(tc.isFieldPlural('b1')).toBe(true);
+        expect(tc.isFieldPlural('b2')).toBe(true);
+        expect(tc.isFieldPlural('b3')).toBe(true);
+
+        tc.makeFieldNonNull('b2');
+        expect(tc.isFieldPlural('b2')).toBe(true);
+        expect(tc.isFieldNonNull('b2')).toBe(true);
+        tc.makeFieldNonPlural(['b2', 'b4', 'unexisted']);
+        expect(tc.isFieldPlural('b2')).toBe(false);
+        expect(tc.isFieldNonNull('b2')).toBe(true);
+        expect(tc.isFieldPlural('b4')).toBe(false);
+        tc.makeFieldNullable(['b2', 'b4', 'unexisted']);
+        expect(tc.isFieldNonNull('b2')).toBe(false);
+        expect(tc.isFieldNonNull('b4')).toBe(false);
+      });
+
+      it('check Plural methods, wrap/unwrap from ListComposer', () => {
+        tc.setFields({
+          f: {
+            type: 'Int',
+            args: {
+              b1: { type: new GraphQLNonNull(GraphQLString) },
+              b2: { type: '[String]' },
+              b3: 'String!',
+              b4: '[String!]!',
+            },
           },
-        },
+        });
+        expect(tc.isFieldArgPlural('f', 'b1')).toBe(false);
+        expect(tc.isFieldArgPlural('f', 'b2')).toBe(true);
+        expect(tc.isFieldArgPlural('f', 'b3')).toBe(false);
+        expect(tc.isFieldArgPlural('f', 'b4')).toBe(true);
+        expect(tc.isFieldArgNonNull('f', 'b1')).toBe(true);
+        expect(tc.isFieldArgNonNull('f', 'b2')).toBe(false);
+        expect(tc.isFieldArgNonNull('f', 'b3')).toBe(true);
+        expect(tc.isFieldArgNonNull('f', 'b4')).toBe(true);
+
+        tc.makeFieldArgPlural('f', ['b1', 'b2', 'b3', 'unexisted']);
+        expect(tc.isFieldArgPlural('f', 'b1')).toBe(true);
+        expect(tc.isFieldArgPlural('f', 'b2')).toBe(true);
+        expect(tc.isFieldArgPlural('f', 'b3')).toBe(true);
+
+        tc.makeFieldArgNonNull('f', 'b2');
+        expect(tc.isFieldArgPlural('f', 'b2')).toBe(true);
+        expect(tc.isFieldArgNonNull('f', 'b2')).toBe(true);
+        tc.makeFieldArgNonPlural('f', ['b2', 'b4', 'unexisted']);
+        expect(tc.isFieldArgPlural('f', 'b2')).toBe(false);
+        expect(tc.isFieldArgNonNull('f', 'b2')).toBe(true);
+        expect(tc.isFieldArgPlural('f', 'b4')).toBe(false);
+        tc.makeFieldArgNullable('f', ['b2', 'b4', 'unexisted']);
+        expect(tc.isFieldArgNonNull('f', 'b2')).toBe(false);
+        expect(tc.isFieldArgNonNull('f', 'b4')).toBe(false);
       });
-      expect(tc.isFieldArgPlural('f', 'b1')).toBe(false);
-      expect(tc.isFieldArgPlural('f', 'b2')).toBe(true);
-      expect(tc.isFieldArgPlural('f', 'b3')).toBe(false);
-      expect(tc.isFieldArgPlural('f', 'b4')).toBe(true);
-      expect(tc.isFieldArgNonNull('f', 'b1')).toBe(true);
-      expect(tc.isFieldArgNonNull('f', 'b2')).toBe(false);
-      expect(tc.isFieldArgNonNull('f', 'b3')).toBe(true);
-      expect(tc.isFieldArgNonNull('f', 'b4')).toBe(true);
+    });
 
-      tc.makeFieldArgPlural('f', ['b1', 'b2', 'b3', 'unexisted']);
-      expect(tc.isFieldArgPlural('f', 'b1')).toBe(true);
-      expect(tc.isFieldArgPlural('f', 'b2')).toBe(true);
-      expect(tc.isFieldArgPlural('f', 'b3')).toBe(true);
-
-      tc.makeFieldArgNonNull('f', 'b2');
-      expect(tc.isFieldArgPlural('f', 'b2')).toBe(true);
-      expect(tc.isFieldArgNonNull('f', 'b2')).toBe(true);
-      tc.makeFieldArgNonPlural('f', ['b2', 'b4', 'unexisted']);
-      expect(tc.isFieldArgPlural('f', 'b2')).toBe(false);
-      expect(tc.isFieldArgNonNull('f', 'b2')).toBe(true);
-      expect(tc.isFieldArgPlural('f', 'b4')).toBe(false);
-      tc.makeFieldArgNullable('f', ['b2', 'b4', 'unexisted']);
-      expect(tc.isFieldArgNonNull('f', 'b2')).toBe(false);
-      expect(tc.isFieldArgNonNull('f', 'b4')).toBe(false);
+    it('check getters List, NonNull', () => {
+      const UserTC = schemaComposer.createObjectTC(`type User { name: String }`);
+      expect(UserTC.List).toBeInstanceOf(ListComposer);
+      expect(UserTC.List.ofType).toBe(UserTC);
+      expect(UserTC.List.getTypeName()).toBe('[User]');
+      expect(UserTC.NonNull).toBeInstanceOf(NonNullComposer);
+      expect(UserTC.NonNull.ofType).toBe(UserTC);
+      expect(UserTC.NonNull.getTypeName()).toBe('User!');
+      expect(UserTC.NonNull.List).toBeInstanceOf(ListComposer);
+      expect(UserTC.NonNull.List.getTypeName()).toBe('[User!]');
+      expect(UserTC.NonNull.List.NonNull).toBeInstanceOf(NonNullComposer);
+      expect(UserTC.NonNull.List.NonNull.getTypeName()).toBe('[User!]!');
     });
   });
 

@@ -343,6 +343,36 @@ export class EnumTypeComposer<TContext> {
     return new NonNullComposer(this);
   }
 
+  /**
+   * Get Type wrapped in List modifier
+   *
+   * @example
+   *   const ColorTC = schemaComposer.createEnumTC(`enum Color { RED GREEN }`);
+   *   schemaComposer.Query.addFields({
+   *     color1: { type: ColorTC.List }  // in SDL: color1: [Color]
+   *     color2: { type: ColorTC.NonNull.List }  // in SDL: color2: [Color!]
+   *     color3: { type: ColorTC.NonNull.List.NonNull }  // in SDL: color2: [Color!]!
+   *   })
+   */
+  get List(): ListComposer<EnumTypeComposer<TContext>> {
+    return new ListComposer(this);
+  }
+
+  /**
+   * Get Type wrapped in NonNull modifier
+   *
+   * @example
+   *   const ColorTC = schemaComposer.createEnumTC(`enum Color { RED GREEN }`);
+   *   schemaComposer.Query.addFields({
+   *     color1: { type: ColorTC.List }  // in SDL: color1: [Color]
+   *     color2: { type: ColorTC.NonNull.List }  // in SDL: color2: [Color!]
+   *     color3: { type: ColorTC.NonNull.List.NonNull }  // in SDL: color2: [Color!]!
+   *   })
+   */
+  get NonNull(): NonNullComposer<EnumTypeComposer<TContext>> {
+    return new NonNullComposer(this);
+  }
+
   getTypeName(): string {
     return this._gqType.name;
   }

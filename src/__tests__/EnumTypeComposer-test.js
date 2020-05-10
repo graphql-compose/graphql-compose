@@ -237,6 +237,20 @@ describe('EnumTypeComposer', () => {
       expect(etc.getTypeNonNull()).toBeInstanceOf(NonNullComposer);
       expect(etc.getTypeNonNull().ofType).toBe(etc);
     });
+
+    it('check getters List, NonNull', () => {
+      const ColorTC = schemaComposer.createEnumTC(`enum Color { RED GREEN }`);
+      expect(ColorTC.List).toBeInstanceOf(ListComposer);
+      expect(ColorTC.List.ofType).toBe(ColorTC);
+      expect(ColorTC.List.getTypeName()).toBe('[Color]');
+      expect(ColorTC.NonNull).toBeInstanceOf(NonNullComposer);
+      expect(ColorTC.NonNull.ofType).toBe(ColorTC);
+      expect(ColorTC.NonNull.getTypeName()).toBe('Color!');
+      expect(ColorTC.NonNull.List).toBeInstanceOf(ListComposer);
+      expect(ColorTC.NonNull.List.getTypeName()).toBe('[Color!]');
+      expect(ColorTC.NonNull.List.NonNull).toBeInstanceOf(NonNullComposer);
+      expect(ColorTC.NonNull.List.NonNull.getTypeName()).toBe('[Color!]!');
+    });
   });
 
   describe('deprecateFields()', () => {

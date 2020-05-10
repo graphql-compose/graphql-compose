@@ -173,6 +173,32 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public makeFieldPlural(fieldNameOrArray: string | string[]): this;
 
+  /**
+   * Get Type wrapped in List modifier
+   *
+   * @example
+   *   const UserTC = schemaComposer.createInterfaceTC(`interface UserIface { name: String }`);
+   *   schemaComposer.Query.addFields({
+   *     users1: { type: UserTC.List }, // in SDL: users1: [UserIface]
+   *     users2: { type: UserTC.NonNull.List }, // in SDL: users2: [UserIface!]
+   *     users3: { type: UserTC.NonNull.List.NonNull }, // in SDL: users2: [UserIface!]!
+   *   })
+   */
+  public get List(): ListComposer<InterfaceTypeComposer<TSource, TContext>>;
+
+  /**
+   * Get Type wrapped in NonNull modifier
+   *
+   * @example
+   *   const UserTC = schemaComposer.createInterfaceTC(`interface UserIface { name: String }`);
+   *   schemaComposer.Query.addFields({
+   *     users1: { type: UserTC.List }, // in SDL: users1: [UserIface]
+   *     users2: { type: UserTC.NonNull.List }, // in SDL: users2: [UserIface!]!
+   *     users3: { type: UserTC.NonNull.List.NonNull }, // in SDL: users2: [UserIface!]!
+   *   })
+   */
+  public get NonNull(): NonNullComposer<InterfaceTypeComposer<TSource, TContext>>;
+
   public makeFieldNonPlural(fieldNameOrArray: string | string[]): this;
 
   public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;

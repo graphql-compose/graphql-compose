@@ -318,6 +318,36 @@ export class UnionTypeComposer<TSource, TContext> {
     return new NonNullComposer(this);
   }
 
+  /**
+   * Get Type wrapped in List modifier
+   *
+   * @example
+   *   const UserTC = schemaComposer.createUnionTC(`union User = Admin | Client`);
+   *   schemaComposer.Query.addFields({
+   *     users1: { type: UserTC.List }, // in SDL: users1: [User]
+   *     users2: { type: UserTC.NonNull.List }, // in SDL: users2: [User!]
+   *     users3: { type: UserTC.NonNull.List.NonNull }, // in SDL: users2: [User!]!
+   *   })
+   */
+  get List(): ListComposer<UnionTypeComposer<TSource, TContext>> {
+    return new ListComposer(this);
+  }
+
+  /**
+   * Get Type wrapped in NonNull modifier
+   *
+   * @example
+   *   const UserTC = schemaComposer.createUnionTC(`union User = Admin | Client`);
+   *   schemaComposer.Query.addFields({
+   *     users1: { type: UserTC.List }, // in SDL: users1: [User]
+   *     users2: { type: UserTC.NonNull.List }, // in SDL: users2: [User!]
+   *     users3: { type: UserTC.NonNull.List.NonNull }, // in SDL: users2: [User!]!
+   *   })
+   */
+  get NonNull(): NonNullComposer<UnionTypeComposer<TSource, TContext>> {
+    return new NonNullComposer(this);
+  }
+
   getTypeName(): string {
     return this._gqType.name;
   }

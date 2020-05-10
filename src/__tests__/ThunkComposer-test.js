@@ -82,6 +82,16 @@ describe('ThunkComposer', () => {
     expect(tc.getTypeNonNull().ofType).toBe(tc);
   });
 
+  it('check getters List, NonNull', () => {
+    expect(tc.List).toBeInstanceOf(ListComposer);
+    expect(tc.List.ofType).toBe(tc);
+    expect(tc.List.getTypeName()).toBe('[User]');
+    expect(tc.NonNull).toBeInstanceOf(NonNullComposer);
+    expect(tc.NonNull.ofType).toBe(tc);
+    expect(tc.NonNull.getTypeName()).toBe('User!');
+    expect(tc.NonNull.List.NonNull.getTypeName()).toBe('[User!]!');
+  });
+
   it('getUnwrappedTC() should return NamedTypeComposer', () => {
     const UserTC1 = tc.getUnwrappedTC();
     expect(UserTC1).toBeInstanceOf(ObjectTypeComposer);
