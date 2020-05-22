@@ -570,7 +570,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     ifaces: Array<
       InterfaceTypeComposerDefinition<any, TContext> | InterfaceTypeComposerThunked<any, TContext>
     >
-  ): ObjectTypeComposer<TSource, TContext>;
+  ): this;
 
   public removeInterface(iface: InterfaceTypeComposerDefinition<any, TContext>): this;
 

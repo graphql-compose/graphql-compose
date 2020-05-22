@@ -83,6 +83,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   protected _gqcFields: ObjectTypeComposerFieldConfigMap<TSource, TContext>;
   protected _gqcInputTypeComposer: void | InputTypeComposer<TContext>;
   protected _gqcTypeResolvers: void | InterfaceTypeComposerResolversMap<TContext>;
+  protected _gqcInterfaces: Array<InterfaceTypeComposerThunked<TSource, TContext>>;
   protected _gqcExtensions: void | Extensions;
 
   /**
@@ -361,6 +362,34 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public removeTypeResolver(type: ObjectTypeComposer<any, TContext> | GraphQLObjectType): this;
+
+  /**
+   * -----------------------------------------------
+   * Sub-interfaces methods
+   * -----------------------------------------------
+   */
+
+  public getInterfaces(): Array<InterfaceTypeComposerThunked<TSource, TContext>>;
+
+  public getInterfacesTypes(): GraphQLInterfaceType[];
+
+  public setInterfaces(interfaces: Array<InterfaceTypeComposerDefinition<any, TContext>>): this;
+
+  public hasInterface(iface: InterfaceTypeComposerDefinition<any, TContext>): boolean;
+
+  public addInterface(
+    iface:
+      | InterfaceTypeComposerDefinition<any, TContext>
+      | InterfaceTypeComposerThunked<any, TContext>
+  ): this;
+
+  public addInterfaces(
+    ifaces: Array<
+      InterfaceTypeComposerDefinition<any, TContext> | InterfaceTypeComposerThunked<any, TContext>
+    >
+  ): this;
+
+  public removeInterface(iface: InterfaceTypeComposerDefinition<any, TContext>): this;
 
   /**
    *  -----------------------------------------------
