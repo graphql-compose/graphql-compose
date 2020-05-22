@@ -12,9 +12,7 @@
 [![Backers on Open Collective](https://opencollective.com/graphql-compose/backers/badge.svg)](#backers)
 [![Sponsors on Open Collective](https://opencollective.com/graphql-compose/sponsors/badge.svg)](#sponsors)
 
-[GraphQL](http://graphql.org/) – is a query language for APIs. [graphql-js](https://github.com/graphql/graphql-js) is the reference implementation of GraphQL for nodejs which introduce GraphQL type system for describing schema _(definition over configuration)_ and executes queries on the server side. [express-graphql](https://github.com/graphql/express-graphql) is a HTTP server which gets request data, passes it to `graphql-js` and returned result passes to response.
-
-**`graphql-compose`** – the _imperative tool_ which works on top of `graphql-js`. It provides some methods for creating types and GraphQL Models (so I call types with a list of common resolvers) for further building of complex relations in your schema.
+**`graphql-compose`** – provides a type registry with a bunch of methods for programmatic schema construction. It allows not only to extend types but also remove fields, interfaces, args. **If you want to write your graphql schema generator – `graphql-compose` is a good instrument for you.**
 
 * provides methods for editing GraphQL output/input types (add/remove fields/args/interfaces)
 * introduces `Resolver`s – the named graphql fieldConfigs, which can be used for finding, updating, removing records
@@ -24,16 +22,18 @@
 * provides `GraphQL schema language` for defining simple types
 * adds additional types `Date`, `Json`
 
+## And a little bit more
+
 **`graphql-compose-[plugin]`** – are _declarative generators/plugins_ built on top of `graphql-compose`, which take some ORMs, schema definitions and create GraphQL Models from them or modify existing GraphQL Types.
 
-Type generator plugins:
+### Type generators built on top `graphql-compose`
 
 * [graphql-compose-json](https://github.com/graphql-compose/graphql-compose-json) - generates GraphQL type from JSON (a good helper for wrapping REST APIs)
 * [graphql-compose-mongoose](https://github.com/graphql-compose/graphql-compose-mongoose) - generates GraphQL types from mongoose (MongoDB models) with Resolvers.
 * [graphql-compose-elasticsearch](https://github.com/graphql-compose/graphql-compose-elasticsearch) - generates GraphQL types from elastic mappings; ElasticSearch REST API proxy via GraphQL.
 * [graphql-compose-aws](https://github.com/graphql-compose/graphql-compose-aws) - expose AWS Cloud API via GraphQL
 
-Utility plugins:
+### Utility plugins:
 
 * [graphql-compose-relay](https://github.com/graphql-compose/graphql-compose-relay) - reassemble GraphQL types with `Relay` specific things, like `Node` type and interface, `globalId`, `clientMutationId`.
 * [graphql-compose-connection](https://github.com/graphql-compose/graphql-compose-connection) - generates `connection` Resolver from `findMany` and `count` Resolvers.
