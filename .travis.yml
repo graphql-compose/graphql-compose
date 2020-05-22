@@ -12,6 +12,8 @@ node_js:
 script:
   - yarn run test
   - yarn run build
+  - echo "[COMPATIBILITY CHECK] Testing with previous graphql versions..."
+  - yarn run test-prev-vers
 after_success:
   - 'curl -Lo travis_after_all.py https://git.io/travis_after_all'
   - python travis_after_all.py

@@ -88,7 +88,7 @@
     "flow": "./node_modules/.bin/flow",
     "test": "npm run coverage && npm run lint && npm run flow && npm run tscheck",
     "semantic-release": "semantic-release",
-    "test-vers": "yarn add graphql@0.13.0 --dev && jest && yarn add graphql@14.0.0 --dev && jest"
+    "test-prev-vers": "yarn add graphql@14.2.0 --dev && jest && git checkout HEAD -- package.json yarn.lock"
   },
   "collective": {
     "type": "opencollective",
