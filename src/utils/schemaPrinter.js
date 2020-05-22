@@ -298,7 +298,8 @@ export function printObject(type: GraphQLObjectType, options?: Options): string 
 
 export function printInterface(type: GraphQLInterfaceType, options?: Options): string {
   return `${printDescription(type, options)}interface ${type.name}${printImplementedInterfaces(
-    type
+    type,
+    options
   )}${printNodeDirectives(type.astNode)}${printFields(type, options)}`;
 }
 

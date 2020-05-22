@@ -990,7 +990,11 @@ export class TypeMapper<TContext> {
   }
 
   makeImplementedInterfaces(
-    def: ObjectTypeDefinitionNode | ObjectTypeExtensionNode
+    def:
+      | ObjectTypeDefinitionNode
+      | ObjectTypeExtensionNode
+      | InterfaceTypeDefinitionNode
+      | InterfaceTypeExtensionNode
   ): Array<InterfaceTypeComposerThunked<any, TContext>> {
     return (def.interfaces || []).map((iface) => {
       const name = this.getNamedTypeAST(iface).name.value;
@@ -1021,6 +1025,7 @@ export class TypeMapper<TContext> {
       name: def.name.value,
       description: getDescription(def),
       fields: this.makeFieldDefMap(def),
+      interfaces: this.makeImplementedInterfaces(def),
       astNode: def,
     });
     if (def.directives) {
