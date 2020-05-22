@@ -44,6 +44,7 @@ import type {
 import { toInputObjectType } from './utils/toInputObjectType';
 import { typeByPath, type TypeInPath } from './utils/typeByPath';
 import {
+  getComposeTypeName,
   getGraphQLType,
   unwrapOutputTC,
   unwrapInputTC,
@@ -51,7 +52,11 @@ import {
   cloneTypeTo,
   type NamedTypeComposer,
 } from './utils/typeHelpers';
-import { defineFieldMap, convertObjectFieldMapToConfig } from './utils/configToDefine';
+import {
+  defineFieldMap,
+  convertObjectFieldMapToConfig,
+  convertInterfaceArrayAsThunk,
+} from './utils/configToDefine';
 import { graphqlVersion } from './utils/graphqlVersion';
 import type { ComposeNamedInputType, ComposeNamedOutputType } from './utils/typeHelpers';
 import { printInterface, type SchemaPrinterOptions } from './utils/schemaPrinter';
@@ -92,6 +97,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   _gqType: GraphQLInterfaceType;
   _gqcFields: ObjectTypeComposerFieldConfigMap<TSource, TContext>;
   _gqcInputTypeComposer: void | InputTypeComposer<TContext>;
+  _gqcInterfaces: Array<InterfaceTypeComposerThunked<TSource, TContext>> = [];
   _gqcTypeResolvers: void | InterfaceTypeComposerResolversMap<TContext>;
   _gqcExtensions: void | Extensions;
 
@@ -166,6 +172,14 @@ export class InterfaceTypeComposer<TSource, TContext> {
         IFTC.addFields(fields);
       }
 
+      const interfaces = (typeDef: any).interfaces;
+      if (Array.isArray(interfaces)) IFTC.setInterfaces(interfaces);
+      else if (isFunction(interfaces)) {
+        // rewrap interfaces `() => [i1, i2]` -> `[()=>i1, ()=>i2]`
+        // helps to solve hoisting problems
+        IFTC.setInterfaces(convertInterfaceArrayAsThunk(interfaces, sc));
+      }
+
       IFTC._gqcExtensions = (typeDef: any).extensions || {};
     } else {
       throw new Error(
@@ -198,7 +212,13 @@ export class InterfaceTypeComposer<TSource, TContext> {
     // it avoids recursive type use errors
     this.schemaComposer.set(graphqlType, this);
 
-    if (graphqlVersion >= 14) {
+    if (graphqlVersion >= 15) {
+      this._gqcFields = convertObjectFieldMapToConfig(this._gqType._fields, this.schemaComposer);
+      this._gqcInterfaces = convertInterfaceArrayAsThunk(
+        this._gqType._interfaces,
+        this.schemaComposer
+      );
+    } else if (graphqlVersion >= 14) {
       this._gqcFields = convertObjectFieldMapToConfig(this._gqType._fields, this.schemaComposer);
     } else {
       // read
@@ -719,7 +739,15 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   getType(): GraphQLInterfaceType {
     this._gqType.astNode = getInterfaceTypeDefinitionNode(this);
-    if (graphqlVersion >= 14) {
+    if (graphqlVersion >= 15) {
+      this._gqType._fields = () =>
+        defineFieldMap(
+          this._gqType,
+          mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name)),
+          this._gqType.astNode
+        );
+      this._gqType._interfaces = () => this.getInterfacesTypes();
+    } else if (graphqlVersion >= 14) {
       this._gqType._fields = () =>
         defineFieldMap(
           this._gqType,
@@ -817,6 +845,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
       })),
       extensions: { ...fieldConfig.extensions },
     }));
+    cloned._gqcInterfaces = [...this._gqcInterfaces];
     cloned._gqcTypeResolvers = new Map(this._gqcTypeResolvers);
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
@@ -850,6 +879,9 @@ export class InterfaceTypeComposer<TSource, TContext> {
       })),
       extensions: { ...fieldConfig.extensions },
     }));
+    cloned._gqcInterfaces = (this._gqcInterfaces.map((i) =>
+      i.cloneTo(anotherSchemaComposer, cloneMap)
+    ): any);
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
 
@@ -887,6 +919,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
     if (tc) {
       this.addFields(tc.getFields());
+      this.addInterfaces(tc.getInterfaces());
     } else {
       throw new Error(
         `Cannot merge ${inspect(
@@ -1102,6 +1135,65 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
     typeResolversMap.delete(type);
     this.setTypeResolvers(typeResolversMap);
+    return this;
+  }
+
+  // -----------------------------------------------
+  // Sub-Interface methods
+  // -----------------------------------------------
+
+  getInterfaces(): Array<InterfaceTypeComposerThunked<TSource, TContext>> {
+    return this._gqcInterfaces;
+  }
+
+  getInterfacesTypes(): Array<GraphQLInterfaceType> {
+    return this._gqcInterfaces.map((i) => i.getType());
+  }
+
+  setInterfaces(
+    interfaces: $ReadOnlyArray<InterfaceTypeComposerDefinition<any, TContext>>
+  ): InterfaceTypeComposer<TSource, TContext> {
+    this._gqcInterfaces = convertInterfaceArrayAsThunk(interfaces, this.schemaComposer);
+    return this;
+  }
+
+  hasInterface(iface: InterfaceTypeComposerDefinition<any, TContext>): boolean {
+    const typeName = getComposeTypeName(iface);
+    return !!this._gqcInterfaces.find((i) => i.getTypeName() === typeName);
+  }
+
+  addInterface(
+    iface:
+      | InterfaceTypeComposerDefinition<any, TContext>
+      | InterfaceTypeComposerThunked<any, TContext>
+  ): InterfaceTypeComposer<TSource, TContext> {
+    if (!this.hasInterface(iface)) {
+      this._gqcInterfaces.push(
+        this.schemaComposer.typeMapper.convertInterfaceTypeDefinition(iface)
+      );
+    }
+    return this;
+  }
+
+  addInterfaces(
+    ifaces: $ReadOnlyArray<
+      InterfaceTypeComposerDefinition<any, TContext> | InterfaceTypeComposerThunked<any, TContext>
+    >
+  ): InterfaceTypeComposer<TSource, TContext> {
+    if (!Array.isArray(ifaces)) {
+      throw new Error(
+        `InterfaceTypeComposer[${this.getTypeName()}].addInterfaces() accepts only array`
+      );
+    }
+    ifaces.forEach((iface) => this.addInterface(iface));
+    return this;
+  }
+
+  removeInterface(
+    iface: InterfaceTypeComposerDefinition<any, TContext>
+  ): InterfaceTypeComposer<TSource, TContext> {
+    const typeName = getComposeTypeName(iface);
+    this._gqcInterfaces = this._gqcInterfaces.filter((i) => i.getTypeName() !== typeName);
     return this;
   }
 
@@ -1429,6 +1521,14 @@ export class InterfaceTypeComposer<TSource, TContext> {
           if (itc instanceof InputTypeComposer) {
             itc.getNestedTCs(opts, passedTypes);
           }
+        }
+      });
+
+      this.getInterfaces().forEach((t) => {
+        const iftc = t instanceof ThunkComposer ? t.ofType : t;
+        if (!passedTypes.has(iftc) && !exclude.includes(iftc.getTypeName())) {
+          passedTypes.add(iftc);
+          iftc.getNestedTCs(opts, passedTypes);
         }
       });
     });

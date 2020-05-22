@@ -470,6 +470,111 @@ describe('InterfaceTypeComposer', () => {
     });
   });
 
+  describe('interfaces manipulation', () => {
+    if (graphqlVersion < 15) return;
+
+    const iface = new GraphQLInterfaceType({
+      name: 'Node',
+      description: '',
+      fields: () => ({ id: { type: GraphQLInt } }),
+      resolveType: () => {},
+    });
+    const iface2 = new GraphQLInterfaceType({
+      name: 'Node2',
+      description: '',
+      fields: () => ({ id: { type: GraphQLInt } }),
+      resolveType: () => {},
+    });
+    const iface3 = InterfaceTypeComposer.create(
+      `
+        interface SimpleObject {
+          id: Int
+          name: String
+        }
+      `,
+      schemaComposer
+    );
+
+    it('getInterfaces()', () => {
+      const iftc1 = schemaComposer.createInterfaceTC(`
+          interface Meee implements SimpleObject {
+            id: Int
+            name: String
+          }
+        `);
+      expect(iftc1.getInterfaces()).toHaveLength(1);
+      expect(iftc1.getInterfaces()[0].getTypeName()).toBe('SimpleObject');
+    });
+
+    it('hasInterface()', () => {
+      const tc1 = schemaComposer.createObjectTC(`
+          type Meee implements SimpleObject {
+            id: Int
+            name: String
+          }
+        `);
+      expect(tc1.hasInterface('SimpleObject')).toBe(true);
+    });
+
+    it('hasInterface() should work by name or ITC', () => {
+      const MyIface = new GraphQLInterfaceType({
+        name: 'MyIface',
+        description: '',
+        fields: () => ({ id: { type: GraphQLInt } }),
+        resolveType: () => {},
+      });
+      iftc.addInterface(MyIface);
+      expect(iftc.hasInterface('MyIface123')).toBeFalsy();
+      expect(iftc.hasInterface('MyIface')).toBeTruthy();
+      expect(iftc.hasInterface(MyIface)).toBeTruthy();
+      expect(iftc.hasInterface(InterfaceTypeComposer.create(MyIface, schemaComposer))).toBeTruthy();
+
+      iftc.addInterface(InterfaceTypeComposer.create('MyIface123', schemaComposer));
+      expect(iftc.hasInterface('MyIface123')).toBeTruthy();
+    });
+
+    it('addInterface()', () => {
+      iftc.addInterface(iface);
+      expect(iftc.getInterfaces()).toHaveLength(1);
+      expect(iftc.hasInterface(iface)).toBe(true);
+      iftc.addInterface(iface2);
+      expect(iftc.getInterfaces()).toHaveLength(2);
+      expect(iftc.hasInterface(iface)).toBe(true);
+      expect(iftc.hasInterface(iface2)).toBe(true);
+      iftc.addInterface(iftc);
+      expect(iftc.hasInterface(iftc)).toBe(true);
+    });
+
+    it('removeInterface()', () => {
+      iftc.addInterface(iface);
+      iftc.addInterface(iface2);
+      iftc.addInterface(iftc);
+      expect(iftc.getInterfaces()).toHaveLength(3);
+      expect(iftc.hasInterface(iface)).toBe(true);
+      expect(iftc.hasInterface(iftc)).toBe(true);
+      expect(iftc.hasInterface(iface2)).toBe(true);
+      iftc.removeInterface(iface);
+      iftc.removeInterface(iftc);
+      expect(iftc.hasInterface(iface)).toBe(false);
+      expect(iftc.hasInterface(iftc)).toBe(false);
+      expect(iftc.hasInterface(iface2)).toBe(true);
+    });
+
+    it('check proper interface definition in GraphQLType', () => {
+      iftc.addInterface(iface);
+      iftc.addInterface(iface2);
+      iftc.addInterface(iface3);
+      const gqType = iftc.getType();
+      const ifaces = gqType.getInterfaces();
+      expect(ifaces[0]).toBeInstanceOf(GraphQLInterfaceType);
+      expect(ifaces[1]).toBeInstanceOf(GraphQLInterfaceType);
+      expect(ifaces[2]).toBeInstanceOf(GraphQLInterfaceType);
+      expect(ifaces[0].name).toBe('Node');
+      expect(ifaces[1].name).toBe('Node2');
+      expect(ifaces[2].name).toBe('SimpleObject');
+    });
+  });
+
   describe('create() [static method]', () => {
     it('should create Interface by typeName as a string', () => {
       const myIFTC = schemaComposer.createInterfaceTC('TypeStub');
@@ -1229,32 +1334,41 @@ describe('InterfaceTypeComposer', () => {
   });
 
   describe('misc methods', () => {
+    if (graphqlVersion < 15) return;
+
     it('toSDL()', () => {
       const t = schemaComposer.createInterfaceTC(`
         """desc1"""
-        interface IUser { 
+        interface IUser implements Node { 
           """desc2"""
           name(a: String): String
           field: ISubField
+          id: ID
         }
 
-        interface ISubField { 
+        interface ISubField {
           subField: Int
+        }
+
+        interface Node {
+          id: ID
         }
       `);
       expect(t.toSDL()).toBe(dedent`
         """desc1"""
-        interface IUser {
+        interface IUser implements Node {
           """desc2"""
           name(a: String): String
           field: ISubField
+          id: ID
         }
       `);
 
       expect(t.toSDL({ omitDescriptions: true })).toBe(dedent`
-        interface IUser {
+        interface IUser implements Node {
           name(a: String): String
           field: ISubField
+          id: ID
         }
       `);
 
@@ -1264,12 +1378,19 @@ describe('InterfaceTypeComposer', () => {
           deep: true,
         })
       ).toBe(dedent`
-        interface IUser {
+        interface IUser implements Node {
           name(a: String): String
           field: ISubField
+          id: ID
         }
 
         scalar String
+
+        interface Node {
+          id: ID
+        }
+        
+        scalar ID
 
         interface ISubField {
           subField: Int
@@ -1280,15 +1401,18 @@ describe('InterfaceTypeComposer', () => {
         t.toSDL({
           omitDescriptions: true,
           deep: true,
-          exclude: ['ISubField'],
+          exclude: ['ISubField', 'Node'],
         })
       ).toBe(dedent`
-        interface IUser {
+        interface IUser implements Node {
           name(a: String): String
           field: ISubField
+          id: ID
         }
 
         scalar String
+
+        scalar ID
       `);
     });
   });
