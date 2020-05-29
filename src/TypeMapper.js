@@ -1105,6 +1105,13 @@ export class TypeMapper<TContext> {
     const result = [];
     directives.forEach((directive) => {
       const name = directive.name.value;
+
+      if (name === GraphQLDeprecatedDirective.name) {
+        // @deprecated directive should be parsed via getDeprecationReason() method
+        // It's due to fact that deprecated is stored as separate type instance's field.
+        return;
+      }
+
       const directiveDef = this.schemaComposer._getDirective(name);
       const args = directiveDef
         ? getArgumentValues(directiveDef, directive)
