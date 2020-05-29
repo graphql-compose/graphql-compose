@@ -154,7 +154,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   displayName: string | void;
   kind: ResolverKinds | void;
   description: string | void;
-  deprecationReason: string | void;
+  deprecationReason: string | null | void;
   projection: ProjectionType;
   parent: Resolver<TSource, TContext, any> | void;
   extensions: Extensions | void;
@@ -940,6 +940,61 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     })): any);
 
     return cloned;
+  }
+
+  // -----------------------------------------------
+  // Extensions methods
+  // -----------------------------------------------
+
+  getExtensions(): Extensions {
+    if (!this.extensions) {
+      return {};
+    } else {
+      return this.extensions;
+    }
+  }
+
+  setExtensions(extensions: Extensions): Resolver<TSource, TContext, TArgs> {
+    this.extensions = extensions;
+    return this;
+  }
+
+  extendExtensions(extensions: Extensions): Resolver<TSource, TContext, TArgs> {
+    const current = this.getExtensions();
+    this.setExtensions({
+      ...current,
+      ...(extensions: any),
+    });
+    return this;
+  }
+
+  clearExtensions(): Resolver<TSource, TContext, TArgs> {
+    this.setExtensions({});
+    return this;
+  }
+
+  getExtension(extensionName: string): ?any {
+    const extensions = this.getExtensions();
+    return extensions[extensionName];
+  }
+
+  hasExtension(extensionName: string): boolean {
+    const extensions = this.getExtensions();
+    return extensionName in extensions;
+  }
+
+  setExtension(extensionName: string, value: any): Resolver<TSource, TContext, TArgs> {
+    this.extendExtensions({
+      [extensionName]: value,
+    });
+    return this;
+  }
+
+  removeExtension(extensionName: string): Resolver<TSource, TContext, TArgs> {
+    const extensions = { ...this.getExtensions() };
+    delete extensions[extensionName];
+    this.setExtensions(extensions);
+    return this;
   }
 
   // -----------------------------------------------
