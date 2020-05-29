@@ -362,6 +362,28 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
 
   /**
    * -----------------------------------------------
+   * Extensions methods
+   * -----------------------------------------------
+   */
+
+  public getExtensions(): Extensions;
+
+  public setExtensions(extensions: Extensions): this;
+
+  public extendExtensions(extensions: Extensions): this;
+
+  public clearExtensions(): this;
+
+  public getExtension(extensionName: string): any;
+
+  public hasExtension(extensionName: string): boolean;
+
+  public setExtension(extensionName: string, value: any): this;
+
+  public removeExtension(extensionName: string): this;
+
+  /**
+   * -----------------------------------------------
    * Debug methods
    * -----------------------------------------------
    */
