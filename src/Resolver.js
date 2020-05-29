@@ -64,6 +64,7 @@ export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
   displayName?: string,
   kind?: ResolverKinds,
   description?: string,
+  deprecationReason?: string | null,
   projection?: ProjectionType,
   parent?: Resolver<any, TContext, any>,
   extensions?: Extensions,
@@ -153,6 +154,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   displayName: string | void;
   kind: ResolverKinds | void;
   description: string | void;
+  deprecationReason: string | void;
   projection: ProjectionType;
   parent: Resolver<TSource, TContext, any> | void;
   extensions: Extensions | void;
@@ -178,7 +180,8 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
     this.displayName = opts.displayName;
     this.parent = opts.parent;
     this.kind = opts.kind;
-    this.description = opts.description || '';
+    this.description = opts.description;
+    this.deprecationReason = opts.deprecationReason;
     this.projection = opts.projection || {};
     this.extensions = opts.extensions;
 
@@ -806,15 +809,17 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
       projection?: ProjectionType,
     } = {}
   ): GraphQLFieldConfig<TSource, TContext, TArgs> {
-    return {
+    const fc: GraphQLFieldConfig<TSource, TContext, TArgs> = {
       type: this.getType(),
       args: mapEachKey((this.getArgs(): any), (ac) => ({
         ...ac,
         type: ac.type.getType(),
       })),
-      description: this.description,
       resolve: this.getFieldResolver(opts),
     };
+    if (this.description) fc.description = this.description;
+    if (this.deprecationReason) fc.deprecationReason = this.deprecationReason;
+    return fc;
   }
 
   getFieldResolver(
@@ -856,6 +861,15 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
 
   setDescription(description: string | void): Resolver<TSource, TContext, TArgs> {
     this.description = description;
+    return this;
+  }
+
+  getDeprecationReason(): ?string {
+    return this.deprecationReason;
+  }
+
+  setDeprecationReason(reason: string | void): Resolver<TSource, TContext, TArgs> {
+    this.deprecationReason = reason;
     return this;
   }
 
@@ -902,6 +916,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
         displayName: this.displayName,
         kind: this.kind,
         description: this.description,
+        deprecationReason: this.deprecationReason,
         projection: { ...this.projection },
         extensions: { ...this.extensions },
         resolve: this.resolve,

@@ -43,6 +43,7 @@ export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
   displayName?: string;
   kind?: ResolverKinds;
   description?: string;
+  deprecationReason?: string;
   projection?: ProjectionType;
   parent?: Resolver<any, TContext, any>;
   extensions?: Extensions;
@@ -334,6 +335,10 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
   public getDescription(): string | null;
 
   public setDescription(description: string | void): this;
+
+  public getDeprecationReason(): string | null;
+
+  public setDeprecationReason(reason: string | void): this;
 
   public get(path: string | string[]): any;
 

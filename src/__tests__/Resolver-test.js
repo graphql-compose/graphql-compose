@@ -48,6 +48,11 @@ describe('Resolver', () => {
     expect(resolver.getDescription()).toBe('Find users');
   });
 
+  it('should have getDeprecationReason/setDeprecationReason methods', () => {
+    resolver.setDeprecationReason('Use another method');
+    expect(resolver.getDeprecationReason()).toBe('Use another method');
+  });
+
   it('should have getKind/setKind methods', () => {
     resolver.setKind('query');
     expect(resolver.getKind()).toBe('query');
@@ -458,7 +463,6 @@ describe('Resolver', () => {
       const fc = resolver.getFieldConfig();
       expect(fc).toHaveProperty('type');
       expect(fc).toHaveProperty('args');
-      expect(fc).toHaveProperty('description');
       expect(fc).toHaveProperty('resolve');
     });
 
