@@ -362,10 +362,10 @@ export class TypeMapper<TContext> {
         };
       }
 
-      // convert type when its provided as composeIFC
-      const tcFromIFC = this.convertOutputTypeDefinition(composeFC, fieldName, typeName);
-      if (tcFromIFC) {
-        return { type: tcFromIFC };
+      // convert type when its provided as composeFC
+      const tcFromFC = this.convertOutputTypeDefinition(composeFC, fieldName, typeName);
+      if (tcFromFC) {
+        return { type: tcFromFC };
       }
 
       // convert type when its provided in composeIFC.type

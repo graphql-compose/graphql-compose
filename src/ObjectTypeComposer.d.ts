@@ -68,10 +68,11 @@ export type ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext> = ObjM
   ObjectTypeComposerFieldConfigDefinition<TSource, TContext>
 >;
 
-export type ObjectTypeComposerFieldConfigDefinition<TSource, TContext, TArgs = ArgsMap> =
+export type ObjectTypeComposerFieldConfigDefinition<TSource, TContext, TArgs = ArgsMap> = Thunk<
   | ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs>
-  | Thunk<ComposeOutputTypeDefinition<TContext>>
-  | Resolver<any, TContext, any>;
+  | ComposeOutputTypeDefinition<TContext>
+  | Resolver<any, TContext, any>
+>;
 
 export type ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs = ArgsMap> = {
   type: Thunk<ComposeOutputTypeDefinition<TContext> | Resolver<any, TContext, any>>;

@@ -363,6 +363,15 @@ export class ObjectTypeComposer<TSource, TContext> {
   }
 
   getField(fieldName: string): ObjectTypeComposerFieldConfig<TSource, TContext, ArgsMap> {
+    // If FieldConfig is a Thunk then unwrap it on first read.
+    // In most cases FieldConfig is an object,
+    // but for solving hoisting problems it's quite good to wrap it in function.
+    if (isFunction(this._gqcFields[fieldName])) {
+      // $FlowFixMe
+      const unwrappedFieldConfig = this._gqcFields[fieldName]();
+      this.setField(fieldName, unwrappedFieldConfig);
+    }
+
     const field = this._gqcFields[fieldName];
     if (!field) {
       throw new Error(
@@ -379,7 +388,10 @@ export class ObjectTypeComposer<TSource, TContext> {
   setFields(
     fields: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>
   ): ObjectTypeComposer<TSource, TContext> {
-    this._gqcFields = this.schemaComposer.typeMapper.convertOutputFieldConfigMap(fields);
+    this._gqcFields = {};
+    Object.keys(fields).forEach((name) => {
+      this.setField(name, fields[name]);
+    });
     return this;
   }
 
@@ -387,9 +399,13 @@ export class ObjectTypeComposer<TSource, TContext> {
     fieldName: string,
     fieldConfig: ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
   ): ObjectTypeComposer<TSource, TContext> {
-    this._gqcFields[fieldName] = this.schemaComposer.typeMapper.convertOutputFieldConfig(
-      fieldConfig
-    );
+    this._gqcFields[fieldName] = isFunction(fieldConfig)
+      ? (fieldConfig: any)
+      : this.schemaComposer.typeMapper.convertOutputFieldConfig(
+          fieldConfig,
+          fieldName,
+          this.getTypeName()
+        );
     return this;
   }
 
@@ -399,10 +415,9 @@ export class ObjectTypeComposer<TSource, TContext> {
   addFields(
     newFields: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>
   ): ObjectTypeComposer<TSource, TContext> {
-    this._gqcFields = {
-      ...this._gqcFields,
-      ...this.schemaComposer.typeMapper.convertOutputFieldConfigMap(newFields),
-    };
+    Object.keys(newFields).forEach((name) => {
+      this.setField(name, newFields[name]);
+    });
     return this;
   }
 
