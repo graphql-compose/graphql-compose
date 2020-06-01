@@ -37,9 +37,9 @@ export type InputTypeComposerFieldConfigMapDefinition = ObjMap<
   InputTypeComposerFieldConfigDefinition
 >;
 
-export type InputTypeComposerFieldConfigDefinition =
-  | InputTypeComposerFieldConfigAsObjectDefinition
-  | Thunk<ComposeInputTypeDefinition>;
+export type InputTypeComposerFieldConfigDefinition = Thunk<
+  InputTypeComposerFieldConfigAsObjectDefinition | ComposeInputTypeDefinition
+>;
 
 export type InputTypeComposerFieldConfigAsObjectDefinition = {
   type: Thunk<ComposeInputTypeDefinition>;

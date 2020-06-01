@@ -56,8 +56,7 @@ export type InputTypeComposerFieldConfigMapDefinition = ObjMapReadOnly<InputType
 
 export type InputTypeComposerFieldConfigDefinition =
   | InputTypeComposerFieldConfigAsObjectDefinition
-  | Thunk<ComposeInputTypeDefinition>
-  | $ReadOnly<ComposeInputType>;
+  | Thunk<ComposeInputTypeDefinition>;
 
 export type InputTypeComposerFieldConfigAsObjectDefinition = {
   type: Thunk<ComposeInputTypeDefinition>,
@@ -211,10 +210,10 @@ export class InputTypeComposer<TContext> {
   }
 
   setFields(fields: InputTypeComposerFieldConfigMapDefinition): InputTypeComposer<TContext> {
-    this._gqcFields = this.schemaComposer.typeMapper.convertInputFieldConfigMap(
-      fields,
-      this.getTypeName()
-    );
+    this._gqcFields = {};
+    Object.keys(fields).forEach((name) => {
+      this.setField(name, fields[name]);
+    });
     return this;
   }
 
@@ -222,11 +221,13 @@ export class InputTypeComposer<TContext> {
     fieldName: string,
     fieldConfig: InputTypeComposerFieldConfigDefinition
   ): InputTypeComposer<TContext> {
-    this._gqcFields[fieldName] = this.schemaComposer.typeMapper.convertInputFieldConfig(
-      fieldConfig,
-      fieldName,
-      this.getTypeName()
-    );
+    this._gqcFields[fieldName] = isFunction(fieldConfig)
+      ? (fieldConfig: any)
+      : this.schemaComposer.typeMapper.convertInputFieldConfig(
+          fieldConfig,
+          fieldName,
+          this.getTypeName()
+        );
     return this;
   }
 
@@ -234,10 +235,9 @@ export class InputTypeComposer<TContext> {
    * Add new fields or replace existed in a GraphQL type
    */
   addFields(newFields: InputTypeComposerFieldConfigMapDefinition): InputTypeComposer<TContext> {
-    this._gqcFields = {
-      ...this._gqcFields,
-      ...this.schemaComposer.typeMapper.convertInputFieldConfigMap(newFields, this.getTypeName()),
-    };
+    Object.keys(newFields).forEach((name) => {
+      this.setField(name, newFields[name]);
+    });
     return this;
   }
 
@@ -277,8 +277,16 @@ export class InputTypeComposer<TContext> {
   }
 
   getField(fieldName: string): InputTypeComposerFieldConfig {
-    const field = this._gqcFields[fieldName];
+    // If FieldConfig is a Thunk then unwrap it on first read.
+    // In most cases FieldConfig is an object,
+    // but for solving hoisting problems it's quite good to wrap it in function.
+    if (isFunction(this._gqcFields[fieldName])) {
+      // $FlowFixMe
+      const unwrappedFieldConfig = this._gqcFields[fieldName]();
+      this.setField(fieldName, unwrappedFieldConfig);
+    }
 
+    const field = this._gqcFields[fieldName];
     if (!field) {
       throw new Error(
         `Cannot get field '${fieldName}' from input type '${this.getTypeName()}'. Field does not exist.`

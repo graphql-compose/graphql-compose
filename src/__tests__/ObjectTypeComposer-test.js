@@ -135,9 +135,9 @@ describe('ObjectTypeComposer', () => {
 
       it('accept thunked type', () => {
         tc.setFields({
-          input4: () => 'String',
+          input4: (() => 'String': any),
         });
-        expect(tc.getField('input4').type).toBeInstanceOf(ThunkComposer);
+        expect(tc.getField('input4').type).toBeInstanceOf(ScalarTypeComposer);
         expect(tc.getFieldType('input4')).toBe(GraphQLString);
       });
     });
@@ -1880,6 +1880,49 @@ describe('ObjectTypeComposer', () => {
 
         scalar String"
       `);
+    });
+  });
+
+  describe('solve hoisting problems via thunk for fieldConfig', () => {
+    it('setFields() & setField() should keep fieldConfig as thunk', () => {
+      const HoistingTC = schemaComposer.createObjectTC('Hoisting');
+      const thunkedFieldConfig = () => ({ type: 'Int' });
+      HoistingTC.setFields({
+        field2: thunkedFieldConfig,
+        field3: 'Int',
+      });
+      HoistingTC.setField('field1', thunkedFieldConfig);
+
+      expect(HoistingTC._gqcFields.field1).toBe(thunkedFieldConfig);
+      expect(HoistingTC._gqcFields.field2).toBe(thunkedFieldConfig);
+      expect(HoistingTC._gqcFields.field3.type).toBeInstanceOf(ScalarTypeComposer);
+    });
+
+    it('getField() should unwrap field from thunk & convert it to ComposeFieldConfig', () => {
+      const HoistingTC = schemaComposer.createObjectTC('Hoisting');
+      const thunkedFieldConfig = () => ({
+        type: 'Int',
+        args: { limit: 'Int' },
+      });
+      HoistingTC.setFields({
+        field1: thunkedFieldConfig,
+        field2: thunkedFieldConfig,
+        field3: 'Int',
+      });
+      // by default fieldConfig is thunked
+      expect(HoistingTC._gqcFields.field1).toBe(thunkedFieldConfig);
+      // getField it should be unwrapped from thunk and converted to ComposeFieldConfig
+      expect(HoistingTC.getField('field1')).toEqual({
+        type: expect.any(ScalarTypeComposer),
+        args: { limit: { type: expect.any(ScalarTypeComposer) } },
+      });
+      // after first getField, type should be keep unthunked
+      expect(HoistingTC._gqcFields.field1).toEqual({
+        type: expect.any(ScalarTypeComposer),
+        args: { limit: { type: expect.any(ScalarTypeComposer) } },
+      });
+      // other thuked fields should be untouched
+      expect(HoistingTC._gqcFields.field2).toBe(thunkedFieldConfig);
     });
   });
 });

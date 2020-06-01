@@ -2,7 +2,6 @@ import {
   GraphQLInterfaceType,
   GraphQLObjectType,
   GraphQLFieldConfig,
-  GraphQLFieldConfigMap,
   GraphQLOutputType,
   GraphQLInputObjectType,
   GraphQLInputType,
