@@ -23,4 +23,7 @@
  *
  * @see https://github.com/dmnd/dedent
  */
-export function dedent(strings: string | string[], ...values: string[]): string;
+export function dedent(
+  strings: string | string[] | TemplateStringsArray,
+  ...values: string[]
+): string;
