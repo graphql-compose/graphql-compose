@@ -45,14 +45,14 @@
     "babel-eslint": "10.1.0",
     "babel-jest": "26.0.1",
     "cz-conventional-changelog": "3.2.0",
-    "eslint": "7.1.0",
+    "eslint": "7.2.0",
     "eslint-config-airbnb-base": "14.1.0",
     "eslint-config-prettier": "6.11.0",
     "eslint-plugin-flowtype": "5.1.3",
-    "eslint-plugin-import": "2.20.2",
+    "eslint-plugin-import": "2.21.2",
     "eslint-plugin-prettier": "3.1.3",
-    "flow-bin": "0.125.1",
-    "graphql": "15.0.0",
+    "flow-bin": "0.126.1",
+    "graphql": "15.1.0",
     "jest": "26.0.1",
     "prettier": "2.0.5",
     "rimraf": "3.0.2",
@@ -60,10 +60,10 @@
     "tslint": "6.1.2",
     "tslint-config-prettier": "1.18.0",
     "tslint-plugin-prettier": "2.3.0",
-    "typescript": "3.9.3"
+    "typescript": "3.9.5"
   },
   "dependencies": {
-    "graphql-type-json": "^0.3.1",
+    "graphql-type-json": "0.3.2",
     "object-path": "^0.11.4"
   },
   "config": {

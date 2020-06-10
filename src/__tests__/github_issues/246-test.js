@@ -1,6 +1,7 @@
 /* @flow */
 
 import { SchemaComposer } from '../..';
+import { graphqlVersion } from '../../utils/graphqlVersion';
 
 const sdl = `
   directive @test(reason: String = "No longer supported") on FIELD_DEFINITION | ENUM_VALUE | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
@@ -24,13 +25,14 @@ const sdl = `
   }
 `;
 
-describe('github issue #246: Directives are removed from schema in SchemaCompose', () => {
-  it('via addTypeDefs', async () => {
-    const schemaComposer = new SchemaComposer();
-    schemaComposer.addTypeDefs(sdl);
+if (graphqlVersion >= 15.1) {
+  describe('github issue #246: Directives are removed from schema in SchemaCompose', () => {
+    it('via addTypeDefs', async () => {
+      const schemaComposer = new SchemaComposer();
+      schemaComposer.addTypeDefs(sdl);
 
-    expect(schemaComposer.toSDL({ omitDescriptions: true, exclude: ['String'] }))
-      .toMatchInlineSnapshot(`
+      expect(schemaComposer.toSDL({ omitDescriptions: true, exclude: ['String'] }))
+        .toMatchInlineSnapshot(`
       "directive @test(reason: String = \\"No longer supported\\") on FIELD_DEFINITION | ENUM_VALUE | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
 
       scalar ID
@@ -53,13 +55,17 @@ describe('github issue #246: Directives are removed from schema in SchemaCompose
         OK @test(reason: \\"enum\\")
       }"
     `);
-  });
+    });
 
-  it('via constructor', async () => {
-    const schemaComposer = new SchemaComposer(sdl);
-    expect(schemaComposer.toSDL({ omitDescriptions: true, exclude: ['String'] }))
-      .toMatchInlineSnapshot(`
+    it('via constructor', async () => {
+      const schemaComposer = new SchemaComposer(sdl);
+      expect(schemaComposer.toSDL({ omitDescriptions: true, exclude: ['String'] }))
+        .toMatchInlineSnapshot(`
       "directive @test(reason: String = \\"No longer supported\\") on FIELD_DEFINITION | ENUM_VALUE | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
+
+      directive @specifiedBy(
+        url: String!
+      ) on SCALAR
 
       scalar ID
 
@@ -81,5 +87,6 @@ describe('github issue #246: Directives are removed from schema in SchemaCompose
         OK @test(reason: \\"enum\\")
       }"
     `);
+    });
   });
-});
+}
