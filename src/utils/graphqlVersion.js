@@ -4,7 +4,7 @@
 export function getGraphqlVersion(): number {
   const graphql: any = require('../graphql');
   if (graphql?.versionInfo?.major) {
-    return graphql?.versionInfo?.major;
+    return parseFloat(`${graphql?.versionInfo?.major}.${graphql?.versionInfo?.minor}`);
   } else if (graphql.getOperationRootType) {
     return 14.0;
   } else if (graphql.lexicographicSortSchema) {
