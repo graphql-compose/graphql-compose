@@ -8,7 +8,6 @@ import {
   GraphQLScalarValueParser,
   GraphQLScalarLiteralParser,
 } from './graphql';
-import { TypeMapper } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
@@ -114,6 +113,10 @@ export class ScalarTypeComposer<TContext = any> {
   public getDescription(): string;
 
   public setDescription(description: string): this;
+
+  public getSpecifiedByUrl(): string | void | null;
+
+  public setSpecifiedByUrl(url: string | void | null): this;
 
   /**
    * You may clone this type with a new provided name as string.

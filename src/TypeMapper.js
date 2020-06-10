@@ -984,7 +984,15 @@ export class TypeMapper<TContext> {
       });
     }
     if (def.directives) {
-      tc.setExtension('directives', this.parseDirectives(def.directives));
+      const directives = this.parseDirectives(def.directives).filter(({ name, args }) => {
+        // extract `specifiedByUrl` from directives
+        if (name === 'specifiedBy' && tc) {
+          tc.setSpecifiedByUrl(args.url);
+          return false;
+        }
+        return true;
+      });
+      tc.setExtension('directives', directives);
     }
     return tc;
   }

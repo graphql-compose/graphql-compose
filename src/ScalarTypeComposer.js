@@ -247,6 +247,15 @@ export class ScalarTypeComposer<TContext> {
     return this;
   }
 
+  getSpecifiedByUrl(): string | void | null {
+    return this._gqType.specifiedByUrl;
+  }
+
+  setSpecifiedByUrl(url: string | void | null): ScalarTypeComposer<TContext> {
+    this._gqType.specifiedByUrl = url;
+    return this;
+  }
+
   /**
    * You may clone this type with a new provided name as string.
    * Or you may provide a new TypeComposer which will get all clonned
@@ -267,6 +276,7 @@ export class ScalarTypeComposer<TContext> {
     cloned._gqcParseLiteral = this._gqcParseLiteral;
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
+    cloned.setSpecifiedByUrl(this.getSpecifiedByUrl());
 
     return cloned;
   }

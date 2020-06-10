@@ -1112,6 +1112,17 @@ describe('TypeMapper', () => {
       `);
       expect(ts.get('S').getDirectiveNames()).toEqual(['ok']);
     });
+
+    if (graphqlVersion >= 15.1) {
+      it('extract specifiedByUrl directive in Scalar', async () => {
+        const ts: any = typeMapper.parseTypesFromString(`
+          scalar S @specifiedBy(url: "https://example.com/foo_spec")
+        `);
+        const scalarTC = ts.get('S');
+        expect(scalarTC.getDirectiveNames()).toEqual([]);
+        expect(scalarTC.getSpecifiedByUrl()).toBe('https://example.com/foo_spec');
+      });
+    }
   });
 
   describe('convertSDLTypeDefinition()', () => {
