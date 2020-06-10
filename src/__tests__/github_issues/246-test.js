@@ -25,14 +25,13 @@ const sdl = `
   }
 `;
 
-if (graphqlVersion >= 15.1) {
-  describe('github issue #246: Directives are removed from schema in SchemaCompose', () => {
-    it('via addTypeDefs', async () => {
-      const schemaComposer = new SchemaComposer();
-      schemaComposer.addTypeDefs(sdl);
+describe('github issue #246: Directives are removed from schema in SchemaCompose', () => {
+  it('via addTypeDefs', async () => {
+    const schemaComposer = new SchemaComposer();
+    schemaComposer.addTypeDefs(sdl);
 
-      expect(schemaComposer.toSDL({ omitDescriptions: true, exclude: ['String'] }))
-        .toMatchInlineSnapshot(`
+    expect(schemaComposer.toSDL({ omitDescriptions: true, exclude: ['String'] }))
+      .toMatchInlineSnapshot(`
       "directive @test(reason: String = \\"No longer supported\\") on FIELD_DEFINITION | ENUM_VALUE | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
 
       scalar ID
@@ -55,10 +54,11 @@ if (graphqlVersion >= 15.1) {
         OK @test(reason: \\"enum\\")
       }"
     `);
-    });
+  });
 
-    it('via constructor', async () => {
-      const schemaComposer = new SchemaComposer(sdl);
+  it('via constructor', async () => {
+    const schemaComposer = new SchemaComposer(sdl);
+    if (graphqlVersion >= 15.1) {
       expect(schemaComposer.toSDL({ omitDescriptions: true, exclude: ['String'] }))
         .toMatchInlineSnapshot(`
       "directive @test(reason: String = \\"No longer supported\\") on FIELD_DEFINITION | ENUM_VALUE | ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
@@ -87,6 +87,6 @@ if (graphqlVersion >= 15.1) {
         OK @test(reason: \\"enum\\")
       }"
     `);
-    });
+    }
   });
-}
+});
