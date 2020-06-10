@@ -45,6 +45,13 @@ type Options = {
   omitScalars?: boolean | null;
 
   /**
+   * Do not print @specifiedByUrl for Scalars types
+   *
+   * Default: false
+   */
+  omitSpecifiedByUrl?: boolean | null;
+
+  /**
    * Sort fields, args and interfaces.
    * Useful for snapshot testing.
    *

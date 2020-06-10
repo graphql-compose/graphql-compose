@@ -6,6 +6,7 @@ import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { dedent } from '../utils/dedent';
+import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -201,6 +202,18 @@ describe('ScalarTypeComposer', () => {
         scalar My1 @d0(a: false) @d1(b: "3") @d0(a: true)
       `);
     });
+
+    if (graphqlVersion >= 15.1) {
+      it('check specifiedByUrl', () => {
+        const scalar1 = schemaComposer.createScalarTC(
+          `scalar S @specifiedBy(url: "https://example.com/foo_spec")`
+        );
+        expect(scalar1.getSpecifiedByUrl()).toEqual('https://example.com/foo_spec');
+        scalar1.setSpecifiedByUrl('other_url');
+        expect(scalar1.getSpecifiedByUrl()).toEqual('other_url');
+        expect(scalar1.toSDL()).toBe('scalar S @specifiedBy(url: "other_url")');
+      });
+    }
   });
 
   describe('merge()', () => {
