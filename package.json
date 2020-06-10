@@ -79,8 +79,8 @@
     "build-mjs-rename": "find ./mjs -name \"*.js\" -exec bash -c 'mv \"$1\" \"${1%.js}\".mjs' - '{}' \\;",
     "build-flow": "find ./src -name '*.js' -not -path '*/__*' | while read filepath; do cp $filepath `echo ./${COPY_TO_FOLDER:-lib}$filepath | sed 's/.\\/src\\//\\//g'`.flow; done",
     "build-ts": "find ./src -name '*.d.ts' -not -path '*/__*' | while read filepath; do cp $filepath `echo ./${COPY_TO_FOLDER:-lib}$filepath | sed 's/.\\/src\\//\\//g'`; done",
-    "watch": "jest --watch",
-    "coverage": "jest --coverage --maxWorkers 4",
+    "watch": "jest --watch --passWithNoTests",
+    "coverage": "jest --coverage --maxWorkers 4 --passWithNoTests",
     "lint": "npm run eslint && npm run tslint",
     "eslint": "eslint --ext .js ./src",
     "tslint": "tslint -p . \"src/**/*.d.ts\"",
@@ -88,7 +88,7 @@
     "flow": "./node_modules/.bin/flow",
     "test": "npm run coverage && npm run lint && npm run flow && npm run tscheck",
     "semantic-release": "semantic-release",
-    "test-prev-vers": "yarn add graphql@14.2.0 --dev && jest && yarn remove graphql && yarn add graphql --dev --exact && git checkout HEAD -- package.json yarn.lock"
+    "test-prev-vers": "yarn add graphql@14.2.0 --dev && jest --passWithNoTests && yarn remove graphql && yarn add graphql --dev --exact && git checkout HEAD -- package.json yarn.lock"
   },
   "collective": {
     "type": "opencollective",
