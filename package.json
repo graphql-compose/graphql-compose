@@ -1,6 +1,6 @@
 {
-  "name": "graphql-compose",
-  "version": "0.0.0-semantically-released",
+  "name": "graphql-compose-extended",
+  "version": "7.18.4",
   "description": "GraphQL schema builder from different data sources with middleware extensions.",
   "engines": {
     "node": ">= 6"
