@@ -1549,7 +1549,18 @@ export class ObjectTypeComposer<TSource, TContext> {
       return directives;
     }
     if (this._gqType.astNode) {
-      directives = this._gqType.astNode.directives;
+      directives = (this._gqType.astNode.directives || []).map((v) => {
+        const args = (v.arguments || []).reduce((acc, x) => {
+          acc[x.name.value] = x.value.value;
+          return acc;
+        }, {});
+
+        return {
+          name: v.name.value,
+          args,
+        };
+      });
+
       if (Array.isArray(directives)) {
         return directives;
       }
