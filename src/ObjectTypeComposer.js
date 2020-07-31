@@ -1544,7 +1544,11 @@ export class ObjectTypeComposer<TSource, TContext> {
   // -----------------------------------------------
 
   getDirectives(): Array<ExtensionsDirective> {
-    const directives = this.getExtension('directives');
+    let directives = this.getExtension('directives');
+    if (Array.isArray(directives)) {
+      return directives;
+    }
+    directives = this._gqType.astNode.directives;
     if (Array.isArray(directives)) {
       return directives;
     }
