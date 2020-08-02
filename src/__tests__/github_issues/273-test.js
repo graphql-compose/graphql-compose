@@ -1,10 +1,14 @@
 /* @flow */
 
 import { buildSchema } from 'graphql';
-import { SchemaComposer, dedent } from '../..';
+import { SchemaComposer, dedent, graphqlVersion } from '../..';
 
 describe('github issue #273: Object directives are removed from schema', () => {
   it('should keep @test directive on TestObject', () => {
+    if (graphqlVersion < 15) {
+      return;
+    }
+
     const schema = buildSchema(`
       directive @test on OBJECT | INPUT_OBJECT | SCALAR | ENUM
       
