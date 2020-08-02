@@ -208,10 +208,10 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   ): void {
     tc.getFieldNames().forEach((fieldName) => {
       const fieldTC = tc.getFieldTC(fieldName);
-      if(!fieldTC) {
-        throw new Error(`fieldTC "${fieldName}" is not defined.`)
+      if (!fieldTC) {
+        throw new Error(`fieldTC "${fieldName}" is not defined.`);
       }
-      
+
       const typeName = fieldTC.getTypeName();
       if (!passedTypes.has(typeName)) {
         passedTypes.add(typeName);
