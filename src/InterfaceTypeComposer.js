@@ -230,6 +230,13 @@ export class InterfaceTypeComposer<TSource, TContext> {
       );
     }
 
+    if (graphqlType?.astNode?.directives) {
+      this.setExtension(
+        'directives',
+        this.schemaComposer.typeMapper.parseDirectives(graphqlType?.astNode?.directives)
+      );
+    }
+
     // alive proper Flow type casting in autosuggestions for class with Generics
     /* :: return this; */
   }

@@ -197,6 +197,13 @@ export class UnionTypeComposer<TSource, TContext> {
       this._gqcTypeResolvers = new Map();
     }
 
+    if (graphqlType?.astNode?.directives) {
+      this.setExtension(
+        'directives',
+        this.schemaComposer.typeMapper.parseDirectives(graphqlType?.astNode?.directives)
+      );
+    }
+
     // alive proper Flow type casting in autosuggestions for class with Generics
     /* :: return this; */
   }

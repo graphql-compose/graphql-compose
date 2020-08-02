@@ -149,6 +149,13 @@ export class EnumTypeComposer<TContext> {
 
     this._gqcFields = convertEnumValuesToConfig(this._gqType.getValues(), this.schemaComposer);
 
+    if (graphqlType?.astNode?.directives) {
+      this.setExtension(
+        'directives',
+        this.schemaComposer.typeMapper.parseDirectives(graphqlType?.astNode?.directives)
+      );
+    }
+
     // alive proper Flow type casting in autosuggestions for class with Generics
     /* :: return this; */
   }
