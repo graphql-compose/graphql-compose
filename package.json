@@ -2,9 +2,6 @@
   "name": "graphql-compose",
   "version": "0.0.0-semantically-released",
   "description": "GraphQL schema builder from different data sources with middleware extensions.",
-  "engines": {
-    "node": ">= 6"
-  },
   "files": [
     "lib",
     "esm",
@@ -31,7 +28,7 @@
   },
   "devDependencies": {
     "@babel/cli": "7.10.5",
-    "@babel/core": "7.11.0",
+    "@babel/core": "7.11.1",
     "@babel/plugin-proposal-class-properties": "7.10.4",
     "@babel/plugin-proposal-nullish-coalescing-operator": "7.10.4",
     "@babel/plugin-proposal-object-rest-spread": "7.11.0",
@@ -51,7 +48,7 @@
     "eslint-plugin-flowtype": "5.2.0",
     "eslint-plugin-import": "2.22.0",
     "eslint-plugin-prettier": "3.1.4",
-    "flow-bin": "0.126.1",
+    "flow-bin": "0.131.0",
     "graphql": "15.3.0",
     "jest": "26.2.2",
     "prettier": "2.0.5",

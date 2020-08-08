@@ -361,7 +361,7 @@ export class InputTypeComposer<TContext> {
       ...prevFieldConfig,
       ...(partialFieldConfig: any),
       extensions: {
-        ...(prevFieldConfig.extensions || {}),
+        ...((prevFieldConfig.extensions: any) || {}),
         ...(partialFieldConfig.extensions || {}),
       },
     });
