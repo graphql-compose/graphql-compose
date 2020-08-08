@@ -114,6 +114,9 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     }
 
     if (schema instanceof GraphQLSchema) {
+      schema.getDirectives().forEach((directive) => {
+        this.addDirective(directive);
+      });
       forEachKey(schema.getTypeMap(), (v, k) => {
         // skip internal types
         if (k.startsWith('__')) return;
@@ -126,9 +129,6 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       if (m) this.set('Mutation', this.get(m));
       const s = schema.getSubscriptionType();
       if (s) this.set('Subscription', this.get(s));
-      schema.getDirectives().forEach((directive) => {
-        this.addDirective(directive);
-      });
       // $FlowFixMe `description` was added only in graphql@15.0.0
       if (schema.description) this.setDescription(schema.description);
     }
