@@ -1,6 +1,6 @@
 /* @flow */
 
-import { SchemaComposer } from '../..';
+import { SchemaComposer, graphqlVersion } from '../..';
 
 describe('github issue #262: SchemaComposer fails to map enum values in field directives', () => {
   it('check', async () => {
@@ -53,6 +53,10 @@ describe('github issue #262: SchemaComposer fails to map enum values in field di
   });
 
   it('check 2', () => {
+    if (graphqlVersion < 15) {
+      return;
+    }
+
     const inputSchema = `
     directive @auth(permissions: [CrudPermissions]) on OBJECT | FIELD_DEFINITION
 
