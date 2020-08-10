@@ -28,13 +28,16 @@ import type {
   NamedTypeNode,
   TypeNode,
   ValueNode,
+  GraphQLInputType,
 } from '../graphql';
+import { GraphQLDirective, astFromValue } from '../graphql';
 import type { ObjectTypeComposer } from '../ObjectTypeComposer';
 import type { InputTypeComposer } from '../InputTypeComposer';
 import type { EnumTypeComposer } from '../EnumTypeComposer';
 import type { InterfaceTypeComposer, InterfaceTypeComposerThunked } from '../InterfaceTypeComposer';
 import type { ScalarTypeComposer } from '../ScalarTypeComposer';
 import type { UnionTypeComposer } from '../UnionTypeComposer';
+import type { SchemaComposer } from '../SchemaComposer';
 import type { AnyTypeComposer } from './typeHelpers';
 import type { ExtensionsDirective, DirectiveArgs } from './definitions';
 import { ThunkComposer } from '../ThunkComposer';
@@ -51,7 +54,7 @@ export function getObjectTypeDefinitionNode(
     kind: 'ObjectTypeDefinition',
     name: { kind: 'Name', value: tc.getTypeName() },
     description: getDescriptionNode(tc.getDescription()),
-    directives: getDirectiveNodes(tc.getDirectives()),
+    directives: getDirectiveNodes(tc.getDirectives(), tc.schemaComposer),
     interfaces: getInterfaceNodes(tc.getInterfaces()),
     fields: getFieldDefinitionNodes(tc),
   };
@@ -66,7 +69,7 @@ export function getInputObjectTypeDefinitionNode(
   return {
     kind: 'InputObjectTypeDefinition',
     name: { kind: 'Name', value: tc.getTypeName() },
-    directives: getDirectiveNodes(tc.getDirectives()),
+    directives: getDirectiveNodes(tc.getDirectives(), tc.schemaComposer),
     description: getDescriptionNode(tc.getDescription()),
     fields: getInputValueDefinitionNodes(tc),
   };
@@ -80,7 +83,7 @@ export function getEnumTypeDefinitionNode(tc: EnumTypeComposer<any>): EnumTypeDe
     kind: 'EnumTypeDefinition',
     name: { kind: 'Name', value: tc.getTypeName() },
     description: getDescriptionNode(tc.getDescription()),
-    directives: getDirectiveNodes(tc.getDirectives()),
+    directives: getDirectiveNodes(tc.getDirectives(), tc.schemaComposer),
     values: getEnumValueDefinitionNodes(tc),
   };
 }
@@ -95,7 +98,7 @@ export function getInterfaceTypeDefinitionNode(
     kind: 'InterfaceTypeDefinition',
     name: { kind: 'Name', value: tc.getTypeName() },
     description: getDescriptionNode(tc.getDescription()),
-    directives: getDirectiveNodes(tc.getDirectives()),
+    directives: getDirectiveNodes(tc.getDirectives(), tc.schemaComposer),
     fields: getFieldDefinitionNodes(tc),
   };
 }
@@ -108,7 +111,7 @@ export function getScalarTypeDefinitionNode(tc: ScalarTypeComposer<any>): Scalar
     kind: 'ScalarTypeDefinition',
     name: { kind: 'Name', value: tc.getTypeName() },
     description: getDescriptionNode(tc.getDescription()),
-    directives: getDirectiveNodes(tc.getDirectives()),
+    directives: getDirectiveNodes(tc.getDirectives(), tc.schemaComposer),
   };
 }
 
@@ -122,7 +125,7 @@ export function getUnionTypeDefinitionNode(
     kind: 'UnionTypeDefinition',
     name: { kind: 'Name', value: tc.getTypeName() },
     description: getDescriptionNode(tc.getDescription()),
-    directives: getDirectiveNodes(tc.getDirectives()),
+    directives: getDirectiveNodes(tc.getDirectives(), tc.schemaComposer),
     types: tc.getTypeNames().map((value) => ({
       kind: 'NamedType',
       name: { kind: 'Name', value },
@@ -185,30 +188,43 @@ function toValueNode(value: mixed): ValueNode {
   }
 }
 
-function getArgumentNodes(data: DirectiveArgs): $ReadOnlyArray<ArgumentNode> | void {
+function getDirectiveArgumentNodes(
+  data: DirectiveArgs,
+  directive: ?GraphQLDirective
+): $ReadOnlyArray<ArgumentNode> | void {
   const keys = Object.keys(data);
   if (!keys.length) return;
   const args: Array<ArgumentNode> = [];
   keys.forEach((k) => {
-    args.push(
-      ({
-        kind: 'Argument',
-        name: { kind: 'Name', value: k },
-        value: toValueNode(data[k]),
-      }: ArgumentNode)
-    );
+    let argumentType: ?GraphQLInputType;
+    if (directive) {
+      argumentType = directive.args.find((d) => d.name === k)?.type;
+    }
+    const argNode = ({
+      kind: 'Argument',
+      name: { kind: 'Name', value: k },
+      value: argumentType
+        ? // `astFromValue` supports EnumString
+          astFromValue(data[k], argumentType) || { kind: 'NullValue' }
+        : // `toValueNode` is fallback which supports just primitive types
+          toValueNode(data[k]),
+    }: ArgumentNode);
+    args.push(argNode);
   });
   return args;
 }
 
-function getDirectiveNodes(values: ExtensionsDirective[]): $ReadOnlyArray<DirectiveNode> | void {
+function getDirectiveNodes(
+  values: ExtensionsDirective[],
+  sc: SchemaComposer<any>
+): $ReadOnlyArray<DirectiveNode> | void {
   if (!values || !values.length) return;
   return values.map(
     (v) =>
       ({
         kind: 'Directive',
         name: { kind: 'Name', value: v.name },
-        arguments: getArgumentNodes(v.args),
+        arguments: getDirectiveArgumentNodes(v.args, sc._getDirective(v.name)),
       }: DirectiveNode)
   );
 }
@@ -268,8 +284,14 @@ function getArgumentsDefinitionNodes(
         name: { kind: 'Name', value: argName },
         type,
         description: getDescriptionNode(ac.description),
-        directives: getDirectiveNodes(tc.getFieldArgDirectives(fieldName, argName)),
-        defaultValue: toValueNode(ac.defaultValue),
+        directives: getDirectiveNodes(
+          tc.getFieldArgDirectives(fieldName, argName),
+          tc.schemaComposer
+        ),
+        defaultValue:
+          (ac.defaultValue !== undefined &&
+            astFromValue(ac.defaultValue, tc.getFieldArgType(fieldName, argName))) ||
+          undefined,
       }: InputValueDefinitionNode);
     })
     .filter(Boolean);
@@ -291,7 +313,7 @@ function getFieldDefinitionNodes(
         type,
         arguments: getArgumentsDefinitionNodes(tc, fieldName),
         description: getDescriptionNode(fc.description),
-        directives: getDirectiveNodes(tc.getFieldDirectives(fieldName)),
+        directives: getDirectiveNodes(tc.getFieldDirectives(fieldName), tc.schemaComposer),
       }: FieldDefinitionNode);
     })
     .filter(Boolean);
@@ -312,8 +334,11 @@ function getInputValueDefinitionNodes(
         name: { kind: 'Name', value: fieldName },
         type,
         description: getDescriptionNode(fc.description),
-        directives: getDirectiveNodes(tc.getFieldDirectives(fieldName)),
-        defaultValue: toValueNode(fc.defaultValue),
+        directives: getDirectiveNodes(tc.getFieldDirectives(fieldName), tc.schemaComposer),
+        defaultValue:
+          (fc.defaultValue !== undefined &&
+            astFromValue(fc.defaultValue, tc.getFieldType(fieldName))) ||
+          undefined,
       }: InputValueDefinitionNode);
     })
     .filter(Boolean);
@@ -330,7 +355,7 @@ function getEnumValueDefinitionNodes(
       kind: 'EnumValueDefinition',
       name: { kind: 'Name', value: fieldName },
       description: getDescriptionNode(fc.description),
-      directives: getDirectiveNodes(tc.getFieldDirectives(fieldName)),
+      directives: getDirectiveNodes(tc.getFieldDirectives(fieldName), tc.schemaComposer),
     }: EnumValueDefinitionNode);
   });
 }
