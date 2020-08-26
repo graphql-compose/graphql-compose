@@ -1019,6 +1019,21 @@ describe('InterfaceTypeComposer', () => {
       expect(checkFn({ nope: 'other type' })).toBeFalsy();
     });
 
+    it('setTypeResolverFallback()', () => {
+      const checkFn1: any = iftc.getResolveType();
+      expect(checkFn1({})).toBeFalsy();
+
+      const FallbackTC = schemaComposer.createObjectTC(`
+        type Fallback { field1: String, field2: String }
+      `);
+      iftc.setTypeResolverFallback(FallbackTC);
+      expect(FallbackTC.hasInterface(iftc)).toBeTruthy();
+      const checkFn2: any = iftc.getResolveType();
+      expect(checkFn2({})).toBe(FallbackTC.getType());
+
+      iftc.setTypeResolverFallback(null);
+    });
+
     it('getTypeResolverNames()', () => {
       expect(iftc.getTypeResolverNames()).toEqual(
         expect.arrayContaining(['Person', 'KindRed', 'KindBlue'])

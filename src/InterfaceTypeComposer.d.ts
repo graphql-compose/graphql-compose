@@ -82,6 +82,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   protected _gqcFields: ObjectTypeComposerFieldConfigMap<TSource, TContext>;
   protected _gqcInputTypeComposer: void | InputTypeComposer<TContext>;
   protected _gqcTypeResolvers: void | InterfaceTypeComposerResolversMap<TContext>;
+  protected _gqcFallbackResolveType: ObjectTypeComposer<any, TContext> | GraphQLObjectType | null;
   protected _gqcInterfaces: Array<InterfaceTypeComposerThunked<TSource, TContext>>;
   protected _gqcExtensions: void | Extensions;
 
@@ -361,6 +362,10 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public removeTypeResolver(type: ObjectTypeComposer<any, TContext> | GraphQLObjectType): this;
+
+  public setTypeResolverFallback(
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType | null
+  ): this;
 
   /**
    * -----------------------------------------------

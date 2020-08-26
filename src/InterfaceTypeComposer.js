@@ -99,6 +99,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   _gqcInputTypeComposer: void | InputTypeComposer<TContext>;
   _gqcInterfaces: Array<InterfaceTypeComposerThunked<TSource, TContext>> = [];
   _gqcTypeResolvers: void | InterfaceTypeComposerResolversMap<TContext>;
+  _gqcFallbackResolveType: ObjectTypeComposer<any, TContext> | GraphQLObjectType | null = null;
   _gqcExtensions: void | Extensions;
 
   // Also supported `GraphQLInterfaceType` but in such case Flowtype force developers
@@ -869,6 +870,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     }));
     cloned._gqcInterfaces = [...this._gqcInterfaces];
     cloned._gqcTypeResolvers = new Map(this._gqcTypeResolvers);
+    cloned._gqcFallbackResolveType = this._gqcFallbackResolveType;
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
 
@@ -920,6 +922,13 @@ export class InterfaceTypeComposer<TSource, TContext> {
         clonedTypeResolvers.set(clonedTC, fn);
       });
       cloned.setTypeResolvers(clonedTypeResolvers);
+    }
+    if (this._gqcFallbackResolveType) {
+      cloned._gqcFallbackResolveType = (cloneTypeTo(
+        this._gqcFallbackResolveType,
+        anotherSchemaComposer,
+        cloneMap
+      ): any);
     }
 
     return cloned;
@@ -1056,8 +1065,16 @@ export class InterfaceTypeComposer<TSource, TContext> {
     typeResolversMap: InterfaceTypeComposerResolversMap<TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
     this._isTypeResolversValid(typeResolversMap);
-
     this._gqcTypeResolvers = typeResolversMap;
+    this._initResolveTypeFn();
+    return this;
+  }
+
+  _initResolveTypeFn(): InterfaceTypeComposer<TSource, TContext> {
+    const typeResolversMap = this._gqcTypeResolvers || new Map();
+    const fallbackType = this._gqcFallbackResolveType
+      ? (getGraphQLType(this._gqcFallbackResolveType): any)
+      : null;
 
     // extract GraphQLObjectType from ObjectTypeComposer
     const fastEntries = [];
@@ -1070,19 +1087,19 @@ export class InterfaceTypeComposer<TSource, TContext> {
     if (isAsyncRuntime) {
       resolveType = async (value, context, info) => {
         for (const [_gqType, checkFn] of fastEntries) {
-          // should we run checkFn simultaniously or in serial?
-          // Current decision is: dont SPIKE event loop - run in serial (it may be changed in future)
+          // should we run checkFn simultaneously or in serial?
+          // Current decision is: don't SPIKE event loop - run in serial (it may be changed in future)
           // eslint-disable-next-line no-await-in-loop
           if (await checkFn(value, context, info)) return _gqType;
         }
-        return null;
+        return fallbackType;
       };
     } else {
       resolveType = (value, context, info) => {
         for (const [_gqType, checkFn] of fastEntries) {
           if (checkFn(value, context, info)) return _gqType;
         }
-        return null;
+        return fallbackType;
       };
     }
 
@@ -1098,26 +1115,35 @@ export class InterfaceTypeComposer<TSource, TContext> {
     }
 
     for (const [composeType, checkFn] of typeResolversMap.entries()) {
-      // checking composeType
-      try {
-        const type = getGraphQLType(composeType);
-        if (!(type instanceof GraphQLObjectType)) throw new Error('Must be GraphQLObjectType');
-      } catch (e) {
-        throw new Error(
-          `For interface type resolver ${this.getTypeName()} you must provide GraphQLObjectType or ObjectTypeComposer, but provided ${inspect(
-            composeType
-          )}`
-        );
-      }
+      this._isTypeResolverValid(composeType, checkFn);
+    }
 
-      // checking checkFn
-      if (!isFunction(checkFn)) {
-        throw new Error(
-          `Interface ${this.getTypeName()} has invalid check function for type ${inspect(
-            composeType
-          )}`
-        );
-      }
+    return true;
+  }
+
+  _isTypeResolverValid(
+    composeType: ObjectTypeComposer<any, TContext> | GraphQLObjectType,
+    checkFn: InterfaceTypeComposerResolverCheckFn<any, TContext>
+  ): true {
+    // checking composeType
+    try {
+      const type = getGraphQLType(composeType);
+      if (!(type instanceof GraphQLObjectType)) throw new Error('Must be GraphQLObjectType');
+    } catch (e) {
+      throw new Error(
+        `For interface type resolver ${this.getTypeName()} you must provide GraphQLObjectType or ObjectTypeComposer, but provided ${inspect(
+          composeType
+        )}`
+      );
+    }
+
+    // checking checkFn
+    if (!isFunction(checkFn)) {
+      throw new Error(
+        `Interface ${this.getTypeName()} has invalid check function for type ${inspect(
+          composeType
+        )}`
+      );
     }
 
     return true;
@@ -1145,8 +1171,9 @@ export class InterfaceTypeComposer<TSource, TContext> {
     checkFn: InterfaceTypeComposerResolverCheckFn<TSrc, TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
+    this._isTypeResolverValid(type, checkFn);
     typeResolversMap.set(type, checkFn);
-    this.setTypeResolvers(typeResolversMap);
+    this._initResolveTypeFn();
 
     // ensure that interface added to ObjectType
     if (type instanceof ObjectTypeComposer) {
@@ -1164,7 +1191,24 @@ export class InterfaceTypeComposer<TSource, TContext> {
   ): InterfaceTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
     typeResolversMap.delete(type);
-    this.setTypeResolvers(typeResolversMap);
+    this._initResolveTypeFn();
+    return this;
+  }
+
+  setTypeResolverFallback(
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType | null
+  ): InterfaceTypeComposer<TSource, TContext> {
+    if (type) {
+      // ensure that interface added to ObjectType
+      if (type instanceof ObjectTypeComposer) {
+        type.addInterface(this);
+      }
+      // ensure that resolved type will be in Schema
+      this.schemaComposer.addSchemaMustHaveType(type);
+    }
+
+    this._gqcFallbackResolveType = type;
+    this._initResolveTypeFn();
     return this;
   }
 
