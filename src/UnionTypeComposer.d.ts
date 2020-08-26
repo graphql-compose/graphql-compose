@@ -7,8 +7,6 @@ import {
 import { SchemaComposer } from './SchemaComposer';
 import {
   ObjectTypeComposerThunked,
-  ObjectTypeComposerFieldConfig,
-  ObjectTypeComposerFieldConfigMap,
   ObjectTypeComposerDefinition,
   ObjectTypeComposer,
 } from './ObjectTypeComposer';
@@ -70,6 +68,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   protected _gqType: GraphQLUnionType;
   protected _gqcTypes: Set<ObjectTypeComposerThunked<any, TContext>>;
   protected _gqcTypeResolvers: UnionTypeComposerResolversMap<TSource, TContext>;
+  protected _gqcFallbackResolveType: ObjectTypeComposer<any, TContext> | GraphQLObjectType | null;
   protected _gqcExtensions: Extensions | void;
 
   constructor(graphqlType: GraphQLUnionType, schemaComposer: SchemaComposer<TContext>);
@@ -226,6 +225,10 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   ): this;
 
   public removeTypeResolver(type: ObjectTypeComposer<any, TContext> | GraphQLObjectType): this;
+
+  public setTypeResolverFallback(
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType | null
+  ): this;
 
   /**
    * -----------------------------------------------

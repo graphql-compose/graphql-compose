@@ -81,6 +81,7 @@ export class UnionTypeComposer<TSource, TContext> {
   _gqType: GraphQLUnionType;
   _gqcTypes: Set<ObjectTypeComposerThunked<any, TContext>>;
   _gqcTypeResolvers: UnionTypeComposerResolversMap<TSource, TContext>;
+  _gqcFallbackResolveType: ObjectTypeComposer<any, TContext> | GraphQLObjectType | null = null;
   _gqcExtensions: Extensions | void;
 
   // Also supported `GraphQLUnionType` but in such case Flowtype force developers
@@ -394,6 +395,7 @@ export class UnionTypeComposer<TSource, TContext> {
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned._gqcTypes = new Set(this._gqcTypes);
     cloned._gqcTypeResolvers = new Map(this._gqcTypeResolvers);
+    cloned._gqcFallbackResolveType = this._gqcFallbackResolveType;
     cloned.setDescription(this.getDescription());
 
     return cloned;
@@ -431,6 +433,13 @@ export class UnionTypeComposer<TSource, TContext> {
         clonedTypeResolvers.set(clonedTC, fn);
       });
       cloned.setTypeResolvers(clonedTypeResolvers);
+    }
+    if (this._gqcFallbackResolveType) {
+      cloned._gqcFallbackResolveType = (cloneTypeTo(
+        this._gqcFallbackResolveType,
+        anotherSchemaComposer,
+        cloneMap
+      ): any);
     }
 
     // this._gqcTypeMap
@@ -528,6 +537,14 @@ export class UnionTypeComposer<TSource, TContext> {
     typeResolversMap: UnionTypeComposerResolversMapDefinition<TSource, TContext>
   ): UnionTypeComposer<TSource, TContext> {
     this._gqcTypeResolvers = this._convertTypeResolvers(typeResolversMap);
+    this._initResolveTypeFn();
+    return this;
+  }
+
+  _initResolveTypeFn(): UnionTypeComposer<TSource, TContext> {
+    const fallbackType = this._gqcFallbackResolveType
+      ? (getGraphQLType(this._gqcFallbackResolveType): any)
+      : null;
 
     // extract GraphQLObjectType from ObjectTypeComposer
     const fastEntries = [];
@@ -541,19 +558,19 @@ export class UnionTypeComposer<TSource, TContext> {
     if (isAsyncRuntime) {
       resolveType = async (value, context, info) => {
         for (const [_gqType, checkFn] of fastEntries) {
-          // should we run checkFn simultaniously or in serial?
-          // Current decision is: dont SPIKE event loop - run in serial (it may be changed in future)
+          // should we run checkFn simultaneously or in serial?
+          // Current decision is: don't SPIKE event loop - run in serial (it may be changed in future)
           // eslint-disable-next-line no-await-in-loop
           if (await checkFn(value, context, info)) return _gqType;
         }
-        return null;
+        return fallbackType;
       };
     } else {
       resolveType = (value, context, info) => {
         for (const [_gqType, checkFn] of fastEntries) {
           if (checkFn(value, context, info)) return _gqType;
         }
-        return null;
+        return fallbackType;
       };
     }
 
@@ -640,6 +657,22 @@ export class UnionTypeComposer<TSource, TContext> {
     const tc = this._convertObjectType(type);
     typeResolversMap.delete(tc);
     this.setTypeResolvers(typeResolversMap);
+    return this;
+  }
+
+  setTypeResolverFallback(
+    type: ObjectTypeComposer<any, TContext> | GraphQLObjectType | null
+  ): UnionTypeComposer<TSource, TContext> {
+    if (type) {
+      // ensure that interface added to ObjectType
+      this.addType(type);
+
+      // ensure that resolved type will be in Schema
+      this.schemaComposer.addSchemaMustHaveType(type);
+    }
+
+    this._gqcFallbackResolveType = type;
+    this._initResolveTypeFn();
     return this;
   }
 

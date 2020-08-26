@@ -429,6 +429,20 @@ describe('UnionTypeComposer', () => {
       expect(checkFn({ nope: 'other type' })).toBeFalsy();
     });
 
+    it('setTypeResolverFallback()', () => {
+      const checkFn1: any = utc.getResolveType();
+      expect(checkFn1({})).toBeFalsy();
+
+      const FallbackTC = schemaComposer.createObjectTC(`
+        type Fallback { field1: String, field2: String }
+      `);
+      utc.setTypeResolverFallback(FallbackTC);
+      const checkFn2: any = utc.getResolveType();
+      expect(checkFn2({})).toBe(FallbackTC.getType());
+
+      utc.setTypeResolverFallback(null);
+    });
+
     it('getTypeResolverNames()', () => {
       expect(utc.getTypeResolverNames()).toEqual(
         expect.arrayContaining(['Person', 'KindRed', 'KindBlue'])
