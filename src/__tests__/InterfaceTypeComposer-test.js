@@ -981,7 +981,7 @@ describe('InterfaceTypeComposer', () => {
       KindRedTC = schemaComposer.createObjectTC(`
         type KindRed { kind: String, field1: String, field2: String, red: String }
       `);
-      KindRedTC.addInterface(iftc);
+      // You may not call `KindRedTC.addInterface(iftc)` it will be done internally by `addTypeResolver`
       iftc.addTypeResolver(KindRedTC, (value) => {
         return value.kind === 'red';
       });
@@ -989,7 +989,6 @@ describe('InterfaceTypeComposer', () => {
       KindBlueTC = schemaComposer.createObjectTC(`
         type KindBlue { kind: String, field1: String, field2: String, blue: String }
       `);
-      KindBlueTC.addInterface(iftc);
       iftc.addTypeResolver(KindBlueTC, (value) => {
         return value.kind === 'blue';
       });
@@ -1000,6 +999,12 @@ describe('InterfaceTypeComposer', () => {
       expect(iftc.hasTypeResolver(KindRedTC)).toBeTruthy();
       expect(iftc.hasTypeResolver(KindBlueTC)).toBeTruthy();
       expect(iftc.hasTypeResolver(schemaComposer.createObjectTC('NewOne'))).toBeFalsy();
+    });
+
+    it('to Object Types should be added current interface', () => {
+      expect(PersonTC.hasInterface(iftc)).toBeTruthy();
+      expect(KindRedTC.hasInterface(iftc)).toBeTruthy();
+      expect(KindBlueTC.hasInterface(iftc)).toBeTruthy();
     });
 
     it('getTypeResolvers()', () => {

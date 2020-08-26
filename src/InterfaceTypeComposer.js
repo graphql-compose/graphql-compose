@@ -1147,7 +1147,15 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const typeResolversMap = this.getTypeResolvers();
     typeResolversMap.set(type, checkFn);
     this.setTypeResolvers(typeResolversMap);
+
+    // ensure that interface added to ObjectType
+    if (type instanceof ObjectTypeComposer) {
+      type.addInterface(this);
+    }
+
+    // ensure that resolved type will be in Schema
     this.schemaComposer.addSchemaMustHaveType(type);
+
     return this;
   }
 
