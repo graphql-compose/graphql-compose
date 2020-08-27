@@ -1,5 +1,5 @@
-export type ObjMap<T> = { [key: string]: T };
-export type ObjMapReadOnly<T> = Readonly<{ [key: string]: Readonly<T> }>;
+export type ObjMap<T> = Record<string, T>;
+export type ObjMapReadOnly<T> = Readonly<Record<string, Readonly<T>>>;
 export type MaybePromise<T> = Promise<T> | T;
 
 // Workaround for fixing "Maximum call stack size exceeded" in Typescript
