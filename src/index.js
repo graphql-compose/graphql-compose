@@ -5,9 +5,7 @@ import { SchemaComposer } from './SchemaComposer';
 
 export { graphql };
 
-type TContext = any;
-
-const schemaComposer = new SchemaComposer<TContext>();
+const schemaComposer = new SchemaComposer<any>();
 const sc = schemaComposer;
 export {
   SchemaComposer, // SchemaComposer class
@@ -34,7 +32,7 @@ export { GraphQLDate, GraphQLBuffer, GraphQLJSON, GraphQLJSONObject } from './ty
 
 // Utils
 export { getProjectionFromAST, getFlatProjectionFromAST } from './utils/projection';
-export { toInputObjectType, convertInputObjectField } from './utils/toInputObjectType';
+export { toInputType, toInputObjectType, convertInputObjectField } from './utils/toInputType';
 export * from './utils/misc';
 export * from './utils/typeHelpers';
 export * from './utils/is';

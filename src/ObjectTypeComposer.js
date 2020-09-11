@@ -40,7 +40,7 @@ import {
   convertObjectFieldMapToConfig,
   convertInterfaceArrayAsThunk,
 } from './utils/configToDefine';
-import { toInputObjectType } from './utils/toInputObjectType';
+import { toInputObjectType } from './utils/toInputType';
 import { typeByPath, type TypeInPath } from './utils/typeByPath';
 import {
   getComposeTypeName,

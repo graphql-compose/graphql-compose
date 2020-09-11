@@ -30,7 +30,7 @@ export { GraphQLDate, GraphQLBuffer, GraphQLJSON, GraphQLJSONObject } from './ty
 
 // Utils
 export { getProjectionFromAST, getFlatProjectionFromAST } from './utils/projection';
-export { toInputObjectType, ConvertInputObjectFieldOpts } from './utils/toInputObjectType';
+export { toInputType, toInputObjectType, convertInputObjectField } from './utils/toInputType';
 export * from './utils/misc';
 export * from './utils/typeHelpers';
 export * from './utils/is';

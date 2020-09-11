@@ -11,7 +11,55 @@ import { schemaComposer as sc } from '../..';
 import { ObjectTypeComposer } from '../../ObjectTypeComposer';
 import { InputTypeComposer } from '../../InputTypeComposer';
 import { InterfaceTypeComposer } from '../../InterfaceTypeComposer';
-import { toInputObjectType } from '../toInputObjectType';
+import { toInputObjectType, toInputType } from '../toInputType';
+
+describe('toInputType()', () => {
+  beforeEach(() => {
+    sc.clear();
+  });
+
+  it('should return Scalar, Enum, Input types unchanged', () => {
+    const stc = sc.createScalarTC('MyScalar');
+    const itc1 = toInputType(stc);
+    expect(itc1).toBe(stc);
+
+    const etc = sc.createEnumTC('MyEnum');
+    const itc2 = toInputType(etc);
+    expect(itc2).toBe(etc);
+
+    const itc = sc.createInputTC('MyInput');
+    const itc3 = toInputType(itc);
+    expect(itc3).toBe(itc);
+  });
+
+  it('should return wrapped Scalar, Enum Input types unchanged', () => {
+    const stc = sc.createScalarTC('MyScalar').List.NonNull;
+    const itc1 = toInputType(stc);
+    expect(itc1.getTypeName()).toBe('[MyScalar]!');
+    expect((itc1: any).ofType.ofType).toBe((stc: any).ofType.ofType);
+
+    const etc = sc.createEnumTC('MyEnum').NonNull;
+    const itc2 = toInputType(etc);
+    expect(itc2.getTypeName()).toBe('MyEnum!');
+    expect((itc2: any).ofType).toBe((etc: any).ofType);
+
+    const itc = sc.createScalarTC('MyInput').NonNull.List.NonNull;
+    const itc3 = toInputType(itc);
+    expect(itc3.getTypeName()).toBe('[MyInput!]!');
+    expect((itc3: any).ofType.ofType.ofType).toBe((itc: any).ofType.ofType.ofType);
+  });
+
+  it('should convert wrapped Object type to new Input type', () => {
+    const otc = sc.createObjectTC({
+      name: 'MyObject',
+      fields: { a: 'Int', b: 'Float!' },
+    }).NonNull;
+    const itc = toInputType(otc);
+    expect(itc.getTypeName()).toBe('MyObjectInput!');
+    expect((itc: any).ofType.getFieldTypeName('a')).toBe('Int');
+    expect((itc: any).ofType.getFieldTypeName('b')).toBe('Float!');
+  });
+});
 
 describe('toInputObjectType()', () => {
   let PersonTC: ObjectTypeComposer<any, any>;

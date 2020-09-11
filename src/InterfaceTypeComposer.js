@@ -41,7 +41,7 @@ import type {
   DirectiveArgs,
   ExtensionsDirective,
 } from './utils/definitions';
-import { toInputObjectType } from './utils/toInputObjectType';
+import { toInputObjectType } from './utils/toInputType';
 import { typeByPath, type TypeInPath } from './utils/typeByPath';
 import {
   getComposeTypeName,
