@@ -99,7 +99,7 @@ export type ObjectTypeComposerFieldConfig<TSource, TContext, TArgs = ArgsMap> = 
 
 // Compose Args -----------------------------
 
-export type ArgsMap = { [argName: string]: any };
+export type ArgsMap = Record<string, any>;
 
 export type ObjectTypeComposerArgumentConfigMap<TArgs = ArgsMap> = {
   [argName in keyof TArgs]: ObjectTypeComposerArgumentConfig;
