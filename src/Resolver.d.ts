@@ -6,7 +6,6 @@ import {
   GraphQLResolveInfo,
   GraphQLFieldConfigArgumentMap,
 } from 'graphql';
-import * as graphql from './graphql';
 import { InputTypeComposer } from './InputTypeComposer';
 import { SchemaComposer } from './SchemaComposer';
 import {
@@ -16,7 +15,6 @@ import {
   ObjectTypeComposer,
   ObjectTypeComposerArgumentConfigAsObjectDefinition,
   ObjectTypeComposerArgumentConfigDefinition,
-  ArgsMap,
 } from './ObjectTypeComposer';
 import { Thunk, Extensions } from './utils/definitions';
 import { ProjectionType } from './utils/projection';
@@ -31,7 +29,7 @@ import {
 
 export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 
-export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
+export type ResolverDefinition<TSource, TContext, TArgs = any> = {
   type?: Thunk<
     | ComposeOutputType<TContext>
     | ComposeOutputTypeDefinition<TContext>
@@ -49,7 +47,7 @@ export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
   extensions?: Extensions;
 };
 
-export type ResolverResolveParams<TSource, TContext, TArgs = ArgsMap> = {
+export type ResolverResolveParams<TSource, TContext, TArgs = any> = {
   source: TSource;
   args: TArgs;
   context: TContext;
@@ -58,13 +56,13 @@ export type ResolverResolveParams<TSource, TContext, TArgs = ArgsMap> = {
   [opt: string]: any;
 };
 
-export type ResolverFilterArgFn<TSource, TContext, TArgs = ArgsMap> = (
+export type ResolverFilterArgFn<TSource, TContext, TArgs = any> = (
   query: any,
   value: any,
   resolveParams: ResolverResolveParams<TSource, TContext, TArgs>
 ) => any;
 
-export type ResolverFilterArgConfigDefinition<TSource, TContext, TArgs = ArgsMap> = {
+export type ResolverFilterArgConfigDefinition<TSource, TContext, TArgs = any> = {
   name: string;
   type: ComposeInputTypeDefinition;
   description?: string | null | void;
@@ -73,11 +71,11 @@ export type ResolverFilterArgConfigDefinition<TSource, TContext, TArgs = ArgsMap
   defaultValue?: any;
 };
 
-export type ResolverSortArgFn<TSource, TContext, TArgs = ArgsMap> = (
+export type ResolverSortArgFn<TSource, TContext, TArgs = any> = (
   resolveParams: ResolverResolveParams<TSource, TContext, TArgs>
 ) => any;
 
-export type ResolverSortArgConfig<TSource, TContext, TArgs = ArgsMap> = {
+export type ResolverSortArgConfig<TSource, TContext, TArgs = any> = {
   name: string;
   sortTypeNameFallback?: string;
   // value also can be an `Object`, but flow does not understande union with object and function
@@ -93,21 +91,15 @@ export type ResolverSortArgConfig<TSource, TContext, TArgs = ArgsMap> = {
   description?: string | null;
 };
 
-export type ResolverWrapCb<
-  TNewSource,
-  TPrevSource,
-  TContext,
-  TNewArgs = ArgsMap,
-  TPrevArgs = ArgsMap
-> = (
+export type ResolverWrapCb<TNewSource, TPrevSource, TContext, TNewArgs = any, TPrevArgs = any> = (
   newResolver: Resolver<TNewSource, TContext, TNewArgs>,
   prevResolver: Resolver<TPrevSource, TContext, TPrevArgs>
 ) => Resolver<TNewSource, TContext, TNewArgs>;
 
-export type ResolverRpCb<TSource, TContext, TArgs = ArgsMap> = (
+export type ResolverRpCb<TSource, TContext, TArgs = any> = (
   resolveParams: ResolverResolveParams<TSource, TContext, TArgs>
 ) => Promise<any> | any;
-export type ResolverNextRpCb<TSource, TContext, TArgs = ArgsMap> = (
+export type ResolverNextRpCb<TSource, TContext, TArgs = any> = (
   next: ResolverRpCb<TSource, TContext, TArgs>
 ) => ResolverRpCb<TSource, TContext, TArgs>;
 
@@ -117,7 +109,7 @@ export type ResolverDebugOpts = {
   colors?: boolean;
 };
 
-export type ResolverMiddleware<TSource, TContext, TArgs = ArgsMap> = (
+export type ResolverMiddleware<TSource, TContext, TArgs = any> = (
   resolve: (source: TSource, args: TArgs, context: TContext, info: GraphQLResolveInfo) => any,
   source: TSource,
   args: TArgs,
@@ -128,7 +120,7 @@ export type ResolverMiddleware<TSource, TContext, TArgs = ArgsMap> = (
 /**
  * The most interesting class in `graphql-compose`. The main goal of `Resolver` is to keep available resolve methods for Type and use them for building relation with other types.
  */
-export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = any> {
+export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any> {
   public schemaComposer: SchemaComposer<TContext>;
   public type: ComposeOutputType<TContext>;
   public args: ObjectTypeComposerArgumentConfigMap<any>;
@@ -206,7 +198,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = ArgsMap, TReturn = 
     partialArgConfig: Partial<ObjectTypeComposerArgumentConfigAsObjectDefinition>
   ): this;
 
-  public addArgs(newArgs: ObjectTypeComposerArgumentConfigMapDefinition<ArgsMap>): this;
+  public addArgs(newArgs: ObjectTypeComposerArgumentConfigMapDefinition<any>): this;
 
   public removeArg(argNameOrArray: string | string[]): this;
 

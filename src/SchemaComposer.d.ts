@@ -6,7 +6,7 @@ import {
   GraphQLResolveInfo,
   GraphQLType,
 } from 'graphql';
-import { ObjectTypeComposer, ObjectTypeComposerDefinition, ArgsMap } from './ObjectTypeComposer';
+import { ObjectTypeComposer, ObjectTypeComposerDefinition } from './ObjectTypeComposer';
 import { InputTypeComposer, InputTypeComposerDefinition } from './InputTypeComposer';
 import { ScalarTypeComposer, ScalarTypeComposerDefinition } from './ScalarTypeComposer';
 import { EnumTypeComposer, EnumTypeComposerDefinition } from './EnumTypeComposer';
@@ -210,7 +210,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   public createScalarTC(typeDef: ScalarTypeComposerDefinition): ScalarTypeComposer<TContext>;
 
-  public createResolver<TSource = any, TArgs = ArgsMap>(
+  public createResolver<TSource = any, TArgs = any>(
     opts: ResolverDefinition<TSource, TContext, TArgs>
   ): Resolver<TSource, TContext, TArgs>;
 

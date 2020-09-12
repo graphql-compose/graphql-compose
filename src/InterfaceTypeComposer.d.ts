@@ -17,24 +17,16 @@ import {
   ObjectTypeComposerArgumentConfig,
   ObjectTypeComposerArgumentConfigMap,
   ObjectTypeComposerFieldConfigMapDefinition,
-  ArgsMap,
   ObjectTypeComposerFieldConfigDefinition,
   ObjectTypeComposerFieldConfigAsObjectDefinition,
   ObjectTypeComposerArgumentConfigMapDefinition,
   ObjectTypeComposerArgumentConfigDefinition,
 } from './ObjectTypeComposer';
-import {
-  Thunk,
-  MaybePromise,
-  Extensions,
-  ExtensionsDirective,
-  DirectiveArgs,
-} from './utils/definitions';
+import { MaybePromise, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { ThunkComposer } from './ThunkComposer';
 import {
   ComposeNamedOutputType,
-  ComposeOutputType,
   ComposeNamedInputType,
   NamedTypeComposer,
 } from './utils/typeHelpers';
@@ -122,7 +114,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public setField(
     name: string,
-    fieldConfig: ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
+    fieldConfig: ObjectTypeComposerFieldConfigDefinition<TSource, TContext, any>
   ): this;
 
   /**
@@ -204,9 +196,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public deprecateFields(fields: { [fieldName: string]: string } | string[] | string): this;
 
-  public getFieldArgs<TArgs = ArgsMap>(
-    fieldName: string
-  ): ObjectTypeComposerArgumentConfigMap<TArgs>;
+  public getFieldArgs<TArgs = any>(fieldName: string): ObjectTypeComposerArgumentConfigMap<TArgs>;
 
   public getFieldArgNames(fieldName: string): string[];
 

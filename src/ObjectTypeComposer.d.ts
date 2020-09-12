@@ -68,13 +68,13 @@ export type ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext> = ObjM
   ObjectTypeComposerFieldConfigDefinition<TSource, TContext>
 >;
 
-export type ObjectTypeComposerFieldConfigDefinition<TSource, TContext, TArgs = ArgsMap> = Thunk<
+export type ObjectTypeComposerFieldConfigDefinition<TSource, TContext, TArgs = any> = Thunk<
   | ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs>
   | ComposeOutputTypeDefinition<TContext>
   | Resolver<any, TContext, any>
 >;
 
-export type ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs = ArgsMap> = {
+export type ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs = any> = {
   type: Thunk<ComposeOutputTypeDefinition<TContext> | Resolver<any, TContext, any>>;
   args?: ObjectTypeComposerArgumentConfigMapDefinition<TArgs>;
   resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>;
@@ -85,7 +85,7 @@ export type ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, T
   [key: string]: any;
 };
 
-export type ObjectTypeComposerFieldConfig<TSource, TContext, TArgs = ArgsMap> = {
+export type ObjectTypeComposerFieldConfig<TSource, TContext, TArgs = any> = {
   type: ComposeOutputType<TContext>;
   args?: ObjectTypeComposerArgumentConfigMap<TArgs>;
   resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>;
@@ -99,13 +99,11 @@ export type ObjectTypeComposerFieldConfig<TSource, TContext, TArgs = ArgsMap> = 
 
 // Compose Args -----------------------------
 
-export type ArgsMap = Record<string, any>;
-
-export type ObjectTypeComposerArgumentConfigMap<TArgs = ArgsMap> = {
+export type ObjectTypeComposerArgumentConfigMap<TArgs = any> = {
   [argName in keyof TArgs]: ObjectTypeComposerArgumentConfig;
 };
 
-export type ObjectTypeComposerArgumentConfigMapDefinition<TArgs = ArgsMap> = {
+export type ObjectTypeComposerArgumentConfigMapDefinition<TArgs = any> = {
   [argName in keyof TArgs]: ObjectTypeComposerArgumentConfigDefinition;
 };
 
@@ -133,16 +131,16 @@ export type ObjectTypeComposerArgumentConfigDefinition =
 // RELATION -----------------------------
 
 export type ObjectTypeComposerRelationThunkMap<TSource, TContext> = {
-  [fieldName: string]: Thunk<ObjectTypeComposerRelationOpts<any, TSource, TContext, ArgsMap>>;
+  [fieldName: string]: Thunk<ObjectTypeComposerRelationOpts<any, TSource, TContext>>;
 };
-export type ObjectTypeComposerRelationOpts<TRelationSource, TSource, TContext, TArgs = ArgsMap> =
+export type ObjectTypeComposerRelationOpts<TRelationSource, TSource, TContext, TArgs = any> =
   | ObjectTypeComposerRelationOptsWithResolver<TRelationSource, TSource, TContext, TArgs>
   | ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs>;
 export type ObjectTypeComposerRelationOptsWithResolver<
   TRelationSource,
   TSource,
   TContext,
-  TArgs = ArgsMap
+  TArgs = any
 > = {
   resolver: Thunk<Resolver<TRelationSource, TContext, TArgs>>;
   prepareArgs?: ObjectTypeComposerRelationArgsMapper<TSource, TContext, TArgs>;
@@ -153,13 +151,13 @@ export type ObjectTypeComposerRelationOptsWithResolver<
   extensions?: Extensions;
 };
 
-export type ObjectTypeComposerRelationArgsMapperFn<TSource, TContext, TArgs = ArgsMap> = (
+export type ObjectTypeComposerRelationArgsMapperFn<TSource, TContext, TArgs = any> = (
   source: TSource,
   args: TArgs,
   context: TContext,
   info: GraphQLResolveInfo
 ) => any;
-export type ObjectTypeComposerRelationArgsMapper<TSource, TContext, TArgs = ArgsMap> = {
+export type ObjectTypeComposerRelationArgsMapper<TSource, TContext, TArgs = any> = {
   [argName: string]:
     | { [key: string]: any }
     | ObjectTypeComposerRelationArgsMapperFn<TSource, TContext, TArgs>
@@ -170,9 +168,9 @@ export type ObjectTypeComposerRelationArgsMapper<TSource, TContext, TArgs = Args
     | any[];
 };
 
-export type ObjectTypeComposerGetRecordIdFn<TSource, TContext> = (
+export type ObjectTypeComposerGetRecordIdFn<TSource, TContext, TArgs = any> = (
   source: TSource,
-  args?: ArgsMap,
+  args?: TArgs,
   context?: TContext
 ) => string;
 
@@ -222,7 +220,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public getFieldNames(): string[];
 
-  public getField<TArgs = ArgsMap>(
+  public getField<TArgs = any>(
     fieldName: string
   ): ObjectTypeComposerFieldConfig<TSource, TContext, TArgs>;
 
@@ -230,9 +228,9 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public setFields(fields: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>): this;
 
-  public setField<TArgs = ArgsMap>(
+  public setField<TArgs = any>(
     fieldName: string,
-    fieldConfig: ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
+    fieldConfig: ObjectTypeComposerFieldConfigDefinition<TSource, TContext, TArgs>
   ): this;
 
   /**
@@ -262,10 +260,10 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public reorderFields(names: string[]): this;
 
-  public extendField(
+  public extendField<TArgs = any>(
     fieldName: string,
     partialFieldConfig: Partial<
-      ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, ArgsMap>
+      ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs>
     >
   ): this;
 
@@ -317,9 +315,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
    * -----------------------------------------------
    */
 
-  public getFieldArgs<TArgs = ArgsMap>(
-    fieldName: string
-  ): ObjectTypeComposerArgumentConfigMap<TArgs>;
+  public getFieldArgs<TArgs = any>(fieldName: string): ObjectTypeComposerArgumentConfigMap<TArgs>;
 
   public getFieldArgNames(fieldName: string): string[];
 
@@ -513,17 +509,17 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
    * @param name
    * @param middlewares type ResolverMiddleware = (resolve, source, args, context, info) => any;
    */
-  public getResolver<TResolverSource = any, TArgs = ArgsMap>(
+  public getResolver<TResolverSource = any, TArgs = any>(
     name: string,
     middlewares?: Array<ResolverMiddleware<TResolverSource, TContext, TArgs>>
   ): Resolver<TResolverSource, TContext, TArgs>;
 
-  public setResolver<TResolverSource = any, TArgs = ArgsMap>(
+  public setResolver<TResolverSource = any, TArgs = any>(
     name: string,
     resolver: Resolver<TResolverSource, TContext, TArgs>
   ): this;
 
-  public addResolver<TResolverSource = any, TArgs = ArgsMap>(
+  public addResolver<TResolverSource = any, TArgs = any>(
     opts:
       | Resolver<TResolverSource, TContext, TArgs>
       | ResolverDefinition<TResolverSource, TContext, TArgs>
@@ -531,18 +527,18 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public removeResolver(resolverName: string): this;
 
-  public wrapResolver<TResolverSource = any, TArgs = ArgsMap>(
+  public wrapResolver<TResolverSource = any, TArgs = any>(
     resolverName: string,
     cbResolver: ResolverWrapCb<TResolverSource, TSource, TContext, TArgs>
   ): this;
 
-  public wrapResolverAs<TResolverSource = any, TArgs = ArgsMap>(
+  public wrapResolverAs<TResolverSource = any, TArgs = any>(
     resolverName: string,
     fromResolverName: string,
     cbResolver: ResolverWrapCb<TResolverSource, TSource, TContext, TArgs>
   ): this;
 
-  public wrapResolverResolve<TResolverSource = any, TArgs = ArgsMap>(
+  public wrapResolverResolve<TResolverSource = any, TArgs = any>(
     resolverName: string,
     cbNextRp: ResolverNextRpCb<TResolverSource, TContext, TArgs>
   ): this;
@@ -695,7 +691,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
    * -----------------------------------------------
    */
 
-  public addRelation<TRelationSource = any, TArgs = ArgsMap>(
+  public addRelation<TRelationSource = any, TArgs = any>(
     fieldName: string,
     opts: ObjectTypeComposerRelationOpts<TRelationSource, TSource, TContext, TArgs>
   ): this;
@@ -711,7 +707,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   /**
    * Get function that returns record id, from provided object.
    */
-  public getRecordId(source: TSource, args?: ArgsMap, context?: TContext): string | number;
+  public getRecordId(source: TSource, args?: any, context?: TContext): string | number;
 
   public get(path: string | string[]): TypeInPath<TContext> | void;
 

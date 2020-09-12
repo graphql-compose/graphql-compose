@@ -19,7 +19,6 @@ import type {
   ObjectTypeComposerArgumentConfig,
   ObjectTypeComposerArgumentConfigDefinition,
   ObjectTypeComposerArgumentConfigAsObjectDefinition,
-  ArgsMap, // eslint-disable-line
 } from './ObjectTypeComposer';
 import { InputTypeComposer } from './InputTypeComposer';
 import { EnumTypeComposer } from './EnumTypeComposer';
@@ -52,7 +51,7 @@ import { ListComposer } from './ListComposer';
 
 export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 
-export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
+export type ResolverDefinition<TSource, TContext, TArgs = any> = {
   type?: Thunk<
     | $ReadOnly<ComposeOutputType<TContext>>
     | ComposeOutputTypeDefinition<TContext>
@@ -70,7 +69,7 @@ export type ResolverDefinition<TSource, TContext, TArgs = ArgsMap> = {
   extensions?: Extensions,
 };
 
-export type ResolverResolveParams<TSource, TContext, TArgs = ArgsMap> = {
+export type ResolverResolveParams<TSource, TContext, TArgs = any> = {
   source: TSource,
   args: TArgs,
   context: TContext,
@@ -79,13 +78,13 @@ export type ResolverResolveParams<TSource, TContext, TArgs = ArgsMap> = {
   [opt: string]: any,
 };
 
-export type ResolverFilterArgFn<TSource, TContext, TArgs = ArgsMap> = (
+export type ResolverFilterArgFn<TSource, TContext, TArgs = any> = (
   query: any,
   value: any,
   resolveParams: ResolverResolveParams<TSource, TContext, TArgs>
 ) => any;
 
-export type ResolverFilterArgConfigDefinition<TSource, TContext, TArgs = ArgsMap> = {
+export type ResolverFilterArgConfigDefinition<TSource, TContext, TArgs = any> = {
   name: string,
   type: ComposeInputTypeDefinition,
   description?: string | null | void,
@@ -94,11 +93,11 @@ export type ResolverFilterArgConfigDefinition<TSource, TContext, TArgs = ArgsMap
   defaultValue?: any,
 };
 
-export type ResolverSortArgFn<TSource, TContext, TArgs = ArgsMap> = (
+export type ResolverSortArgFn<TSource, TContext, TArgs = any> = (
   resolveParams: ResolverResolveParams<TSource, TContext, TArgs>
 ) => any;
 
-export type ResolverSortArgConfig<TSource, TContext, TArgs = ArgsMap> = {
+export type ResolverSortArgConfig<TSource, TContext, TArgs = any> = {
   name: string,
   sortTypeNameFallback?: string,
   // value also can be an `Object`, but flow does not understande union with object and function
@@ -114,21 +113,15 @@ export type ResolverSortArgConfig<TSource, TContext, TArgs = ArgsMap> = {
   description?: string | null,
 };
 
-export type ResolverWrapCb<
-  TNewSource,
-  TPrevSource,
-  TContext,
-  TNewArgs = ArgsMap,
-  TPrevArgs = ArgsMap
-> = (
+export type ResolverWrapCb<TNewSource, TPrevSource, TContext, TNewArgs = any, TPrevArgs = any> = (
   newResolver: Resolver<TNewSource, TContext, TNewArgs>,
   prevResolver: Resolver<TPrevSource, TContext, TPrevArgs>
 ) => Resolver<TNewSource, TContext, TNewArgs>;
 
-export type ResolverRpCb<TSource, TContext, TArgs = ArgsMap> = (
+export type ResolverRpCb<TSource, TContext, TArgs = any> = (
   resolveParams: ResolverResolveParams<TSource, TContext, TArgs>
 ) => Promise<any> | any;
-export type ResolverNextRpCb<TSource, TContext, TArgs = ArgsMap> = (
+export type ResolverNextRpCb<TSource, TContext, TArgs = any> = (
   next: ResolverRpCb<TSource, TContext, TArgs>
 ) => ResolverRpCb<TSource, TContext, TArgs>;
 
@@ -138,7 +131,7 @@ export type ResolverDebugOpts = {
   colors?: boolean,
 };
 
-export type ResolverMiddleware<TSource, TContext, TArgs = ArgsMap> = (
+export type ResolverMiddleware<TSource, TContext, TArgs = any> = (
   resolve: (source: TSource, args: TArgs, context: TContext, info: GraphQLResolveInfo) => any,
   source: TSource,
   args: TArgs,
@@ -146,7 +139,7 @@ export type ResolverMiddleware<TSource, TContext, TArgs = ArgsMap> = (
   info: GraphQLResolveInfo
 ) => any;
 
-export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
+export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
   schemaComposer: SchemaComposer<TContext>;
   type: ComposeOutputType<TContext>;
   args: ObjectTypeComposerArgumentConfigMap<any>;
@@ -367,7 +360,7 @@ export class Resolver<TSource, TContext, TArgs = ArgsMap, TReturn = any> {
   }
 
   addArgs(
-    newArgs: ObjectTypeComposerArgumentConfigMapDefinition<ArgsMap>
+    newArgs: ObjectTypeComposerArgumentConfigMapDefinition<any>
   ): Resolver<TSource, TContext, TArgs> {
     this.setArgs({ ...this.getArgs(), ...(newArgs: any) });
     return this;

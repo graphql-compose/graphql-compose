@@ -29,7 +29,6 @@ import type {
   ObjectTypeComposerArgumentConfig,
   ObjectTypeComposerArgumentConfigDefinition,
   ObjectTypeComposerArgumentConfigMap,
-  ArgsMap,
 } from './ObjectTypeComposer';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
@@ -254,7 +253,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return Object.keys(this._gqcFields);
   }
 
-  getField(fieldName: string): ObjectTypeComposerFieldConfig<TSource, TContext, ArgsMap> {
+  getField(fieldName: string): ObjectTypeComposerFieldConfig<TSource, TContext> {
     // If FieldConfig is a Thunk then unwrap it on first read.
     // In most cases FieldConfig is an object,
     // but for solving hoisting problems it's quite good to wrap it in function.
@@ -289,7 +288,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   setField(
     fieldName: string,
-    fieldConfig: ObjectTypeComposerFieldConfigDefinition<TSource, TContext, ArgsMap>
+    fieldConfig: ObjectTypeComposerFieldConfigDefinition<TSource, TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
     this._gqcFields[fieldName] = isFunction(fieldConfig)
       ? (fieldConfig: any)
@@ -369,9 +368,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   extendField(
     fieldName: string,
-    partialFieldConfig: $Shape<
-      ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, any>
-    >
+    partialFieldConfig: $Shape<ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext>>
   ): InterfaceTypeComposer<TSource, TContext> {
     let prevFieldConfig;
     try {
@@ -552,7 +549,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return this;
   }
 
-  getFieldArgs(fieldName: string): ObjectTypeComposerArgumentConfigMap<ArgsMap> {
+  getFieldArgs<TArgs = any>(fieldName: string): ObjectTypeComposerArgumentConfigMap<TArgs> {
     try {
       const fc = this.getField(fieldName);
       return fc.args || {};
