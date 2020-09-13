@@ -188,7 +188,7 @@ const findManyReduced = AuthorTC.getResolver('findMany').wrap(newResolver => {
   // for new created resolver, clone its `filter` argument with a new name
   newResolver.cloneArg('filter', 'AuthorFilterForUsers');
   // remove some filter fields to which regular users should not have access
-  newResolver.getArgTC('filter').removeFields(['age', 'other_sensetive_filter']);
+  newResolver.getArgITC('filter').removeFields(['age', 'other_sensetive_filter']);
   // and return modified resolver with new set of args
   return newResolver;
 });
