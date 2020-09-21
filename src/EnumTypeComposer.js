@@ -283,7 +283,7 @@ export class EnumTypeComposer<TContext> {
     if (typeof fields === 'string') {
       if (existedFieldNames.indexOf(fields) === -1) {
         throw new Error(
-          `Cannot deprecate unexisted value '${fields}' from enum '${this.getTypeName()}'`
+          `Cannot deprecate non-existent value '${fields}' from enum '${this.getTypeName()}'`
         );
       }
       this.extendField(fields, { deprecationReason: 'deprecated' });
@@ -291,7 +291,7 @@ export class EnumTypeComposer<TContext> {
       fields.forEach((field) => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
-            `Cannot deprecate unexisted value '${field}' from enum '${this.getTypeName()}'`
+            `Cannot deprecate non-existent value '${field}' from enum '${this.getTypeName()}'`
           );
         }
         this.extendField(field, { deprecationReason: 'deprecated' });
@@ -301,7 +301,7 @@ export class EnumTypeComposer<TContext> {
       Object.keys(fieldMap).forEach((field) => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
-            `Cannot deprecate unexisted value '${field}' from enum '${this.getTypeName()}'`
+            `Cannot deprecate non-existent value '${field}' from enum '${this.getTypeName()}'`
           );
         }
         const deprecationReason: string = fieldMap[field];
@@ -401,7 +401,7 @@ export class EnumTypeComposer<TContext> {
 
   /**
    * You may clone this type with a new provided name as string.
-   * Or you may provide a new TypeComposer which will get all clonned
+   * Or you may provide a new TypeComposer which will get all cloned
    * settings from this type.
    */
   clone(newTypeNameOrTC: string | EnumTypeComposer<any>): EnumTypeComposer<TContext> {
@@ -426,7 +426,7 @@ export class EnumTypeComposer<TContext> {
 
   /**
    * Clone this type to another SchemaComposer.
-   * Also will be clonned all sub-types.
+   * Also will be cloned all sub-types.
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,

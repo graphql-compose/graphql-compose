@@ -59,12 +59,12 @@ describe('ObjectTypeComposer', () => {
       });
 
       it('should throw error if field does not exist', () => {
-        expect(() => tc.getField('unexisted')).toThrowError(/Cannot get field.*does not exist/);
+        expect(() => tc.getField('missing')).toThrowError(/Cannot get field.*does not exist/);
       });
     });
 
     describe('setFields()', () => {
-      it('should add field with standart config', () => {
+      it('should add field with standard config', () => {
         tc.setFields({
           field3: { type: GraphQLString },
         });
@@ -270,7 +270,7 @@ describe('ObjectTypeComposer', () => {
         expect(tc.getFieldNames().join(',')).toBe('f3,f1,f2');
       });
 
-      it('should skip non existed fields', () => {
+      it('should skip non-existent fields', () => {
         tc.setFields({ f1: 'Int', f2: 'Int', f3: 'Int' });
         expect(tc.getFieldNames().join(',')).toBe('f1,f2,f3');
         tc.reorderFields(['f22', 'f3', 'f55', 'f1', 'f2']);
@@ -293,19 +293,19 @@ describe('ObjectTypeComposer', () => {
         expect(Object.keys(args)).toEqual(['arg1', 'arg2']);
         expect(args.arg1.type.getType()).toBe(GraphQLInt);
         expect(tc.getFieldArgType('field1', 'arg1')).toBe(GraphQLInt);
-        expect(() => tc.getFieldArgs('unexistedField')).toThrow();
+        expect(() => tc.getFieldArgs('missingField')).toThrow();
       });
 
       it('hasFieldArg()', () => {
         expect(tc.hasFieldArg('field1', 'arg1')).toBeTruthy();
         expect(tc.hasFieldArg('field1', 'arg222')).toBeFalsy();
-        expect(tc.hasFieldArg('unexistedField', 'arg1')).toBeFalsy();
+        expect(tc.hasFieldArg('missingField', 'arg1')).toBeFalsy();
       });
 
       it('getFieldArg()', () => {
         expect(tc.getFieldArg('field1', 'arg1')).toBeTruthy();
         expect(() => tc.getFieldArg('field1', 'arg222')).toThrow(/Argument does not exist/);
-        expect(tc.hasFieldArg('unexistedField', 'arg1')).toBeFalsy();
+        expect(tc.hasFieldArg('missingField', 'arg1')).toBeFalsy();
       });
 
       it('getFieldArgTC()', () => {
@@ -434,7 +434,7 @@ describe('ObjectTypeComposer', () => {
       });
 
       it('should throw error if field does not exists', () => {
-        expect(() => tc.extendField('unexisted', { description: '123' })).toThrow(
+        expect(() => tc.extendField('missing', { description: '123' })).toThrow(
           /Cannot extend field.*Field does not exist/
         );
       });
@@ -493,7 +493,7 @@ describe('ObjectTypeComposer', () => {
         expect(tc.isFieldNonNull('b3')).toBe(true);
         expect(tc.isFieldNonNull('b4')).toBe(true);
 
-        tc.makeFieldPlural(['b1', 'b2', 'b3', 'unexisted']);
+        tc.makeFieldPlural(['b1', 'b2', 'b3', 'missing']);
         expect(tc.isFieldPlural('b1')).toBe(true);
         expect(tc.isFieldPlural('b2')).toBe(true);
         expect(tc.isFieldPlural('b3')).toBe(true);
@@ -501,11 +501,11 @@ describe('ObjectTypeComposer', () => {
         tc.makeFieldNonNull('b2');
         expect(tc.isFieldPlural('b2')).toBe(true);
         expect(tc.isFieldNonNull('b2')).toBe(true);
-        tc.makeFieldNonPlural(['b2', 'b4', 'unexisted']);
+        tc.makeFieldNonPlural(['b2', 'b4', 'missing']);
         expect(tc.isFieldPlural('b2')).toBe(false);
         expect(tc.isFieldNonNull('b2')).toBe(true);
         expect(tc.isFieldPlural('b4')).toBe(false);
-        tc.makeFieldNullable(['b2', 'b4', 'unexisted']);
+        tc.makeFieldNullable(['b2', 'b4', 'missing']);
         expect(tc.isFieldNonNull('b2')).toBe(false);
         expect(tc.isFieldNonNull('b4')).toBe(false);
       });
@@ -531,7 +531,7 @@ describe('ObjectTypeComposer', () => {
         expect(tc.isFieldArgNonNull('f', 'b3')).toBe(true);
         expect(tc.isFieldArgNonNull('f', 'b4')).toBe(true);
 
-        tc.makeFieldArgPlural('f', ['b1', 'b2', 'b3', 'unexisted']);
+        tc.makeFieldArgPlural('f', ['b1', 'b2', 'b3', 'missing']);
         expect(tc.isFieldArgPlural('f', 'b1')).toBe(true);
         expect(tc.isFieldArgPlural('f', 'b2')).toBe(true);
         expect(tc.isFieldArgPlural('f', 'b3')).toBe(true);
@@ -539,11 +539,11 @@ describe('ObjectTypeComposer', () => {
         tc.makeFieldArgNonNull('f', 'b2');
         expect(tc.isFieldArgPlural('f', 'b2')).toBe(true);
         expect(tc.isFieldArgNonNull('f', 'b2')).toBe(true);
-        tc.makeFieldArgNonPlural('f', ['b2', 'b4', 'unexisted']);
+        tc.makeFieldArgNonPlural('f', ['b2', 'b4', 'missing']);
         expect(tc.isFieldArgPlural('f', 'b2')).toBe(false);
         expect(tc.isFieldArgNonNull('f', 'b2')).toBe(true);
         expect(tc.isFieldArgPlural('f', 'b4')).toBe(false);
-        tc.makeFieldArgNullable('f', ['b2', 'b4', 'unexisted']);
+        tc.makeFieldArgNullable('f', ['b2', 'b4', 'missing']);
         expect(tc.isFieldArgNonNull('f', 'b2')).toBe(false);
         expect(tc.isFieldArgNonNull('f', 'b4')).toBe(false);
       });
@@ -589,7 +589,7 @@ describe('ObjectTypeComposer', () => {
 
     it('getInterfaces()', () => {
       const tc1 = schemaComposer.createObjectTC(`
-        type Meee implements SimpleObject {
+        type MeAnother implements SimpleObject {
           id: Int
           name: String
         }
@@ -600,7 +600,7 @@ describe('ObjectTypeComposer', () => {
 
     it('hasInterface()', () => {
       const tc1 = schemaComposer.createObjectTC(`
-        type Meee implements SimpleObject {
+        type MeAnother implements SimpleObject {
           id: Int
           name: String
         }
@@ -712,7 +712,7 @@ describe('ObjectTypeComposer', () => {
       expect((myTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });
 
-    it('should create TC by ComposeObjectTypeConfig with unexisted types', () => {
+    it('should create TC by ComposeObjectTypeConfig with non-existent types', () => {
       const myTC = ObjectTypeComposer.create(
         {
           name: 'TestType',
@@ -1314,7 +1314,7 @@ describe('ObjectTypeComposer', () => {
     });
   });
 
-  it('should have chainable methods', () => {
+  it('should have chain-methods', () => {
     expect(tc.setFields({})).toBe(tc);
     expect(tc.setField('f1', { type: 'Int' })).toBe(tc);
     expect(tc.extendField('f1', { description: 'Ok' })).toBe(tc);
@@ -1374,26 +1374,26 @@ describe('ObjectTypeComposer', () => {
 
     it('should accept object with fields and reasons', () => {
       tc1.deprecateFields({
-        age: 'dont use',
+        age: 'do not use',
         dob: 'old field',
       });
       expect(tc1.getFieldConfig('name').deprecationReason).toBeUndefined();
-      expect(tc1.getFieldConfig('age').deprecationReason).toBe('dont use');
+      expect(tc1.getFieldConfig('age').deprecationReason).toBe('do not use');
       expect(tc1.getFieldConfig('dob').deprecationReason).toBe('old field');
     });
 
-    it('should throw error on unexisted field', () => {
+    it('should throw error on non-existent field', () => {
       expect(() => {
-        tc1.deprecateFields('unexisted');
-      }).toThrowError(/Cannot deprecate unexisted field/);
+        tc1.deprecateFields('missing');
+      }).toThrowError(/Cannot deprecate non-existent field/);
 
       expect(() => {
-        tc1.deprecateFields(['unexisted']);
-      }).toThrowError(/Cannot deprecate unexisted field/);
+        tc1.deprecateFields(['missing']);
+      }).toThrowError(/Cannot deprecate non-existent field/);
 
       expect(() => {
-        tc1.deprecateFields({ unexisted: 'Deprecate reason' });
-      }).toThrowError(/Cannot deprecate unexisted field/);
+        tc1.deprecateFields({ missing: 'Deprecate reason' });
+      }).toThrowError(/Cannot deprecate non-existent field/);
     });
   });
 
@@ -1425,7 +1425,7 @@ describe('ObjectTypeComposer', () => {
       const tco = myTC.getFieldTC('objArr');
       expect(tco).toBeInstanceOf(ObjectTypeComposer);
       expect(tco.getTypeName()).toBe('MyCustomObjType2');
-      // schould return the same TypeComposer instance
+      // should return the same TypeComposer instance
       const tco2 = myTC.getFieldOTC('objArr');
       expect(tco).toBe(tco2);
     });
@@ -1463,7 +1463,7 @@ describe('ObjectTypeComposer', () => {
   });
 
   describe('check isTypeOf methods', () => {
-    it('check methods setIstypeOf() getIstypeOf()', () => {
+    it('check methods setIsTypeOf() getIsTypeOf()', () => {
       const tc1 = schemaComposer.createObjectTC('type A { f: Int }');
       expect(tc1.getIsTypeOf()).toBeUndefined();
       const isTypeOf = () => true;
@@ -1921,7 +1921,7 @@ describe('ObjectTypeComposer', () => {
         type: expect.any(ScalarTypeComposer),
         args: { limit: { type: expect.any(ScalarTypeComposer) } },
       });
-      // other thuked fields should be untouched
+      // other thunked fields should be untouched
       expect(HoistingTC._gqcFields.field2).toBe(thunkedFieldConfig);
     });
   });

@@ -232,7 +232,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   }
 
   /**
-   * Clone schema with deep clonning of all its types.
+   * Clone schema with deep cloning of all its types.
    * Except Scalar types which will be the same for both schemas.
    */
   clone(): SchemaComposer<any> {
@@ -287,7 +287,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
       // merge regular types
       if (this.has(key)) {
-        // merge by key (key preffer, cause it may be reference and types not yet resolved)
+        // merge by key (key prefer, cause it may be reference and types not yet resolved)
         this.getAnyTC(key).merge((type: any));
       } else if (typeName && this.has(typeName)) {
         // merge by type name (key may be different)

@@ -595,7 +595,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     const tc = this.getFieldTC(fieldName);
     if (!(tc instanceof ObjectTypeComposer)) {
       throw new Error(
-        `${this.getTypeName()}.getFieldOTC('${fieldName}') must be ObjectTypeComposer, but recieved ${
+        `${this.getTypeName()}.getFieldOTC('${fieldName}') must be ObjectTypeComposer, but received ${
           tc.constructor.name
         }. Maybe you need to use 'getFieldTC()' method which returns any type composer?`
       );
@@ -674,7 +674,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     if (typeof fields === 'string') {
       if (existedFieldNames.indexOf(fields) === -1) {
         throw new Error(
-          `Cannot deprecate unexisted field '${fields}' from type '${this.getTypeName()}'`
+          `Cannot deprecate non-existent field '${fields}' from type '${this.getTypeName()}'`
         );
       }
       this.extendField(fields, { deprecationReason: 'deprecated' });
@@ -682,7 +682,7 @@ export class ObjectTypeComposer<TSource, TContext> {
       fields.forEach((field) => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
-            `Cannot deprecate unexisted field '${field}' from type '${this.getTypeName()}'`
+            `Cannot deprecate non-existent field '${field}' from type '${this.getTypeName()}'`
           );
         }
         this.extendField(field, { deprecationReason: 'deprecated' });
@@ -692,7 +692,7 @@ export class ObjectTypeComposer<TSource, TContext> {
       Object.keys(fieldMap).forEach((field) => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
-            `Cannot deprecate unexisted field '${field}' from type '${this.getTypeName()}'`
+            `Cannot deprecate non-existent field '${field}' from type '${this.getTypeName()}'`
           );
         }
         const deprecationReason: string = fieldMap[field];
@@ -782,7 +782,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     const tc = this.getFieldArgTC(fieldName, argName);
     if (!(tc instanceof InputTypeComposer)) {
       throw new Error(
-        `${this.getTypeName()}.getFieldArgITC('${fieldName}', '${argName}') must be InputTypeComposer, but recieved ${
+        `${this.getTypeName()}.getFieldArgITC('${fieldName}', '${argName}') must be InputTypeComposer, but received ${
           tc.constructor.name
         }. Maybe you need to use 'getFieldArgTC()' method which returns any type composer?`
       );
@@ -1027,7 +1027,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
   /**
    * You may clone this type with a new provided name as string.
-   * Or you may provide a new TypeComposer which will get all clonned
+   * Or you may provide a new TypeComposer which will get all cloned
    * settings from this type.
    */
   clone(
@@ -1057,7 +1057,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
     this.getResolvers().forEach((resolver) => {
       const newResolver = resolver.clone();
-      // in clonned resolvers we also replace cloned ObjectTypeComposer
+      // in cloned resolvers we also replace cloned ObjectTypeComposer
       newResolver.type = replaceTC(newResolver.type, (tc) => {
         return tc === this ? cloned : tc;
       });
@@ -1069,7 +1069,7 @@ export class ObjectTypeComposer<TSource, TContext> {
 
   /**
    * Clone this type to another SchemaComposer.
-   * Also will be clonned all sub-types.
+   * Also will be cloned all sub-types.
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
@@ -1102,8 +1102,8 @@ export class ObjectTypeComposer<TSource, TContext> {
     cloned.setDescription(this.getDescription());
 
     this.getResolvers().forEach((resolver) => {
-      const clonnedResolver = resolver.cloneTo(anotherSchemaComposer, cloneMap);
-      cloned.addResolver(clonnedResolver);
+      const clonedResolver = resolver.cloneTo(anotherSchemaComposer, cloneMap);
+      cloned.addResolver(clonedResolver);
     });
 
     return cloned;

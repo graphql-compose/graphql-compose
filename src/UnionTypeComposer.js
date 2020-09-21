@@ -84,7 +84,7 @@ export class UnionTypeComposer<TSource, TContext> {
   _gqcFallbackResolveType: ObjectTypeComposer<any, TContext> | GraphQLObjectType | null = null;
   _gqcExtensions: Extensions | void;
 
-  // Also supported `GraphQLUnionType` but in such case Flowtype force developers
+  // Also supported `GraphQLUnionType` but in such case FlowType force developers
   // to explicitly write annotations in their code. But it's bad.
   static create<TSrc, TCtx>(
     typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
@@ -377,7 +377,7 @@ export class UnionTypeComposer<TSource, TContext> {
 
   /**
    * You may clone this type with a new provided name as string.
-   * Or you may provide a new TypeComposer which will get all clonned
+   * Or you may provide a new TypeComposer which will get all cloned
    * settings from this type.
    */
   clone(
@@ -403,7 +403,7 @@ export class UnionTypeComposer<TSource, TContext> {
 
   /**
    * Clone this type to another SchemaComposer.
-   * Also will be clonned all sub-types.
+   * Also will be cloned all sub-types.
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
@@ -585,7 +585,7 @@ export class UnionTypeComposer<TSource, TContext> {
     if (tc instanceof ObjectTypeComposer || tc instanceof ThunkComposer) {
       return (tc: any);
     }
-    throw new Error(`Should be provided ObjectType but recieved ${inspect(type)}`);
+    throw new Error(`Should be provided ObjectType but received ${inspect(type)}`);
   }
 
   _convertTypeResolvers(

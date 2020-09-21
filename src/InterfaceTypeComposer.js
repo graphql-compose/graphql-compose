@@ -101,7 +101,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   _gqcFallbackResolveType: ObjectTypeComposer<any, TContext> | GraphQLObjectType | null = null;
   _gqcExtensions: void | Extensions;
 
-  // Also supported `GraphQLInterfaceType` but in such case Flowtype force developers
+  // Also supported `GraphQLInterfaceType` but in such case FlowType force developers
   // to explicitly write annotations in their code. But it's bad.
   static create<TSrc, TCtx>(
     typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
@@ -439,7 +439,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const tc = this.getFieldTC(fieldName);
     if (!(tc instanceof ObjectTypeComposer)) {
       throw new Error(
-        `${this.getTypeName()}.getFieldOTC('${fieldName}') must be ObjectTypeComposer, but recieved ${
+        `${this.getTypeName()}.getFieldOTC('${fieldName}') must be ObjectTypeComposer, but received ${
           tc.constructor.name
         }. Maybe you need to use 'getFieldTC()' method which returns any type composer?`
       );
@@ -520,7 +520,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     if (typeof fields === 'string') {
       if (existedFieldNames.indexOf(fields) === -1) {
         throw new Error(
-          `Cannot deprecate unexisted field '${fields}' from interface type '${this.getTypeName()}'`
+          `Cannot deprecate non-existent field '${fields}' from interface type '${this.getTypeName()}'`
         );
       }
       this.extendField(fields, { deprecationReason: 'deprecated' });
@@ -528,7 +528,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
       fields.forEach((field) => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
-            `Cannot deprecate unexisted field '${field}' from interface type '${this.getTypeName()}'`
+            `Cannot deprecate non-existent field '${field}' from interface type '${this.getTypeName()}'`
           );
         }
         this.extendField(field, { deprecationReason: 'deprecated' });
@@ -538,7 +538,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
       Object.keys(fieldMap).forEach((field) => {
         if (existedFieldNames.indexOf(field) === -1) {
           throw new Error(
-            `Cannot deprecate unexisted field '${field}' from interface type '${this.getTypeName()}'`
+            `Cannot deprecate non-existent field '${field}' from interface type '${this.getTypeName()}'`
           );
         }
         const deprecationReason: string = fieldMap[field];
@@ -620,7 +620,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     const tc = this.getFieldArgTC(fieldName, argName);
     if (!(tc instanceof InputTypeComposer)) {
       throw new Error(
-        `${this.getTypeName()}.getFieldArgITC('${fieldName}', '${argName}') must be InputTypeComposer, but recieved ${
+        `${this.getTypeName()}.getFieldArgITC('${fieldName}', '${argName}') must be InputTypeComposer, but received ${
           tc.constructor.name
         }. Maybe you need to use 'getFieldArgTC()' method which returns any type composer?`
       );
@@ -842,7 +842,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   /**
    * You may clone this type with a new provided name as string.
-   * Or you may provide a new TypeComposer which will get all clonned
+   * Or you may provide a new TypeComposer which will get all cloned
    * settings from this type.
    */
   clone(
@@ -876,7 +876,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
 
   /**
    * Clone this type to another SchemaComposer.
-   * Also will be clonned all sub-types.
+   * Also will be cloned all sub-types.
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,

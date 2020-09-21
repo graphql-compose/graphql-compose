@@ -424,7 +424,7 @@ export class InputTypeComposer<TContext> {
     const tc = this.getFieldTC(fieldName);
     if (!(tc instanceof InputTypeComposer)) {
       throw new Error(
-        `${this.getTypeName()}.getFieldITC('${fieldName}') must be InputTypeComposer, but recieved ${
+        `${this.getTypeName()}.getFieldITC('${fieldName}') must be InputTypeComposer, but received ${
           tc.constructor.name
         }. Maybe you need to use 'getFieldTC()' method which returns any type composer?`
       );
@@ -599,7 +599,7 @@ export class InputTypeComposer<TContext> {
 
   /**
    * You may clone this type with a new provided name as string.
-   * Or you may provide a new TypeComposer which will get all clonned
+   * Or you may provide a new TypeComposer which will get all cloned
    * settings from this type.
    */
   clone(newTypeNameOrTC: string | InputTypeComposer<any>): InputTypeComposer<TContext> {
@@ -624,7 +624,7 @@ export class InputTypeComposer<TContext> {
 
   /**
    * Clone this type to another SchemaComposer.
-   * Also will be clonned all sub-types.
+   * Also will be cloned all sub-types.
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,

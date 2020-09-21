@@ -59,12 +59,12 @@ describe('InterfaceTypeComposer', () => {
       });
 
       it('should throw error if field does not exist', () => {
-        expect(() => iftc.getField('unexisted')).toThrowError(/Cannot get field.*does not exist/);
+        expect(() => iftc.getField('missing')).toThrowError(/Cannot get field.*does not exist/);
       });
     });
 
     describe('setFields()', () => {
-      it('should add field with standart config', () => {
+      it('should add field with standard config', () => {
         iftc.setFields({
           field3: { type: GraphQLString },
         });
@@ -279,19 +279,19 @@ describe('InterfaceTypeComposer', () => {
         expect(Object.keys(args)).toEqual(['arg1', 'arg2']);
         expect(args.arg1.type.getType()).toBe(GraphQLInt);
         expect(iftc.getFieldArgType('field1', 'arg1')).toBe(GraphQLInt);
-        expect(() => iftc.getFieldArgs('unexistedField')).toThrow();
+        expect(() => iftc.getFieldArgs('missingField')).toThrow();
       });
 
       it('hasFieldArg()', () => {
         expect(iftc.hasFieldArg('field1', 'arg1')).toBeTruthy();
         expect(iftc.hasFieldArg('field1', 'arg222')).toBeFalsy();
-        expect(iftc.hasFieldArg('unexistedField', 'arg1')).toBeFalsy();
+        expect(iftc.hasFieldArg('missingField', 'arg1')).toBeFalsy();
       });
 
       it('getFieldArg()', () => {
         expect(iftc.getFieldArg('field1', 'arg1')).toBeTruthy();
         expect(() => iftc.getFieldArg('field1', 'arg222')).toThrow(/Argument does not exist/);
-        expect(iftc.hasFieldArg('unexistedField', 'arg1')).toBeFalsy();
+        expect(iftc.hasFieldArg('missingField', 'arg1')).toBeFalsy();
       });
 
       it('getFieldArgTC()', () => {
@@ -356,7 +356,7 @@ describe('InterfaceTypeComposer', () => {
       });
 
       it('should throw error if field does not exists', () => {
-        expect(() => iftc.extendField('unexisted', { description: '123' })).toThrow(
+        expect(() => iftc.extendField('missing', { description: '123' })).toThrow(
           /Cannot extend field.*Field does not exist/
         );
       });
@@ -414,7 +414,7 @@ describe('InterfaceTypeComposer', () => {
       expect(iftc.isFieldNonNull('b3')).toBe(true);
       expect(iftc.isFieldNonNull('b4')).toBe(true);
 
-      iftc.makeFieldPlural(['b1', 'b2', 'b3', 'unexisted']);
+      iftc.makeFieldPlural(['b1', 'b2', 'b3', 'missing']);
       expect(iftc.isFieldPlural('b1')).toBe(true);
       expect(iftc.isFieldPlural('b2')).toBe(true);
       expect(iftc.isFieldPlural('b3')).toBe(true);
@@ -422,11 +422,11 @@ describe('InterfaceTypeComposer', () => {
       iftc.makeFieldNonNull('b2');
       expect(iftc.isFieldPlural('b2')).toBe(true);
       expect(iftc.isFieldNonNull('b2')).toBe(true);
-      iftc.makeFieldNonPlural(['b2', 'b4', 'unexisted']);
+      iftc.makeFieldNonPlural(['b2', 'b4', 'missing']);
       expect(iftc.isFieldPlural('b2')).toBe(false);
       expect(iftc.isFieldNonNull('b2')).toBe(true);
       expect(iftc.isFieldPlural('b4')).toBe(false);
-      iftc.makeFieldNullable(['b2', 'b4', 'unexisted']);
+      iftc.makeFieldNullable(['b2', 'b4', 'missing']);
       expect(iftc.isFieldNonNull('b2')).toBe(false);
       expect(iftc.isFieldNonNull('b4')).toBe(false);
     });
@@ -452,7 +452,7 @@ describe('InterfaceTypeComposer', () => {
       expect(iftc.isFieldArgNonNull('f', 'b3')).toBe(true);
       expect(iftc.isFieldArgNonNull('f', 'b4')).toBe(true);
 
-      iftc.makeFieldArgPlural('f', ['b1', 'b2', 'b3', 'unexisted']);
+      iftc.makeFieldArgPlural('f', ['b1', 'b2', 'b3', 'missing']);
       expect(iftc.isFieldArgPlural('f', 'b1')).toBe(true);
       expect(iftc.isFieldArgPlural('f', 'b2')).toBe(true);
       expect(iftc.isFieldArgPlural('f', 'b3')).toBe(true);
@@ -460,11 +460,11 @@ describe('InterfaceTypeComposer', () => {
       iftc.makeFieldArgNonNull('f', 'b2');
       expect(iftc.isFieldArgPlural('f', 'b2')).toBe(true);
       expect(iftc.isFieldArgNonNull('f', 'b2')).toBe(true);
-      iftc.makeFieldArgNonPlural('f', ['b2', 'b4', 'unexisted']);
+      iftc.makeFieldArgNonPlural('f', ['b2', 'b4', 'missing']);
       expect(iftc.isFieldArgPlural('f', 'b2')).toBe(false);
       expect(iftc.isFieldArgNonNull('f', 'b2')).toBe(true);
       expect(iftc.isFieldArgPlural('f', 'b4')).toBe(false);
-      iftc.makeFieldArgNullable('f', ['b2', 'b4', 'unexisted']);
+      iftc.makeFieldArgNullable('f', ['b2', 'b4', 'missing']);
       expect(iftc.isFieldArgNonNull('f', 'b2')).toBe(false);
       expect(iftc.isFieldArgNonNull('f', 'b4')).toBe(false);
     });
@@ -497,7 +497,7 @@ describe('InterfaceTypeComposer', () => {
 
     it('getInterfaces()', () => {
       const iftc1 = schemaComposer.createInterfaceTC(`
-          interface Meee implements SimpleObject {
+          interface MeAnother implements SimpleObject {
             id: Int
             name: String
           }
@@ -508,7 +508,7 @@ describe('InterfaceTypeComposer', () => {
 
     it('hasInterface()', () => {
       const tc1 = schemaComposer.createObjectTC(`
-          type Meee implements SimpleObject {
+          type MeAnother implements SimpleObject {
             id: Int
             name: String
           }
@@ -616,7 +616,7 @@ describe('InterfaceTypeComposer', () => {
       expect((myIFTC.getFieldType('f2'): any).ofType).toBe(GraphQLInt);
     });
 
-    it('should create TC by ComposeInterfaceTypeConfig with unexisted types', () => {
+    it('should create TC by ComposeInterfaceTypeConfig with non-existent types', () => {
       const myIFTC = schemaComposer.createInterfaceTC({
         name: 'TestType',
         fields: {
@@ -836,7 +836,7 @@ describe('InterfaceTypeComposer', () => {
     });
   });
 
-  it('should have chainable methods', () => {
+  it('should have chain-methods', () => {
     expect(iftc.setFields({})).toBe(iftc);
     expect(iftc.setField('f1', { type: 'Int' })).toBe(iftc);
     expect(iftc.extendField('f1', { description: 'Ok' })).toBe(iftc);
@@ -877,26 +877,26 @@ describe('InterfaceTypeComposer', () => {
 
     it('should accept object with fields and reasons', () => {
       iftc1.deprecateFields({
-        age: 'dont use',
+        age: 'do not use',
         dob: 'old field',
       });
       expect(iftc1.getFieldConfig('name').deprecationReason).toBeUndefined();
-      expect(iftc1.getFieldConfig('age').deprecationReason).toBe('dont use');
+      expect(iftc1.getFieldConfig('age').deprecationReason).toBe('do not use');
       expect(iftc1.getFieldConfig('dob').deprecationReason).toBe('old field');
     });
 
-    it('should throw error on unexisted field', () => {
+    it('should throw error on non-existent field', () => {
       expect(() => {
-        iftc1.deprecateFields('unexisted');
-      }).toThrowError(/Cannot deprecate unexisted field/);
+        iftc1.deprecateFields('missing');
+      }).toThrowError(/Cannot deprecate non-existent field/);
 
       expect(() => {
-        iftc1.deprecateFields(['unexisted']);
-      }).toThrowError(/Cannot deprecate unexisted field/);
+        iftc1.deprecateFields(['missing']);
+      }).toThrowError(/Cannot deprecate non-existent field/);
 
       expect(() => {
-        iftc1.deprecateFields({ unexisted: 'Deprecate reason' });
-      }).toThrowError(/Cannot deprecate unexisted field/);
+        iftc1.deprecateFields({ missing: 'Deprecate reason' });
+      }).toThrowError(/Cannot deprecate non-existent field/);
     });
   });
 
@@ -1470,12 +1470,12 @@ describe('InterfaceTypeComposer', () => {
         type: expect.any(ScalarTypeComposer),
         args: { limit: { type: expect.any(ScalarTypeComposer) } },
       });
-      // after first getField, type should be keep unthunked
+      // after first getField, type should be keep un-thunked
       expect(HoistingTC._gqcFields.field1).toEqual({
         type: expect.any(ScalarTypeComposer),
         args: { limit: { type: expect.any(ScalarTypeComposer) } },
       });
-      // other thuked fields should be untouched
+      // other thunked fields should be untouched
       expect(HoistingTC._gqcFields.field2).toBe(thunkedFieldConfig);
     });
   });

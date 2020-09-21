@@ -46,12 +46,12 @@ describe('EnumTypeComposer', () => {
       });
 
       it('should throw error if value does not exist', () => {
-        expect(() => etc.getField('unexisted')).toThrowError(/Cannot get value.*does not exist/);
+        expect(() => etc.getField('missing')).toThrowError(/Cannot get value.*does not exist/);
       });
     });
 
     describe('setFields()', () => {
-      it('should set fields with standart config', () => {
+      it('should set fields with standard config', () => {
         etc.setFields({
           VAL3: { value: 'VAL3', description: 'Added value' },
         });
@@ -143,7 +143,7 @@ describe('EnumTypeComposer', () => {
       });
 
       it('should throw error if field does not exists', () => {
-        expect(() => etc.extendField('unexisted', { description: '123' })).toThrow(
+        expect(() => etc.extendField('missing', { description: '123' })).toThrow(
           /Cannot extend value.*Value does not exist/
         );
       });
@@ -273,27 +273,27 @@ describe('EnumTypeComposer', () => {
     it('should accept object with fields and reasons', () => {
       etc.setFields({ f1: {}, f2: {}, f3: {} });
       etc.deprecateFields({
-        f2: 'dont use',
+        f2: 'do not use',
         f3: 'old field',
       });
       expect(etc.getField('f1').deprecationReason).toBeUndefined();
-      expect(etc.getField('f2').deprecationReason).toBe('dont use');
+      expect(etc.getField('f2').deprecationReason).toBe('do not use');
       expect(etc.getField('f3').deprecationReason).toBe('old field');
     });
 
-    it('should throw error on unexisted field', () => {
+    it('should throw error on non-existent field', () => {
       etc.setFields({ f1: {}, f2: {}, f3: {} });
       expect(() => {
-        etc.deprecateFields('unexisted');
-      }).toThrowError(/Cannot deprecate unexisted value/);
+        etc.deprecateFields('missing');
+      }).toThrowError(/Cannot deprecate non-existent value/);
 
       expect(() => {
-        etc.deprecateFields(['unexisted']);
-      }).toThrowError(/Cannot deprecate unexisted value/);
+        etc.deprecateFields(['missing']);
+      }).toThrowError(/Cannot deprecate non-existent value/);
 
       expect(() => {
-        etc.deprecateFields({ unexisted: 'Deprecate reason' });
-      }).toThrowError(/Cannot deprecate unexisted value/);
+        etc.deprecateFields({ missing: 'Deprecate reason' });
+      }).toThrowError(/Cannot deprecate non-existent value/);
     });
   });
 
