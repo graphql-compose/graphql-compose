@@ -4,7 +4,7 @@ import { buildSchema, GraphQLSchema } from 'graphql';
 import { SchemaComposer, dedent } from '../..';
 
 describe('github issue #287: Can we merge schemas with overriding types in fields', () => {
-  it('merge two schemas', () => {
+  it('merge two simple schemas', () => {
     const schemaA = buildSchema(`
       type Query {
         field1: Int
@@ -40,5 +40,78 @@ describe('github issue #287: Can we merge schemas with overriding types in field
     `);
 
     expect(sc.buildSchema()).toBeInstanceOf(GraphQLSchema);
+  });
+
+  it('it merges field & arg types', () => {
+    const schemaA = buildSchema(`
+      # An object with an ID
+      interface Node {
+        # The id of the object.
+        id: ID!
+      }
+
+      type Post implements Node {
+        id: ID!
+        content: String
+        fieldA: Int
+        fieldB: String
+      }
+
+      type Query {
+        post: Post
+        # Fetches an object given its ID
+        node(
+          # The ID of an object
+          id: ID!
+        ): Node
+      }
+      `);
+
+    const schemaB = buildSchema(`
+      # An object with an ID
+      interface Node {
+        # The id of the object.
+        id: ID!
+      }
+
+      type Post implements Node {
+        id: ID!
+        content: String
+      }
+
+      type Query {
+        post: Post
+        # Fetches an object given its ID
+        node(
+          # The ID of an object
+          id: ID!
+        ): Node
+      }
+      `);
+
+    const sc = new SchemaComposer(schemaA);
+    sc.merge(schemaB);
+
+    expect(sc.toSDL({ omitScalars: true, omitDirectiveDefinitions: true })).toEqual(dedent`
+      type Mutation
+      
+      interface Node {
+        id: ID!
+      }
+      
+      type Post implements Node {
+        id: ID!
+        content: String
+        fieldA: Int
+        fieldB: String
+      }
+      
+      type Query {
+        post: Post
+        node(id: ID!): Node
+      }
+      
+      type Subscription
+    `);
   });
 });

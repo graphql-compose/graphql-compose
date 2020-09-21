@@ -460,10 +460,6 @@ export class UnionTypeComposer<TSource, TContext> {
       tc = UnionTypeComposer.createTemp(type, this.schemaComposer);
     } else if (type instanceof UnionTypeComposer) {
       tc = type;
-    }
-
-    if (tc) {
-      this.addTypes(tc.getTypes());
     } else {
       throw new Error(
         `Cannot merge ${inspect(
@@ -471,6 +467,9 @@ export class UnionTypeComposer<TSource, TContext> {
         )} with UnionType(${this.getTypeName()}). Provided type should be GraphQLUnionType or UnionTypeComposer.`
       );
     }
+
+    // set types as SDL string, it automatically will be remapped to the correct type instance in the current schema
+    this.addTypes(tc.getTypes().map((t) => t.getTypeName()));
 
     return this;
   }

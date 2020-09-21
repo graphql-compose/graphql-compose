@@ -449,10 +449,6 @@ export class EnumTypeComposer<TContext> {
       tc = EnumTypeComposer.createTemp(type, this.schemaComposer);
     } else if (type instanceof EnumTypeComposer) {
       tc = type;
-    }
-
-    if (tc) {
-      this.addFields(tc.getFields());
     } else {
       throw new Error(
         `Cannot merge ${inspect(
@@ -460,6 +456,8 @@ export class EnumTypeComposer<TContext> {
         )} with EnumType(${this.getTypeName()}). Provided type should be GraphQLEnumType or EnumTypeComposer.`
       );
     }
+
+    this.addFields(tc.getFields());
 
     return this;
   }

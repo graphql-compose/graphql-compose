@@ -650,15 +650,11 @@ export class InputTypeComposer<TContext> {
   }
 
   merge(type: GraphQLInputObjectType | InputTypeComposer<any>): InputTypeComposer<TContext> {
-    let tc: ?InputTypeComposer<any>;
+    let tc;
     if (type instanceof GraphQLInputObjectType) {
       tc = InputTypeComposer.createTemp(type, this.schemaComposer);
     } else if (type instanceof InputTypeComposer) {
       tc = type;
-    }
-
-    if (tc) {
-      this.addFields(tc.getFields());
     } else {
       throw new Error(
         `Cannot merge ${inspect(
@@ -666,6 +662,17 @@ export class InputTypeComposer<TContext> {
         )} with InputObjectType(${this.getTypeName()}). Provided type should be GraphQLInputObjectType or InputTypeComposer.`
       );
     }
+
+    // deep clone all fields
+    const fields = ({ ...tc.getFields() }: any);
+    Object.keys(fields).forEach((fieldName) => {
+      fields[fieldName] = {
+        ...fields[fieldName],
+        // set type as SDL string, it automatically will be remapped to the correct type instance in the current schema
+        type: tc.getFieldTypeName(fieldName),
+      };
+    });
+    this.addFields(fields);
 
     return this;
   }

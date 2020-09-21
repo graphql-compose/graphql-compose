@@ -294,7 +294,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
         this.getAnyTC(typeName).merge((type: any));
       } else {
         // add a new type
-        const tc = this.createTC(type);
+        const tc = type.cloneTo(this);
         this.set(key, tc);
         if (typeName && typeName !== key) {
           this.set(typeName, tc);
@@ -753,7 +753,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   addDirective(directive: GraphQLDirective): SchemaComposer<TContext> {
     if (!(directive instanceof GraphQLDirective)) {
       throw new Error(dedent`
-        You should provide GraphQLDirective to schemaComposer.addDirective(), but recieved: 
+        You should provide GraphQLDirective to schemaComposer.addDirective(), but received: 
           ${inspect(directive)}
       `);
     }
@@ -883,14 +883,14 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       ENUM_TYPE: (tc: EnumTypeComposer<any>) => {
         const typename = tc.getTypeName();
         if (exclude.includes(typename)) return;
-        let hasDifferentIntervalVals = false;
-        const internalVals = {};
+        let hasDifferentIntervalValues = false;
+        const internalValues = {};
         forEachKey(tc.getFields(), (fc, fieldName) => {
-          if (fc.value !== fieldName) hasDifferentIntervalVals = true;
-          internalVals[fieldName] = fc.value;
+          if (fc.value !== fieldName) hasDifferentIntervalValues = true;
+          internalValues[fieldName] = fc.value;
         });
-        if (hasDifferentIntervalVals) {
-          resolveMethods[typename] = internalVals;
+        if (hasDifferentIntervalValues) {
+          resolveMethods[typename] = internalValues;
         }
       },
     });

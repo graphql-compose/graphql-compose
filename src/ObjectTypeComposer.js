@@ -1125,27 +1125,47 @@ export class ObjectTypeComposer<TSource, TContext> {
       | ObjectTypeComposer<any, any>
       | InterfaceTypeComposer<any, any>
   ): ObjectTypeComposer<TSource, TContext> {
-    if (type instanceof GraphQLObjectType) {
-      const tmp = ObjectTypeComposer.createTemp(type, this.schemaComposer);
-      this.addFields(tmp.getFields());
-      this.addInterfaces(tmp.getInterfaces());
+    let tc;
+    if (type instanceof ObjectTypeComposer || type instanceof InterfaceTypeComposer) {
+      tc = type;
+    } else if (type instanceof GraphQLObjectType) {
+      tc = ObjectTypeComposer.createTemp(type, this.schemaComposer);
     } else if (type instanceof GraphQLInterfaceType) {
-      const tmp = InterfaceTypeComposer.createTemp(type, this.schemaComposer);
-      this.addFields(tmp.getFields());
-    } else if (type instanceof ObjectTypeComposer) {
-      this.addFields(type.getFields());
-      this.addInterfaces(type.getInterfaces());
-      // Feel free to add other properties for merging two TypeComposers.
-      // For simplicity it just merge fields and interfaces.
-    } else if (type instanceof InterfaceTypeComposer) {
-      this.addFields(type.getFields());
+      tc = InterfaceTypeComposer.createTemp(type, this.schemaComposer);
     } else {
       throw new Error(
         `Cannot merge ${inspect(
           type
-        )} with ObjectType(${this.getTypeName()}). Provided type should be GraphQLObjectType or ObjectTypeComposer.`
+        )} with ObjectType(${this.getTypeName()}). Provided type should be GraphQLInterfaceType, GraphQLObjectType, InterfaceTypeComposer or ObjectTypeComposer.`
       );
     }
+
+    // deep clone all fields with args
+    const fields = ({ ...tc.getFields() }: any);
+    Object.keys(fields).forEach((fieldName) => {
+      fields[fieldName] = {
+        ...fields[fieldName],
+        args: {
+          ...fields[fieldName].args,
+        },
+        // set type as SDL string, it automatically will be remapped to the correct type instance in the current schema
+        type: tc.getFieldTypeName(fieldName),
+      };
+      tc.getFieldArgNames(fieldName).forEach((argName) => {
+        fields[fieldName].args[argName] = {
+          ...fields[fieldName].args[argName],
+          // set type as SDL string, it automatically will be remapped to the correct type instance in the current schema
+          type: tc.getFieldArgTypeName(fieldName, argName),
+        };
+      });
+    });
+    this.addFields(fields);
+
+    // set interfaces as SDL string, it automatically will be remapped to the correct type instance in the current schema
+    this.addInterfaces(tc.getInterfaces().map((i) => i.getTypeName()));
+
+    // Feel free to add other properties for merging two TypeComposers.
+    // For simplicity it just merge fields and interfaces.
 
     return this;
   }
