@@ -1,10 +1,12 @@
 /* @flow */
 
 import { buildSchema, GraphQLSchema } from 'graphql';
-import { SchemaComposer, dedent } from '../..';
+import { SchemaComposer, dedent, graphqlVersion } from '../..';
 
 describe('github issue #287: Can we merge schemas with overriding types in fields', () => {
   it('merge two simple schemas', () => {
+    if (graphqlVersion < 15) return;
+
     const schemaA = buildSchema(`
       type Query {
         field1: Int
@@ -43,6 +45,8 @@ describe('github issue #287: Can we merge schemas with overriding types in field
   });
 
   it('it merges field & arg types', () => {
+    if (graphqlVersion < 15) return;
+
     const schemaA = buildSchema(`
       # An object with an ID
       interface Node {
