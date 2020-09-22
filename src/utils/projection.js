@@ -33,12 +33,12 @@ export function getProjectionFromAST(
     return {};
   }
 
-  const queryProjection = getProjectionFromASTquery(info, fieldNode);
+  const queryProjection = getProjectionFromASTQuery(info, fieldNode);
   const queryExtProjection = extendByFieldProjection(info.returnType, queryProjection);
   return queryExtProjection;
 }
 
-export function getProjectionFromASTquery(
+export function getProjectionFromASTQuery(
   info: GraphQLResolveInfo,
   fieldNode?: FieldNode | InlineFragmentNode | FragmentDefinitionNode
 ): ProjectionType {
@@ -67,18 +67,18 @@ export function getProjectionFromASTquery(
         case FIELD: {
           const { value } = ast.name;
           if (res[value]) {
-            res[value] = deepmerge(res[value], getProjectionFromASTquery(info, ast) || true);
+            res[value] = deepmerge(res[value], getProjectionFromASTQuery(info, ast) || true);
           } else {
-            res[value] = getProjectionFromASTquery(info, ast) || true;
+            res[value] = getProjectionFromASTQuery(info, ast) || true;
           }
           return res;
         }
         case INLINE_FRAGMENT:
-          return deepmerge(res, getProjectionFromASTquery(info, ast));
+          return deepmerge(res, getProjectionFromASTQuery(info, ast));
         case FRAGMENT_SPREAD:
-          return deepmerge(res, getProjectionFromASTquery(info, info.fragments[ast.name.value]));
+          return deepmerge(res, getProjectionFromASTQuery(info, info.fragments[ast.name.value]));
         default:
-          throw new Error('Unsuported query selection');
+          throw new Error('Unsupported query selection');
       }
     },
     {}
@@ -86,6 +86,8 @@ export function getProjectionFromASTquery(
 
   return projection;
 }
+// export old getProjectionFromASTquery to be removed in next major release
+export const getProjectionFromASTquery = getProjectionFromASTQuery;
 
 export function getFlatProjectionFromAST(
   info: GraphQLResolveInfo,
