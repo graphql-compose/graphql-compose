@@ -27,7 +27,8 @@ export type ProjectionNode = { [fieldName: string]: any };
 
 export function getProjectionFromAST(
   info: GraphQLResolveInfo,
-  fieldNode?: FieldNode | InlineFragmentNode | FragmentDefinitionNode
+  fieldNode?: FieldNode | InlineFragmentNode | FragmentDefinitionNode,
+  queryName?: string
 ): ProjectionType {
   if (!info) {
     return {};
@@ -35,6 +36,11 @@ export function getProjectionFromAST(
 
   const queryProjection = getProjectionFromASTquery(info, fieldNode);
   const queryExtProjection = extendByFieldProjection(info.returnType, queryProjection);
+  if (queryName) {
+    if (queryExtProjection[queryName]) {
+      return queryExtProjection[queryName];
+    }
+  }
   return queryExtProjection;
 }
 

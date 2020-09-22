@@ -71,6 +71,20 @@ describe('projection', () => {
       });
     });
 
+    it('targeted simple query', async () => {
+      const info = await getResolveInfo(`
+        query {
+          field0 {
+            field1a { field2a }
+            field1b
+          }
+        }
+      `);
+      expect(getProjectionFromAST(info, null, 'field1a')).toEqual({
+        field2a: {},
+      });
+    });
+
     it('inline fragments', async () => {
       const info = await getResolveInfo(`
         query {
@@ -86,6 +100,24 @@ describe('projection', () => {
       expect(getProjectionFromAST(info)).toEqual({
         field1a: { field2a: {}, field2b: {} },
         field1b: {},
+      });
+    });
+
+    it('targeted inline fragments', async () => {
+      const info = await getResolveInfo(`
+        query {
+          field0 {
+            field1a { field2a }
+            ... {
+              field1a { field2b }
+              field1b
+            }
+          }
+        }
+      `);
+      expect(getProjectionFromAST(info, null, 'field1a')).toEqual({
+        field2a: {},
+        field2b: {},
       });
     });
 
@@ -107,6 +139,26 @@ describe('projection', () => {
       expect(getProjectionFromAST(info)).toEqual({
         field1a: { field2b: {} },
         field1b: {},
+      });
+    });
+
+    it('targeted fragment spreads', async () => {
+      const info = await getResolveInfo(`
+        query {
+          field0 {
+            ...Frag
+            field1b
+          }
+        }
+
+        fragment Frag on Level1 {
+          field1a {
+            field2b
+          }
+        }
+      `);
+      expect(getProjectionFromAST(info, null, 'field1a')).toEqual({
+        field2b: {},
       });
     });
 
