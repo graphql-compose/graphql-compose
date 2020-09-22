@@ -324,6 +324,10 @@ export class ObjectTypeComposer<TSource, TContext> {
     // add itself to TypeStorage on create
     // it avoids recursive type use errors
     this.schemaComposer.set(graphqlType, this);
+    const typename = graphqlType.name;
+    if (typename !== 'Query' && typename !== 'Mutation' && typename !== 'Subscription') {
+      this.schemaComposer.set(typename, this);
+    }
 
     if (graphqlVersion >= 14) {
       this._gqcFields = convertObjectFieldMapToConfig(this._gqType._fields, this.schemaComposer);

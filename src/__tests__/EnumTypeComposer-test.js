@@ -198,7 +198,7 @@ describe('EnumTypeComposer', () => {
     });
 
     it('should create TC without values from string', () => {
-      const myTC = EnumTypeComposer.create('MyEnum', schemaComposer);
+      const myTC = EnumTypeComposer.create('MyEnum123', schemaComposer);
       expect(myTC.getFieldNames()).toEqual([]);
     });
 

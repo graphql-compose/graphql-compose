@@ -70,7 +70,7 @@ describe('github issue #107 merge Schema types on GQL', () => {
     expect(RemoteAccessTC.getTypeName()).toEqual('Access');
   });
 
-  it('schema stiching on Query', async () => {
+  it('schema stitching on Query', async () => {
     const RemoteQueryType: any = remoteSchema._queryType;
     const RemoteQueryTC = schemaComposer.createObjectTC(RemoteQueryType);
 
@@ -105,7 +105,7 @@ describe('github issue #107 merge Schema types on GQL', () => {
     });
   });
 
-  it('schema stiching on Query.remote', async () => {
+  it('schema stitching on Query.remote', async () => {
     const RemoteQueryType: any = remoteSchema._queryType;
     const RemoteQueryTC = schemaComposer.createObjectTC(RemoteQueryType);
 

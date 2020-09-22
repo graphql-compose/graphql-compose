@@ -120,6 +120,7 @@ export class ScalarTypeComposer<TContext> {
     // add itself to TypeStorage on create
     // it avoids recursive type use errors
     this.schemaComposer.set(graphqlType, this);
+    this.schemaComposer.set(graphqlType.name, this);
 
     let serialize;
     let parseValue;

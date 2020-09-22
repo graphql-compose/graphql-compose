@@ -118,4 +118,96 @@ describe('github issue #287: Can we merge schemas with overriding types in field
       type Subscription
     `);
   });
+
+  it('should not throw contains multiple types named "Node"', () => {
+    if (graphqlVersion < 15) return;
+
+    const typeDefsA = `
+      type Mutation {
+        createPost(data: String!): Post!
+      }
+
+      interface Node {
+        id: ID!
+      }
+
+      type Post implements Node {
+        id: ID!
+        title: String!
+      }
+
+      type PostConnection {
+        edges: [PostEdge]!
+      }
+
+      type PostEdge {
+        node: Post!
+      }
+
+      type PostSubscriptionPayload {
+        node: Post
+      }
+
+      input PostUpdateManyMutationInput {
+        title: String
+        content: String
+      }
+
+      type Query {
+        posts(first: Int, last: Int): [Post]!
+        postsConnection(first: Int, last: Int): PostConnection!
+        node(id: ID!): Node
+      }
+
+      type Subscription {
+        post(where: String): PostSubscriptionPayload
+      }
+    `;
+
+    const typeDefsB = `
+      type Mutation {
+        createPost(data: String!): Post!
+      }
+
+      interface Node {
+        id: ID!
+      }
+
+      type Post implements Node {
+        id: ID!
+        content: String
+      }
+
+      type PostConnection {
+        edges: [PostEdge]!
+      }
+
+      type PostEdge {
+        node: Post!
+      }
+
+      type PostSubscriptionPayload {
+        node: Post
+      }
+
+      type Query {
+        posts: [Post]!
+        postsConnection: PostConnection!
+        node(id: ID!): Node
+      }
+
+      type Subscription {
+        post(where: String): PostSubscriptionPayload
+      }
+      `;
+
+    const schemaA = buildSchema(typeDefsA);
+    const schemaB = buildSchema(typeDefsB);
+
+    const sc = new SchemaComposer(schemaA);
+    sc.merge(schemaB);
+    expect(() => {
+      sc.buildSchema();
+    }).not.toThrow(/contains multiple types named "Node"/);
+  });
 });

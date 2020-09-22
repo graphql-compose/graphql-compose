@@ -178,6 +178,7 @@ export class InputTypeComposer<TContext> {
     // add itself to TypeStorage on create
     // it avoids recursive type use errors
     this.schemaComposer.set(graphqlType, this);
+    this.schemaComposer.set(graphqlType.name, this);
 
     if (graphqlVersion >= 14) {
       this._gqcFields = convertInputFieldMapToConfig(this._gqType._fields, this.schemaComposer);

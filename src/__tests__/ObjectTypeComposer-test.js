@@ -784,7 +784,7 @@ describe('ObjectTypeComposer', () => {
       expect(schemaComposer.getOTC('SomeUser')).toBe(SomeUserTC);
     });
 
-    it('should create type and NOTE store root types in schemaComposer', () => {
+    it('should create type and NOT to store root types in schemaComposer', () => {
       ObjectTypeComposer.create('Query', schemaComposer);
       expect(schemaComposer.has('Query')).toBeFalsy();
 

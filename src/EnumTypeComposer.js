@@ -146,6 +146,7 @@ export class EnumTypeComposer<TContext> {
     // add itself to TypeStorage on create
     // it avoids recursive type use errors
     this.schemaComposer.set(graphqlType, this);
+    this.schemaComposer.set(graphqlType.name, this);
 
     this._gqcFields = convertEnumValuesToConfig(this._gqType.getValues(), this.schemaComposer);
 

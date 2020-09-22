@@ -211,6 +211,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     // add itself to TypeStorage on create
     // it avoids recursive type use errors
     this.schemaComposer.set(graphqlType, this);
+    this.schemaComposer.set(graphqlType.name, this);
 
     if (graphqlVersion >= 15) {
       this._gqcFields = convertObjectFieldMapToConfig(this._gqType._fields, this.schemaComposer);
