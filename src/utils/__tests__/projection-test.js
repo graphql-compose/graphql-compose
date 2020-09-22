@@ -85,6 +85,18 @@ describe('projection', () => {
       });
     });
 
+    it('targeted simple query nested', async () => {
+      const info = await getResolveInfo(`
+        query {
+          field0 {
+            field1a { field2a }
+            field1b
+          }
+        }
+      `);
+      expect(getProjectionFromAST(info, null, 'field1a.field2a')).toEqual({});
+    });
+
     it('inline fragments', async () => {
       const info = await getResolveInfo(`
         query {
@@ -119,6 +131,21 @@ describe('projection', () => {
         field2a: {},
         field2b: {},
       });
+    });
+
+    it('targeted inline fragments nested', async () => {
+      const info = await getResolveInfo(`
+        query {
+          field0 {
+            field1a { field2a }
+            ... {
+              field1a { field2b }
+              field1b
+            }
+          }
+        }
+      `);
+      expect(getProjectionFromAST(info, null, 'field1a.field2b')).toEqual({});
     });
 
     it('fragment spreads', async () => {

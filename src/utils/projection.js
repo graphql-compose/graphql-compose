@@ -39,6 +39,14 @@ export function getProjectionFromAST(
   if (queryName) {
     if (queryExtProjection[queryName]) {
       return queryExtProjection[queryName];
+    } else if (queryName.split('.').length > 1) {
+      let result = { ...queryExtProjection };
+      queryName.split('.').forEach((name) => {
+        if (result[name]) {
+          result = result[name];
+        }
+      });
+      return result;
     }
   }
   return queryExtProjection;
