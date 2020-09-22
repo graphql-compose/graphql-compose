@@ -86,6 +86,8 @@ export function getProjectionFromASTQuery(
 
   return projection;
 }
+// export old getProjectionFromASTquery to be removed in next major release
+export const getProjectionFromASTquery = getProjectionFromASTQuery;
 
 export function getFlatProjectionFromAST(
   info: GraphQLResolveInfo,
