@@ -158,8 +158,8 @@ export type ObjectTypeComposerArgumentConfigDefinition =
 
 // RELATION -----------------------------
 
-export type ObjectTypeComposerRelationThunkMap<TSource, TContext> = {
-  [fieldName: string]: Thunk<ObjectTypeComposerRelationOpts<any, TSource, TContext>>,
+export type ObjectTypeComposerRelationMap<TSource, TContext> = {
+  [fieldName: string]: ObjectTypeComposerRelationOpts<any, TSource, TContext>,
 };
 export type ObjectTypeComposerRelationOpts<TRelationSource, TSource, TContext, TArgs = any> =
   | ObjectTypeComposerRelationOptsWithResolver<TRelationSource, TSource, TContext, TArgs>
@@ -212,7 +212,7 @@ export class ObjectTypeComposer<TSource, TContext> {
   _gqcInputTypeComposer: void | InputTypeComposer<TContext>;
   _gqcResolvers: void | Map<string, Resolver<TSource, TContext>>;
   _gqcGetRecordIdFn: void | ObjectTypeComposerGetRecordIdFn<TSource, TContext>;
-  _gqcRelations: void | ObjectTypeComposerRelationThunkMap<TSource, TContext>;
+  _gqcRelations: void | ObjectTypeComposerRelationMap<TSource, TContext>;
   _gqcFields: ObjectTypeComposerFieldConfigMap<TSource, TContext>;
   _gqcInterfaces: Array<InterfaceTypeComposerThunked<TSource, TContext>>;
   _gqcExtensions: void | Extensions;
@@ -1707,7 +1707,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     return this;
   }
 
-  getRelations(): ObjectTypeComposerRelationThunkMap<any, TContext> {
+  getRelations(): ObjectTypeComposerRelationMap<any, TContext> {
     if (!this._gqcRelations) {
       this._gqcRelations = {};
     }

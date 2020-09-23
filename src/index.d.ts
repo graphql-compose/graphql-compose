@@ -57,7 +57,7 @@ export {
   ObjectTypeComposerArgumentConfigAsObjectDefinition,
   ObjectTypeComposerArgumentConfig,
   ObjectTypeComposerArgumentConfigDefinition,
-  ObjectTypeComposerRelationThunkMap,
+  ObjectTypeComposerRelationMap,
   ObjectTypeComposerRelationOpts,
   ObjectTypeComposerRelationOptsWithResolver,
   ObjectTypeComposerRelationArgsMapperFn,
