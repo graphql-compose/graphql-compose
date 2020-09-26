@@ -158,7 +158,7 @@ export type ObjectTypeComposerRelationArgsMapperFn<TSource, TContext, TArgs = an
   info: GraphQLResolveInfo
 ) => any;
 export type ObjectTypeComposerRelationArgsMapper<TSource, TContext, TArgs = any> = {
-  [argName: string]:
+  [argName in keyof TArgs]:
     | { [key: string]: any }
     | ObjectTypeComposerRelationArgsMapperFn<TSource, TContext, TArgs>
     | null
