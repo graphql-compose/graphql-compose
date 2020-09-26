@@ -1,9 +1,6 @@
 /* eslint-disable no-param-reassign, no-unused-vars, import/no-unresolved */
 
-import {
-  ObjectTypeComposer,
-  ObjectTypeComposerRelationOptsWithResolver,
-} from '../../ObjectTypeComposer';
+import { ObjectTypeComposer } from '../../ObjectTypeComposer';
 
 // Person from this schemaComposer gets the context defined for that schemaComposer
 import {
@@ -12,7 +9,6 @@ import {
   DeepOptions,
   GenericUID,
   Person,
-  Post,
   schemaComposerWithContext,
 } from './mock-typedefs';
 
@@ -49,7 +45,7 @@ const PostTC = ObjectTypeComposer.createTemp('Post');
 
 // TC.getResolver()
 // should be without errors! By default in resolvers source should be `any` even if provided ObjectTypeComposer.create<Person, Context>
-PersonTC.getResolver('findOne').wrapResolve(next => rp => {
+PersonTC.getResolver('findOne').wrapResolve((next) => (rp) => {
   rp.source.name = 5; // source any
   rp.source.age = 'string';
 
@@ -57,31 +53,21 @@ PersonTC.getResolver('findOne').wrapResolve(next => rp => {
 });
 
 // BUT I see your what you want to do. So let provide source correctly to `wrapResolve` function:
-// We keep standard resolvers untyped forsource. BUT almost all wrappers created for some exact type,
+// We keep standard resolvers untyped for source. BUT almost all wrappers created for some exact type,
 // so let make it typed! I think it's a right place.
 interface QuerySource {
   name: number;
   age: number;
 }
 schemaComposerWithContext.Query.addFields({
-  user: PersonTC.getResolver('findOne').wrapResolve<QuerySource>(next => rp => {
+  user: PersonTC.getResolver('findOne').wrapResolve<QuerySource>((next) => (rp) => {
     rp.source.name = 5; // source any
-    // rp.source.age = 'string'; // <----- here must be an error
+    // @ts-expect-error
+    rp.source.age = 'string';
     rp.source.age = 4;
 
     return next(rp);
   }),
-});
-
-// TResolverSource is Person or you may specify
-PersonTC.getResolver('findOne').wrapResolve(next => rp => {
-  // rp.source.name = 5;  // source Person
-  // rp.source.age = 'string';
-
-  rp.source.name = 2; // <---- for backward compatibility for TS users, here should be mo errors (by default source: any)
-  rp.source.age = 5;
-
-  return next(rp);
 });
 
 // TC.addResolver()
@@ -109,16 +95,18 @@ PersonTC.addResolver<GenericUID>({
 });
 
 // wrapResolverResolve
-PersonTC.wrapResolverResolve('findMany', next => rp => {
+PersonTC.wrapResolverResolve('findMany', (next) => (rp) => {
   rp.source.name = 5; // source any
   rp.source.age = 'string';
 
   return next(rp);
 });
 
-PersonTC.wrapResolverResolve<Person>('findMany', next => rp => {
-  // rp.source.name = 5;  // source Person
-  // rp.source.age = 'string';
+PersonTC.wrapResolverResolve<Person>('findMany', (next) => (rp) => {
+  // @ts-expect-error
+  rp.source.name = 5; // source Person
+  // @ts-expect-error
+  rp.source.age = 'string';
 
   rp.source.name = 'string';
   rp.source.age = 5;
@@ -132,19 +120,19 @@ PersonTC.wrapResolverResolve<Person>('findMany', next => rp => {
 // ****************************
 (PersonTC.getFieldTC('deep') as ObjectTypeComposer) // <----- no matter what type you provide here, it should not affect on rp.source below
   .getResolver('findOne')
-  .wrapResolve<DeepOptions>(next => rp => {
+  .wrapResolve<DeepOptions>((next) => (rp) => {
     rp.source.deep1 = 'string';
     rp.context.uid = 'string'; // passes
   });
 
 (PersonTC.getFieldTC('deep') as ObjectTypeComposer) // <-------------- this case should not have errors
   .getResolver('findOne')
-  .wrapResolve(next => rp => {
+  .wrapResolve((next) => (rp) => {
     // no checking of rp.source as it is any, but we check context as it is inherited
     rp.source.deep1 = 5; // passes
     rp.source.deep1 = 'ssas'; // passes
 
-    // rp.context.uid = 5;   // fails
+    rp.context.uid = 5; // fails
     rp.context.uid = 'string'; // passes
   });
 
@@ -164,7 +152,8 @@ PersonTC.addFields({
             // test ObjectTypeComposerFieldConfig<TSource = Person ...
             resolve: (source, args, context) => {
               source.name = 'string';
-              // source.name = 55; // <-- errors
+              // @ts-expect-error
+              source.name = 55; // <-- errors
             },
           },
         },
@@ -185,7 +174,7 @@ PersonTC.addFields({
 ArtTC.addRelation('extends', {
   resolver: PersonTC.getResolver('findById'), // comes from other (resolve to)
   prepareArgs: {
-    _id: source => source.personId, // type checks well now
+    _id: (source) => source.personId, // type checks well now
   },
   projection: { personId: true },
 });
@@ -214,7 +203,8 @@ PersonTC.setField<FieldArgs1>('field1', {
   type: 'Int',
   resolve: (source, args) => {
     args.arg1 = 'string';
-    // args.arg1 = 3; // should be error
+    // @ts-expect-error
+    args.arg1 = 3; // should be error
   },
 });
 
@@ -223,7 +213,6 @@ PersonTC.addResolver<GenericUID, GeneralArgs>({
   // <--- this is ok, if we want to provide really Basic/Global/Generic interface, which will be implemented in several types/models. And then to these types we will add current resolver.
   resolve: ({ source, context, args }) => {
     if (context.uid !== source.uid) {
-      // args.skip = 'st';
       args.skip = 4;
       // do something if not the current user ...
     }
@@ -231,24 +220,27 @@ PersonTC.addResolver<GenericUID, GeneralArgs>({
 });
 
 // wrapResolverResolve
-PersonTC.wrapResolverResolve('findMany', next => rp => {
+PersonTC.wrapResolverResolve('findMany', (next) => (rp) => {
   rp.source.name = 5; // source any
   rp.source.age = 'string';
 
-  // rp.args = 123; // should be error
+  rp.args = 123; // should be error
   rp.args.skip = 'string';
   rp.args.skip = 4;
 
   return next(rp);
 });
 
-PersonTC.wrapResolverResolve<Person, GeneralArgs>('findMany', next => rp => {
-  // rp.source.name = 5;  // source Person
-  // rp.source.age = 'string';
+PersonTC.wrapResolverResolve<Person, GeneralArgs>('findMany', (next) => (rp) => {
+  // @ts-expect-error
+  rp.source.name = 5; // source Person
+  // @ts-expect-error
+  rp.source.age = 'string';
 
   rp.source.name = 'string';
   rp.source.age = 5;
-  // rp.args.skip = 'ss'; // should be error
+  // @ts-expect-error
+  rp.args.skip = 'ss'; // should be error
   rp.args.skip = 4;
 
   return next(rp);
@@ -256,7 +248,7 @@ PersonTC.wrapResolverResolve<Person, GeneralArgs>('findMany', next => rp => {
 
 // in relations
 ArtTC.addRelation('extends', {
-  resolver: PersonTC.getResolver('findById').wrapResolve(next => rp => {
+  resolver: PersonTC.getResolver('findById').wrapResolve((next) => (rp) => {
     rp.args.skip = 'hey';
     rp.args.skip = 4;
   }),
@@ -266,13 +258,15 @@ ArtTC.addRelation('extends', {
   projection: { personId: true },
 });
 
-ArtTC.addRelation<Person, GeneralArgs>('extends', {
-  resolver: PersonTC.getResolver('findById').wrapResolve(next => rp => {
-    // rp.args.skip = 'hey'; // should be error
+ArtTC.addRelation<Person, { _id: number }>('extends', {
+  resolver: PersonTC.getResolver('findById').wrapResolve((next) => (rp) => {
+    // @ts-expect-error
+    rp.args.skip = 'hey';
+    // @ts-expect-error
     rp.args.skip = 4;
   }),
   prepareArgs: {
-    _id: (source: any) => source.personId, // type checks well now
+    _id: (source: any) => source.personId,
   },
   projection: { personId: true },
 });
