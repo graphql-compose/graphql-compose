@@ -25,6 +25,7 @@ import {
 } from '../graphql';
 import { dedent } from '../utils/dedent';
 import { graphqlVersion } from '../utils/graphqlVersion';
+import { buildSchema } from 'graphql';
 
 describe('SchemaComposer', () => {
   it('should implements `add` method', () => {
@@ -347,6 +348,57 @@ describe('SchemaComposer', () => {
           `,
         })
       ).toEqual({ data: { num: null } });
+    });
+
+    it('should throw error if only Mutation provided', async () => {
+      const sc = new SchemaComposer();
+      sc.Mutation.addFields({ num: 'Int' });
+      expect(() => {
+        sc.buildSchema();
+      }).toThrow('Must be initialized Query type');
+    });
+
+    it('should keep unused types', () => {
+      const schema = buildSchema(`type Test {
+        prop1: String
+      }
+      interface UnusedInterface {
+        id: ID!
+      }
+      enum UnusedEnum {
+        VALUE_ONE
+      }
+      scalar TestUnusedScalar
+      directive @unusedDirective on FIELD_DEFINITION
+      input UnusedInput {
+        name: String
+      }
+      type Query {
+        me: String
+      }`);
+
+      const sc = new SchemaComposer(schema);
+      sc.addTypeDefs(`type SecondTestType {
+        prop1: String
+      }`);
+      sc.createObjectTC({
+        name: 'TestType3',
+        fields: {
+          prop1: {
+            name: 'prop1',
+            type: GraphQLString,
+          },
+        },
+      });
+
+      const builtSchema = sc.buildSchema({ keepUnusedTypes: true });
+      expect(builtSchema.getType('Test')).toBeInstanceOf(GraphQLObjectType);
+      expect(builtSchema.getType('SecondTestType')).toBeInstanceOf(GraphQLObjectType);
+      expect(builtSchema.getType('TestType3')).toBeInstanceOf(GraphQLObjectType);
+      expect(builtSchema.getType('TestUnusedScalar')).toBeInstanceOf(GraphQLScalarType);
+      expect(builtSchema.getType('UnusedInterface')).toBeInstanceOf(GraphQLInterfaceType);
+      expect(builtSchema.getType('UnusedEnum')).toBeInstanceOf(GraphQLEnumType);
+      expect(builtSchema.getType('UnusedInput')).toBeInstanceOf(GraphQLInputObjectType);
     });
   });
 
