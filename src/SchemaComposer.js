@@ -56,6 +56,7 @@ import {
   type GraphQLNamedType,
   type SchemaDefinitionNode,
   type GraphQLResolveInfo,
+  type GraphQLSchemaConfig,
 } from './graphql';
 import {
   printSchemaComposer,
@@ -69,6 +70,7 @@ type ExtraSchemaConfig = {|
   +directives?: GraphQLDirective[] | null,
   +astNode?: SchemaDefinitionNode | null,
   +description?: string | null,
+  +keepUnusedTypes?: boolean | null,
 |};
 
 type GraphQLToolsResolveMethods<TContext> = {
@@ -174,9 +176,16 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       }
     }
 
+    const mustHaveTypes =
+      extraConfig && extraConfig.keepUnusedTypes
+        ? [...this.types.values()].map(t => (getGraphQLType(t): any))
+        : this._schemaMustHaveTypes.map(t => (getGraphQLType(t): any)); // additional types, eg. used in Interfaces
+
     const types = [
-      ...this._schemaMustHaveTypes.map((t) => (getGraphQLType(t): any)), // additional types, eg. used in Interfaces
-      ...(extraConfig && Array.isArray(extraConfig.types) ? [...extraConfig.types] : []),
+      ...mustHaveTypes,
+      ...(extraConfig && !extraConfig.keepUnusedTypes && Array.isArray(extraConfig.types)
+        ? [...extraConfig.types]
+        : []),
     ];
 
     const directives = [
@@ -188,13 +197,14 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     if (!description) description = undefined;
 
     // $FlowFixMe `description` was added only in graphql@15.0.0
-    return new GraphQLSchema({
-      description,
-      ...roots,
-      ...extraConfig,
-      types,
-      directives,
-    });
+    const newSchemaConfig: GraphQLSchemaConfig = {
+      types: extraConfig?.types,
+      directives: extraConfig?.directives,
+      astNode: extraConfig?.astNode,
+    };
+
+    // $FlowFixMe `description` was added only in graphql@15.0.0
+    return new GraphQLSchema({ description, ...roots, ...newSchemaConfig, types, directives });
   }
 
   addSchemaMustHaveType(type: AnyType<TContext>): SchemaComposer<TContext> {
