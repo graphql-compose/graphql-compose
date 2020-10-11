@@ -52,11 +52,12 @@ import {
   GraphQLList,
   defaultFieldResolver,
   buildSchema,
+  getNamedType,
   type GraphQLType,
   type GraphQLNamedType,
   type SchemaDefinitionNode,
   type GraphQLResolveInfo,
-  type GraphQLSchemaConfig,
+  type SchemaExtensionNode,
 } from './graphql';
 import {
   printSchemaComposer,
@@ -66,10 +67,13 @@ import {
 import { visitSchema } from './utils/schemaVisitor';
 
 type ExtraSchemaConfig = {|
+  +description?: string | null,
   +types?: GraphQLNamedType[] | null,
   +directives?: GraphQLDirective[] | null,
+  +extensions?: any | null,
   +astNode?: SchemaDefinitionNode | null,
-  +description?: string | null,
+  +extensionASTNodes?: $ReadOnlyArray<SchemaExtensionNode> | null,
+  /** You may pass all unused types from type registry to GraphQL schema if set this option to `true` */
   +keepUnusedTypes?: boolean | null,
 |};
 
@@ -176,35 +180,39 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       }
     }
 
-    const mustHaveTypes =
-      extraConfig && extraConfig.keepUnusedTypes
-        ? [...this.types.values()].map(t => (getGraphQLType(t): any))
-        : this._schemaMustHaveTypes.map(t => (getGraphQLType(t): any)); // additional types, eg. used in Interfaces
+    const { keepUnusedTypes, ...reducedConfig } = extraConfig || {};
 
-    const types = [
-      ...mustHaveTypes,
-      ...(extraConfig && !extraConfig.keepUnusedTypes && Array.isArray(extraConfig.types)
-        ? [...extraConfig.types]
-        : []),
-    ];
+    const typesSet = new Set<GraphQLNamedType>();
+    if (keepUnusedTypes) {
+      this.types.forEach((type) => {
+        typesSet.add(getNamedType(getGraphQLType(type)));
+      });
+    }
+    // additional types, eg. used in Interfaces
+    this._schemaMustHaveTypes.forEach((type) => {
+      typesSet.add(getNamedType(getGraphQLType(type)));
+    });
+    if (Array.isArray(extraConfig?.types)) {
+      extraConfig.types.forEach((type) => {
+        typesSet.add(getNamedType(getGraphQLType(type)));
+      });
+    }
 
     const directives = [
       ...this._directives,
-      ...(extraConfig && Array.isArray(extraConfig.directives) ? [...extraConfig.directives] : []),
+      ...(Array.isArray(extraConfig?.directives) ? [...extraConfig.directives] : []),
     ];
 
-    let description = this.getDescription();
-    if (!description) description = undefined;
+    const description = this.getDescription() || reducedConfig.description || undefined;
 
     // $FlowFixMe `description` was added only in graphql@15.0.0
-    const newSchemaConfig: GraphQLSchemaConfig = {
-      types: extraConfig?.types,
-      directives: extraConfig?.directives,
-      astNode: extraConfig?.astNode,
-    };
-
-    // $FlowFixMe `description` was added only in graphql@15.0.0
-    return new GraphQLSchema({ description, ...roots, ...newSchemaConfig, types, directives });
+    return new GraphQLSchema({
+      ...reducedConfig,
+      ...roots,
+      types: Array.from(typesSet),
+      directives,
+      description,
+    });
   }
 
   addSchemaMustHaveType(type: AnyType<TContext>): SchemaComposer<TContext> {
