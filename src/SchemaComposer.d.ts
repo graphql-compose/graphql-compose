@@ -3,8 +3,10 @@ import {
   GraphQLNamedType,
   GraphQLDirective,
   SchemaDefinitionNode,
+  SchemaExtensionNode,
   GraphQLResolveInfo,
   GraphQLType,
+  GraphQLSchemaExtensions,
 } from 'graphql';
 import { ObjectTypeComposer, ObjectTypeComposerDefinition } from './ObjectTypeComposer';
 import { InputTypeComposer, InputTypeComposerDefinition } from './InputTypeComposer';
@@ -12,8 +14,6 @@ import { ScalarTypeComposer, ScalarTypeComposerDefinition } from './ScalarTypeCo
 import { EnumTypeComposer, EnumTypeComposerDefinition } from './EnumTypeComposer';
 import { InterfaceTypeComposer, InterfaceTypeComposerDefinition } from './InterfaceTypeComposer';
 import { UnionTypeComposer, UnionTypeComposerDefinition } from './UnionTypeComposer';
-import { ListComposer } from './ListComposer';
-import { NonNullComposer } from './NonNullComposer';
 import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
 import { Resolver, ResolverDefinition } from './Resolver';
@@ -21,10 +21,14 @@ import { NamedTypeComposer, AnyType } from './utils/typeHelpers';
 import { SchemaComposerPrinterOptions, SchemaPrinterOptions } from './utils/schemaPrinter';
 
 type ExtraSchemaConfig = {
+  description?: string | null;
   types?: GraphQLNamedType[] | null;
   directives?: GraphQLDirective[] | null;
+  extensions?: GraphQLSchemaExtensions | null;
   astNode?: SchemaDefinitionNode | null;
-  description?: string | null;
+  extensionASTNodes?: ReadonlyArray<SchemaExtensionNode> | null;
+  /** You may pass all unused types from type registry to GraphQL schema if set this option to `true` */
+  keepUnusedTypes?: boolean | null;
 };
 
 type GraphQLToolsResolveMethods<TContext> = {

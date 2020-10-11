@@ -1,6 +1,6 @@
 /* @flow strict */
 
-import { printSchema } from 'graphql';
+import { printSchema, buildSchema } from 'graphql';
 import { SchemaComposer, BUILT_IN_DIRECTIVES } from '../SchemaComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
@@ -25,7 +25,6 @@ import {
 } from '../graphql';
 import { dedent } from '../utils/dedent';
 import { graphqlVersion } from '../utils/graphqlVersion';
-import { buildSchema } from 'graphql';
 
 describe('SchemaComposer', () => {
   it('should implements `add` method', () => {
@@ -348,14 +347,6 @@ describe('SchemaComposer', () => {
           `,
         })
       ).toEqual({ data: { num: null } });
-    });
-
-    it('should throw error if only Mutation provided', async () => {
-      const sc = new SchemaComposer();
-      sc.Mutation.addFields({ num: 'Int' });
-      expect(() => {
-        sc.buildSchema();
-      }).toThrow('Must be initialized Query type');
     });
 
     it('should keep unused types', () => {
