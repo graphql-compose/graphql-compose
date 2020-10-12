@@ -6,7 +6,6 @@ import {
   SchemaExtensionNode,
   GraphQLResolveInfo,
   GraphQLType,
-  GraphQLSchemaExtensions,
 } from 'graphql';
 import { ObjectTypeComposer, ObjectTypeComposerDefinition } from './ObjectTypeComposer';
 import { InputTypeComposer, InputTypeComposerDefinition } from './InputTypeComposer';
@@ -24,7 +23,7 @@ type ExtraSchemaConfig = {
   description?: string | null;
   types?: GraphQLNamedType[] | null;
   directives?: GraphQLDirective[] | null;
-  extensions?: GraphQLSchemaExtensions | null;
+  extensions?: any | null; // should be `GraphQLSchemaExtensions` but it does not exists graphql@<15.0.0 (fix this when drop v14 support)
   astNode?: SchemaDefinitionNode | null;
   extensionASTNodes?: ReadonlyArray<SchemaExtensionNode> | null;
   /** You may pass all unused types from type registry to GraphQL schema if set this option to `true` */
