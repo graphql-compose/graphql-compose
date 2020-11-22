@@ -401,6 +401,15 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
           });
         });
         return;
+      } else if (tc instanceof EnumTypeComposer) {
+        const enumValuesMap = typesFieldsResolve[typeName];
+        const fieldNames = Object.keys(enumValuesMap);
+        fieldNames.forEach((fieldName) => {
+          tc.extendField(fieldName, {
+            value: enumValuesMap[fieldName],
+          });
+        });
+        return;
       }
       throw new Error(dedent`
         Cannot add resolver to the following type: 

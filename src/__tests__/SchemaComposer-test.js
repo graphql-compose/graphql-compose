@@ -1093,6 +1093,31 @@ describe('SchemaComposer', () => {
       expect(sc.get('Date')).toBeInstanceOf(ScalarTypeComposer);
       expect(Array.from(sc.types.keys())).toContain('Date');
     });
+
+    it('should add enum values', () => {
+      const sc = new SchemaComposer();
+      sc.addTypeDefs(`
+        enum AllowedColor {
+          RED
+          GREEN
+          BLUE
+        }
+      `);
+
+      sc.addResolveMethods({
+        AllowedColor: ({
+          RED: '#f00',
+          GREEN: '#0f0',
+          BLUE: '#00f',
+        }: any),
+      });
+
+      const etc = sc.getETC('AllowedColor');
+      expect(etc).toBeInstanceOf(EnumTypeComposer);
+      expect(etc.getField('RED').value).toBe('#f00');
+      expect(etc.getField('GREEN').value).toBe('#0f0');
+      expect(etc.getField('BLUE').value).toBe('#00f');
+    });
   });
 
   describe('getResolveMethods', () => {
