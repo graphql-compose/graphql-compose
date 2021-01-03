@@ -143,7 +143,7 @@ When your Schema is constructed, it needs to implement a server. It will serve c
 
 ```js
 import express from 'express';
-import graphqlHTTP from 'express-graphql';
+import { graphqlHTTP } from 'express-graphql';
 import { schema } from './schema';
 
 const PORT = 4000;
