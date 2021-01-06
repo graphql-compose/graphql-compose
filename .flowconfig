@@ -40,6 +40,10 @@
 #   flowlint uninitialized-instance-property:off
 .*/node_modules/graphql/error/GraphQLError.js.flow
 
+# hide some errors from graphql 15.4.0
+.*/node_modules/graphql/polyfills/symbols.js.flow
+.*/node_modules/graphql/validation/rules/custom/NoDeprecatedCustomRule.js.flow
+
 [include]
 
 [libs]

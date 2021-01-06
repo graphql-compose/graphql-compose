@@ -46,9 +46,7 @@ export type EnumTypeComposerValueConfigDefinition = {
 };
 
 export type EnumTypeComposerValueConfigMap = ObjMap<EnumTypeComposerValueConfig>;
-export type EnumTypeComposerValueConfigMapDefinition = ObjMap<
-  EnumTypeComposerValueConfigDefinition
->;
+export type EnumTypeComposerValueConfigMapDefinition = ObjMap<EnumTypeComposerValueConfigDefinition>;
 
 /**
  * `EnumTypeComposer` is a class which helps to create and modify `GraphQLEnumType`.
