@@ -81,17 +81,25 @@ describe('InputTypeComposer', () => {
         expect(itc.getFieldType('input4')).toBe(GraphQLString);
       });
 
-      it('accept shortand fields definition', () => {
+      it('accept shorthand fields definition', () => {
         itc.setFields({
           input3: GraphQLString,
           input4: 'String',
+          input5: (sc) => {
+            expect(sc).toBeInstanceOf(SchemaComposer);
+            return GraphQLString;
+          },
         });
         expect(itc.getFieldType('input3')).toBe(GraphQLString);
         expect(itc.getFieldType('input4')).toBe(GraphQLString);
+        expect(itc.getFieldType('input5')).toBe(GraphQLString);
       });
 
       it('accept types as function', () => {
-        const typeAsFn = () => GraphQLString;
+        const typeAsFn = (sc) => {
+          expect(sc).toBeInstanceOf(SchemaComposer);
+          return GraphQLString;
+        };
         itc.setFields({
           input3: { type: typeAsFn },
         });

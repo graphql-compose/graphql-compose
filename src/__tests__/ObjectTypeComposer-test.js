@@ -94,6 +94,16 @@ describe('ObjectTypeComposer', () => {
             args: {
               arg1: { type: 'String!' },
               arg2: '[Float]',
+              arg3: {
+                type: (s) => {
+                  expect(s).toBeInstanceOf(SchemaComposer);
+                  return 'String';
+                },
+              },
+              arg4: (s) => {
+                expect(s).toBeInstanceOf(SchemaComposer);
+                return 'String';
+              },
             },
           },
         });
@@ -104,6 +114,8 @@ describe('ObjectTypeComposer', () => {
         expect((tc.getFieldArgType('field3', 'arg2'): any).ofType).toBe(GraphQLFloat);
         expect(tc.getFieldArgTypeName('field3', 'arg1')).toBe('String!');
         expect(tc.getFieldArgTypeName('field3', 'arg2')).toBe('[Float]');
+        expect(tc.getFieldArgTypeName('field3', 'arg3')).toBe('String');
+        expect(tc.getFieldArgTypeName('field3', 'arg4')).toBe('String');
       });
 
       it('should add projection via `setField` and `addFields`', () => {
@@ -118,7 +130,10 @@ describe('ObjectTypeComposer', () => {
       });
 
       it('accept types as function', () => {
-        const typeAsFn = () => GraphQLString;
+        const typeAsFn = (s) => {
+          expect(s).toBeInstanceOf(SchemaComposer);
+          return GraphQLString;
+        };
         tc.setFields({
           input3: { type: typeAsFn },
         });
@@ -135,7 +150,10 @@ describe('ObjectTypeComposer', () => {
 
       it('accept thunked type', () => {
         tc.setFields({
-          input4: (() => 'String': any),
+          input4: (s) => {
+            expect(s).toBeInstanceOf(SchemaComposer);
+            return 'String';
+          },
         });
         expect(tc.getField('input4').type).toBeInstanceOf(ScalarTypeComposer);
         expect(tc.getFieldType('input4')).toBe(GraphQLString);
@@ -633,7 +651,10 @@ describe('ObjectTypeComposer', () => {
       expect(tc.getInterfaces()).toHaveLength(2);
       expect(tc.hasInterface(iface)).toBe(true);
       expect(tc.hasInterface(iface2)).toBe(true);
-      tc.addInterface(iftc);
+      tc.addInterface((s) => {
+        expect(s).toBeInstanceOf(SchemaComposer);
+        return iftc;
+      });
       expect(tc.hasInterface(iftc)).toBe(true);
     });
 

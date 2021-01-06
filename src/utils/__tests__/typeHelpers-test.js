@@ -19,8 +19,8 @@ import { schemaComposer as sc } from '../..';
 describe('typeHelpers', () => {
   describe('getComposeTypeName()', () => {
     it('understand strings', () => {
-      expect(getComposeTypeName('MyTypeName')).toBe('MyTypeName');
-      expect(getComposeTypeName('type AAA { f: Int }')).toBe('AAA');
+      expect(getComposeTypeName('MyTypeName', sc)).toBe('MyTypeName');
+      expect(getComposeTypeName('type AAA { f: Int }', sc)).toBe('AAA');
     });
 
     it('understands GraphQL named types', () => {
@@ -29,7 +29,8 @@ describe('typeHelpers', () => {
           new GraphQLObjectType({
             name: 'OutputType',
             fields: () => ({}),
-          })
+          }),
+          sc
         )
       ).toBe('OutputType');
 
@@ -38,14 +39,15 @@ describe('typeHelpers', () => {
           new GraphQLInputObjectType({
             name: 'InputType',
             fields: () => ({}),
-          })
+          }),
+          sc
         )
       ).toBe('InputType');
     });
 
     it('understands compose types', () => {
-      expect(getComposeTypeName(sc.createObjectTC('TypeTC'))).toBe('TypeTC');
-      expect(getComposeTypeName(sc.createInputTC('TypeITC'))).toBe('TypeITC');
+      expect(getComposeTypeName(sc.createObjectTC('TypeTC'), sc)).toBe('TypeTC');
+      expect(getComposeTypeName(sc.createInputTC('TypeITC'), sc)).toBe('TypeITC');
     });
   });
 

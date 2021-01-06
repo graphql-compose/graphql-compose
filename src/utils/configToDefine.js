@@ -2,7 +2,7 @@
 /* eslint-disable no-use-before-define */
 
 // This is internal methods of graphql-js (introduced in 14.0.0)
-// required for corret config convertion to internal field definition of types
+// required for correct config conversion to internal field definition of types
 // copy pasted from https://github.com/graphql/graphql-js/blame/master/src/type/definition.js
 
 import invariant from 'graphql/jsutils/invariant';
@@ -117,7 +117,7 @@ export function convertObjectFieldMapToConfig(
 ): ObjectTypeComposerFieldConfigMap<any, any> {
   const fields = {};
   const isThunk = isFunction(fieldMap);
-  const _fields: any = isThunk ? (fieldMap: any)() : fieldMap;
+  const _fields: any = isThunk ? (fieldMap: any)(schemaComposer) : fieldMap;
   if (!isObject(_fields)) return {};
   Object.keys(_fields).forEach((n) => {
     const { name, isDeprecated, ...fc } = _fields[n];
@@ -267,7 +267,7 @@ export function convertInputFieldMapToConfig(
 ): InputTypeComposerFieldConfigMap {
   const fields = {};
   const isThunk = isFunction(fieldMap);
-  const _fields: any = isThunk ? (fieldMap: any)() : fieldMap;
+  const _fields: any = isThunk ? (fieldMap: any)(schemaComposer) : fieldMap;
   Object.keys(_fields).forEach((n) => {
     const { name, isDeprecated, ...fc } = _fields[n];
     fields[n] = {
@@ -300,7 +300,7 @@ export function convertObjectTypeArrayAsThunk(
   sc: SchemaComposer<any>
 ): Array<ObjectTypeComposerThunked<any, any>> {
   const isThunk = isFunction(types);
-  const t: any = isThunk ? (types: any)() : types;
+  const t: any = isThunk ? (types: any)(sc) : types;
   if (!Array.isArray(t)) return [];
 
   return t.map((type) => {
@@ -311,11 +311,11 @@ export function convertObjectTypeArrayAsThunk(
     if (!tc && isThunk) {
       return new ThunkComposer(
         () => sc.typeMapper.convertOutputTypeDefinition(type),
-        getComposeTypeName(type)
+        getComposeTypeName(type, sc)
       );
     }
     if (!(tc instanceof ObjectTypeComposer) && !(tc instanceof ThunkComposer)) {
-      throw new Error(`Should be provided ObjectType but recieved ${inspect(type)}`);
+      throw new Error(`Should be provided ObjectType but received ${inspect(type)}`);
     }
     return tc;
   });
@@ -332,7 +332,7 @@ export function convertInterfaceArrayAsThunk(
   sc: SchemaComposer<any>
 ): Array<InterfaceTypeComposerThunked<any, any>> {
   const isThunk = isFunction(types);
-  const t: any = isThunk ? (types: any)() : types;
+  const t: any = isThunk ? (types: any)(sc) : types;
   if (!Array.isArray(t)) return [];
   return t.map((type) => {
     if (type instanceof InterfaceTypeComposer || type instanceof ThunkComposer) {
@@ -342,7 +342,7 @@ export function convertInterfaceArrayAsThunk(
     return isThunk
       ? new ThunkComposer(
           () => sc.typeMapper.convertInterfaceTypeDefinition(type),
-          getComposeTypeName(type)
+          getComposeTypeName(type, sc)
         )
       : sc.typeMapper.convertInterfaceTypeDefinition(type);
   });

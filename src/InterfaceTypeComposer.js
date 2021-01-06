@@ -260,7 +260,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
     // but for solving hoisting problems it's quite good to wrap it in function.
     if (isFunction(this._gqcFields[fieldName])) {
       // $FlowFixMe
-      const unwrappedFieldConfig = this._gqcFields[fieldName]();
+      const unwrappedFieldConfig = this._gqcFields[fieldName](this.schemaComposer);
       this.setField(fieldName, unwrappedFieldConfig);
     }
 
@@ -1254,7 +1254,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   }
 
   hasInterface(iface: InterfaceTypeComposerDefinition<any, TContext>): boolean {
-    const typeName = getComposeTypeName(iface);
+    const typeName = getComposeTypeName(iface, this.schemaComposer);
     return !!this._gqcInterfaces.find((i) => i.getTypeName() === typeName);
   }
 
@@ -1288,7 +1288,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
   removeInterface(
     iface: InterfaceTypeComposerDefinition<any, TContext>
   ): InterfaceTypeComposer<TSource, TContext> {
-    const typeName = getComposeTypeName(iface);
+    const typeName = getComposeTypeName(iface, this.schemaComposer);
     this._gqcInterfaces = this._gqcInterfaces.filter((i) => i.getTypeName() !== typeName);
     return this;
   }

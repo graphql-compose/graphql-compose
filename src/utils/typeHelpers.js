@@ -274,7 +274,7 @@ export function getGraphQLType(anyType: any): GraphQLType {
   return type;
 }
 
-export function getComposeTypeName(type: any): string {
+export function getComposeTypeName(type: any, sc: SchemaComposer<any>): string {
   if (typeof type === 'string') {
     if (/^[_a-zA-Z][_a-zA-Z0-9]*$/.test(type)) {
       // single type name
@@ -293,7 +293,7 @@ export function getComposeTypeName(type: any): string {
 
     throw new Error(`Cannot get type name from string: ${inspect(type)}`);
   } else if (isFunction(type)) {
-    return getComposeTypeName((type: any)());
+    return getComposeTypeName((type: any)(sc), sc);
   } else {
     try {
       const gqlType = getGraphQLType(type);

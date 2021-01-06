@@ -22,7 +22,7 @@ import {
   InterfaceTypeComposerDefinition,
   InterfaceTypeComposerThunked,
 } from './InterfaceTypeComposer';
-import { Thunk } from './utils/definitions';
+import { Thunk, ThunkWithSchemaComposer } from './utils/definitions';
 import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
 import {
@@ -70,8 +70,11 @@ declare class TypeMapper<TContext> {
   public convertSDLTypeDefinition(str: TypeDefinitionString): NamedTypeComposer<TContext> | void;
 
   public convertOutputTypeDefinition(
-    typeDef: Thunk<
-      ComposeOutputTypeDefinition<any> | ObjectTypeComposerDefinition<any, any> | Resolver<any, any>
+    typeDef: ThunkWithSchemaComposer<
+      | ComposeOutputTypeDefinition<any>
+      | ObjectTypeComposerDefinition<any, any>
+      | Resolver<any, any>,
+      SchemaComposer<TContext>
     >,
     fieldName?: string,
     typeName?: string
@@ -102,7 +105,7 @@ declare class TypeMapper<TContext> {
   ): ObjectTypeComposerArgumentConfigMap<any>;
 
   public convertInputTypeDefinition(
-    typeDef: Thunk<ComposeInputTypeDefinition>,
+    typeDef: ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<TContext>>,
     fieldName?: string,
     typeName?: string
   ): ComposeInputType | void;

@@ -20,7 +20,14 @@ import {
   ResolverMiddleware,
 } from './Resolver';
 import { SchemaComposer } from './SchemaComposer';
-import { ObjMap, Thunk, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
+import {
+  ObjMap,
+  Thunk,
+  ThunkWithSchemaComposer,
+  Extensions,
+  ExtensionsDirective,
+  DirectiveArgs,
+} from './utils/definitions';
 import { ProjectionType } from './utils/projection';
 import { TypeDefinitionString, TypeAsString } from './TypeMapper';
 import {
@@ -53,7 +60,10 @@ export type ObjectTypeComposerDefinition<TSource, TContext> =
 
 export type ObjectTypeComposerAsObjectDefinition<TSource, TContext> = {
   name: string;
-  interfaces?: null | Thunk<Array<InterfaceTypeComposerDefinition<any, TContext>>>;
+  interfaces?: null | ThunkWithSchemaComposer<
+    Array<InterfaceTypeComposerDefinition<any, TContext>>,
+    SchemaComposer<TContext>
+  >;
   fields?: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>;
   isTypeOf?: null | GraphQLIsTypeOfFn<TSource, TContext>;
   description?: string | null;
@@ -68,14 +78,22 @@ export type ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext> = ObjM
   ObjectTypeComposerFieldConfigDefinition<TSource, TContext>
 >;
 
-export type ObjectTypeComposerFieldConfigDefinition<TSource, TContext, TArgs = any> = Thunk<
+export type ObjectTypeComposerFieldConfigDefinition<
+  TSource,
+  TContext,
+  TArgs = any
+> = ThunkWithSchemaComposer<
   | ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs>
   | ComposeOutputTypeDefinition<TContext>
-  | Resolver<any, TContext, any>
+  | Resolver<any, TContext, any>,
+  SchemaComposer<TContext>
 >;
 
 export type ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs = any> = {
-  type: Thunk<ComposeOutputTypeDefinition<TContext> | Resolver<any, TContext, any>>;
+  type: ThunkWithSchemaComposer<
+    ComposeOutputTypeDefinition<TContext> | Resolver<any, TContext, any>,
+    SchemaComposer<TContext>
+  >;
   args?: ObjectTypeComposerArgumentConfigMapDefinition<TArgs>;
   resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>;
   subscribe?: GraphQLFieldResolver<TSource, TContext>;
@@ -108,7 +126,7 @@ export type ObjectTypeComposerArgumentConfigMapDefinition<TArgs = any> = {
 };
 
 export type ObjectTypeComposerArgumentConfigAsObjectDefinition = {
-  type: Thunk<ComposeInputTypeDefinition>;
+  type: ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<any>>;
   defaultValue?: any;
   description?: string | null;
   extensions?: Extensions;
@@ -126,7 +144,7 @@ export type ObjectTypeComposerArgumentConfig = {
 
 export type ObjectTypeComposerArgumentConfigDefinition =
   | ObjectTypeComposerArgumentConfigAsObjectDefinition
-  | Thunk<ComposeInputTypeDefinition>;
+  | ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<any>>;
 
 // RELATION -----------------------------
 
@@ -142,7 +160,10 @@ export type ObjectTypeComposerRelationOptsWithResolver<
   TContext,
   TArgs = any
 > = {
-  resolver: Thunk<Resolver<TRelationSource, TContext, TArgs>>;
+  resolver: ThunkWithSchemaComposer<
+    Resolver<TRelationSource, TContext, TArgs>,
+    SchemaComposer<TContext>
+  >;
   prepareArgs?: ObjectTypeComposerRelationArgsMapper<TSource, TContext, TArgs>;
   projection?: ProjectionType;
   description?: string | null;

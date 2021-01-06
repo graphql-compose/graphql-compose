@@ -56,6 +56,7 @@ import type {
   ObjMap,
   ObjMapReadOnly,
   Thunk,
+  ThunkWithSchemaComposer,
   Extensions,
   ExtensionsDirective,
   DirectiveArgs,
@@ -82,7 +83,10 @@ export type ObjectTypeComposerDefinition<TSource, TContext> =
 
 export type ObjectTypeComposerAsObjectDefinition<TSource, TContext> = {
   name: string,
-  interfaces?: null | Thunk<$ReadOnlyArray<InterfaceTypeComposerDefinition<any, TContext>>>,
+  interfaces?: null | ThunkWithSchemaComposer<
+    $ReadOnlyArray<InterfaceTypeComposerDefinition<any, TContext>>,
+    SchemaComposer<TContext>
+  >,
   fields?: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>,
   isTypeOf?: null | GraphQLIsTypeOfFn<TSource, TContext>,
   description?: string | null,
@@ -99,11 +103,14 @@ export type ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext> = ObjM
 
 export type ObjectTypeComposerFieldConfigDefinition<TSource, TContext, TArgs = any> =
   | ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs>
-  | Thunk<ComposeOutputTypeDefinition<TContext>>
+  | ThunkWithSchemaComposer<ComposeOutputTypeDefinition<TContext>, SchemaComposer<TContext>>
   | $ReadOnly<Resolver<any, TContext, any>>;
 
 export type ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs = any> = {
-  type: Thunk<ComposeOutputTypeDefinition<TContext> | $ReadOnly<Resolver<any, TContext, any>>>,
+  type: ThunkWithSchemaComposer<
+    ComposeOutputTypeDefinition<TContext> | $ReadOnly<Resolver<any, TContext, any>>,
+    SchemaComposer<TContext>
+  >,
   args?: ObjectTypeComposerArgumentConfigMapDefinition<TArgs>,
   resolve?: GraphQLFieldResolver<TSource, TContext, TArgs>,
   subscribe?: GraphQLFieldResolver<TSource, TContext>,
@@ -136,7 +143,7 @@ export type ObjectTypeComposerArgumentConfigMapDefinition<TArgs = any> = {
 };
 
 export type ObjectTypeComposerArgumentConfigAsObjectDefinition = {
-  type: Thunk<ComposeInputTypeDefinition>,
+  type: ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<any>>,
   defaultValue?: any,
   description?: string | null,
   extensions?: Extensions,
@@ -154,7 +161,7 @@ export type ObjectTypeComposerArgumentConfig = {
 
 export type ObjectTypeComposerArgumentConfigDefinition =
   | ObjectTypeComposerArgumentConfigAsObjectDefinition
-  | Thunk<ComposeInputTypeDefinition>;
+  | ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<any>>;
 
 // RELATION -----------------------------
 
@@ -170,7 +177,10 @@ export type ObjectTypeComposerRelationOptsWithResolver<
   TContext,
   TArgs = any
 > = {
-  +resolver: Thunk<Resolver<TRelationSource, TContext, TArgs>>,
+  +resolver: ThunkWithSchemaComposer<
+    Resolver<TRelationSource, TContext, TArgs>,
+    SchemaComposer<TContext>
+  >,
   +prepareArgs?: ObjectTypeComposerRelationArgsMapper<TSource, TContext, TArgs>,
   +projection?: ProjectionType,
   +description?: string | null,
@@ -379,7 +389,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     // but for solving hoisting problems it's quite good to wrap it in function.
     if (isFunction(this._gqcFields[fieldName])) {
       // $FlowFixMe
-      const unwrappedFieldConfig = this._gqcFields[fieldName]();
+      const unwrappedFieldConfig = this._gqcFields[fieldName](this.schemaComposer);
       this.setField(fieldName, unwrappedFieldConfig);
     }
 
@@ -1345,7 +1355,7 @@ export class ObjectTypeComposer<TSource, TContext> {
   }
 
   hasInterface(iface: InterfaceTypeComposerDefinition<any, TContext>): boolean {
-    const typeName = getComposeTypeName(iface);
+    const typeName = getComposeTypeName(iface, this.schemaComposer);
     return !!this._gqcInterfaces.find((i) => i.getTypeName() === typeName);
   }
 
@@ -1379,7 +1389,7 @@ export class ObjectTypeComposer<TSource, TContext> {
   removeInterface(
     iface: InterfaceTypeComposerDefinition<any, TContext>
   ): ObjectTypeComposer<TSource, TContext> {
-    const typeName = getComposeTypeName(iface);
+    const typeName = getComposeTypeName(iface, this.schemaComposer);
     this._gqcInterfaces = this._gqcInterfaces.filter((i) => i.getTypeName() !== typeName);
     return this;
   }
@@ -1718,7 +1728,7 @@ export class ObjectTypeComposer<TSource, TContext> {
     opts: ObjectTypeComposerRelationOptsWithResolver<any, TSource, TContext, any>,
     fieldName?: string = ''
   ): ObjectTypeComposerFieldConfig<TSource, TContext, any> {
-    const resolver = isFunction(opts.resolver) ? opts.resolver() : opts.resolver;
+    const resolver = isFunction(opts.resolver) ? opts.resolver(this.schemaComposer) : opts.resolver;
 
     if (!(resolver instanceof Resolver)) {
       throw new Error(

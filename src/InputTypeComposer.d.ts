@@ -4,7 +4,14 @@ import {
   GraphQLInputType,
   GraphQLInputFieldConfig,
 } from './graphql';
-import { Thunk, ObjMap, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
+import {
+  Thunk,
+  ThunkWithSchemaComposer,
+  ObjMap,
+  Extensions,
+  ExtensionsDirective,
+  DirectiveArgs,
+} from './utils/definitions';
 import { SchemaComposer } from './SchemaComposer';
 import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { TypeInPath } from './utils/typeByPath';
@@ -27,7 +34,7 @@ export type InputTypeComposerDefinition =
 
 export type InputTypeComposerAsObjectDefinition = {
   name: string;
-  fields: Thunk<InputTypeComposerFieldConfigMapDefinition>;
+  fields: ThunkWithSchemaComposer<InputTypeComposerFieldConfigMapDefinition, SchemaComposer<any>>;
   description?: null | string;
   extensions?: Extensions;
 };
@@ -37,12 +44,13 @@ export type InputTypeComposerFieldConfigMapDefinition = ObjMap<
   InputTypeComposerFieldConfigDefinition
 >;
 
-export type InputTypeComposerFieldConfigDefinition = Thunk<
-  InputTypeComposerFieldConfigAsObjectDefinition | ComposeInputTypeDefinition
+export type InputTypeComposerFieldConfigDefinition = ThunkWithSchemaComposer<
+  InputTypeComposerFieldConfigAsObjectDefinition | ComposeInputTypeDefinition,
+  SchemaComposer<any>
 >;
 
 export type InputTypeComposerFieldConfigAsObjectDefinition = {
-  type: Thunk<ComposeInputTypeDefinition>;
+  type: ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<any>>;
   defaultValue?: any;
   description?: string | null;
   extensions?: Extensions;

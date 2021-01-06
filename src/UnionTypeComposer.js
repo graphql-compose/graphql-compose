@@ -215,7 +215,7 @@ export class UnionTypeComposer<TSource, TContext> {
   // -----------------------------------------------
 
   hasType(name: ObjectTypeComposerDefinition<any, TContext>): boolean {
-    const typeName = getComposeTypeName(name);
+    const typeName = getComposeTypeName(name, this.schemaComposer);
     for (const type of this._gqcTypes) {
       if (type.getTypeName() === typeName) {
         return true;

@@ -67,6 +67,12 @@ describe('Resolver', () => {
       resolver.setType(GraphQLString);
       expect(resolver.getType()).toBe(GraphQLString);
 
+      resolver.setType((sc) => {
+        expect(sc).toBeInstanceOf(SchemaComposer);
+        return 'Int';
+      });
+      expect(resolver.getType()).toBe(GraphQLInt);
+
       expect(() => {
         resolver.setType(
           (new GraphQLInputObjectType({

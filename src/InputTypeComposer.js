@@ -7,6 +7,7 @@ import { isObject, isFunction, isString } from './utils/is';
 import { typeByPath, type TypeInPath } from './utils/typeByPath';
 import type {
   Thunk,
+  ThunkWithSchemaComposer,
   ObjMap,
   ObjMapReadOnly,
   Extensions,
@@ -46,7 +47,7 @@ export type InputTypeComposerDefinition =
 
 export type InputTypeComposerAsObjectDefinition = {
   name: string,
-  fields: Thunk<InputTypeComposerFieldConfigMapDefinition>,
+  fields: ThunkWithSchemaComposer<InputTypeComposerFieldConfigMapDefinition, SchemaComposer<any>>,
   description?: null | string,
   extensions?: Extensions,
 };
@@ -56,10 +57,10 @@ export type InputTypeComposerFieldConfigMapDefinition = ObjMapReadOnly<InputType
 
 export type InputTypeComposerFieldConfigDefinition =
   | InputTypeComposerFieldConfigAsObjectDefinition
-  | Thunk<ComposeInputTypeDefinition>;
+  | ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<any>>;
 
 export type InputTypeComposerFieldConfigAsObjectDefinition = {
-  type: Thunk<ComposeInputTypeDefinition>,
+  type: ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<any>>,
   defaultValue?: any,
   description?: string | null,
   extensions?: Extensions,
@@ -290,7 +291,7 @@ export class InputTypeComposer<TContext> {
     // but for solving hoisting problems it's quite good to wrap it in function.
     if (isFunction(this._gqcFields[fieldName])) {
       // $FlowFixMe
-      const unwrappedFieldConfig = this._gqcFields[fieldName]();
+      const unwrappedFieldConfig = this._gqcFields[fieldName](this.schemaComposer);
       this.setField(fieldName, unwrappedFieldConfig);
     }
 

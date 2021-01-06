@@ -184,7 +184,7 @@ export function isTypeComposer(type: any): type is AnyTypeComposer<any>;
 
 export function getGraphQLType(anyType: any): GraphQLType;
 
-export function getComposeTypeName(type: any): string;
+export function getComposeTypeName(type: any, sc: SchemaComposer<any>): string;
 
 export function unwrapTC<TContext>(anyTC: AnyTypeComposer<TContext>): NamedTypeComposer<TContext>;
 

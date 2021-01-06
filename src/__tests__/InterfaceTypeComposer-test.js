@@ -94,6 +94,10 @@ describe('InterfaceTypeComposer', () => {
             args: {
               arg1: { type: 'String!' },
               arg2: '[Float]',
+              arg3: (sc) => {
+                expect(sc).toBeInstanceOf(SchemaComposer);
+                return 'String';
+              },
             },
           },
         });
@@ -104,6 +108,7 @@ describe('InterfaceTypeComposer', () => {
         expect((iftc.getFieldArgType('field3', 'arg2'): any).ofType).toBe(GraphQLFloat);
         expect(iftc.getFieldArgTypeName('field3', 'arg1')).toBe('String!');
         expect(iftc.getFieldArgTypeName('field3', 'arg2')).toBe('[Float]');
+        expect(iftc.getFieldArgTypeName('field3', 'arg3')).toBe('String');
       });
 
       it('should add projection via `setField` and `addFields`', () => {
@@ -118,24 +123,30 @@ describe('InterfaceTypeComposer', () => {
       });
 
       it('accept types as function', () => {
-        const typeAsFn = () => GraphQLString;
+        const typeAsFn = (sc) => {
+          expect(sc).toBeInstanceOf(SchemaComposer);
+          return GraphQLString;
+        };
         iftc.setFields({
-          input3: { type: typeAsFn },
+          field6: { type: typeAsFn },
         });
-        expect(iftc.getField('input3').type).toBeInstanceOf(ThunkComposer);
-        expect(iftc.getFieldType('input3')).toBe(GraphQLString);
+        expect(iftc.getField('field6').type).toBeInstanceOf(ThunkComposer);
+        expect(iftc.getFieldType('field6')).toBe(GraphQLString);
 
         // show provide unwrapped/unhoisted type for graphql
         if (graphqlVersion >= 14) {
-          expect((iftc.getType(): any)._fields().input3.type).toBe(GraphQLString);
+          expect((iftc.getType(): any)._fields().field6.type).toBe(GraphQLString);
         } else {
-          expect((iftc.getType(): any)._typeConfig.fields().input3.type).toBe(GraphQLString);
+          expect((iftc.getType(): any)._typeConfig.fields().field6.type).toBe(GraphQLString);
         }
       });
 
       it('accept fieldConfig as function', () => {
         iftc.setFields({
-          input4: (): { type: string } => ({ type: 'String' }),
+          input4: (sc) => {
+            expect(sc).toBeInstanceOf(SchemaComposer);
+            return { type: 'String' };
+          },
         });
         // show provide unwrapped/unhoisted type for graphql
         if (graphqlVersion >= 14) {
@@ -541,7 +552,10 @@ describe('InterfaceTypeComposer', () => {
       expect(iftc.getInterfaces()).toHaveLength(2);
       expect(iftc.hasInterface(iface)).toBe(true);
       expect(iftc.hasInterface(iface2)).toBe(true);
-      iftc.addInterface(iftc);
+      iftc.addInterface((s) => {
+        expect(s).toBeInstanceOf(SchemaComposer);
+        return iftc;
+      });
       expect(iftc.hasInterface(iftc)).toBe(true);
     });
 

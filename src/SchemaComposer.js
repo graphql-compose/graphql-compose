@@ -300,7 +300,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
       let typeName;
       if (isComposeNamedType(type)) {
-        typeName = getComposeTypeName(type);
+        typeName = getComposeTypeName(type, this);
       }
 
       // merge regular types

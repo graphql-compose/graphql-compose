@@ -8,6 +8,8 @@ export type MaybePromise<T> = Promise<T> | T;
 // export type Thunk<T> = (() => T) | T;
 export type Thunk<T> = (() => any) | T;
 
+export type ThunkWithSchemaComposer<T, SC> = ((schemaComposer: SC) => T) | T;
+
 export type DirectiveArgs = { [key: string]: any };
 export type ExtensionsDirective = {
   name: string;

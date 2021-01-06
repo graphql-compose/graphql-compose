@@ -44,7 +44,7 @@ import type {
   ComposeNamedInputType,
   ComposeInputTypeDefinition,
 } from './utils/typeHelpers';
-import type { Thunk, Extensions } from './utils/definitions';
+import type { Thunk, ThunkWithSchemaComposer, Extensions } from './utils/definitions';
 import { GraphQLJSON } from './type';
 import { NonNullComposer } from './NonNullComposer';
 import { ListComposer } from './ListComposer';
@@ -52,10 +52,11 @@ import { ListComposer } from './ListComposer';
 export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 
 export type ResolverDefinition<TSource, TContext, TArgs = any> = {
-  type?: Thunk<
+  type?: ThunkWithSchemaComposer<
     | $ReadOnly<ComposeOutputType<TContext>>
     | ComposeOutputTypeDefinition<TContext>
-    | $ReadOnly<Resolver<any, TContext, any>>
+    | $ReadOnly<Resolver<any, TContext, any>>,
+    SchemaComposer<TContext>
   >,
   resolve?: ResolverRpCb<TSource, TContext, TArgs>,
   args?: ObjectTypeComposerArgumentConfigMapDefinition<TArgs>,
@@ -227,10 +228,11 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
   }
 
   setType<TNewReturn>(
-    typeDef: Thunk<
+    typeDef: ThunkWithSchemaComposer<
       | $ReadOnly<ComposeOutputType<TContext>>
       | ComposeOutputTypeDefinition<TContext>
-      | $ReadOnly<Resolver<any, TContext, any>>
+      | $ReadOnly<Resolver<any, TContext, any>>,
+      SchemaComposer<TContext>
     >
   ): Resolver<TSource, TContext, TArgs, TNewReturn> {
     const tc = this.schemaComposer.typeMapper.convertOutputTypeDefinition(
@@ -264,7 +266,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
 
     let arg = this.args[argName];
 
-    if (isFunction(arg)) arg = arg();
+    if (isFunction(arg)) arg = arg(this.schemaComposer);
 
     if (typeof arg === 'string' || isComposeInputType(arg) || Array.isArray(arg)) {
       return { type: (arg: any) };

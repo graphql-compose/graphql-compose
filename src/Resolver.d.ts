@@ -16,7 +16,7 @@ import {
   ObjectTypeComposerArgumentConfigAsObjectDefinition,
   ObjectTypeComposerArgumentConfigDefinition,
 } from './ObjectTypeComposer';
-import { Thunk, Extensions } from './utils/definitions';
+import { Thunk, ThunkWithSchemaComposer, Extensions } from './utils/definitions';
 import { ProjectionType } from './utils/projection';
 import {
   ComposeOutputTypeDefinition,
@@ -30,10 +30,11 @@ import {
 export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 
 export type ResolverDefinition<TSource, TContext, TArgs = any> = {
-  type?: Thunk<
+  type?: ThunkWithSchemaComposer<
     | ComposeOutputType<TContext>
     | ComposeOutputTypeDefinition<TContext>
-    | Resolver<any, TContext, any>
+    | Resolver<any, TContext, any>,
+    SchemaComposer<TContext>
   >;
   resolve?: ResolverRpCb<TSource, TContext, TArgs>;
   args?: ObjectTypeComposerArgumentConfigMapDefinition<TArgs>;
@@ -158,10 +159,11 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
   public getOTC(): ObjectTypeComposer<TReturn, TContext>;
 
   public setType<TNewReturn>(
-    composeType: Thunk<
+    composeType: ThunkWithSchemaComposer<
       | ComposeOutputType<TContext>
       | ComposeOutputTypeDefinition<TContext>
-      | Resolver<any, TContext, any>
+      | Resolver<any, TContext, any>,
+      SchemaComposer<TContext>
     >
   ): Resolver<TSource, TContext, TArgs, TNewReturn>;
 

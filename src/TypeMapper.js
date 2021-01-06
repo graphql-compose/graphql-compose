@@ -97,7 +97,7 @@ import { NonNullComposer } from './NonNullComposer';
 import { ThunkComposer } from './ThunkComposer';
 import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
-import type { Thunk, ExtensionsDirective } from './utils/definitions';
+import type { Thunk, ThunkWithSchemaComposer, ExtensionsDirective } from './utils/definitions';
 import { isFunction, isObject } from './utils/is';
 import {
   type AnyTypeComposer,
@@ -258,10 +258,11 @@ export class TypeMapper<TContext> {
   }
 
   convertOutputTypeDefinition(
-    typeDef: Thunk<
+    typeDef: ThunkWithSchemaComposer<
       | ComposeOutputTypeDefinition<any>
       | ObjectTypeComposerDefinition<any, any>
-      | $ReadOnly<Resolver<any, any>>
+      | $ReadOnly<Resolver<any, any>>,
+      SchemaComposer<TContext>
     >,
     fieldName?: string = '',
     typeName?: string = ''
@@ -306,7 +307,7 @@ export class TypeMapper<TContext> {
       return new ListComposer(tc);
     } else if (isFunction(typeDef)) {
       return new ThunkComposer(() => {
-        const def = typeDef();
+        const def = typeDef(this.schemaComposer);
         const tc = this.convertOutputFieldConfig((def: any), fieldName, typeName).type;
         if (!isSomeOutputTypeComposer(tc)) {
           throw new Error(`Provided incorrect OutputType: Function[${inspect(def)}]`);
@@ -469,7 +470,7 @@ export class TypeMapper<TContext> {
   }
 
   convertInputTypeDefinition(
-    typeDef: Thunk<ComposeInputTypeDefinition>,
+    typeDef: ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<TContext>>,
     fieldName?: string = '',
     typeName?: string = ''
   ): ComposeInputType | void {
@@ -512,7 +513,7 @@ export class TypeMapper<TContext> {
       return new ListComposer(tc);
     } else if (isFunction(typeDef)) {
       return new ThunkComposer(() => {
-        const def = typeDef();
+        const def = typeDef(this.schemaComposer);
         const tc = this.convertInputFieldConfig(def, fieldName, typeName).type;
         if (!isSomeInputTypeComposer(tc)) {
           throw new Error(`Provided incorrect InputType: Function[${inspect(def)}]`);
@@ -615,7 +616,9 @@ export class TypeMapper<TContext> {
     } else if (typeDef instanceof InterfaceTypeComposer || typeDef instanceof ThunkComposer) {
       return typeDef;
     } else if (isFunction(typeDef)) {
-      return new ThunkComposer(() => this.convertInterfaceTypeDefinition(typeDef()));
+      return new ThunkComposer(() =>
+        this.convertInterfaceTypeDefinition(typeDef(this.schemaComposer))
+      );
     }
 
     throw new Error(
