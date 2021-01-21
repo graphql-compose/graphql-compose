@@ -388,7 +388,7 @@ export class TypeMapper<TContext> {
         }
       }
 
-      throw new Error(`Cannot convert to InputType the following value: ${inspect(composeFC)}`);
+      throw new Error(`Cannot convert to OutputType the following value: ${inspect(composeFC)}`);
     } catch (e) {
       e.message = `TypeError[${typeName}.${fieldName}]: ${e.message}`;
       throw e;

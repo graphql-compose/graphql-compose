@@ -70,11 +70,6 @@ export function defineFieldMap(
       isPlainObj(fieldConfig),
       `${config.name}.${fieldName} field config must be an object`
     );
-    invariant(
-      !fieldConfig.hasOwnProperty('isDeprecated'),
-      `${config.name}.${fieldName} should provide "deprecationReason" ` +
-        'instead of "isDeprecated".'
-    );
     const field = {
       ...fieldConfig,
       isDeprecated: Boolean(fieldConfig.deprecationReason),
