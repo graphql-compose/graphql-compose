@@ -141,16 +141,17 @@ export function convertObjectFieldMapToConfig(
     } else if (isObject(fc.args)) {
       // `fc.args` is Object in `ObjectTypeComposerFieldConfigMapDefinition`
       Object.keys(fc.args).forEach((argName) => {
+        const sourceArgs = fc.args;
         args[argName] = {
-          ...(isObject(fc.args[argName]) ? fc.args[argName] : null),
+          ...(isObject(sourceArgs[argName]) ? sourceArgs[argName] : null),
           type: isThunk
             ? new ThunkComposer(() =>
                 schemaComposer.typeMapper.convertInputTypeDefinition(
-                  fc.args[argName].type || fc.args[argName]
+                  sourceArgs[argName].type || sourceArgs[argName]
                 )
               )
             : schemaComposer.typeMapper.convertInputTypeDefinition(
-                fc.args[argName].type || fc.args[argName]
+                sourceArgs[argName].type || sourceArgs[argName]
               ),
         };
       });
