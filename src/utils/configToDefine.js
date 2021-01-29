@@ -59,13 +59,28 @@ export function defineFieldMap(
       'function which returns such an object.'
   );
 
+  // Perf: prepare AST node maps to avoid costly lookups
+  const fieldAstNodeMap = Object.create(null);
+  const argAstNodeMap = Object.create(null);
+
+  for (const fieldNode of parentAstNode?.fields ?? []) {
+    if (!fieldAstNodeMap[fieldNode.name.value]) {
+      fieldAstNodeMap[fieldNode.name.value] = fieldNode;
+      argAstNodeMap[fieldNode.name.value] = Object.create(null);
+    }
+    for (const argAstNode of fieldNode?.arguments ?? []) {
+      if (!argAstNodeMap[fieldNode.name.value][argAstNode.name.value]) {
+        argAstNodeMap[fieldNode.name.value][argAstNode.name.value] = argAstNode;
+      }
+    }
+  }
+
   const resultFieldMap = Object.create(null);
+
   for (const fieldName of Object.keys(fieldMap)) {
     const fieldConfig = fieldMap[fieldName];
     // $FlowFixMe
-    const fieldNodeAst: ?FieldDefinitionNode = parentAstNode?.fields?.find(
-      (f) => f.name.value === fieldName
-    );
+    const fieldNodeAst: ?FieldDefinitionNode = fieldAstNodeMap[fieldName];
     invariant(
       isPlainObj(fieldConfig),
       `${config.name}.${fieldName} field config must be an object`
@@ -89,6 +104,7 @@ export function defineFieldMap(
         isPlainObj(argsConfig),
         `${config.name}.${fieldName} args must be an object with argument names as keys.`
       );
+      const fieldArgNodeMap = argAstNodeMap[fieldName] ?? {};
       field.args = (Object.keys(argsConfig).map((argName) => {
         const arg = argsConfig[argName];
         return {
@@ -96,8 +112,7 @@ export function defineFieldMap(
           description: arg.description === undefined ? null : arg.description,
           type: arg.type,
           defaultValue: arg.defaultValue,
-          // $FlowFixMe
-          astNode: fieldNodeAst?.arguments?.find((a) => a.name.value === argName),
+          astNode: fieldArgNodeMap[argName],
         };
       }): any);
     }
