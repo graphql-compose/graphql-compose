@@ -259,13 +259,17 @@ export function defineInputFieldMap(
     `${config.name} fields must be an object with field names as keys or a ` +
       'function which returns such an object.'
   );
+  const astNodeMap = Object.create(null);
+  for (const fieldNode of parentAstNode?.fields ?? []) {
+    astNodeMap[fieldNode.name.value] = fieldNode;
+  }
+
   const resultFieldMap = Object.create(null);
   for (const fieldName of Object.keys(fieldMap)) {
     const field = {
       ...fieldMap[fieldName],
       name: fieldName,
-      // $FlowFixMe
-      astNode: parentAstNode?.fields?.find((f) => f.name.value === fieldName),
+      astNode: astNodeMap[fieldName],
     };
     invariant(
       !field.hasOwnProperty('resolve'),
