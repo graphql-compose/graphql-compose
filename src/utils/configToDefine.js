@@ -202,6 +202,12 @@ export function defineEnumValues(
     isPlainObj(valueMap),
     `${type.name} values must be an object with value names as keys.`
   );
+
+  const astNodeMap = Object.create(null);
+  for (const valueNode of parentAstNode?.values ?? []) {
+    astNodeMap[valueNode.name.value] = valueNode;
+  }
+
   return Object.keys(valueMap).map((valueName) => {
     const value = valueMap[valueName];
     invariant(
@@ -218,8 +224,7 @@ export function defineEnumValues(
       description: value.description,
       isDeprecated: Boolean(value.deprecationReason),
       deprecationReason: value.deprecationReason,
-      // $FlowFixMe
-      astNode: parentAstNode?.values?.find((v) => v.name.value === valueName),
+      astNode: astNodeMap[valueName],
       value: value.hasOwnProperty('value') ? value.value : valueName,
       extensions: undefined,
     };
