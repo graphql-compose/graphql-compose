@@ -10,6 +10,7 @@ import {
   isSomeInputTypeComposer,
   type ComposeOutputType,
   type ComposeInputType,
+  type ComposeInputTypeDefinition,
   type AnyTypeComposer,
 } from './typeHelpers';
 import { inspect } from './misc';
@@ -21,7 +22,7 @@ export type ToInputTypeOpts = {
   /** If ObjectType or Interface received then will be used `ObjectTypeName${suffix}` as name for new Input type */
   postfix?: string,
   /** When Union type is met then Error will be throw. This option helps to return provided fallbackType instead of Error. */
-  fallbackType?: ComposeInputType | null,
+  fallbackType?: ComposeInputTypeDefinition | null,
 };
 
 /**
@@ -57,7 +58,7 @@ export function toInputType(anyTC: AnyTypeComposer<any>, opts?: ToInputTypeOpts)
     if (tc instanceof ObjectTypeComposer || tc instanceof InterfaceTypeComposer) {
       tc = toInputObjectType(tc, opts);
     } else {
-      if (opts?.fallbackType) return opts.fallbackType;
+      if (opts?.fallbackType) return (opts.fallbackType: any);
 
       if (tc instanceof UnionTypeComposer) {
         throw new Error(
@@ -104,7 +105,7 @@ export function toInputObjectType<TContext>(
   fieldNames.forEach((fieldName) => {
     const fc = tc.getField(fieldName);
 
-    let fieldInputType: ?ComposeInputType;
+    let fieldInputType: ?ComposeInputTypeDefinition;
     try {
       fieldInputType = toInputType(fc.type, opts);
     } catch (e) {

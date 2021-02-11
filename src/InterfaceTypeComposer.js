@@ -41,6 +41,7 @@ import type {
   ExtensionsDirective,
 } from './utils/definitions';
 import { toInputObjectType } from './utils/toInputType';
+import type { ToInputTypeOpts } from './utils/toInputType';
 import { typeByPath, type TypeInPath } from './utils/typeByPath';
 import {
   getComposeTypeName,
@@ -1001,16 +1002,16 @@ export class InterfaceTypeComposer<TSource, TContext> {
     return this;
   }
 
-  getInputTypeComposer(): InputTypeComposer<TContext> {
+  getInputTypeComposer(opts?: ToInputTypeOpts): InputTypeComposer<TContext> {
     if (!this._gqcInputTypeComposer) {
-      this._gqcInputTypeComposer = toInputObjectType(this);
+      this._gqcInputTypeComposer = toInputObjectType(this, opts);
     }
 
     return this._gqcInputTypeComposer;
   }
 
-  getITC(): InputTypeComposer<TContext> {
-    return this.getInputTypeComposer();
+  getITC(opts?: ToInputTypeOpts): InputTypeComposer<TContext> {
+    return this.getInputTypeComposer(opts);
   }
 
   removeInputTypeComposer(): InterfaceTypeComposer<TSource, TContext> {
