@@ -20,8 +20,8 @@ export type ToInputTypeOpts = {
   prefix?: string,
   /** If ObjectType or Interface received then will be used `ObjectTypeName${suffix}` as name for new Input type */
   postfix?: string,
-  /** When Union type is met then Error will be throw. This option helps to return provided fallbackType instead of Error. */
-  fallbackType?: ComposeInputType,
+  /** When Union type is met then Error will be throw. This option helps to return provided fallbackType instead of Error. When set to `null` the field of union type is omitted. */
+  fallbackType?: ComposeInputType | null,
 };
 
 /**
@@ -108,7 +108,8 @@ export function toInputObjectType<TContext>(
     try {
       fieldInputType = toInputType(fc.type, opts);
     } catch (e) {
-      if (opts?.fallbackType) {
+      if (opts?.fallbackType || opts?.fallbackType === null) {
+        // Setting to null effectively skips this field
         fieldInputType = opts?.fallbackType;
       } else {
         throw new Error(
