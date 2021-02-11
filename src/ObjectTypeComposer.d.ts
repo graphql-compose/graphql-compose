@@ -50,6 +50,7 @@ import { NonNullComposer } from './NonNullComposer';
 import { ListComposer } from './ListComposer';
 import { TypeInPath } from './utils/typeByPath';
 import { SchemaPrinterOptions } from './utils/schemaPrinter';
+import { ToInputTypeOpts } from './utils/toInputType';
 
 export type ObjectTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -493,9 +494,9 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
 
   public setInputTypeComposer(itc: InputTypeComposer<TContext>): this;
 
-  public getInputTypeComposer(): InputTypeComposer<TContext>;
+  public getInputTypeComposer(opts?: ToInputTypeOpts): InputTypeComposer<TContext>;
 
-  public getITC(): InputTypeComposer<TContext>;
+  public getITC(opts?: ToInputTypeOpts): InputTypeComposer<TContext>;
 
   public removeInputTypeComposer(): this;
 

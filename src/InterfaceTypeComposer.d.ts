@@ -34,6 +34,7 @@ import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { TypeInPath } from './utils/typeByPath';
 import { SchemaPrinterOptions } from './utils/schemaPrinter';
+import { ToInputTypeOpts } from './utils/toInputType';
 
 export type InterfaceTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -313,12 +314,12 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   public setInputTypeComposer(itc: InputTypeComposer<TContext>): this;
 
-  public getInputTypeComposer(): InputTypeComposer<TContext>;
+  public getInputTypeComposer(opts?: ToInputTypeOpts): InputTypeComposer<TContext>;
 
   /**
    * An alias for `getInputTypeComposer()`
    */
-  public getITC(): InputTypeComposer<TContext>;
+  public getITC(opts?: ToInputTypeOpts): InputTypeComposer<TContext>;
 
   public removeInputTypeComposer(): this;
 

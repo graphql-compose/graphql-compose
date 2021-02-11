@@ -180,7 +180,7 @@ describe('toInputObjectType()', () => {
   });
 
   describe('fallbackType option', () => {
-    let tc: ObjectTypeComposer;
+    let tc: ObjectTypeComposer<any, any>;
 
     beforeEach(() => {
       sc.clear();
