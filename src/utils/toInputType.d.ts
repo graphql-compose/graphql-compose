@@ -10,7 +10,7 @@ export interface ToInputTypeOpts {
   /** If ObjectType or Interface received then will be used `ObjectTypeName${suffix}` as name for new Input type */
   postfix?: string;
   /** When Union type is met then Error will be throw. This option helps to return provided fallbackType instead of Error. */
-  fallbackType?: ComposeInputType;
+  fallbackType?: ComposeInputType | null;
 }
 
 /**

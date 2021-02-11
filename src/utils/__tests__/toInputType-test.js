@@ -178,4 +178,48 @@ describe('toInputObjectType()', () => {
       expect(itc.getTypeName()).toBe('ExampleInput');
     }
   });
+
+  describe('fallbackType option', () => {
+    let tc: ObjectTypeComposer;
+
+    beforeEach(() => {
+      sc.clear();
+      sc.addTypeDefs(`
+        union SearchResult = Post | Comment
+
+        type Post {
+          title: String
+        }
+
+        type Comment {
+          text: String
+        }
+      `);
+      tc = ObjectTypeComposer.create(
+        `
+        type Example {
+          name: String
+          union: SearchResult
+        }
+      `,
+        sc
+      );
+    });
+
+    it('should throw error on field with Union type', () => {
+      expect(() => {
+        toInputObjectType(tc);
+      }).toThrowError("Can not convert field 'Example.union' to InputType");
+    });
+
+    it('should use type from fallbackType option for union', () => {
+      const itc = toInputObjectType(tc, { fallbackType: 'JSON' });
+      expect(itc.getFieldTypeName('union')).toBe('JSON');
+    });
+
+    it('should remove union field if fallbackType: null', () => {
+      const itc = toInputObjectType(tc, { fallbackType: null });
+      expect(itc.hasField('union')).toBeFalsy();
+    });
+  });
 });
