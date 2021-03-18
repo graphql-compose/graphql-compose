@@ -22,7 +22,13 @@ import {
   ObjectTypeComposerArgumentConfigMapDefinition,
   ObjectTypeComposerArgumentConfigDefinition,
 } from './ObjectTypeComposer';
-import { MaybePromise, Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
+import {
+  MaybePromise,
+  Extensions,
+  ExtensionsDirective,
+  DirectiveArgs,
+  ThunkWithSchemaComposer,
+} from './utils/definitions';
 import { TypeAsString, TypeDefinitionString } from './TypeMapper';
 import { ThunkComposer } from './ThunkComposer';
 import {
@@ -45,6 +51,10 @@ export type InterfaceTypeComposerDefinition<TSource, TContext> =
 
 export type InterfaceTypeComposerAsObjectDefinition<TSource, TContext> = {
   name: string;
+  interfaces?: null | ThunkWithSchemaComposer<
+    Array<InterfaceTypeComposerDefinition<any, TContext>>,
+    SchemaComposer<TContext>
+  >;
   fields?: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>;
   resolveType?: null | GraphQLTypeResolver<TSource, TContext>;
   description?: null | string;
