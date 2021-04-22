@@ -413,7 +413,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     const tc = this.getArgTC(argName);
     if (!(tc instanceof InputTypeComposer)) {
       throw new Error(
-        `Resolver(${this.name}).getArgITC('${argName}') must be InputTypeComposer, but recieved ${tc.constructor.name}. Maybe you need to use 'getArgTC()' method which returns any type composer?`
+        `Resolver(${this.name}).getArgITC('${argName}') must be InputTypeComposer, but received ${tc.constructor.name}. Maybe you need to use 'getArgTC()' method which returns any type composer?`
       );
     }
     return tc;
@@ -508,7 +508,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
       if (!(unwrappedTC instanceof InputTypeComposer)) {
         throw new Error(
           `Cannot clone arg ${inspect(argName)} for resolver ${inspect(this.name)}. ` +
-            `Argument should be InputObjectType, but recieved: ${inspect(unwrappedTC)}.`
+            `Argument should be InputObjectType, but received: ${inspect(unwrappedTC)}.`
         );
       }
       if (!newTypeName || newTypeName !== clearName(newTypeName)) {
@@ -1043,7 +1043,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
   }
 
   debugParams(
-    filterPaths: ?(string | string[]),
+    filterPaths?: ?(string | string[]),
     opts?: ResolverDebugOpts = { colors: true, depth: 5 }
   ): Resolver<TSource, TContext, TArgs> {
     /* eslint-disable no-console */
@@ -1076,7 +1076,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
   }
 
   debugPayload(
-    filterPaths: ?(string | string[]),
+    filterPaths?: ?(string | string[]),
     opts?: ResolverDebugOpts = { colors: true, depth: 5 }
   ): Resolver<TSource, TContext, TArgs> {
     /* eslint-disable no-console */

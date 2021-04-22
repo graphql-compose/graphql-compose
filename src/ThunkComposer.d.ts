@@ -12,7 +12,7 @@ export class ThunkComposer<
 > {
   protected thunk: Function;
   protected typeName: string | void;
-  protected _typeFromThunk: T | void;
+  _typeFromThunk: T | undefined;
   public ofType: T;
 
   constructor(thunk: Function, typeName?: string);

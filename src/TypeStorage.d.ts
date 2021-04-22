@@ -1,11 +1,3 @@
-import { GraphQLNamedType, GraphQLScalarType } from 'graphql';
-import { ObjectTypeComposer } from './ObjectTypeComposer';
-import { InputTypeComposer } from './InputTypeComposer';
-import { ScalarTypeComposer } from './ScalarTypeComposer';
-import { EnumTypeComposer } from './EnumTypeComposer';
-import { InterfaceTypeComposer } from './InterfaceTypeComposer';
-import { UnionTypeComposer } from './UnionTypeComposer';
-
 export class TypeStorage<K, V> {
   public types: Map<K, V>;
   public readonly size: number;

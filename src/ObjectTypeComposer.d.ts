@@ -210,7 +210,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   protected _gqcResolvers: void | Map<string, Resolver<TSource, TContext>>;
   protected _gqcGetRecordIdFn: void | ObjectTypeComposerGetRecordIdFn<TSource, TContext>;
   protected _gqcRelations: void | ObjectTypeComposerRelationMap<TSource, TContext>;
-  protected _gqcFields: ObjectTypeComposerFieldConfigMap<TSource, TContext>;
+  _gqcFields: ObjectTypeComposerFieldConfigMap<TSource, TContext>;
   protected _gqcInterfaces: Array<InterfaceTypeComposerThunked<TSource, TContext>>;
   protected _gqcExtensions: void | Extensions;
 
