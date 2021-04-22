@@ -31,7 +31,6 @@ import type {
 } from 'graphql/language/ast';
 import deprecate from './utils/deprecate';
 import { inspect } from './utils/misc';
-import find from './utils/polyfills/find';
 import {
   GraphQLInt,
   GraphQLFloat,
@@ -684,7 +683,7 @@ export class TypeMapper<TContext> {
   typeFromASTInput(typeNode: TypeNode): ComposeInputType {
     const tc = this.typeFromAST(typeNode);
     if (!isSomeInputTypeComposer(tc)) {
-      throw new Error(`TypeAST should be for Input types. But recieved ${inspect(typeNode)}`);
+      throw new Error(`TypeAST should be for Input types. But received ${inspect(typeNode)}`);
     }
     return (tc: any);
   }
@@ -692,7 +691,7 @@ export class TypeMapper<TContext> {
   typeFromASTOutput(typeNode: TypeNode): ComposeOutputType<TContext> {
     const tc = this.typeFromAST(typeNode);
     if (!isSomeOutputTypeComposer(tc)) {
-      throw new Error(`TypeAST should be for Output types. But recieved ${inspect(typeNode)}`);
+      throw new Error(`TypeAST should be for Output types. But received ${inspect(typeNode)}`);
     }
     return (tc: any);
   }
@@ -1102,9 +1101,9 @@ export class TypeMapper<TContext> {
   }
 
   getDeprecationReason(directives: ?$ReadOnlyArray<DirectiveNode>): ?string {
-    const deprecatedAST =
-      directives &&
-      find(directives, (directive) => directive.name.value === GraphQLDeprecatedDirective.name);
+    const deprecatedAST = directives?.find(
+      (directive) => directive.name.value === GraphQLDeprecatedDirective.name
+    );
     if (!deprecatedAST) {
       return;
     }
