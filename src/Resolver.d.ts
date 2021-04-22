@@ -129,6 +129,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
   public displayName: string | void;
   public kind: ResolverKinds | void;
   public description: string | void;
+  public projection: ProjectionType;
   public parent: Resolver<TSource, TContext, any> | void;
   public extensions: Extensions | void;
   public resolve: (
@@ -393,12 +394,12 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
   public debugExecTime(): Resolver<TSource, TContext, TArgs>;
 
   public debugParams(
-    filterPaths: (string | string[]) | null,
+    filterPaths?: (string | string[]) | null,
     opts?: ResolverDebugOpts
   ): Resolver<TSource, TContext, TArgs>;
 
   public debugPayload(
-    filterPaths: (string | string[]) | null,
+    filterPaths?: (string | string[]) | null,
     opts?: ResolverDebugOpts
   ): Resolver<TSource, TContext, TArgs>;
 

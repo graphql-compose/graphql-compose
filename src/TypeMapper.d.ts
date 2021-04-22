@@ -7,7 +7,6 @@ import {
   InputTypeComposerFieldConfigMapDefinition,
 } from './InputTypeComposer';
 import {
-  ObjectTypeComposer,
   ObjectTypeComposerArgumentConfig,
   ObjectTypeComposerFieldConfig,
   ObjectTypeComposerFieldConfigDefinition,
@@ -22,7 +21,7 @@ import {
   InterfaceTypeComposerDefinition,
   InterfaceTypeComposerThunked,
 } from './InterfaceTypeComposer';
-import { Thunk, ThunkWithSchemaComposer } from './utils/definitions';
+import { ThunkWithSchemaComposer } from './utils/definitions';
 import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
 import {
@@ -33,6 +32,7 @@ import {
   ComposeInputTypeDefinition,
   NamedTypeComposer,
 } from './utils/typeHelpers';
+import { ScalarTypeComposer } from './ScalarTypeComposer';
 
 /**
  * Eg. `type Name { field: Int }`
@@ -65,7 +65,9 @@ declare class TypeMapper<TContext> {
 
   public convertGraphQLTypeToComposer(type: GraphQLType): AnyTypeComposer<TContext>;
 
-  public convertSDLWrappedTypeName(str: TypeWrappedString | TypeNameString): GraphQLType | null;
+  public convertSDLWrappedTypeName(
+    str: TypeWrappedString | TypeNameString
+  ): AnyTypeComposer<TContext>;
 
   public convertSDLTypeDefinition(str: TypeDefinitionString): NamedTypeComposer<TContext> | void;
 
@@ -126,6 +128,8 @@ declare class TypeMapper<TContext> {
   ): InterfaceTypeComposerThunked<any, TContext>;
 
   public parseTypesFromString(str: string): TypeStorage<string, NamedTypeComposer<TContext>>;
+
+  public getBuiltInType(name: string): ScalarTypeComposer<TContext> | undefined;
 
   /**
    * -----------------------------------------------

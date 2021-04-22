@@ -31,15 +31,20 @@ type ExtraSchemaConfig = {
 };
 
 type GraphQLToolsResolveMethods<TContext> = {
-  [typeName: string]: {
-    [fieldName: string]: (
-      source: any,
-      args: object,
-      context: TContext,
-      info: GraphQLResolveInfo
-    ) => any;
-  };
+  [typeName: string]:
+    | {
+        [fieldName: string]: (
+          source: any,
+          args: object,
+          context: TContext,
+          info: GraphQLResolveInfo
+        ) => any;
+      }
+    | { name: string; serialize: Function }
+    | { [enumKey: string]: any };
 };
+
+export const BUILT_IN_DIRECTIVES: Array<GraphQLDirective>;
 
 /**
  * `SchemaComposer` is a class which helps to create `GraphQLSchema`.
@@ -102,7 +107,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    * Deeply traverse fields in Query, Mutation, Subscription & sub-objects
    * where will be removed all fields with empty object types (without sub-fields).
    */
-  public removeEmptyTypes(tc: ObjectTypeComposer<any, TContext>, passedTypes: Set<string>): void;
+  public removeEmptyTypes(tc: ObjectTypeComposer<any, TContext>, passedTypes?: Set<string>): void;
 
   /**
    * Clone schema with deep clonning of all its types.
@@ -274,7 +279,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   public isObjectType(type: string | AnyType<any> | GraphQLType): boolean;
 
-  public isInputType(type: string | AnyType<any> | GraphQLType): boolean;
+  public isInputObjectType(type: string | AnyType<any> | GraphQLType): boolean;
 
   public isScalarType(type: string | AnyType<any> | GraphQLType): boolean;
 

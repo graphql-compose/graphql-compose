@@ -1,8 +1,12 @@
 import { InputTypeComposer } from '../InputTypeComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
-import { SchemaComposer } from '../SchemaComposer';
-import { AnyTypeComposer, ComposeOutputType, ComposeInputType } from './typeHelpers';
+import {
+  AnyTypeComposer,
+  ComposeOutputType,
+  ComposeInputType,
+  ComposeInputTypeDefinition,
+} from './typeHelpers';
 
 export interface ToInputTypeOpts {
   /** If ObjectType or Interface received then will be used `${prefix}ObjectTypeName` as name for new Input type */
@@ -10,7 +14,7 @@ export interface ToInputTypeOpts {
   /** If ObjectType or Interface received then will be used `ObjectTypeName${suffix}` as name for new Input type */
   postfix?: string;
   /** When Union type is met then Error will be throw. This option helps to return provided fallbackType instead of Error. */
-  fallbackType?: ComposeInputType | null;
+  fallbackType?: ComposeInputTypeDefinition | null;
 }
 
 /**
