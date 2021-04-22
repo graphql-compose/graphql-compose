@@ -1,13 +1,26 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2016",
     "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "removeComments": true,
     "strict": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "forceConsistentCasingInFileNames": true,
     "lib": ["es2017", "esnext.asynciterable"],
-    "noImplicitAny": false,
-    "noEmit": true
+    "types": ["node", "jest"],
+    "baseUrl": ".",
+    "rootDir": "./src",
   },
-  "include": ["src/**/*.d.ts", "src/**/*.spec.ts"],
+  "include": ["src/**/*"],
   "exclude": [
     "./node_modules"
   ]
