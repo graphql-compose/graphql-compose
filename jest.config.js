@@ -1,8 +1,18 @@
 module.exports = {
-  // moduleNameMapper: {
-  //   '^app(.*)$': '<rootDir>/src$1',
-  // },
-  moduleFileExtensions: ['js'],
-  testMatch: ['**/__tests__/**/*-test.(ts|js)'],
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.json',
+      isolatedModules: true,
+      diagnostics: false,
+    },
+  },
+  moduleFileExtensions: ['ts', 'js'],
+  transform: {
+    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.js$': 'babel-jest',
+  },
   roots: ['<rootDir>/src'],
+  testPathIgnorePatterns: ['/node_modules/', '/lib/'],
 };

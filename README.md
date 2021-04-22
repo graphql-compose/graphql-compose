@@ -8,7 +8,6 @@
 [![npm](https://img.shields.io/npm/dt/graphql-compose.svg)](http://www.npmtrends.com/graphql-compose)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 ![TypeScript compatible](https://img.shields.io/badge/typescript-compatible-brightgreen.svg)
-![FlowType compatible](https://img.shields.io/badge/flowtype-compatible-brightgreen.svg)
 [![Backers on Open Collective](https://opencollective.com/graphql-compose/backers/badge.svg)](#backers)
 [![Sponsors on Open Collective](https://opencollective.com/graphql-compose/sponsors/badge.svg)](#sponsors)
 
