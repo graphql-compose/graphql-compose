@@ -1,5 +1,4 @@
 /* eslint-disable consistent-return */
-// @flow strict
 
 // copied from https://github.com/graphql/graphql-js/blob/master/src/utilities/printSchema.js
 // added printNodeDirectives() method
@@ -10,7 +9,7 @@ import invariant from 'graphql/jsutils/invariant';
 import { print } from 'graphql/language/printer';
 import { printBlockString } from 'graphql/language/blockString';
 import type { DirectiveNode } from 'graphql/language/ast';
-import { type GraphQLSchema } from 'graphql/type/schema';
+import type { GraphQLSchema } from 'graphql/type/schema';
 import { isIntrospectionType } from 'graphql/type/introspection';
 import { GraphQLString, isSpecifiedScalarType } from 'graphql/type/scalars';
 import {
@@ -19,30 +18,32 @@ import {
   isSpecifiedDirective,
 } from 'graphql/type/directives';
 import {
-  type GraphQLArgument,
-  type GraphQLEnumValue,
-  type GraphQLNamedType,
-  type GraphQLScalarType,
-  type GraphQLEnumType,
-  type GraphQLObjectType,
-  type GraphQLInterfaceType,
-  type GraphQLUnionType,
-  type GraphQLInputObjectType,
+  GraphQLArgument,
+  GraphQLNamedType,
+  GraphQLScalarType,
+  GraphQLEnumType,
+  GraphQLObjectType,
+  GraphQLInterfaceType,
+  GraphQLUnionType,
+  GraphQLInputObjectType,
   isScalarType,
   isObjectType,
   isInterfaceType,
   isUnionType,
   isEnumType,
   isInputObjectType,
+  GraphQLInputField,
+  GraphQLField,
 } from 'graphql/type/definition';
 import { astFromValue } from 'graphql/utilities/astFromValue';
 
-import { BUILT_IN_DIRECTIVES } from '../SchemaComposer';
+import { BUILT_IN_DIRECTIVES, SchemaComposer } from '../SchemaComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { UnionTypeComposer } from '../UnionTypeComposer';
 import type { NamedTypeComposer } from './typeHelpers';
+import { Maybe } from 'graphql/jsutils/Maybe';
 
 type Options = {
   /**
@@ -53,28 +54,28 @@ type Options = {
    *
    * Default: false
    */
-  commentDescriptions?: ?boolean,
+  commentDescriptions?: boolean | null;
 
   /**
    * Do not print descriptions for types
    *
    * Default: false
    */
-  omitDescriptions?: ?boolean,
+  omitDescriptions?: boolean | null;
 
   /**
    * Do not print Scalars for types
    *
    * Default: false
    */
-  omitScalars?: boolean | null,
+  omitScalars?: boolean | null;
 
   /**
    * Do not print @specifiedByUrl for Scalars types
    *
    * Default: false
    */
-  omitSpecifiedByUrl?: boolean | null,
+  omitSpecifiedByUrl?: boolean | null;
 
   /**
    * Sort fields, args and interfaces.
@@ -82,30 +83,30 @@ type Options = {
    *
    * Default: false
    */
-  sortAll?: ?boolean,
-  sortFields?: ?boolean,
-  sortArgs?: ?boolean,
-  sortInterfaces?: ?boolean,
-  sortUnions?: ?boolean,
-  sortEnums?: ?boolean,
+  sortAll?: boolean;
+  sortFields?: boolean;
+  sortArgs?: boolean;
+  sortInterfaces?: boolean;
+  sortUnions?: boolean;
+  sortEnums?: boolean;
 };
 
 export type SchemaPrinterOptions = Options;
 
 export type SchemaComposerPrinterOptions = Options & {
-  include?: ?(string[]),
-  exclude?: ?(string[]),
-  omitDirectiveDefinitions?: ?boolean,
+  include?: string[];
+  exclude?: string[];
+  omitDirectiveDefinitions?: boolean;
 };
 
 /**
  * Return schema as a SDL string.
  */
 export function printSchemaComposer(
-  sc: any, // SchemaComposer<any>, // HATE FLOWTYPE for *** Recursion limit exceeded ***
+  sc: SchemaComposer<any>,
   options?: SchemaComposerPrinterOptions
 ): string {
-  const { exclude = [], include, omitDirectiveDefinitions, ...innerOpts } = (options: any) || {};
+  const { exclude = [], include, omitDirectiveDefinitions, ...innerOpts } = options || {};
 
   const includeTypes = new Set();
   if (Array.isArray(include) && include.length) {
@@ -129,7 +130,7 @@ export function printSchemaComposer(
       if (!Array.isArray(d.args)) return;
       d.args.forEach((ac) => {
         const tc = sc.getAnyTC(ac.type);
-        if (!exclude.includes(tc.getTypeName())) {
+        if (!(exclude as any).includes(tc.getTypeName())) {
           includeTypes.add(tc);
         }
       });
@@ -147,7 +148,7 @@ export function printSchemaComposer(
       printTypeSet.add(tc);
       tc.getNestedTCs({ exclude }, printTypeSet);
     } else {
-      printTypeSet.add(tc);
+      printTypeSet.add(tc as any);
     }
   });
   const printTypes = Array.from(printTypeSet).sort((tc1, tc2) =>
@@ -186,7 +187,7 @@ export function printFilteredSchema(
 ): string {
   const directives = schema.getDirectives().filter(directiveFilter);
   const typeMap = schema.getTypeMap();
-  const types = objectValues(typeMap)
+  const types = (objectValues(typeMap) as GraphQLNamedType[])
     .sort((type1, type2) => type1.name.localeCompare(type2.name))
     .filter(typeFilter);
 
@@ -199,9 +200,9 @@ export function printFilteredSchema(
     .join('\n\n')}\n`;
 }
 
-export function printSchemaDefinition(schema: GraphQLSchema): ?string {
+export function printSchemaDefinition(schema: GraphQLSchema): string {
   if (isSchemaOfCommonNames(schema)) {
-    return;
+    return '';
   }
 
   const operationTypes = [];
@@ -271,7 +272,8 @@ export function printType(type: GraphQLNamedType, options?: Options): string {
   }
 
   // Not reachable. All possible types have been considered.
-  invariant(false, `Unexpected type: ${inspect((type: empty))}`);
+  invariant(false, `Unexpected type: ${inspect(type as never)}`);
+  return '';
 }
 
 export function printScalar(type: GraphQLScalarType, options?: Options): string {
@@ -282,7 +284,7 @@ export function printScalar(type: GraphQLScalarType, options?: Options): string 
   )}${printNodeDirectives(type.astNode)}`;
 }
 
-export function printSpecifiedByUrl(type: GraphQLScalarType, options?: Options) {
+export function printSpecifiedByUrl(type: GraphQLScalarType, options?: Options): string {
   if (!type.specifiedByUrl || options?.omitSpecifiedByUrl) {
     return '';
   }
@@ -296,7 +298,7 @@ export function printImplementedInterfaces(
   type: GraphQLObjectType | GraphQLInterfaceType,
   options?: Options
 ): string {
-  const interfaces = type.getInterfaces ? (type: any).getInterfaces() : [];
+  const interfaces = (type.getInterfaces ? type.getInterfaces() : []) as GraphQLInterfaceType[];
   if (!interfaces.length) return '';
   if (options?.sortAll || options?.sortInterfaces) {
     return ` implements ${interfaces
@@ -351,7 +353,7 @@ export function printEnum(type: GraphQLEnumType, options?: Options): string {
 }
 
 export function printInputObject(type: GraphQLInputObjectType, options?: Options): string {
-  let fields = objectValues(type.getFields());
+  let fields = objectValues(type.getFields()) as GraphQLInputField[];
   if (options?.sortAll || options?.sortFields) {
     fields = fields.sort((a, b) => a.name.localeCompare(b.name));
   }
@@ -368,7 +370,7 @@ export function printFields(
   type: GraphQLObjectType | GraphQLInterfaceType,
   options?: Options
 ): string {
-  let fields = objectValues(type.getFields());
+  let fields = objectValues(type.getFields()) as GraphQLField<any, any>[];
   if (options?.sortAll || options?.sortFields) {
     fields = fields.sort((a, b) => a.name.localeCompare(b.name));
   }
@@ -417,7 +419,7 @@ export function printArgs(
     .join('\n')}\n${indentation})`;
 }
 
-export function printInputValue(arg: GraphQLArgument): string {
+export function printInputValue(arg: GraphQLArgument | GraphQLInputField): string {
   const defaultAST = astFromValue(arg.defaultValue, arg.type);
   let argDecl = `${arg.name}: ${String(arg.type)}`;
   if (defaultAST) {
@@ -426,7 +428,7 @@ export function printInputValue(arg: GraphQLArgument): string {
   return `${argDecl}${printNodeDirectives(arg.astNode)}`;
 }
 
-export function printDirective(directive: GraphQLDirective, options?: Options) {
+export function printDirective(directive: GraphQLDirective, options?: Options): string {
   return `${printDescription(directive, options)}directive @${directive.name}${printArgs(
     directive.args,
     options
@@ -434,9 +436,12 @@ export function printDirective(directive: GraphQLDirective, options?: Options) {
 }
 
 export function printNodeDirectives(
-  node: ?{
-    +directives?: $ReadOnlyArray<DirectiveNode>,
-  }
+  node:
+    | {
+        directives?: ReadonlyArray<DirectiveNode>;
+      }
+    | undefined
+    | null
 ): string {
   if (!node || !node.directives || !node.directives.length) return '';
   return ` ${node.directives
@@ -450,7 +455,10 @@ export function printNodeDirectives(
     .join(' ')}`;
 }
 
-export function printDeprecated(fieldOrEnumVal: GraphQLEnumValue) {
+export function printDeprecated(fieldOrEnumVal: {
+  isDeprecated?: boolean;
+  deprecationReason?: Maybe<string>;
+}): string {
   if (!fieldOrEnumVal.isDeprecated) {
     return '';
   }
@@ -463,6 +471,7 @@ export function printDeprecated(fieldOrEnumVal: GraphQLEnumValue) {
 }
 
 export function printDescription(
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   def: any,
   options?: Options,
   indentation: string = '',
@@ -488,7 +497,7 @@ export function printDescriptionWithComments(
   description: string,
   indentation: string,
   firstInBlock: boolean
-) {
+): string {
   const prefix = indentation && !firstInBlock ? '\n' : '';
   const comment = description
     .split('\n')

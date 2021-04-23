@@ -1,5 +1,3 @@
-/* @flow strict */
-
 import {
   GraphQLJSON as _GraphQLJSON,
   GraphQLJSONObject as _GraphQLJSONObject,

@@ -1,4 +1,5 @@
-/* @flow strict */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-use-before-define */
 
 // This is internal methods of graphql-js (introduced in 14.0.0)
@@ -32,19 +33,20 @@ import type { InputTypeComposerFieldConfigMap } from '../InputTypeComposer';
 import type { EnumTypeComposerValueConfigMap } from '../EnumTypeComposer';
 import {
   ObjectTypeComposer,
-  type ObjectTypeComposerFieldConfigMap,
-  type ObjectTypeComposerFieldConfigMapDefinition,
-  type ObjectTypeComposerDefinition,
-  type ObjectTypeComposerThunked,
+  ObjectTypeComposerFieldConfigMap,
+  ObjectTypeComposerFieldConfigMapDefinition,
+  ObjectTypeComposerDefinition,
+  ObjectTypeComposerThunked,
+  ObjectTypeComposerArgumentConfigMap,
 } from '../ObjectTypeComposer';
 import {
-  type InterfaceTypeComposerDefinition,
-  type InterfaceTypeComposerThunked,
+  InterfaceTypeComposerDefinition,
+  InterfaceTypeComposerThunked,
   InterfaceTypeComposer,
 } from '../InterfaceTypeComposer';
 import { getComposeTypeName } from './typeHelpers';
 
-function isPlainObj(obj) {
+function isPlainObj(obj: any): obj is Record<any, any> {
   return obj && typeof obj === 'object' && !Array.isArray(obj);
 }
 
@@ -79,8 +81,7 @@ export function defineFieldMap(
 
   for (const fieldName of Object.keys(fieldMap)) {
     const fieldConfig = fieldMap[fieldName];
-    // $FlowFixMe
-    const fieldNodeAst: ?FieldDefinitionNode = fieldAstNodeMap[fieldName];
+    const fieldNodeAst = fieldAstNodeMap[fieldName] as FieldDefinitionNode;
     invariant(
       isPlainObj(fieldConfig),
       `${config.name}.${fieldName} field config must be an object`
@@ -98,14 +99,14 @@ export function defineFieldMap(
     );
     const argsConfig = fieldConfig.args;
     if (!argsConfig) {
-      field.args = ([]: any);
+      field.args = [] as any;
     } else {
       invariant(
         isPlainObj(argsConfig),
         `${config.name}.${fieldName} args must be an object with argument names as keys.`
       );
       const fieldArgNodeMap = argAstNodeMap[fieldName] ?? {};
-      field.args = (Object.keys(argsConfig).map((argName) => {
+      field.args = Object.keys(argsConfig).map((argName) => {
         const arg = argsConfig[argName];
         return {
           name: argName,
@@ -114,7 +115,7 @@ export function defineFieldMap(
           defaultValue: arg.defaultValue,
           astNode: fieldArgNodeMap[argName],
         };
-      }): any);
+      }) as any;
     }
     resultFieldMap[fieldName] = field;
   }
@@ -123,36 +124,34 @@ export function defineFieldMap(
 
 export function convertObjectFieldMapToConfig(
   fieldMap: Thunk<GraphQLFieldMap<any, any> | ObjectTypeComposerFieldConfigMapDefinition<any, any>>,
-  schemaComposer: SchemaComposer<any>
+  sc: SchemaComposer<any>
 ): ObjectTypeComposerFieldConfigMap<any, any> {
-  const fields = {};
+  const fields = {} as ObjectTypeComposerFieldConfigMap<any, any>;
   const isThunk = isFunction(fieldMap);
-  const _fields: any = isThunk ? (fieldMap: any)(schemaComposer) : fieldMap;
+  const _fields: any = isThunk ? (fieldMap as any)(sc) : fieldMap;
   if (!isObject(_fields)) return {};
   Object.keys(_fields).forEach((n) => {
     const { name, isDeprecated, ...fc } = _fields[n];
-    const args = {};
+    const args = {} as ObjectTypeComposerArgumentConfigMap;
     if (Array.isArray(fc.args)) {
       // `fc.args` is an Array in `GraphQLFieldMap`
-      fc.args.forEach((arg) => {
+      fc.args.forEach((arg: any) => {
         const { name: argName, ...ac } = arg;
         args[argName] = {
           ...ac,
           type: isThunk
-            ? new ThunkComposer(() =>
-                schemaComposer.typeMapper.convertInputTypeDefinition(ac.type || arg)
-              )
-            : schemaComposer.typeMapper.convertInputTypeDefinition(ac.type || arg),
+            ? new ThunkComposer(() => sc.typeMapper.convertInputTypeDefinition(ac.type || arg))
+            : sc.typeMapper.convertInputTypeDefinition(ac.type || arg),
         };
         if (ac?.astNode?.directives) {
-          const directives = schemaComposer.typeMapper.parseDirectives(ac.astNode.directives);
+          const directives = sc.typeMapper.parseDirectives(ac.astNode.directives);
           if (directives) {
             if (!args[argName].extensions) args[argName].extensions = {};
-            args[argName].extensions.directives = directives;
+            args[argName]!.extensions!.directives = directives;
           }
         }
       });
-      fc.args = (args: any);
+      fc.args = args;
     } else if (isObject(fc.args)) {
       // `fc.args` is Object in `ObjectTypeComposerFieldConfigMapDefinition`
       Object.keys(fc.args).forEach((argName) => {
@@ -161,32 +160,30 @@ export function convertObjectFieldMapToConfig(
           ...(isObject(sourceArgs[argName]) ? sourceArgs[argName] : null),
           type: isThunk
             ? new ThunkComposer(() =>
-                schemaComposer.typeMapper.convertInputTypeDefinition(
+                sc.typeMapper.convertInputTypeDefinition(
                   sourceArgs[argName].type || sourceArgs[argName]
                 )
               )
-            : schemaComposer.typeMapper.convertInputTypeDefinition(
+            : sc.typeMapper.convertInputTypeDefinition(
                 sourceArgs[argName].type || sourceArgs[argName]
               ),
         };
       });
-      fc.args = (args: any);
+      fc.args = args;
     }
 
     fields[n] = {
       ...fc,
       type: isThunk
-        ? new ThunkComposer(() =>
-            schemaComposer.typeMapper.convertOutputTypeDefinition(fc.type || _fields[n])
-          )
-        : schemaComposer.typeMapper.convertOutputTypeDefinition(fc.type || _fields[n]),
+        ? new ThunkComposer(() => sc.typeMapper.convertOutputTypeDefinition(fc.type || _fields[n]))
+        : sc.typeMapper.convertOutputTypeDefinition(fc.type || _fields[n]),
     };
 
     if (fc?.astNode?.directives) {
-      const directives = schemaComposer.typeMapper.parseDirectives(fc.astNode.directives);
+      const directives = sc.typeMapper.parseDirectives(fc.astNode.directives);
       if (directives) {
         if (!fields[n].extensions) fields[n].extensions = {};
-        fields[n].extensions.directives = directives;
+        fields[n]!.extensions!.directives = directives;
       }
     }
   });
@@ -235,14 +232,14 @@ export function convertEnumValuesToConfig(
   values: GraphQLEnumValue[],
   schemaComposer: SchemaComposer<any>
 ): EnumTypeComposerValueConfigMap {
-  const fields = {};
+  const fields = {} as EnumTypeComposerValueConfigMap;
   values.forEach(({ name, isDeprecated, ...fc }) => {
-    fields[name] = fc;
+    fields[name] = fc as any;
     if (fc?.astNode?.directives) {
       const directives = schemaComposer.typeMapper.parseDirectives(fc.astNode.directives);
       if (directives) {
         if (!fields[name].extensions) fields[name].extensions = {};
-        fields[name].extensions.directives = directives;
+        fields[name]!.extensions!.directives = directives;
       }
     }
   });
@@ -283,26 +280,24 @@ export function defineInputFieldMap(
 
 export function convertInputFieldMapToConfig(
   fieldMap: Thunk<GraphQLInputFieldMap>,
-  schemaComposer: SchemaComposer<any>
+  sc: SchemaComposer<any>
 ): InputTypeComposerFieldConfigMap {
-  const fields = {};
+  const fields = {} as InputTypeComposerFieldConfigMap;
   const isThunk = isFunction(fieldMap);
-  const _fields: any = isThunk ? (fieldMap: any)(schemaComposer) : fieldMap;
+  const _fields: any = isThunk ? (fieldMap as any)(sc) : fieldMap;
   Object.keys(_fields).forEach((n) => {
     const { name, isDeprecated, ...fc } = _fields[n];
     fields[n] = {
       ...fc,
       type: isThunk
-        ? new ThunkComposer(() =>
-            schemaComposer.typeMapper.convertInputTypeDefinition(fc.type || _fields[n])
-          )
-        : schemaComposer.typeMapper.convertInputTypeDefinition(fc.type || _fields[n]),
+        ? new ThunkComposer(() => sc.typeMapper.convertInputTypeDefinition(fc.type || _fields[n]))
+        : sc.typeMapper.convertInputTypeDefinition(fc.type || _fields[n]),
     };
     if (fc?.astNode?.directives) {
-      const directives = schemaComposer.typeMapper.parseDirectives(fc.astNode.directives);
+      const directives = sc.typeMapper.parseDirectives(fc.astNode.directives);
       if (directives) {
         if (!fields[n].extensions) fields[n].extensions = {};
-        fields[n].extensions.directives = directives;
+        fields[n]!.extensions!.directives = directives;
       }
     }
   });
@@ -311,7 +306,7 @@ export function convertInputFieldMapToConfig(
 
 export function convertObjectTypeArrayAsThunk(
   types: Thunk<
-    $ReadOnlyArray<
+    ReadonlyArray<
       | GraphQLObjectType
       | ObjectTypeComposerDefinition<any, any>
       | ObjectTypeComposerThunked<any, any>
@@ -320,7 +315,7 @@ export function convertObjectTypeArrayAsThunk(
   sc: SchemaComposer<any>
 ): Array<ObjectTypeComposerThunked<any, any>> {
   const isThunk = isFunction(types);
-  const t: any = isThunk ? (types: any)(sc) : types;
+  const t: any = isThunk ? (types as any)(sc) : types;
   if (!Array.isArray(t)) return [];
 
   return t.map((type) => {
@@ -343,16 +338,16 @@ export function convertObjectTypeArrayAsThunk(
 
 export function convertInterfaceArrayAsThunk(
   types: Thunk<
-    $ReadOnlyArray<
+    ReadonlyArray<
       | InterfaceTypeComposerDefinition<any, any>
-      | $ReadOnly<GraphQLInterfaceType>
-      | $ReadOnly<InterfaceTypeComposerThunked<any, any>>
+      | Readonly<GraphQLInterfaceType>
+      | Readonly<InterfaceTypeComposerThunked<any, any>>
     >
   >,
   sc: SchemaComposer<any>
 ): Array<InterfaceTypeComposerThunked<any, any>> {
   const isThunk = isFunction(types);
-  const t: any = isThunk ? (types: any)(sc) : types;
+  const t: any = isThunk ? (types as any)(sc) : types;
   if (!Array.isArray(t)) return [];
   return t.map((type) => {
     if (type instanceof InterfaceTypeComposer || type instanceof ThunkComposer) {
