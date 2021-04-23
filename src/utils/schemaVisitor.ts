@@ -1,5 +1,4 @@
 /* eslint-disable no-use-before-define */
-/* @flow strict */
 
 import type { SchemaComposer } from '../SchemaComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
@@ -8,7 +7,7 @@ import { ScalarTypeComposer } from '../ScalarTypeComposer';
 import { EnumTypeComposer } from '../EnumTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import { UnionTypeComposer } from '../UnionTypeComposer';
-import { isNamedTypeComposer, type NamedTypeComposer } from './typeHelpers';
+import { isNamedTypeComposer, NamedTypeComposer } from './typeHelpers';
 
 export type VisitorEmptyResult =
   | void // just move further
@@ -21,27 +20,27 @@ export type VisitKindFn<T, TContext> = (
 ) => VisitorEmptyResult | NamedTypeComposer<TContext>;
 
 export type SchemaVisitor<TContext> = {
-  TYPE?: VisitKindFn<NamedTypeComposer<TContext>, TContext>,
-  SCALAR_TYPE?: VisitKindFn<ScalarTypeComposer<TContext>, TContext>,
-  ENUM_TYPE?: VisitKindFn<EnumTypeComposer<TContext>, TContext>,
+  TYPE?: VisitKindFn<NamedTypeComposer<TContext>, TContext>;
+  SCALAR_TYPE?: VisitKindFn<ScalarTypeComposer<TContext>, TContext>;
+  ENUM_TYPE?: VisitKindFn<EnumTypeComposer<TContext>, TContext>;
   COMPOSITE_TYPE?: VisitKindFn<
     | ObjectTypeComposer<any, TContext>
     | InterfaceTypeComposer<any, TContext>
     | UnionTypeComposer<any, TContext>,
     TContext
-  >,
-  OBJECT_TYPE?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>,
-  INPUT_OBJECT_TYPE?: VisitKindFn<InputTypeComposer<TContext>, TContext>,
+  >;
+  OBJECT_TYPE?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>;
+  INPUT_OBJECT_TYPE?: VisitKindFn<InputTypeComposer<TContext>, TContext>;
   ABSTRACT_TYPE?: VisitKindFn<
     InterfaceTypeComposer<any, TContext> | UnionTypeComposer<any, TContext>,
     TContext
-  >,
-  UNION_TYPE?: VisitKindFn<UnionTypeComposer<any, TContext>, TContext>,
-  INTERFACE_TYPE?: VisitKindFn<InterfaceTypeComposer<any, TContext>, TContext>,
-  ROOT_OBJECT?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>,
-  QUERY?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>,
-  MUTATION?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>,
-  SUBSCRIPTION?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>,
+  >;
+  UNION_TYPE?: VisitKindFn<UnionTypeComposer<any, TContext>, TContext>;
+  INTERFACE_TYPE?: VisitKindFn<InterfaceTypeComposer<any, TContext>, TContext>;
+  ROOT_OBJECT?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>;
+  QUERY?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>;
+  MUTATION?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>;
+  SUBSCRIPTION?: VisitKindFn<ObjectTypeComposer<any, TContext>, TContext>;
 };
 
 export type VisitSchemaKind =
@@ -104,12 +103,12 @@ export function visitSchema<TContext>(
     if (visitedTCs.has(value)) return;
     visitedTCs.add(value);
 
-    let tc: NamedTypeComposer<any> = (value: any);
+    let tc = value;
     const visitKinds = getVisitKinds(tc, schema);
     for (const kind of visitKinds) {
       const visitorFn = visitor[kind];
       if (visitorFn) {
-        const result = visitorFn((tc: any), schema);
+        const result = visitorFn(tc as any, schema);
         if (result === null) {
           // `null` - means remove type from registry
           schema.delete(key);
@@ -129,26 +128,28 @@ export function visitSchema<TContext>(
   });
 }
 
-export function isScalarTypeComposer(type: NamedTypeComposer<any>): boolean %checks {
+export function isScalarTypeComposer(type: NamedTypeComposer<any>): type is ScalarTypeComposer {
   return type instanceof ScalarTypeComposer;
 }
 
-export function isEnumTypeComposer(type: NamedTypeComposer<any>): boolean %checks {
+export function isEnumTypeComposer(type: NamedTypeComposer<any>): type is EnumTypeComposer {
   return type instanceof EnumTypeComposer;
 }
 
-export function isObjectTypeComposer(type: NamedTypeComposer<any>): boolean %checks {
+export function isObjectTypeComposer(type: NamedTypeComposer<any>): type is ObjectTypeComposer {
   return type instanceof ObjectTypeComposer;
 }
 
-export function isInputTypeComposer(type: NamedTypeComposer<any>): boolean %checks {
+export function isInputTypeComposer(type: NamedTypeComposer<any>): type is InputTypeComposer {
   return type instanceof InputTypeComposer;
 }
 
-export function isInterfaceTypeComposer(type: NamedTypeComposer<any>): boolean %checks {
+export function isInterfaceTypeComposer(
+  type: NamedTypeComposer<any>
+): type is InterfaceTypeComposer {
   return type instanceof InterfaceTypeComposer;
 }
 
-export function isUnionTypeComposer(type: NamedTypeComposer<any>): boolean %checks {
+export function isUnionTypeComposer(type: NamedTypeComposer<any>): type is UnionTypeComposer {
   return type instanceof UnionTypeComposer;
 }

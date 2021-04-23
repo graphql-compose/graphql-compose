@@ -1,5 +1,3 @@
-/* @flow strict */
-
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
@@ -8,21 +6,21 @@ import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
 import type { InputTypeComposer } from '../InputTypeComposer';
 import {
   isSomeInputTypeComposer,
-  type ComposeOutputType,
-  type ComposeInputType,
-  type ComposeInputTypeDefinition,
-  type AnyTypeComposer,
+  ComposeOutputType,
+  ComposeInputType,
+  ComposeInputTypeDefinition,
+  AnyTypeComposer,
 } from './typeHelpers';
 import { inspect } from './misc';
 import { UnionTypeComposer } from '../UnionTypeComposer';
 
 export type ToInputTypeOpts = {
   /** If ObjectType or Interface received then will be used `${prefix}ObjectTypeName` as name for new Input type */
-  prefix?: string,
+  prefix?: string;
   /** If ObjectType or Interface received then will be used `ObjectTypeName${suffix}` as name for new Input type */
-  postfix?: string,
+  postfix?: string;
   /** When Union type is met then Error will be throw. This option helps to return provided fallbackType instead of Error. */
-  fallbackType?: ComposeInputTypeDefinition | null,
+  fallbackType?: ComposeInputTypeDefinition | null;
 };
 
 /**
@@ -58,7 +56,7 @@ export function toInputType(anyTC: AnyTypeComposer<any>, opts?: ToInputTypeOpts)
     if (tc instanceof ObjectTypeComposer || tc instanceof InterfaceTypeComposer) {
       tc = toInputObjectType(tc, opts);
     } else {
-      if (opts?.fallbackType) return (opts.fallbackType: any);
+      if (opts?.fallbackType) return opts.fallbackType as any;
 
       if (tc instanceof UnionTypeComposer) {
         throw new Error(
@@ -76,10 +74,10 @@ export function toInputType(anyTC: AnyTypeComposer<any>, opts?: ToInputTypeOpts)
 
   if (tc) {
     // wrap TypeComposer back
-    tc = wrappers.reduce((type: any, Wrapper) => new Wrapper(type), tc);
+    tc = wrappers.reduce((type: any, Wrapper: any) => new Wrapper(type), tc);
   }
 
-  return (tc: any);
+  return tc;
 }
 
 /**
@@ -105,13 +103,13 @@ export function toInputObjectType<TContext>(
   fieldNames.forEach((fieldName) => {
     const fc = tc.getField(fieldName);
 
-    let fieldInputType: ?ComposeInputTypeDefinition;
+    let fieldInputType: ComposeInputTypeDefinition;
     try {
       fieldInputType = toInputType(fc.type, opts);
     } catch (e) {
       if (opts?.fallbackType || opts?.fallbackType === null) {
         // Setting to null effectively skips this field
-        fieldInputType = opts?.fallbackType;
+        fieldInputType = opts?.fallbackType as any;
       } else {
         throw new Error(
           `${
@@ -123,13 +121,10 @@ export function toInputObjectType<TContext>(
     }
 
     if (fieldInputType) {
-      inputTypeComposer.setField(
-        fieldName,
-        ({
-          type: fieldInputType,
-          description: fc.description,
-        }: any)
-      );
+      inputTypeComposer.setField(fieldName, {
+        type: fieldInputType,
+        description: fc.description,
+      });
     }
   });
 

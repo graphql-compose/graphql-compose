@@ -134,7 +134,7 @@ export function getUnionTypeDefinitionNode(
 }
 
 // eslint-disable-next-line no-unused-vars
-function getDescriptionNode(value?: string | null): StringValueNode | void {
+function getDescriptionNode(value?: string | null): StringValueNode | undefined {
   // Do not add comments to astNode for memory consuption by Scalar types
   // In every place where is used Scalar type will be added the same text.
   //
@@ -143,31 +143,32 @@ function getDescriptionNode(value?: string | null): StringValueNode | void {
   //   kind: 'StringValue',
   //   value,
   // };
+  return;
 }
 
 /**
  * Maybe this function should be replaced by build-in `astFromValue(value, type)` function from graphql-js
  */
-function toValueNode(value: mixed): ValueNode {
+function toValueNode(value: any): ValueNode {
   switch (typeof value) {
     case 'string':
-      return ({ kind: 'StringValue', value }: StringValueNode);
+      return { kind: 'StringValue', value } as StringValueNode;
     case 'number':
       if (Number.isInteger(value))
-        return ({ kind: 'IntValue', value: value.toString() }: IntValueNode);
-      return ({ kind: 'FloatValue', value: value.toString() }: FloatValueNode);
+        return { kind: 'IntValue', value: value.toString() } as IntValueNode;
+      return { kind: 'FloatValue', value: value.toString() } as FloatValueNode;
     case 'boolean':
-      return ({ kind: 'BooleanValue', value }: BooleanValueNode);
+      return { kind: 'BooleanValue', value } as BooleanValueNode;
     case 'object':
       if (value === null) {
-        return ({ kind: 'NullValue' }: NullValueNode);
+        return { kind: 'NullValue' } as NullValueNode;
       } else if (Array.isArray(value)) {
-        return ({
+        return {
           kind: 'ListValue',
           values: value.map((v) => toValueNode(v)),
-        }: ListValueNode);
+        } as ListValueNode;
       } else {
-        return ({
+        return {
           kind: 'ObjectValue',
           fields: Object.keys(value).map(
             (k) =>
@@ -175,9 +176,9 @@ function toValueNode(value: mixed): ValueNode {
                 kind: 'ObjectField',
                 name: { kind: 'Name', value: k },
                 value: toValueNode(value[k]),
-              }: ObjectFieldNode)
+              } as ObjectFieldNode)
           ),
-        }: ObjectValueNode);
+        } as ObjectValueNode;
       }
     default:
       // unsupported types
@@ -190,17 +191,17 @@ function toValueNode(value: mixed): ValueNode {
 
 function getDirectiveArgumentNodes(
   data: DirectiveArgs,
-  directive: ?GraphQLDirective
-): $ReadOnlyArray<ArgumentNode> | void {
+  directive?: GraphQLDirective
+): ReadonlyArray<ArgumentNode> | undefined {
   const keys = Object.keys(data);
   if (!keys.length) return;
   const args: Array<ArgumentNode> = [];
   keys.forEach((k) => {
-    let argumentType: ?GraphQLInputType;
+    let argumentType: GraphQLInputType | undefined;
     if (directive) {
       argumentType = directive.args.find((d) => d.name === k)?.type;
     }
-    const argNode = ({
+    const argNode = {
       kind: 'Argument',
       name: { kind: 'Name', value: k },
       value: argumentType
@@ -208,7 +209,7 @@ function getDirectiveArgumentNodes(
           astFromValue(data[k], argumentType) || { kind: 'NullValue' }
         : // `toValueNode` is fallback which supports just primitive types
           toValueNode(data[k]),
-    }: ArgumentNode);
+    } as ArgumentNode;
     args.push(argNode);
   });
   return args;
@@ -217,7 +218,7 @@ function getDirectiveArgumentNodes(
 function getDirectiveNodes(
   values: ExtensionsDirective[],
   sc: SchemaComposer<any>
-): $ReadOnlyArray<DirectiveNode> | void {
+): ReadonlyArray<DirectiveNode> | undefined {
   if (!values || !values.length) return;
   return values.map(
     (v) =>
@@ -225,25 +226,25 @@ function getDirectiveNodes(
         kind: 'Directive',
         name: { kind: 'Name', value: v.name },
         arguments: getDirectiveArgumentNodes(v.args, sc._getDirective(v.name)),
-      }: DirectiveNode)
+      } as DirectiveNode)
   );
 }
 
 function getInterfaceNodes(
   ifaces: InterfaceTypeComposerThunked<any, any>[]
-): $ReadOnlyArray<NamedTypeNode> {
+): ReadonlyArray<NamedTypeNode> {
   return ifaces
     .map((iface) => {
       if (!iface || !iface.getTypeName) return;
-      return ({
+      return {
         kind: 'NamedType',
         name: { kind: 'Name', value: iface.getTypeName() },
-      }: NamedTypeNode);
+      } as NamedTypeNode;
     })
-    .filter(Boolean);
+    .filter(Boolean) as any;
 }
 
-function getTypeNode(atc: AnyTypeComposer<any>): TypeNode | void {
+function getTypeNode(atc: AnyTypeComposer<any>): TypeNode | undefined {
   if (atc instanceof ThunkComposer) {
     return getTypeNode(atc.ofType);
   } else if (atc instanceof ListComposer) {
@@ -258,7 +259,7 @@ function getTypeNode(atc: AnyTypeComposer<any>): TypeNode | void {
     if (!subType) return;
     return {
       kind: 'NonNullType',
-      type: (subType: any),
+      type: subType as any,
     };
   } else if (atc && atc.getTypeName) {
     return {
@@ -271,7 +272,7 @@ function getTypeNode(atc: AnyTypeComposer<any>): TypeNode | void {
 function getArgumentsDefinitionNodes(
   tc: ObjectTypeComposer<any, any> | InterfaceTypeComposer<any, any>,
   fieldName: string
-): $ReadOnlyArray<InputValueDefinitionNode> | void {
+): ReadonlyArray<InputValueDefinitionNode> | undefined {
   const argNames = tc.getFieldArgNames(fieldName);
   if (!argNames.length) return;
   return argNames
@@ -279,7 +280,7 @@ function getArgumentsDefinitionNodes(
       const ac = tc.getFieldArg(fieldName, argName);
       const type = getTypeNode(ac.type);
       if (!type) return;
-      return ({
+      return {
         kind: 'InputValueDefinition',
         name: { kind: 'Name', value: argName },
         type,
@@ -292,14 +293,14 @@ function getArgumentsDefinitionNodes(
           (ac.defaultValue !== undefined &&
             astFromValue(ac.defaultValue, tc.getFieldArgType(fieldName, argName))) ||
           undefined,
-      }: InputValueDefinitionNode);
+      } as InputValueDefinitionNode;
     })
-    .filter(Boolean);
+    .filter(Boolean) as any;
 }
 
 function getFieldDefinitionNodes(
   tc: ObjectTypeComposer<any, any> | InterfaceTypeComposer<any, any>
-): $ReadOnlyArray<FieldDefinitionNode> | void {
+): ReadonlyArray<FieldDefinitionNode> | undefined {
   const fieldNames = tc.getFieldNames();
   if (!fieldNames.length) return;
   return fieldNames
@@ -307,21 +308,21 @@ function getFieldDefinitionNodes(
       const fc = tc.getField(fieldName);
       const type = getTypeNode(fc.type);
       if (!type) return;
-      return ({
+      return {
         kind: 'FieldDefinition',
         name: { kind: 'Name', value: fieldName },
         type,
         arguments: getArgumentsDefinitionNodes(tc, fieldName),
         description: getDescriptionNode(fc.description),
         directives: getDirectiveNodes(tc.getFieldDirectives(fieldName), tc.schemaComposer),
-      }: FieldDefinitionNode);
+      } as FieldDefinitionNode;
     })
-    .filter(Boolean);
+    .filter(Boolean) as any;
 }
 
 function getInputValueDefinitionNodes(
   tc: InputTypeComposer<any>
-): $ReadOnlyArray<InputValueDefinitionNode> | void {
+): ReadonlyArray<InputValueDefinitionNode> | undefined {
   const fieldNames = tc.getFieldNames();
   if (!fieldNames.length) return;
   return fieldNames
@@ -329,7 +330,7 @@ function getInputValueDefinitionNodes(
       const fc = tc.getField(fieldName);
       const type = getTypeNode(fc.type);
       if (!type) return;
-      return ({
+      return {
         kind: 'InputValueDefinition',
         name: { kind: 'Name', value: fieldName },
         type,
@@ -339,23 +340,23 @@ function getInputValueDefinitionNodes(
           (fc.defaultValue !== undefined &&
             astFromValue(fc.defaultValue, tc.getFieldType(fieldName))) ||
           undefined,
-      }: InputValueDefinitionNode);
+      } as InputValueDefinitionNode;
     })
-    .filter(Boolean);
+    .filter(Boolean) as any;
 }
 
 function getEnumValueDefinitionNodes(
   tc: EnumTypeComposer<any>
-): $ReadOnlyArray<EnumValueDefinitionNode> | void {
+): ReadonlyArray<EnumValueDefinitionNode> | undefined {
   const fieldNames = tc.getFieldNames();
   if (!fieldNames.length) return;
   return fieldNames.map((fieldName) => {
     const fc = tc.getField(fieldName);
-    return ({
+    return {
       kind: 'EnumValueDefinition',
       name: { kind: 'Name', value: fieldName },
       description: getDescriptionNode(fc.description),
       directives: getDirectiveNodes(tc.getFieldDirectives(fieldName), tc.schemaComposer),
-    }: EnumValueDefinitionNode);
+    } as EnumValueDefinitionNode;
   });
 }

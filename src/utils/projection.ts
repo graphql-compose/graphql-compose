@@ -1,4 +1,3 @@
-/* @flow strict */
 /* eslint-disable no-param-reassign, no-lonely-if */
 
 import type {
@@ -62,7 +61,7 @@ export function getProjectionFromASTQuery(
   }
 
   const projection = (selections || []).reduce(
-    (res, ast: FieldNode | InlineFragmentNode | FragmentSpreadNode) => {
+    (res: Record<any, any>, ast: FieldNode | InlineFragmentNode | FragmentSpreadNode) => {
       switch (ast.kind) {
         case FIELD: {
           const { value } = ast.name;
@@ -92,9 +91,9 @@ export const getProjectionFromASTquery = getProjectionFromASTQuery;
 export function getFlatProjectionFromAST(
   info: GraphQLResolveInfo,
   fieldNodes?: FieldNode | InlineFragmentNode | FragmentDefinitionNode
-) {
+): Record<any, any> {
   const projection = getProjectionFromAST(info, fieldNodes) || {};
-  const flatProjection = {};
+  const flatProjection = {} as Record<any, any>;
   Object.keys(projection).forEach((key) => {
     flatProjection[key] = !!projection[key];
   });
@@ -119,14 +118,14 @@ export function extendByFieldProjection(
 
   let proj = projection;
   Object.keys(proj).forEach((key) => {
-    const field = (type: any).getFields()[key];
+    const field = (type as any).getFields()[key];
     if (!field) return;
 
     if (field.projection) proj = deepmerge(proj, field.projection);
     if (field.extensions && field.extensions.projection) {
       proj = deepmerge(proj, field.extensions.projection);
     }
-    proj[key] = extendByFieldProjection((field.type: any), proj[key]);
+    proj[key] = extendByFieldProjection(field.type as any, proj[key]);
   });
 
   return proj;

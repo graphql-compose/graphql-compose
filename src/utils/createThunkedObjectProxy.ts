@@ -1,9 +1,7 @@
-/* @flow strict */
-
 import { isFunction } from './is';
 
-export function createThunkedObjectProxy<T: {}>(thunk: () => T): T {
-  const data = {};
+export function createThunkedObjectProxy<T extends Record<string, any>>(thunk: () => T): T {
+  const data = {} as any;
   let isResolved = false;
   const getFC: any = () => {
     if (!isResolved) {
@@ -50,6 +48,7 @@ export function createThunkedObjectProxy<T: {}>(thunk: () => T): T {
     // getPropertyNames() {
     //   return Object.getPropertyNames(getFC());
     // },
+    // @ts-expect-error
     getOwnPropertyNames() {
       return Object.getOwnPropertyNames(getFC());
     },
@@ -57,9 +56,9 @@ export function createThunkedObjectProxy<T: {}>(thunk: () => T): T {
     //   return Object.getPropertyDescriptor(getFC(), k);
     // },
     getOwnPropertyDescriptor(o, k: any) {
-      return (Object.getOwnPropertyDescriptor(getFC(), k): any);
+      return Object.getOwnPropertyDescriptor(getFC(), k);
     },
   });
 
-  return (proxy: any);
+  return proxy as any;
 }

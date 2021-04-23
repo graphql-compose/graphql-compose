@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* @flow */
 /* eslint-disable no-use-before-define */
 
@@ -54,15 +55,15 @@ export type ComposeOutputType<TContext> =
   | ThunkComposer<any, GraphQLOutputType>;
 
 export type ComposeOutputTypeDefinition<TContext> =
-  | $ReadOnly<ComposeOutputType<TContext>>
-  | $ReadOnly<GraphQLOutputType>
+  | Readonly<ComposeOutputType<TContext>>
+  | Readonly<GraphQLOutputType>
   | TypeAsString
-  | $ReadOnlyArray<
-      | $ReadOnly<ComposeOutputType<TContext>>
-      | $ReadOnly<GraphQLOutputType>
+  | ReadonlyArray<
+      | Readonly<ComposeOutputType<TContext>>
+      | Readonly<GraphQLOutputType>
       | TypeAsString
-      | $ReadOnlyArray<
-          $ReadOnly<ComposeOutputType<TContext>> | $ReadOnly<GraphQLOutputType> | TypeAsString
+      | ReadonlyArray<
+          Readonly<ComposeOutputType<TContext>> | Readonly<GraphQLOutputType> | TypeAsString
         >
     >;
 
@@ -88,13 +89,13 @@ export type ComposeInputType =
 
 export type ComposeInputTypeDefinition =
   | TypeAsString
-  | $ReadOnly<ComposeInputType>
-  | $ReadOnly<GraphQLInputType>
-  | $ReadOnlyArray<
+  | Readonly<ComposeInputType>
+  | Readonly<GraphQLInputType>
+  | ReadonlyArray<
       | TypeAsString
-      | $ReadOnly<ComposeInputType>
-      | $ReadOnly<GraphQLInputType>
-      | $ReadOnlyArray<TypeAsString | $ReadOnly<ComposeInputType> | $ReadOnly<GraphQLInputType>>
+      | Readonly<ComposeInputType>
+      | Readonly<GraphQLInputType>
+      | ReadonlyArray<TypeAsString | Readonly<ComposeInputType> | Readonly<GraphQLInputType>>
     >;
 
 /**
@@ -119,6 +120,10 @@ export function isWrappedTypeNameString(str: string): boolean {
   return isTypeNameString(unwrapTypeNameString(str));
 }
 
+/**
+ * Checks that string is SDL definition of some type
+ * eg. `type Out { name: String! }` or `input Filter { minAge: Int }` etc.
+ */
 export function isTypeDefinitionString(str: string): boolean {
   return (
     isOutputTypeDefinitionString(str) ||
@@ -130,6 +135,9 @@ export function isTypeDefinitionString(str: string): boolean {
   );
 }
 
+/**
+ * Checks that string is SDL definition of any Output type
+ */
 export function isSomeOutputTypeDefinitionString(str: string): boolean {
   return (
     isOutputTypeDefinitionString(str) ||
@@ -140,6 +148,9 @@ export function isSomeOutputTypeDefinitionString(str: string): boolean {
   );
 }
 
+/**
+ * Checks that string is SDL definition of any Input type
+ */
 export function isSomeInputTypeDefinitionString(str: string): boolean {
   return (
     isInputTypeDefinitionString(str) ||
@@ -148,31 +159,59 @@ export function isSomeInputTypeDefinitionString(str: string): boolean {
   );
 }
 
+/**
+ * Checks that string is OutputType SDL definition
+ * eg. `type Out { name: String! }`
+ */
 export function isOutputTypeDefinitionString(str: string): boolean {
   return /type\s[^{]+\{[^}]+\}/im.test(str);
 }
 
+/**
+ * Checks that string is InputType SDL definition
+ * eg. `input Filter { minAge: Int }`
+ */
 export function isInputTypeDefinitionString(str: string): boolean {
   return /input\s[^{]+\{[^}]+\}/im.test(str);
 }
 
+/**
+ * Checks that string is EnumType SDL definition
+ * eg. `enum Sort { ASC DESC }`
+ */
 export function isEnumTypeDefinitionString(str: string): boolean {
   return /enum\s[^{]+\{[^}]+\}/im.test(str);
 }
 
+/**
+ * Checks that string is ScalarType SDL definition
+ * eg. `scalar UInt`
+ */
 export function isScalarTypeDefinitionString(str: string): boolean {
   return /scalar\s/im.test(str);
 }
 
+/**
+ * Checks that string is InterfaceType SDL definition
+ * eg. `interface User { name: String }`
+ */
 export function isInterfaceTypeDefinitionString(str: string): boolean {
   return /interface\s/im.test(str);
 }
 
+/**
+ * Checks that string is UnionType SDL definition
+ * eg. `union User = A | B`
+ */
 export function isUnionTypeDefinitionString(str: string): boolean {
   return /union\s/im.test(str);
 }
 
-export function isSomeOutputTypeComposer(type: any): boolean %checks {
+/**
+ * Check that provided TypeComposer is OutputType (Object, Scalar, Enum, Interface, Union).
+ * It may be wrapped in NonNull or List.
+ */
+export function isSomeOutputTypeComposer(type: any): type is ComposeOutputType<any> {
   return (
     type instanceof ObjectTypeComposer ||
     type instanceof InterfaceTypeComposer ||
@@ -185,7 +224,11 @@ export function isSomeOutputTypeComposer(type: any): boolean %checks {
   );
 }
 
-export function isSomeInputTypeComposer(type: any): boolean %checks {
+/**
+ * Check that provided TypeComposer is InputType (InputObject, Scalar, Enum).
+ * It may be wrapped in NonNull or List.
+ */
+export function isSomeInputTypeComposer(type: any): type is ComposeInputType {
   return (
     type instanceof InputTypeComposer ||
     type instanceof EnumTypeComposer ||
@@ -196,7 +239,7 @@ export function isSomeInputTypeComposer(type: any): boolean %checks {
   );
 }
 
-export function isComposeNamedType(type: any): boolean {
+export function isComposeNamedType(type: any): type is NamedTypeComposer<any> | GraphQLNamedType {
   return (
     isNamedType(type) ||
     type instanceof ObjectTypeComposer ||
@@ -208,7 +251,7 @@ export function isComposeNamedType(type: any): boolean {
   );
 }
 
-export function isComposeType(type: any): boolean {
+export function isComposeType(type: any): type is AnyTypeComposer<any> {
   return (
     isComposeNamedType(type) ||
     (Array.isArray(type) && isComposeType(type[0])) ||
@@ -220,7 +263,7 @@ export function isComposeType(type: any): boolean {
   );
 }
 
-export function isComposeOutputType(type: any): boolean %checks {
+export function isComposeOutputType(type: any): type is ComposeOutputTypeDefinition<any> {
   return (
     isOutputType(type) ||
     (Array.isArray(type) && isComposeOutputType(type[0])) ||
@@ -229,7 +272,7 @@ export function isComposeOutputType(type: any): boolean %checks {
   );
 }
 
-export function isComposeInputType(type: any): boolean %checks {
+export function isComposeInputType(type: any): type is ComposeInputTypeDefinition {
   return (
     isInputType(type) ||
     (Array.isArray(type) && isComposeInputType(type[0])) ||
@@ -239,7 +282,7 @@ export function isComposeInputType(type: any): boolean %checks {
 
 export type AnyType<TContext> = NamedTypeComposer<TContext> | GraphQLNamedType;
 
-export function isNamedTypeComposer(type: any): boolean %checks {
+export function isNamedTypeComposer(type: any): type is NamedTypeComposer<any> {
   return (
     type instanceof ObjectTypeComposer ||
     type instanceof InputTypeComposer ||
@@ -250,7 +293,7 @@ export function isNamedTypeComposer(type: any): boolean %checks {
   );
 }
 
-export function isTypeComposer(type: any): boolean %checks {
+export function isTypeComposer(type: any): type is AnyTypeComposer<any> {
   return (
     isNamedTypeComposer(type) ||
     type instanceof ListComposer ||
@@ -260,7 +303,7 @@ export function isTypeComposer(type: any): boolean %checks {
 }
 
 export function getGraphQLType(anyType: any): GraphQLType {
-  let type = (anyType: any);
+  let type = anyType;
 
   // extract type from ObjectTypeComposer, InputTypeComposer, EnumTypeComposer and Resolver
   if (type && isFunction(type.getType)) {
@@ -281,7 +324,7 @@ export function getComposeTypeName(type: any, sc: SchemaComposer<any>): string {
       return type;
     } else {
       // parse type name from `type Name { f: Int }`
-      const docNode = parse(type);
+      const docNode = parse(type) as any;
       if (
         docNode.definitions[0] &&
         docNode.definitions[0].name &&
@@ -293,10 +336,10 @@ export function getComposeTypeName(type: any, sc: SchemaComposer<any>): string {
 
     throw new Error(`Cannot get type name from string: ${inspect(type)}`);
   } else if (isFunction(type)) {
-    return getComposeTypeName((type: any)(sc), sc);
+    return getComposeTypeName((type as any)(sc), sc);
   } else {
     try {
-      const gqlType = getGraphQLType(type);
+      const gqlType = getGraphQLType(type) as any;
       if (typeof gqlType.name === 'string') {
         return gqlType.name;
       }
@@ -321,22 +364,22 @@ export function unwrapTC<TContext>(anyTC: AnyTypeComposer<TContext>): NamedTypeC
 }
 
 export function unwrapInputTC(inputTC: ComposeInputType): ComposeNamedInputType<any> {
-  return (unwrapTC(inputTC): any);
+  return unwrapTC(inputTC) as any;
 }
 
 export function unwrapOutputTC<TContext>(
   outputTC: ComposeOutputType<TContext>
 ): ComposeNamedOutputType<TContext> {
-  return (unwrapTC(outputTC): any);
+  return unwrapTC(outputTC) as any;
 }
 
 /**
- * @deprecated 8.0.0
+ * @deprecated Use `replaceTC()` function instead.
  */
 export function changeUnwrappedTC<TContext, T>(
   anyTC: T,
   cb: (tc: NamedTypeComposer<TContext>) => NamedTypeComposer<TContext>
-) {
+): T {
   deprecate('Please use `replaceTC()` function instead.');
   return replaceTC(anyTC, cb);
 }
@@ -361,10 +404,10 @@ export function changeUnwrappedTC<TContext, T>(
 export function replaceTC<T>(
   anyTC: T,
   replaceByTC:
-    | $ReadOnly<NamedTypeComposer<any>>
+    | Readonly<NamedTypeComposer<any>>
     | ((unwrappedTC: NamedTypeComposer<any>) => NamedTypeComposer<any>)
 ): T {
-  let tc = anyTC;
+  let tc = anyTC as any;
 
   const wrappers = [];
   while (
@@ -381,14 +424,14 @@ export function replaceTC<T>(
   }
 
   // call callback for TC
-  tc = isFunction(replaceByTC) ? replaceByTC((tc: any)) : replaceByTC;
+  tc = isFunction(replaceByTC) ? replaceByTC(tc as any) : replaceByTC;
 
   if (tc) {
     // wrap TypeComposer back
-    tc = wrappers.reduce((type: any, Wrapper) => new Wrapper(type), tc);
+    tc = wrappers.reduce((type: any, Wrapper: any) => new Wrapper(type), tc);
   }
 
-  return (tc: any);
+  return tc as any;
 }
 
 /**
@@ -412,15 +455,15 @@ export function unwrapTypeNameString(str: string): string {
 export function cloneTypeTo(
   type: AnyTypeComposer<any> | TypeAsString | GraphQLType,
   anotherSchemaComposer: SchemaComposer<any>,
-  cloneMap?: Map<any, any> = new Map()
+  cloneMap: Map<any, any> = new Map()
 ): AnyTypeComposer<any> | TypeAsString {
   if (cloneMap.has(type)) {
-    return (cloneMap.get(type): any);
+    return cloneMap.get(type) as any;
   } else if (typeof type === 'string') {
     return type;
   } else if (isComposeType(type)) {
     if (Array.isArray(type)) return type[0].cloneTo(anotherSchemaComposer, cloneMap);
-    else return (type: any).cloneTo(anotherSchemaComposer, cloneMap);
+    else return (type as any).cloneTo(anotherSchemaComposer, cloneMap);
   } else if (isType(type)) {
     // create new TC directly in new schema
     const tc = anotherSchemaComposer.typeMapper.convertGraphQLTypeToComposer(type);

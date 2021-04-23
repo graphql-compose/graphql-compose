@@ -52,7 +52,7 @@ export const BUILT_IN_DIRECTIVES: Array<GraphQLDirective>;
 export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer<TContext>> {
   public typeMapper: TypeMapper<TContext>;
   protected _schemaMustHaveTypes: Array<AnyType<TContext>>;
-  protected _directives: GraphQLDirective[];
+  public _directives: GraphQLDirective[];
   protected _description: string | null | undefined;
 
   /**
@@ -340,6 +340,11 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   public removeDirective(directive: GraphQLDirective): this;
 
   public getDirectives(): GraphQLDirective[];
+
+  /**
+   * This method is used in TypeMapper and does not throw error if directive absent
+   */
+  public _getDirective(name: string): GraphQLDirective | undefined;
 
   public getDirective(name: string): GraphQLDirective;
 

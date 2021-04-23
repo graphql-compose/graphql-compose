@@ -1,5 +1,3 @@
-// Flow
-
 /**
  * TemplateLiteral for removing leading spaces (prettifying) multiline messages.
  *
@@ -25,8 +23,11 @@
  *
  * @see https://github.com/dmnd/dedent
  */
-export function dedent(strings: string | Array<string>, ...values: Array<string>) {
-  // $FlowFixMe: Flow doesn't undestand .raw
+export function dedent(
+  strings: string | string[] | TemplateStringsArray,
+  ...values: string[]
+): string {
+  // @ts-ignore: doesn't understand .raw
   const raw = typeof strings === 'string' ? [strings] : strings.raw;
 
   // first, perform interpolation

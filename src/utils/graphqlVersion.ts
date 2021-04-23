@@ -1,4 +1,4 @@
-/* @flow strict */
+/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable global-require */
 
 export function getGraphqlVersion(): number {

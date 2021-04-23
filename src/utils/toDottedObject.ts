@@ -1,5 +1,3 @@
-/* @flow strict */
-
 /**
  * Convert object to dotted-key/value pair
  * { a: { b: { c: 1 }}} ->  { 'a.b.c': 1 }
@@ -13,12 +11,11 @@
  * @param {Array} path path array (internal)
  */
 export function toDottedObject(
-  obj: Object,
-  target?: Object = {},
-  path?: string[] = []
-): { [dottedPath: string]: mixed } {
-  /* eslint-disable */
-  Object.keys(obj).forEach(key => {
+  obj: Record<any, any>,
+  target: Record<any, any> = {},
+  path: string[] = []
+): Record<string, any> {
+  Object.keys(obj).forEach((key) => {
     if (Object(obj[key]) === obj[key]) {
       return toDottedObject(obj[key], target, path.concat(key));
     } else {
@@ -26,5 +23,4 @@ export function toDottedObject(
     }
   });
   return target;
-  /* eslint-enable */
 }
