@@ -800,7 +800,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   }
 
   /**
-   * This method used in TypeMapper and for fast parsing
+   * This method is used in TypeMapper and does not throw error if directive absent
    */
   _getDirective(name: string): ?GraphQLDirective {
     const directives = this.getDirectives();

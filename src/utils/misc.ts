@@ -1,13 +1,11 @@
-/* @flow strict */
 /* eslint-disable no-nested-ternary */
 
 import { isObject } from './is';
 import { pluralize } from './pluralize';
 import type { Thunk, ObjMap } from './definitions';
 
-export function resolveMaybeThunk<+T>(thingOrThunk: Thunk<T>): T {
-  // eslint-disable-line
-  return typeof thingOrThunk === 'function' ? (thingOrThunk: any)() : thingOrThunk;
+export function resolveMaybeThunk<T>(thingOrThunk: Thunk<T>): T {
+  return typeof thingOrThunk === 'function' ? (thingOrThunk as any)() : thingOrThunk;
 }
 
 export function camelCase(str: string): string {
@@ -30,7 +28,7 @@ export function clearName(str: string): string {
   return str.replace(/[^_a-zA-Z0-9]/g, '');
 }
 
-export function omit(obj: Object, keys: string | string[]) {
+export function omit(obj: Record<any, any>, keys: string | string[]): Record<any, any> {
   if (!obj) {
     return {};
   }
@@ -47,12 +45,12 @@ export function omit(obj: Object, keys: string | string[]) {
   return result;
 }
 
-export function only(obj: Object, keys: string | string[]) {
+export function only(obj: Record<any, any>, keys: string | string[]): Record<any, any> {
   if (!obj) {
     return {};
   }
 
-  const result = {};
+  const result = {} as any;
   if (Array.isArray(keys)) {
     keys.forEach((k) => {
       if ({}.hasOwnProperty.call(obj, k)) {
@@ -66,14 +64,14 @@ export function only(obj: Object, keys: string | string[]) {
   return result;
 }
 
-function inspectObject(value: Object): string {
+function inspectObject(value: Record<any, any>): string {
   let name;
   if (value && value.constructor && value.constructor.name) {
     name = value.constructor.name;
   }
 
   const props = `{ ${Object.keys(value)
-    .map((k) => `${k}: ${inspect((value: any)[k])}`)
+    .map((k) => `${k}: ${inspect((value as any)[k])}`)
     .join(', ')} }`;
 
   return name ? `${name}(${props})` : props;
@@ -82,10 +80,10 @@ function inspectObject(value: Object): string {
 /**
  * Used to print values in error messages.
  */
-export function inspect(value: mixed): string {
+export function inspect(value: unknown): string {
   return value && typeof value === 'object'
-    ? typeof value.inspect === 'function'
-      ? (value: any).inspect()
+    ? typeof (value as any).inspect === 'function'
+      ? (value as any).inspect()
       : Array.isArray(value)
       ? `[${value.map(inspect).join(', ')}]`
       : inspectObject(value)
@@ -127,9 +125,9 @@ export function mapEachKey<V, NewV, NonObjectValue>(
   callback: (value: V, key: string) => NewV
 ): ObjMap<NewV> | NonObjectValue {
   if (!isObject(obj)) return obj;
-  const result = {};
-  Object.keys((obj: any)).forEach((key) => {
-    result[key] = callback((obj: any)[key], key);
+  const result = {} as any;
+  Object.keys(obj as any).forEach((key) => {
+    result[key] = callback((obj as any)[key], key);
   });
   return result;
 }

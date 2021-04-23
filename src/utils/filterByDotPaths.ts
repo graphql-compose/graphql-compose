@@ -1,21 +1,21 @@
-/* @flow strict */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable no-param-reassign */
 
 import objectPath from 'object-path';
 
 type FilterOpts = {
-  hideFields: { [fieldPath: string]: string },
-  hideFieldsNote?: string,
+  hideFields: { [fieldPath: string]: string };
+  hideFieldsNote?: string;
 };
 
 type PathsFilter = string | string[];
 
 export function filterByDotPaths(
-  obj: Object,
-  pathsFilter: ?PathsFilter,
+  obj: Record<any, any>,
+  pathsFilter?: PathsFilter | null,
   opts?: FilterOpts
-): Object {
-  let result;
+): Record<any, any> {
+  let result: Record<any, any>;
 
   const paths = preparePathsFilter(pathsFilter);
   if (paths) {
@@ -28,7 +28,7 @@ export function filterByDotPaths(
   }
 
   if (opts && opts.hideFields) {
-    const hiddenFields = [];
+    const hiddenFields = [] as string[];
     const optsHideFields = opts.hideFields;
     Object.keys(optsHideFields).forEach((key) => {
       const msg = optsHideFields[key];
@@ -42,7 +42,7 @@ export function filterByDotPaths(
   return result;
 }
 
-export function preparePathsFilter(pathsFilter: ?PathsFilter): string[] | null {
+export function preparePathsFilter(pathsFilter: PathsFilter | null | undefined): string[] | null {
   if (!pathsFilter) return null;
   if (Array.isArray(pathsFilter)) return pathsFilter;
 
@@ -51,7 +51,7 @@ export function preparePathsFilter(pathsFilter: ?PathsFilter): string[] | null {
   return null;
 }
 
-export function hideComplexValue(val: any, msg?: string = 'was hidden'): string {
+export function hideComplexValue(val: any, msg: string = 'was hidden'): string {
   if (val === null || val === undefined) return val;
   const t = typeof val;
   if (t === 'boolean' || t === 'number') {
@@ -75,7 +75,10 @@ export function hideComplexValue(val: any, msg?: string = 'was hidden'): string 
   return t;
 }
 
-export function isPresentInDotFilter(name: string, pathsFilter: ?(string | string[])): boolean {
+export function isPresentInDotFilter(
+  name: string,
+  pathsFilter?: string | string[] | null
+): boolean {
   if (!pathsFilter) return false;
   if (Array.isArray(pathsFilter)) {
     for (let i = 0; i < pathsFilter.length; i++) {
@@ -91,7 +94,7 @@ export function isPresentInDotFilter(name: string, pathsFilter: ?(string | strin
 export function partialCloneSubpath(res: any, path: string[]) {
   if (!res) return;
 
-  let key = path.shift();
+  let key = path.shift() as any;
   const idx = parseInt(key, 10);
   key = idx >= 0 ? idx : key;
 
@@ -107,12 +110,12 @@ export function partialCloneSubpath(res: any, path: string[]) {
 }
 
 export function hideField(
-  result: Object,
+  result: Record<any, any>,
   key: string,
   msg?: string,
-  pathsFilter?: ?PathsFilter
+  pathsFilter?: PathsFilter | null
 ): string[] {
-  const hiddenFields = [];
+  const hiddenFields = [] as string[];
   const wildcardMatch = key.match(/(.*)\.\*$/);
   if (wildcardMatch) {
     const k = wildcardMatch[1];

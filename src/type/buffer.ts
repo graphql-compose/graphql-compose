@@ -1,8 +1,6 @@
-/* @flow strict */
-
 import { GraphQLScalarType, GraphQLError, Kind } from '../graphql';
 
-function coerceBuffer(value) {
+function coerceBuffer(value: Buffer) {
   if (!(value instanceof Buffer)) {
     throw new TypeError('Field error: value is not an instance of Buffer');
   }

@@ -1,5 +1,3 @@
-/* @flow strict */
-
 const rules = [
   [/(m)an$/gi, '$1en'],
   [/(pe)rson$/gi, '$1ople'],
@@ -25,7 +23,7 @@ const rules = [
   [/$/gi, 's'],
 ];
 
-const uncountables = [
+const uncountable = [
   'advice',
   'energy',
   'excretion',
@@ -56,9 +54,8 @@ const uncountables = [
 ];
 
 export function pluralize(str: string): string {
-  let found;
-  // eslint-disable-next-line
-  if (!~uncountables.indexOf(str.toLowerCase())) {
+  let found: any;
+  if (!~uncountable.indexOf(str.toLowerCase())) {
     found = rules.filter((rule) => str.match(rule[0]));
     if (found[0]) {
       return str.replace(found[0][0], found[0][1]);

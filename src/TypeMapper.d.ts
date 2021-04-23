@@ -1,4 +1,4 @@
-import { GraphQLType } from 'graphql';
+import { DirectiveNode, GraphQLType } from 'graphql';
 import { SchemaComposer } from './SchemaComposer';
 import {
   InputTypeComposerFieldConfig,
@@ -21,7 +21,7 @@ import {
   InterfaceTypeComposerDefinition,
   InterfaceTypeComposerThunked,
 } from './InterfaceTypeComposer';
-import { ThunkWithSchemaComposer } from './utils/definitions';
+import { ExtensionsDirective, ThunkWithSchemaComposer } from './utils/definitions';
 import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
 import {
@@ -130,6 +130,8 @@ declare class TypeMapper<TContext> {
   public parseTypesFromString(str: string): TypeStorage<string, NamedTypeComposer<TContext>>;
 
   public getBuiltInType(name: string): ScalarTypeComposer<TContext> | undefined;
+
+  public parseDirectives(directives: ReadonlyArray<DirectiveNode>): Array<ExtensionsDirective>;
 
   /**
    * -----------------------------------------------
