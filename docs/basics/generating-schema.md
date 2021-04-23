@@ -3,11 +3,11 @@ id: generating-schema
 title: Generating Schema
 ---
 
-`SchemaComposer` is a builder of `GraphQLSchema` object. Obtained Schema via `buildSchema()` method may be used in `express-graphql`, `apollo-server` and other libs which uses `GraphQL.js` under the hood for query execution at runtime.
+`SchemaComposer` allows to build a `GraphQLSchema` instance. The Schema obtained calling the `buildSchema()` method may be used in `express-graphql`, `apollo-server` and other libs that use `GraphQL.js` under the hood for query execution at runtime.
 
 ## Create Schema
 
-`SchemaComposer` provides basic root types `Query`, `Mutation`, `Subscription`. You must add fields at least to one of these types, otherwise Schema will not have sense and cannot be build.
+`SchemaComposer` provides three basic root types: `Query`, `Mutation` and `Subscription`. It's imperative to initialize at least one of those, otherwise our Schema would not build.
 
 ```js
 import { schemaComposer } from 'graphql-compose';
@@ -39,7 +39,7 @@ export default schemaComposer.buildSchema(); // exports GraphQLSchema
 
 ## Restrict access
 
-GraphQL.js does not provide any access rights checks. You should it do manually in `resolve` methods. With `graphql-compose` you may do it via wrapping Resolvers:
+GraphQL.js does not provide any access rights checks, so a developer would need to implemented them manually in the `resolve` methods. With `graphql-compose` it can be done by wrapping Resolvers:
 
 ```js
 // rootMutation.js
@@ -72,7 +72,7 @@ function adminAccess(resolvers) {
 }
 ```
 
-For getting `isAdmin` property from `context` you must define it in `express-graphql` or `apollo-server`:
+The `isAdmin` property from the above example must be defined in `express-graphql` or `apollo-server`, in order to retrieve it from `context`:
 
 ```js
 import express from 'express';
@@ -103,13 +103,13 @@ app.listen(PORT, () => {
 
 ## Multiple Schemas
 
-In some complex scenarios you may need to have several GraphQL Schemas in one app. `Graphql-compose` by default exports following classes/instances for single schema mode:
+In some complex scenarios we may need several GraphQL Schemas within a single app. `graphql-compose` by default exports the following classes/instances for single schema mode:
 
 ```js
 import { schemaComposer } from 'graphql-compose';
 ```
 
-But for multi-schema mode you need to import class `SchemaComposer` (starts from upper-case letter `S`) and create instances from it:
+The equivalent class for multi-schema mode is called `SchemaComposer` (with a capital `S`). Unlike with single-schema where we have a static class, `SchemaComposer` has a constructor and allows creating multiple instances:
 
 ```js
 import { SchemaComposer } from 'graphql-compose';
@@ -127,4 +127,4 @@ const ScalarTypeComposer2 = schemaComposer2.createScalarTC(...);
 const Resolver2 = schemaComposer2.createResolver(...);
 ```
 
-Types created via `ObjectTypeComposer1` and `ObjectTypeComposer2` will not be visible to each other. So may have different definitions for types with the same name.
+Types created via `ObjectTypeComposer1` and `ObjectTypeComposer2` will not be visible to each other: name-clashing and overriding would not be isssues, and multiple definitions for types with the same name are allowed, as long as they live in separate `SchemaComposer` instances.
