@@ -61,7 +61,7 @@ export function dedent(
   });
 
   if (mindent !== null) {
-    const m = mindent; // appease Flow
+    const m = mindent;
     result = lines.map((l) => (l[0] === ' ' ? l.slice(m) : l)).join('\n');
   }
 

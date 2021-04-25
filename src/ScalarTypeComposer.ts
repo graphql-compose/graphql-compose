@@ -1,4 +1,3 @@
-/* @flow strict */
 /* eslint-disable no-use-before-define */
 
 import { GraphQLScalarType, valueFromASTUntyped } from './graphql';
@@ -17,26 +16,36 @@ import { isTypeNameString } from './utils/typeHelpers';
 import type { Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
 import { inspect } from './utils/misc';
 import { graphqlVersion } from './utils/graphqlVersion';
-import { printScalar, type SchemaPrinterOptions } from './utils/schemaPrinter';
+import { printScalar, SchemaPrinterOptions } from './utils/schemaPrinter';
 import { getScalarTypeDefinitionNode } from './utils/definitionNode';
 
 export type ScalarTypeComposerDefinition =
   | TypeAsString
-  | $ReadOnly<ScalarTypeComposerAsObjectDefinition>
-  | $ReadOnly<GraphQLScalarType>;
+  | Readonly<ScalarTypeComposerAsObjectDefinition>
+  | Readonly<GraphQLScalarType>;
 
 export type ScalarTypeComposerAsObjectDefinition = GraphQLScalarTypeConfig<any, any> & {
-  +extensions?: Extensions,
+  extensions?: Extensions;
 };
 
+/**
+ * `ScalarTypeComposer` is a class which helps to create and modify `GraphQLScalarType`.
+ */
 export class ScalarTypeComposer<TContext> {
   schemaComposer: SchemaComposer<TContext>;
   _gqType: GraphQLScalarType;
-  _gqcExtensions: Extensions | void;
+  _gqcExtensions: Extensions | undefined;
+  // @ts-ignore due to initialization via setter
   _gqcSerialize: GraphQLScalarSerializer<any>;
+  // @ts-ignore due to initialization via setter
   _gqcParseValue: GraphQLScalarValueParser<any>;
+  // @ts-ignore due to initialization via setter
   _gqcParseLiteral: GraphQLScalarLiteralParser<any>;
 
+  /**
+   * Create `ScalarTypeComposer` with adding it by name to the `SchemaComposer`.
+   * This type became available in SDL by its name.
+   */
   static create<TCtx>(
     typeDef: ScalarTypeComposerDefinition,
     schemaComposer: SchemaComposer<TCtx>
@@ -56,6 +65,10 @@ export class ScalarTypeComposer<TContext> {
     return stc;
   }
 
+  /**
+   * Create `ScalarTypeComposer` without adding it to the `SchemaComposer`.
+   * This method may be useful in plugins, when you need to create type temporary.
+   */
   static createTemp<TCtx>(
     typeDef: ScalarTypeComposerDefinition,
     schemaComposer?: SchemaComposer<TCtx>
@@ -86,10 +99,10 @@ export class ScalarTypeComposer<TContext> {
       STC = new ScalarTypeComposer(typeDef, sc);
     } else if (isObject(typeDef)) {
       const type = new GraphQLScalarType({
-        ...(typeDef: any),
+        ...(typeDef as any),
       });
       STC = new ScalarTypeComposer(type, sc);
-      STC._gqcExtensions = (typeDef: any).extensions || {};
+      STC._gqcExtensions = typeDef.extensions || {};
     } else {
       throw new Error(
         `You should provide GraphQLScalarTypeConfig or string with scalar name or SDL. Provided:\n${inspect(
@@ -101,10 +114,7 @@ export class ScalarTypeComposer<TContext> {
     return STC;
   }
 
-  constructor(
-    graphqlType: GraphQLScalarType,
-    schemaComposer: SchemaComposer<TContext>
-  ): ScalarTypeComposer<TContext> {
+  constructor(graphqlType: GraphQLScalarType, schemaComposer: SchemaComposer<TContext>) {
     if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `new ScalarTypeComposer(GraphQLScalarType, SchemaComposer)`'
@@ -130,9 +140,9 @@ export class ScalarTypeComposer<TContext> {
       parseValue = this._gqType.parseValue;
       parseLiteral = this._gqType.parseLiteral;
     } else {
-      serialize = (this._gqType: any)._scalarConfig.serialize;
-      parseValue = (this._gqType: any)._scalarConfig.parseValue;
-      parseLiteral = (this._gqType: any)._scalarConfig.parseLiteral;
+      serialize = (this._gqType as any)._scalarConfig.serialize;
+      parseValue = (this._gqType as any)._scalarConfig.parseValue;
+      parseLiteral = (this._gqType as any)._scalarConfig.parseLiteral;
     }
     this.setSerialize(serialize);
     this.setParseValue(parseValue);
@@ -144,36 +154,36 @@ export class ScalarTypeComposer<TContext> {
         this.schemaComposer.typeMapper.parseDirectives(graphqlType?.astNode?.directives)
       );
     }
-
-    // alive proper Flow type casting in autosuggestions for class with Generics
-    /* :: return this; */
   }
 
   // -----------------------------------------------
   // Serialize methods
   // -----------------------------------------------
 
-  setSerialize(fn: GraphQLScalarSerializer<any>) {
+  setSerialize(fn: GraphQLScalarSerializer<any>): this {
     this._gqcSerialize = fn;
+    return this;
   }
 
   getSerialize(): GraphQLScalarSerializer<any> {
     return this._gqcSerialize;
   }
 
-  setParseValue(fn: ?GraphQLScalarValueParser<any>) {
+  setParseValue(fn: GraphQLScalarValueParser<any> | undefined): this {
     this._gqcParseValue = fn || ((value) => value);
+    return this;
   }
 
-  getParseValue(): GraphQLScalarValueParser<any> | void {
+  getParseValue(): GraphQLScalarValueParser<any> | undefined {
     return this._gqcParseValue;
   }
 
-  setParseLiteral(fn: ?GraphQLScalarLiteralParser<any>) {
+  setParseLiteral(fn: GraphQLScalarLiteralParser<any> | undefined): this {
     this._gqcParseLiteral = fn || valueFromASTUntyped;
+    return this;
   }
 
-  getParseLiteral(): GraphQLScalarLiteralParser<any> | void {
+  getParseLiteral(): GraphQLScalarLiteralParser<any> | undefined {
     return this._gqcParseLiteral;
   }
 
@@ -188,8 +198,8 @@ export class ScalarTypeComposer<TContext> {
       this._gqType.parseValue = this._gqcParseValue;
       this._gqType.parseLiteral = this._gqcParseLiteral;
     } else {
-      (this._gqType: any)._scalarConfig = {
-        ...(this._gqType: any)._scalarConfig,
+      (this._gqType as any)._scalarConfig = {
+        ...(this._gqType as any)._scalarConfig,
         serialize: this._gqcSerialize,
         parseValue: this._gqcParseValue,
         parseLiteral: this._gqcParseLiteral,
@@ -240,7 +250,7 @@ export class ScalarTypeComposer<TContext> {
     return this._gqType.name;
   }
 
-  setTypeName(name: string): ScalarTypeComposer<TContext> {
+  setTypeName(name: string): this {
     this._gqType.name = name;
     this.schemaComposer.add(this);
     return this;
@@ -250,7 +260,7 @@ export class ScalarTypeComposer<TContext> {
     return this._gqType.description || '';
   }
 
-  setDescription(description: string): ScalarTypeComposer<TContext> {
+  setDescription(description: string): this {
     this._gqType.description = description;
     return this;
   }
@@ -259,14 +269,14 @@ export class ScalarTypeComposer<TContext> {
     return this._gqType.specifiedByUrl;
   }
 
-  setSpecifiedByUrl(url: string | void | null): ScalarTypeComposer<TContext> {
-    this._gqType.specifiedByUrl = url;
+  setSpecifiedByUrl(url: string | void | null): this {
+    (this._gqType as any).specifiedByUrl = url;
     return this;
   }
 
   /**
    * You may clone this type with a new provided name as string.
-   * Or you may provide a new TypeComposer which will get all clonned
+   * Or you may provide a new TypeComposer which will get all cloned
    * settings from this type.
    */
   clone(newTypeNameOrTC: string | ScalarTypeComposer<any>): ScalarTypeComposer<TContext> {
@@ -289,8 +299,36 @@ export class ScalarTypeComposer<TContext> {
     return cloned;
   }
 
+  /**
+   * Copy this scalar type to another SchemaComposer.
+   *
+   * Scalar types cannot be cloned.
+   * It will be very strange if we clone for example Boolean or Date types.
+   *
+   * This methods exists for compatibility with other TypeComposers.
+   */
+  cloneTo(
+    anotherSchemaComposer: SchemaComposer<any>,
+    cloneMap: Map<any, any> = new Map()
+  ): ScalarTypeComposer<any> {
+    if (!anotherSchemaComposer) {
+      throw new Error('You should provide SchemaComposer for ObjectTypeComposer.cloneTo()');
+    }
+
+    if (cloneMap.has(this)) return cloneMap.get(this);
+    // scalar cannot be cloned, so use the same instance
+    cloneMap.set(this, this);
+
+    // copy same type instance
+    if (!anotherSchemaComposer.has(this.getTypeName())) {
+      anotherSchemaComposer.add(this);
+    }
+
+    return this;
+  }
+
   merge(type: GraphQLScalarType | ScalarTypeComposer<any>): ScalarTypeComposer<TContext> {
-    let tc: ?ScalarTypeComposer<any>;
+    let tc: ScalarTypeComposer<any> | undefined;
     if (type instanceof GraphQLScalarType) {
       tc = ScalarTypeComposer.createTemp(type, this.schemaComposer);
     } else if (type instanceof ScalarTypeComposer) {
@@ -324,26 +362,26 @@ export class ScalarTypeComposer<TContext> {
     }
   }
 
-  setExtensions(extensions: Extensions): ScalarTypeComposer<TContext> {
+  setExtensions(extensions: Extensions): this {
     this._gqcExtensions = extensions;
     return this;
   }
 
-  extendExtensions(extensions: Extensions): ScalarTypeComposer<TContext> {
+  extendExtensions(extensions: Extensions): this {
     const current = this.getExtensions();
     this.setExtensions({
       ...current,
-      ...(extensions: any),
+      ...extensions,
     });
     return this;
   }
 
-  clearExtensions(): ScalarTypeComposer<TContext> {
+  clearExtensions(): this {
     this.setExtensions({});
     return this;
   }
 
-  getExtension(extensionName: string): ?any {
+  getExtension(extensionName: string): unknown {
     const extensions = this.getExtensions();
     return extensions[extensionName];
   }
@@ -353,14 +391,14 @@ export class ScalarTypeComposer<TContext> {
     return extensionName in extensions;
   }
 
-  setExtension(extensionName: string, value: any): ScalarTypeComposer<TContext> {
+  setExtension(extensionName: string, value: unknown): this {
     this.extendExtensions({
       [extensionName]: value,
     });
     return this;
   }
 
-  removeExtension(extensionName: string): ScalarTypeComposer<TContext> {
+  removeExtension(extensionName: string): this {
     const extensions = { ...this.getExtensions() };
     delete extensions[extensionName];
     this.setExtensions(extensions);
@@ -379,7 +417,7 @@ export class ScalarTypeComposer<TContext> {
     return [];
   }
 
-  setDirectives(directives: Array<ExtensionsDirective>): ScalarTypeComposer<TContext> {
+  setDirectives(directives: Array<ExtensionsDirective>): this {
     this.setExtension('directives', directives);
     return this;
   }
@@ -388,13 +426,13 @@ export class ScalarTypeComposer<TContext> {
     return this.getDirectives().map((d) => d.name);
   }
 
-  getDirectiveByName(directiveName: string): ?DirectiveArgs {
+  getDirectiveByName(directiveName: string): DirectiveArgs | undefined {
     const directive = this.getDirectives().find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
   }
 
-  getDirectiveById(idx: number): ?DirectiveArgs {
+  getDirectiveById(idx: number): DirectiveArgs | undefined {
     const directive = this.getDirectives()[idx];
     if (!directive) return undefined;
     return directive.args;
@@ -411,33 +449,5 @@ export class ScalarTypeComposer<TContext> {
    */
   toSDL(opts?: SchemaPrinterOptions): string {
     return printScalar(this.getType(), opts);
-  }
-
-  /**
-   * Copy this scalar type to another SchemaComposer.
-   *
-   * Scalar types cannot be cloned.
-   * It will be very strange if we clone for example Boolean or Date types.
-   *
-   * This methods exists for compatibility with other TypeComposers.
-   */
-  cloneTo(
-    anotherSchemaComposer: SchemaComposer<any>,
-    cloneMap?: Map<any, any> = new Map()
-  ): ScalarTypeComposer<any> {
-    if (!anotherSchemaComposer) {
-      throw new Error('You should provide SchemaComposer for ObjectTypeComposer.cloneTo()');
-    }
-
-    if (cloneMap.has(this)) return (cloneMap.get(this): any);
-    // scalar cannot be cloned, so use the same instance
-    cloneMap.set(this, this);
-
-    // copy same type instance
-    if (!anotherSchemaComposer.has(this.getTypeName())) {
-      anotherSchemaComposer.add(this);
-    }
-
-    return this;
   }
 }

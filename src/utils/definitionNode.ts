@@ -1,5 +1,4 @@
 /* eslint-disable consistent-return */
-/* @flow strict */
 
 /**
  * For reference see https://github.com/graphql/graphql-js/blob/master/src/language/ast.js

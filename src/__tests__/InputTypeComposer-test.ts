@@ -290,7 +290,6 @@ describe('InputTypeComposer', () => {
           description: 'this is field #3',
           extensions: { second: true },
         });
-        // $FlowFixMe
         expect(itc.getFieldConfig('input3').extensions).toEqual({
           first: true,
           second: true,
