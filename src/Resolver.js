@@ -1,4 +1,3 @@
-/* @flow strict */
 /* eslint-disable no-use-before-define, no-restricted-syntax */
 
 import objectPath from 'object-path';
@@ -101,8 +100,6 @@ export type ResolverSortArgFn<TSource, TContext, TArgs = any> = (
 export type ResolverSortArgConfig<TSource, TContext, TArgs = any> = {
   name: string,
   sortTypeNameFallback?: string,
-  // value also can be an `Object`, but flow does not understande union with object and function
-  // see https://github.com/facebook/flow/issues/1948
   value:
     | { [key: string]: any }
     | ResolverSortArgFn<TSource, TContext, TArgs>
@@ -188,9 +185,6 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     if (opts.resolve) {
       this.resolve = opts.resolve;
     }
-
-    // alive proper Flow type casting in autosuggestions for class with Generics
-    /* :: return this; */
   }
 
   // -----------------------------------------------
@@ -880,7 +874,6 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     const self: Resolver<TSource, TContext, TArgs> = this;
     for (const key in self) {
       if (self.hasOwnProperty(key)) {
-        // $FlowFixMe
         oldOpts[key] = self[key];
       }
     }

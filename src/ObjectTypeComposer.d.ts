@@ -206,13 +206,13 @@ export type ObjectTypeComposerThunked<TReturn, TContext> =
 export class ObjectTypeComposer<TSource = any, TContext = any> {
   public schemaComposer: SchemaComposer<TContext>;
   protected _gqType: GraphQLObjectType;
-  protected _gqcInputTypeComposer: void | InputTypeComposer<TContext>;
-  protected _gqcResolvers: void | Map<string, Resolver<TSource, TContext>>;
-  protected _gqcGetRecordIdFn: void | ObjectTypeComposerGetRecordIdFn<TSource, TContext>;
-  protected _gqcRelations: void | ObjectTypeComposerRelationMap<TSource, TContext>;
+  protected _gqcInputTypeComposer: undefined | InputTypeComposer<TContext>;
+  protected _gqcResolvers: undefined | Map<string, Resolver<TSource, TContext>>;
+  protected _gqcGetRecordIdFn: undefined | ObjectTypeComposerGetRecordIdFn<TSource, TContext>;
+  protected _gqcRelations: undefined | ObjectTypeComposerRelationMap<TSource, TContext>;
   _gqcFields: ObjectTypeComposerFieldConfigMap<TSource, TContext>;
   protected _gqcInterfaces: Array<InterfaceTypeComposerThunked<TSource, TContext>>;
-  protected _gqcExtensions: void | Extensions;
+  protected _gqcExtensions: undefined | Extensions;
 
   /**
    * Create `ObjectTypeComposer` with adding it by name to the `SchemaComposer`.

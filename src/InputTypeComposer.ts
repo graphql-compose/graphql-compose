@@ -1,15 +1,13 @@
-/* @flow strict */
 /* eslint-disable no-use-before-define */
 
 import { GraphQLInputObjectType } from './graphql';
 import { resolveMaybeThunk, upperFirst, inspect, mapEachKey } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
-import { typeByPath, type TypeInPath } from './utils/typeByPath';
+import { typeByPath, TypeInPath } from './utils/typeByPath';
 import type {
   Thunk,
   ThunkWithSchemaComposer,
   ObjMap,
-  ObjMapReadOnly,
   Extensions,
   ExtensionsDirective,
   DirectiveArgs,
@@ -31,61 +29,64 @@ import {
   unwrapInputTC,
   isTypeNameString,
   cloneTypeTo,
-  type NamedTypeComposer,
-  type ComposeInputType,
-  type ComposeNamedInputType,
-  type ComposeInputTypeDefinition,
+  NamedTypeComposer,
+  ComposeInputType,
+  ComposeNamedInputType,
+  ComposeInputTypeDefinition,
 } from './utils/typeHelpers';
-import { printInputObject, type SchemaPrinterOptions } from './utils/schemaPrinter';
+import { printInputObject, SchemaPrinterOptions } from './utils/schemaPrinter';
 import { getInputObjectTypeDefinitionNode } from './utils/definitionNode';
 
 export type InputTypeComposerDefinition =
   | TypeAsString
   | TypeDefinitionString
   | InputTypeComposerAsObjectDefinition
-  | $ReadOnly<GraphQLInputObjectType>;
+  | Readonly<GraphQLInputObjectType>;
 
 export type InputTypeComposerAsObjectDefinition = {
-  name: string,
-  fields: ThunkWithSchemaComposer<InputTypeComposerFieldConfigMapDefinition, SchemaComposer<any>>,
-  description?: null | string,
-  extensions?: Extensions,
+  name: string;
+  fields: ThunkWithSchemaComposer<InputTypeComposerFieldConfigMapDefinition, SchemaComposer<any>>;
+  description?: null | string;
+  extensions?: Extensions;
 };
 
 export type InputTypeComposerFieldConfigMap = ObjMap<InputTypeComposerFieldConfig>;
-export type InputTypeComposerFieldConfigMapDefinition = ObjMapReadOnly<InputTypeComposerFieldConfigDefinition>;
+export type InputTypeComposerFieldConfigMapDefinition = ObjMap<InputTypeComposerFieldConfigDefinition>;
 
 export type InputTypeComposerFieldConfigDefinition =
   | InputTypeComposerFieldConfigAsObjectDefinition
   | ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<any>>;
 
 export type InputTypeComposerFieldConfigAsObjectDefinition = {
-  type: ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<any>>,
-  defaultValue?: any,
-  description?: string | null,
-  extensions?: Extensions,
-  [key: string]: any,
+  type: ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<any>>;
+  defaultValue?: unknown;
+  description?: string | null;
+  extensions?: Extensions | null;
+  [key: string]: unknown;
 };
 
 export type InputTypeComposerFieldConfig = {
-  type: ComposeInputType,
-  defaultValue?: any,
-  description?: string | null,
-  astNode?: InputValueDefinitionNode | null,
-  extensions?: Extensions,
-  [key: string]: any,
+  type: ComposeInputType;
+  defaultValue?: unknown;
+  description?: string | null;
+  astNode?: InputValueDefinitionNode | null;
+  extensions?: Extensions;
+  [key: string]: unknown;
 };
 
 export type InputTypeComposerThunked<TContext> =
   | InputTypeComposer<TContext>
   | ThunkComposer<InputTypeComposer<TContext>, GraphQLInputType>;
 
-export class InputTypeComposer<TContext> {
+export class InputTypeComposer<TContext = any> {
   schemaComposer: SchemaComposer<TContext>;
   _gqType: GraphQLInputObjectType;
   _gqcFields: InputTypeComposerFieldConfigMap;
-  _gqcExtensions: Extensions | null;
+  _gqcExtensions?: Extensions;
 
+  /**
+   * Create `InputTypeComposer` with adding it by name to the `SchemaComposer`.
+   */
   static create<TCtx>(
     typeDef: InputTypeComposerDefinition,
     schemaComposer: SchemaComposer<TCtx>
@@ -105,6 +106,9 @@ export class InputTypeComposer<TContext> {
     return itc;
   }
 
+  /**
+   * Create `InputTypeComposer` without adding it to the `SchemaComposer`. This method may be useful in plugins, when you need to create type temporary.
+   */
   static createTemp<TCtx>(
     typeDef: InputTypeComposerDefinition,
     schemaComposer?: SchemaComposer<TCtx>
@@ -141,14 +145,14 @@ export class InputTypeComposer<TContext> {
         fields: () => ({}),
       });
       ITC = new InputTypeComposer(type, sc);
-      const fields = (typeDef: any).fields;
+      const fields = (typeDef as any).fields;
       if (isFunction(fields)) {
         // `convertInputFieldMapToConfig` helps to solve hoisting problems
         // rewrap fields `() => { f1: { type: A } }` -> `{ f1: { type: () => A } }`
         ITC.addFields(convertInputFieldMapToConfig(fields, sc));
       }
       if (isObject(fields)) ITC.addFields(fields);
-      ITC._gqcExtensions = (typeDef: any).extensions || {};
+      ITC._gqcExtensions = typeDef?.extensions || {};
     } else {
       throw new Error(
         `You should provide InputObjectConfig or string with type name to InputTypeComposer.create(typeDef). Provided:\n${inspect(
@@ -160,10 +164,7 @@ export class InputTypeComposer<TContext> {
     return ITC;
   }
 
-  constructor(
-    graphqlType: GraphQLInputObjectType,
-    schemaComposer: SchemaComposer<TContext>
-  ): InputTypeComposer<TContext> {
+  constructor(graphqlType: GraphQLInputObjectType, schemaComposer: SchemaComposer<TContext>) {
     if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `new InputTypeComposer(GraphQLInputType, SchemaComposer)`'
@@ -182,11 +183,14 @@ export class InputTypeComposer<TContext> {
     this.schemaComposer.set(graphqlType.name, this);
 
     if (graphqlVersion >= 14) {
-      this._gqcFields = convertInputFieldMapToConfig(this._gqType._fields, this.schemaComposer);
+      this._gqcFields = convertInputFieldMapToConfig(
+        (this._gqType as any)._fields,
+        this.schemaComposer
+      );
     } else {
-      const fields: Thunk<GraphQLInputFieldConfigMap> = (this._gqType: any)._typeConfig.fields;
+      const fields: Thunk<GraphQLInputFieldConfigMap> = (this._gqType as any)._typeConfig.fields;
       this._gqcFields = this.schemaComposer.typeMapper.convertInputFieldConfigMap(
-        (resolveMaybeThunk(fields) || {}: any),
+        (resolveMaybeThunk(fields) as any) || {},
         this.getTypeName()
       );
     }
@@ -197,9 +201,6 @@ export class InputTypeComposer<TContext> {
         this.schemaComposer.typeMapper.parseDirectives(graphqlType?.astNode?.directives)
       );
     }
-
-    // alive proper Flow type casting in autosuggestions for class with Generics
-    /* :: return this; */
   }
 
   // -----------------------------------------------
@@ -218,7 +219,7 @@ export class InputTypeComposer<TContext> {
     return !!this._gqcFields[fieldName];
   }
 
-  setFields(fields: InputTypeComposerFieldConfigMapDefinition): InputTypeComposer<TContext> {
+  setFields(fields: InputTypeComposerFieldConfigMapDefinition): this {
     this._gqcFields = {};
     Object.keys(fields).forEach((name) => {
       this.setField(name, fields[name]);
@@ -226,12 +227,9 @@ export class InputTypeComposer<TContext> {
     return this;
   }
 
-  setField(
-    fieldName: string,
-    fieldConfig: InputTypeComposerFieldConfigDefinition
-  ): InputTypeComposer<TContext> {
+  setField(fieldName: string, fieldConfig: InputTypeComposerFieldConfigDefinition): this {
     this._gqcFields[fieldName] = isFunction(fieldConfig)
-      ? (fieldConfig: any)
+      ? (fieldConfig as any)
       : this.schemaComposer.typeMapper.convertInputFieldConfig(
           fieldConfig,
           fieldName,
@@ -243,7 +241,7 @@ export class InputTypeComposer<TContext> {
   /**
    * Add new fields or replace existed in a GraphQL type
    */
-  addFields(newFields: InputTypeComposerFieldConfigMapDefinition): InputTypeComposer<TContext> {
+  addFields(newFields: InputTypeComposerFieldConfigMapDefinition): this {
     Object.keys(newFields).forEach((name) => {
       this.setField(name, newFields[name]);
     });
@@ -253,13 +251,15 @@ export class InputTypeComposer<TContext> {
   /**
    * Add new fields or replace existed (where field name may have dots)
    */
-  addNestedFields(
-    newFields: InputTypeComposerFieldConfigMapDefinition
-  ): InputTypeComposer<TContext> {
+  addNestedFields(newFields: InputTypeComposerFieldConfigMapDefinition): this {
     Object.keys(newFields).forEach((fieldName) => {
       const fc = newFields[fieldName];
       const names = fieldName.split('.');
       const name = names.shift();
+
+      if (!name) {
+        throw new Error(`Type ${this.getTypeName()} has invalid field name: ${fieldName}`);
+      }
 
       if (names.length === 0) {
         // single field
@@ -290,8 +290,7 @@ export class InputTypeComposer<TContext> {
     // In most cases FieldConfig is an object,
     // but for solving hoisting problems it's quite good to wrap it in function.
     if (isFunction(this._gqcFields[fieldName])) {
-      // $FlowFixMe
-      const unwrappedFieldConfig = this._gqcFields[fieldName](this.schemaComposer);
+      const unwrappedFieldConfig = (this._gqcFields as any)[fieldName](this.schemaComposer);
       this.setField(fieldName, unwrappedFieldConfig);
     }
 
@@ -314,11 +313,14 @@ export class InputTypeComposer<TContext> {
    *     removeField(['field1', 'field2']); // remove 2 fields
    *     removeField('field1.subField1'); // remove 1 nested field
    */
-  removeField(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
+  removeField(fieldNameOrArray: string | string[]): this {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     fieldNames.forEach((fieldName) => {
       const names = fieldName.split('.');
       const name = names.shift();
+
+      if (!name) return;
+
       if (names.length === 0) {
         // single field
         delete this._gqcFields[name];
@@ -336,7 +338,7 @@ export class InputTypeComposer<TContext> {
     return this;
   }
 
-  removeOtherFields(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
+  removeOtherFields(fieldNameOrArray: string | string[]): this {
     const keepFieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     Object.keys(this._gqcFields).forEach((fieldName) => {
       if (keepFieldNames.indexOf(fieldName) === -1) {
@@ -348,8 +350,8 @@ export class InputTypeComposer<TContext> {
 
   extendField(
     fieldName: string,
-    partialFieldConfig: $Shape<InputTypeComposerFieldConfigAsObjectDefinition>
-  ): InputTypeComposer<TContext> {
+    partialFieldConfig: Partial<InputTypeComposerFieldConfigAsObjectDefinition>
+  ): this {
     let prevFieldConfig;
     try {
       prevFieldConfig = this.getField(fieldName);
@@ -361,17 +363,17 @@ export class InputTypeComposer<TContext> {
 
     this.setField(fieldName, {
       ...prevFieldConfig,
-      ...(partialFieldConfig: any),
+      ...partialFieldConfig,
       extensions: {
-        ...((prevFieldConfig.extensions: any) || {}),
+        ...(prevFieldConfig.extensions || {}),
         ...(partialFieldConfig.extensions || {}),
       },
     });
     return this;
   }
 
-  reorderFields(names: string[]): InputTypeComposer<TContext> {
-    const orderedFields = {};
+  reorderFields(names: string[]): this {
+    const orderedFields = {} as InputTypeComposerFieldConfigMap;
     const fields = this._gqcFields;
     names.forEach((name) => {
       if (fields[name]) {
@@ -385,10 +387,10 @@ export class InputTypeComposer<TContext> {
 
   getFieldConfig(fieldName: string): GraphQLInputFieldConfig {
     const { type, ...rest } = this.getField(fieldName);
-    return ({
+    return {
       type: type.getType(),
-      ...(rest: any),
-    }: any);
+      ...rest,
+    };
   }
 
   getFieldType(fieldName: string): GraphQLInputType {
@@ -443,7 +445,7 @@ export class InputTypeComposer<TContext> {
     return this.getField(fieldName).type instanceof NonNullComposer;
   }
 
-  makeFieldNonNull(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
+  makeFieldNonNull(fieldNameOrArray: string | string[]): this {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
@@ -454,12 +456,14 @@ export class InputTypeComposer<TContext> {
     return this;
   }
 
-  // alias for makeFieldNonNull()
-  makeRequired(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
+  /**
+   * An alias for `makeFieldNonNull()`
+   */
+  makeRequired(fieldNameOrArray: string | string[]): this {
     return this.makeFieldNonNull(fieldNameOrArray);
   }
 
-  makeFieldNullable(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
+  makeFieldNullable(fieldNameOrArray: string | string[]): this {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
@@ -470,7 +474,10 @@ export class InputTypeComposer<TContext> {
     return this;
   }
 
-  makeOptional(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
+  /**
+   * An alias for `makeFieldNullable()`
+   */
+  makeOptional(fieldNameOrArray: string | string[]): this {
     return this.makeFieldNullable(fieldNameOrArray);
   }
 
@@ -482,7 +489,7 @@ export class InputTypeComposer<TContext> {
     );
   }
 
-  makeFieldPlural(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
+  makeFieldPlural(fieldNameOrArray: string | string[]): this {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
@@ -493,7 +500,7 @@ export class InputTypeComposer<TContext> {
     return this;
   }
 
-  makeFieldNonPlural(fieldNameOrArray: string | string[]): InputTypeComposer<TContext> {
+  makeFieldNonPlural(fieldNameOrArray: string | string[]): this {
     const fieldNames = Array.isArray(fieldNameOrArray) ? fieldNameOrArray : [fieldNameOrArray];
     fieldNames.forEach((fieldName) => {
       const fc = this._gqcFields[fieldName];
@@ -518,18 +525,18 @@ export class InputTypeComposer<TContext> {
   getType(): GraphQLInputObjectType {
     this._gqType.astNode = getInputObjectTypeDefinitionNode(this);
     if (graphqlVersion >= 14) {
-      this._gqType._fields = () => {
+      (this._gqType as any)._fields = () => {
         return defineInputFieldMap(
           this._gqType,
-          mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name)),
+          mapEachKey(this._gqcFields, (_, name) => this.getFieldConfig(name)) as any,
           this._gqType.astNode
         );
       };
     } else {
-      (this._gqType: any)._typeConfig.fields = () => {
-        return mapEachKey(this._gqcFields, (fc, name) => this.getFieldConfig(name));
+      (this._gqType as any)._typeConfig.fields = () => {
+        return mapEachKey(this._gqcFields, (_, name) => this.getFieldConfig(name));
       };
-      delete (this._gqType: any)._fields;
+      delete (this._gqType as any)._fields;
     }
     return this._gqType;
   }
@@ -584,7 +591,7 @@ export class InputTypeComposer<TContext> {
     return this._gqType.name;
   }
 
-  setTypeName(name: string): InputTypeComposer<TContext> {
+  setTypeName(name: string): this {
     this._gqType.name = name;
     this.schemaComposer.set(name, this);
     return this;
@@ -594,7 +601,7 @@ export class InputTypeComposer<TContext> {
     return this._gqType.description || '';
   }
 
-  setDescription(description: string): InputTypeComposer<TContext> {
+  setDescription(description: string): this {
     this._gqType.description = description;
     return this;
   }
@@ -630,19 +637,19 @@ export class InputTypeComposer<TContext> {
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
-    cloneMap?: Map<any, any> = new Map()
+    cloneMap: Map<any, any> = new Map()
   ): InputTypeComposer<any> {
     if (!anotherSchemaComposer) {
       throw new Error('You should provide SchemaComposer for InputTypeComposer.cloneTo()');
     }
 
-    if (cloneMap.has(this)) return (cloneMap.get(this): any);
+    if (cloneMap.has(this)) return cloneMap.get(this);
     const cloned = InputTypeComposer.create(this.getTypeName(), anotherSchemaComposer);
     cloneMap.set(this, cloned);
 
     cloned._gqcFields = mapEachKey(this._gqcFields, (fieldConfig) => ({
       ...fieldConfig,
-      type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, cloneMap),
+      type: cloneTypeTo(fieldConfig.type, anotherSchemaComposer, cloneMap) as ComposeInputType,
       extensions: { ...fieldConfig.extensions },
     }));
     cloned._gqcExtensions = { ...this._gqcExtensions };
@@ -651,8 +658,8 @@ export class InputTypeComposer<TContext> {
     return cloned;
   }
 
-  merge(type: GraphQLInputObjectType | InputTypeComposer<any>): InputTypeComposer<TContext> {
-    let tc;
+  merge(type: GraphQLInputObjectType | InputTypeComposer<any>): this {
+    let tc: InputTypeComposer<any>;
     if (type instanceof GraphQLInputObjectType) {
       tc = InputTypeComposer.createTemp(type, this.schemaComposer);
     } else if (type instanceof InputTypeComposer) {
@@ -666,10 +673,10 @@ export class InputTypeComposer<TContext> {
     }
 
     // deep clone all fields
-    const fields = ({ ...tc.getFields() }: any);
+    const fields = { ...tc.getFields() } as InputTypeComposerFieldConfigMapDefinition;
     Object.keys(fields).forEach((fieldName) => {
       fields[fieldName] = {
-        ...fields[fieldName],
+        ...(fields[fieldName] as any),
         // set type as SDL string, it automatically will be remapped to the correct type instance in the current schema
         type: tc.getFieldTypeName(fieldName),
       };
@@ -691,26 +698,26 @@ export class InputTypeComposer<TContext> {
     }
   }
 
-  setExtensions(extensions: Extensions): InputTypeComposer<TContext> {
+  setExtensions(extensions: Extensions): this {
     this._gqcExtensions = extensions;
     return this;
   }
 
-  extendExtensions(extensions: Extensions): InputTypeComposer<TContext> {
+  extendExtensions(extensions: Extensions): this {
     const current = this.getExtensions();
     this.setExtensions({
       ...current,
-      ...(extensions: any),
+      ...extensions,
     });
     return this;
   }
 
-  clearExtensions(): InputTypeComposer<TContext> {
+  clearExtensions(): this {
     this.setExtensions({});
     return this;
   }
 
-  getExtension(extensionName: string): ?any {
+  getExtension(extensionName: string): unknown {
     const extensions = this.getExtensions();
     return extensions[extensionName];
   }
@@ -720,14 +727,14 @@ export class InputTypeComposer<TContext> {
     return extensionName in extensions;
   }
 
-  setExtension(extensionName: string, value: any): InputTypeComposer<TContext> {
+  setExtension(extensionName: string, value: unknown): this {
     this.extendExtensions({
       [extensionName]: value,
     });
     return this;
   }
 
-  removeExtension(extensionName: string): InputTypeComposer<TContext> {
+  removeExtension(extensionName: string): this {
     const extensions = { ...this.getExtensions() };
     delete extensions[extensionName];
     this.setExtensions(extensions);
@@ -739,27 +746,27 @@ export class InputTypeComposer<TContext> {
     return field.extensions || {};
   }
 
-  setFieldExtensions(fieldName: string, extensions: Extensions): InputTypeComposer<TContext> {
+  setFieldExtensions(fieldName: string, extensions: Extensions): this {
     const field = this.getField(fieldName);
     this.setField(fieldName, { ...field, extensions });
     return this;
   }
 
-  extendFieldExtensions(fieldName: string, extensions: Extensions): InputTypeComposer<TContext> {
+  extendFieldExtensions(fieldName: string, extensions: Extensions): this {
     const current = this.getFieldExtensions(fieldName);
     this.setFieldExtensions(fieldName, {
       ...current,
-      ...(extensions: any),
+      ...extensions,
     });
     return this;
   }
 
-  clearFieldExtensions(fieldName: string): InputTypeComposer<TContext> {
+  clearFieldExtensions(fieldName: string): this {
     this.setFieldExtensions(fieldName, {});
     return this;
   }
 
-  getFieldExtension(fieldName: string, extensionName: string): ?any {
+  getFieldExtension(fieldName: string, extensionName: string): unknown {
     const extensions = this.getFieldExtensions(fieldName);
     return extensions[extensionName];
   }
@@ -769,27 +776,32 @@ export class InputTypeComposer<TContext> {
     return extensionName in extensions;
   }
 
-  setFieldExtension(
-    fieldName: string,
-    extensionName: string,
-    value: any
-  ): InputTypeComposer<TContext> {
+  setFieldExtension(fieldName: string, extensionName: string, value: unknown): this {
     this.extendFieldExtensions(fieldName, {
       [extensionName]: value,
     });
     return this;
   }
 
-  removeFieldExtension(fieldName: string, extensionName: string): InputTypeComposer<TContext> {
+  removeFieldExtension(fieldName: string, extensionName: string): this {
     const extensions = { ...this.getFieldExtensions(fieldName) };
     delete extensions[extensionName];
     this.setFieldExtensions(fieldName, extensions);
     return this;
   }
 
-  // -----------------------------------------------
-  // Directive methods
-  // -----------------------------------------------
+  /**
+   * -----------------------------------------------
+   * Directive methods
+   *
+   * Directive methods are useful if you declare your schemas via SDL.
+   * Users who actively use `graphql-tools` can open new abilities for writing
+   * your own directive handlers.
+   *
+   * If you create your schemas via config objects, then probably you
+   * no need in `directives`. Instead directives better to use `extensions`.
+   * -----------------------------------------------
+   */
 
   getDirectives(): Array<ExtensionsDirective> {
     const directives = this.getExtension('directives');
@@ -799,7 +811,7 @@ export class InputTypeComposer<TContext> {
     return [];
   }
 
-  setDirectives(directives: Array<ExtensionsDirective>): InputTypeComposer<TContext> {
+  setDirectives(directives: Array<ExtensionsDirective>): this {
     this.setExtension('directives', directives);
     return this;
   }
@@ -808,13 +820,13 @@ export class InputTypeComposer<TContext> {
     return this.getDirectives().map((d) => d.name);
   }
 
-  getDirectiveByName(directiveName: string): ?DirectiveArgs {
+  getDirectiveByName(directiveName: string): DirectiveArgs | undefined {
     const directive = this.getDirectives().find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
   }
 
-  getDirectiveById(idx: number): ?DirectiveArgs {
+  getDirectiveById(idx: number): DirectiveArgs | undefined {
     const directive = this.getDirectives()[idx];
     if (!directive) return undefined;
     return directive.args;
@@ -828,10 +840,7 @@ export class InputTypeComposer<TContext> {
     return [];
   }
 
-  setFieldDirectives(
-    fieldName: string,
-    directives: Array<ExtensionsDirective>
-  ): InputTypeComposer<TContext> {
+  setFieldDirectives(fieldName: string, directives: Array<ExtensionsDirective>): this {
     this.setFieldExtension(fieldName, 'directives', directives);
     return this;
   }
@@ -840,13 +849,13 @@ export class InputTypeComposer<TContext> {
     return this.getFieldDirectives(fieldName).map((d) => d.name);
   }
 
-  getFieldDirectiveByName(fieldName: string, directiveName: string): ?DirectiveArgs {
+  getFieldDirectiveByName(fieldName: string, directiveName: string): DirectiveArgs | undefined {
     const directive = this.getFieldDirectives(fieldName).find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
   }
 
-  getFieldDirectiveById(fieldName: string, idx: number): ?DirectiveArgs {
+  getFieldDirectiveById(fieldName: string, idx: number): DirectiveArgs | undefined {
     const directive = this.getFieldDirectives(fieldName)[idx];
     if (!directive) return undefined;
     return directive.args;
@@ -865,11 +874,11 @@ export class InputTypeComposer<TContext> {
    */
   getNestedTCs(
     opts: {
-      exclude?: string[],
+      exclude?: string[] | null;
     } = {},
     passedTypes: Set<NamedTypeComposer<any>> = new Set()
   ): Set<NamedTypeComposer<any>> {
-    const exclude = Array.isArray(opts.exclude) ? (opts: any).exclude : [];
+    const exclude = Array.isArray(opts.exclude) ? opts.exclude : [];
     this.getFieldNames().forEach((fieldName) => {
       const itc = this.getFieldTC(fieldName);
       if (!passedTypes.has(itc) && !exclude.includes(itc.getTypeName())) {
@@ -887,13 +896,13 @@ export class InputTypeComposer<TContext> {
    */
   toSDL(
     opts?: SchemaPrinterOptions & {
-      deep?: ?boolean,
-      sortTypes?: ?boolean,
-      exclude?: ?(string[]),
+      deep?: boolean;
+      sortTypes?: boolean;
+      exclude?: string[];
     }
   ): string {
     const { deep, ...innerOpts } = opts || {};
-    const exclude = Array.isArray((innerOpts: any).exclude) ? (innerOpts: any).exclude : [];
+    const exclude = Array.isArray(innerOpts.exclude) ? innerOpts.exclude : [];
     if (deep) {
       let r = '';
       r += printInputObject(this.getType(), innerOpts);

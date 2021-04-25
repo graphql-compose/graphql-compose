@@ -348,7 +348,6 @@ describe('InterfaceTypeComposer', () => {
           description: 'this is field #3',
           extensions: { second: true },
         });
-        // $FlowFixMe
         expect(iftc.getFieldConfig('field3').extensions).toEqual({
           first: true,
           second: true,

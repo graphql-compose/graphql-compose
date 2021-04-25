@@ -1,12 +1,11 @@
-/* @flow strict */
 /* eslint-disable no-use-before-define, class-methods-use-this, no-unused-vars, no-param-reassign */
 
 import { parse, parseType } from 'graphql/language/parser';
-import { Kind } from 'graphql/language';
+import { DirectiveLocationEnum, Kind } from 'graphql/language';
 import { getDescription } from 'graphql/utilities';
 import keyValMap from 'graphql/jsutils/keyValMap';
 import invariant from 'graphql/jsutils/invariant';
-import { getArgumentValues, getDirectiveValues } from 'graphql/execution/values';
+import { getArgumentValues } from 'graphql/execution/values';
 import type {
   DocumentNode,
   ScalarTypeDefinitionNode,
@@ -28,6 +27,9 @@ import type {
   UnionTypeExtensionNode,
   EnumTypeExtensionNode,
   ScalarTypeExtensionNode,
+  FieldDefinitionNode,
+  EnumValueDefinitionNode,
+  ArgumentNode,
 } from 'graphql/language/ast';
 import deprecate from './utils/deprecate';
 import { inspect } from './utils/misc';
@@ -45,13 +47,10 @@ import {
   GraphQLInputObjectType,
   GraphQLInterfaceType,
   GraphQLDirective,
-  GraphQLSkipDirective,
-  GraphQLIncludeDirective,
   GraphQLDeprecatedDirective,
   GraphQLUnionType,
-  isNamedType,
-  isScalarType,
   valueFromAST,
+  GraphQLFieldConfigArgumentMap,
 } from './graphql';
 import type { GraphQLType, GraphQLInputType } from './graphql';
 import { GraphQLDate, GraphQLBuffer, GraphQLJSON, GraphQLJSONObject } from './type';
@@ -72,7 +71,6 @@ import type {
   ObjectTypeComposerArgumentConfigDefinition,
   ObjectTypeComposerArgumentConfigMap,
   ObjectTypeComposerArgumentConfigMapDefinition,
-  ObjectTypeComposerArgumentConfigAsObjectDefinition,
   ObjectTypeComposerDefinition,
 } from './ObjectTypeComposer';
 import { ObjectTypeComposer } from './ObjectTypeComposer';
@@ -81,14 +79,13 @@ import { InputTypeComposer } from './InputTypeComposer';
 import { ScalarTypeComposer } from './ScalarTypeComposer';
 import {
   EnumTypeComposer,
-  type EnumTypeComposerValueConfig,
-  type EnumTypeComposerValueConfigDefinition,
-  type EnumTypeComposerValueConfigMapDefinition,
+  EnumTypeComposerValueConfigDefinition,
+  EnumTypeComposerValueConfigMapDefinition,
 } from './EnumTypeComposer';
 import {
   InterfaceTypeComposer,
-  type InterfaceTypeComposerDefinition,
-  type InterfaceTypeComposerThunked,
+  InterfaceTypeComposerDefinition,
+  InterfaceTypeComposerThunked,
 } from './InterfaceTypeComposer';
 import { UnionTypeComposer } from './UnionTypeComposer';
 import { ListComposer } from './ListComposer';
@@ -96,15 +93,15 @@ import { NonNullComposer } from './NonNullComposer';
 import { ThunkComposer } from './ThunkComposer';
 import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
-import type { Thunk, ThunkWithSchemaComposer, ExtensionsDirective } from './utils/definitions';
+import type { ThunkWithSchemaComposer, ExtensionsDirective } from './utils/definitions';
 import { isFunction, isObject } from './utils/is';
 import {
-  type AnyTypeComposer,
-  type ComposeOutputType,
-  type ComposeOutputTypeDefinition,
-  type ComposeInputType,
-  type ComposeInputTypeDefinition,
-  type NamedTypeComposer,
+  AnyTypeComposer,
+  ComposeOutputType,
+  ComposeOutputTypeDefinition,
+  ComposeInputType,
+  ComposeInputTypeDefinition,
+  NamedTypeComposer,
   isInputTypeDefinitionString,
   isTypeDefinitionString,
   isOutputTypeDefinitionString,
@@ -117,32 +114,46 @@ import {
   isUnionTypeDefinitionString,
 } from './utils/typeHelpers';
 
-export type TypeDefinitionString = string; // eg type Name { field: Int }
-export type TypeWrappedString = string; // eg. Int, Int!, [Int]
-export type TypeNameString = string; // eg. Int, Float
+/**
+ * Eg. `type Name { field: Int }`
+ */
+export type TypeDefinitionString = string;
+
+/**
+ * Eg. `Int`, `Int!`, `[Int]`
+ */
+export type TypeWrappedString = string;
+
+/**
+ * Eg. `Int`, `Float`
+ */
+export type TypeNameString = string;
+
 export type TypeAsString = TypeDefinitionString | TypeWrappedString | TypeNameString;
 
+/**
+ * Type storage and type generator from `Schema Definition Language` (`SDL`).
+ * This is slightly rewritten [buildASTSchema](https://github.com/graphql/graphql-js/blob/master/src/utilities/buildASTSchema.js)
+ * utility from `graphql-js` that allows to create type from a string (SDL).
+ */
 export class TypeMapper<TContext> {
   schemaComposer: SchemaComposer<TContext>;
 
-  constructor(schemaComposer: SchemaComposer<TContext>): TypeMapper<TContext> {
+  constructor(schemaComposer: SchemaComposer<TContext>) {
     if (!schemaComposer) {
       throw new Error('TypeMapper must have SchemaComposer instance.');
     }
     this.schemaComposer = schemaComposer;
-
-    // alive proper Flow type casting in autosuggestions for class with Generics
-    /* :: return this; */
   }
 
   /* @deprecated 8.0.0 */
-  static isOutputType(type: any): boolean {
+  static isOutputType(type: unknown): boolean {
     deprecate("Use `import { isSomeOutputTypeComposer } from './utils/typeHelpers'` instead.");
     return isSomeOutputTypeComposer(type);
   }
 
   /* @deprecated 8.0.0 */
-  static isInputType(type: any): boolean {
+  static isInputType(type: unknown): boolean {
     deprecate("Use `import { isSomeInputTypeComposer } from './utils/typeHelpers'` instead.");
     return isSomeInputTypeComposer(type);
   }
@@ -260,11 +271,11 @@ export class TypeMapper<TContext> {
     typeDef: ThunkWithSchemaComposer<
       | ComposeOutputTypeDefinition<any>
       | ObjectTypeComposerDefinition<any, any>
-      | $ReadOnly<Resolver<any, any>>,
+      | Readonly<Resolver<any, any>>,
       SchemaComposer<TContext>
     >,
-    fieldName?: string = '',
-    typeName?: string = ''
+    fieldName: string = '',
+    typeName: string = ''
   ): ComposeOutputType<TContext> | void {
     if (typeof typeDef === 'string') {
       if (isInputTypeDefinitionString(typeDef)) {
@@ -275,7 +286,7 @@ export class TypeMapper<TContext> {
 
       let tc;
       if (this.schemaComposer.has(typeDef)) {
-        tc = (this.schemaComposer.getAnyTC(typeDef): any);
+        tc = this.schemaComposer.getAnyTC(typeDef);
       } else {
         tc = isTypeDefinitionString(typeDef)
           ? this.convertSDLTypeDefinition(typeDef)
@@ -288,9 +299,9 @@ export class TypeMapper<TContext> {
       if (!isSomeOutputTypeComposer(tc)) {
         throw new Error(`Provided incorrect OutputType: ${inspect(typeDef)}`);
       }
-      return (tc: any);
+      return tc;
     } else if (isSomeOutputTypeComposer(typeDef)) {
-      return (typeDef: any);
+      return typeDef;
     } else if (Array.isArray(typeDef)) {
       if (typeDef.length !== 1) {
         throw new Error(
@@ -307,18 +318,18 @@ export class TypeMapper<TContext> {
     } else if (isFunction(typeDef)) {
       return new ThunkComposer(() => {
         const def = typeDef(this.schemaComposer);
-        const tc = this.convertOutputFieldConfig((def: any), fieldName, typeName).type;
+        const tc = this.convertOutputFieldConfig(def as any, fieldName, typeName).type;
         if (!isSomeOutputTypeComposer(tc)) {
           throw new Error(`Provided incorrect OutputType: Function[${inspect(def)}]`);
         }
-        return tc;
+        return tc as any;
       });
     } else if (typeDef instanceof Resolver) {
       return typeDef.getTypeComposer();
     } else if (typeDef instanceof GraphQLList || typeDef instanceof GraphQLNonNull) {
       const type = this.convertGraphQLTypeToComposer(typeDef);
       if (isSomeOutputTypeComposer(type)) {
-        return (type: any);
+        return type;
       } else {
         throw new Error(`Provided incorrect OutputType: ${inspect(type)}`);
       }
@@ -329,7 +340,7 @@ export class TypeMapper<TContext> {
       typeDef instanceof GraphQLUnionType ||
       typeDef instanceof GraphQLScalarType
     ) {
-      return (this.convertGraphQLTypeToComposer(typeDef): any);
+      return this.convertGraphQLTypeToComposer(typeDef) as any;
     }
 
     if (typeDef instanceof InputTypeComposer) {
@@ -342,9 +353,9 @@ export class TypeMapper<TContext> {
   convertOutputFieldConfig<TSource>(
     composeFC:
       | ObjectTypeComposerFieldConfigDefinition<TSource, TContext>
-      | $ReadOnly<Resolver<any, TContext>>,
-    fieldName?: string = '',
-    typeName?: string = ''
+      | Readonly<Resolver<any, TContext>>,
+    fieldName: string = '',
+    typeName: string = ''
   ): ObjectTypeComposerFieldConfig<TSource, TContext> {
     try {
       if (!composeFC) {
@@ -363,14 +374,14 @@ export class TypeMapper<TContext> {
       }
 
       // convert type when its provided as composeFC
-      const tcFromFC = this.convertOutputTypeDefinition(composeFC, fieldName, typeName);
+      const tcFromFC = this.convertOutputTypeDefinition(composeFC as any, fieldName, typeName);
       if (tcFromFC) {
         return { type: tcFromFC };
       }
 
       // convert type when its provided in composeIFC.type
       if (isObject(composeFC)) {
-        const { type, args, ...rest } = (composeFC: any);
+        const { type, args, ...rest } = composeFC as any;
         if (!type) {
           throw new Error(
             `Definition object should contain 'type' property: ${inspect(composeFC)}`
@@ -396,7 +407,7 @@ export class TypeMapper<TContext> {
 
   convertOutputFieldConfigMap<TSource>(
     composeFields: ObjectTypeComposerFieldConfigMapDefinition<TSource, TContext>,
-    typeName?: string = ''
+    typeName: string = ''
   ): ObjectTypeComposerFieldConfigMap<TSource, TContext> {
     const fields: ObjectTypeComposerFieldConfigMap<TSource, TContext> = {};
     Object.keys(composeFields).forEach((name) => {
@@ -408,9 +419,9 @@ export class TypeMapper<TContext> {
 
   convertArgConfig(
     composeAC: ObjectTypeComposerArgumentConfigDefinition,
-    argName?: string = '',
-    fieldName?: string = '',
-    typeName?: string = ''
+    argName: string = '',
+    fieldName: string = '',
+    typeName: string = ''
   ): ObjectTypeComposerArgumentConfig {
     try {
       if (!composeAC) {
@@ -418,14 +429,14 @@ export class TypeMapper<TContext> {
       }
 
       // convert type when its provided as composeAC
-      const tcFromAC = this.convertInputTypeDefinition((composeAC: any));
+      const tcFromAC = this.convertInputTypeDefinition(composeAC as any);
       if (tcFromAC) {
         return { type: tcFromAC };
       }
 
       // convert type when its provided in composeIFC.type
       if (isObject(composeAC)) {
-        const { type, ...rest } = (composeAC: any);
+        const { type, ...rest } = composeAC as any;
         if (!type) {
           throw new Error(
             `Definition object should contain 'type' property: ${inspect(composeAC)}'`
@@ -450,10 +461,10 @@ export class TypeMapper<TContext> {
 
   convertArgConfigMap(
     composeArgsConfigMap: ObjectTypeComposerArgumentConfigMapDefinition<any>,
-    fieldName?: string = '',
-    typeName?: string = ''
+    fieldName: string = '',
+    typeName: string = ''
   ): ObjectTypeComposerArgumentConfigMap<any> {
-    const argsConfigMap = {};
+    const argsConfigMap = {} as ObjectTypeComposerArgumentConfigMap<any>;
     if (composeArgsConfigMap) {
       Object.keys(composeArgsConfigMap).forEach((argName) => {
         argsConfigMap[argName] = this.convertArgConfig(
@@ -470,8 +481,8 @@ export class TypeMapper<TContext> {
 
   convertInputTypeDefinition(
     typeDef: ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<TContext>>,
-    fieldName?: string = '',
-    typeName?: string = ''
+    fieldName: string = '',
+    typeName: string = ''
   ): ComposeInputType | void {
     if (typeof typeDef === 'string') {
       if (isOutputTypeDefinitionString(typeDef)) {
@@ -480,7 +491,7 @@ export class TypeMapper<TContext> {
 
       let tc;
       if (this.schemaComposer.has(typeDef)) {
-        tc = (this.schemaComposer.getAnyTC(typeDef): any);
+        tc = this.schemaComposer.getAnyTC(typeDef) as any;
       } else {
         tc = isTypeDefinitionString(typeDef)
           ? this.convertSDLTypeDefinition(typeDef)
@@ -494,9 +505,9 @@ export class TypeMapper<TContext> {
         throw new Error(`Provided incorrect InputType: ${inspect(typeDef)}`);
       }
 
-      return (tc: any);
+      return tc;
     } else if (isSomeInputTypeComposer(typeDef)) {
-      return (typeDef: any);
+      return typeDef;
     } else if (Array.isArray(typeDef)) {
       if (typeDef.length !== 1) {
         throw new Error(
@@ -517,12 +528,12 @@ export class TypeMapper<TContext> {
         if (!isSomeInputTypeComposer(tc)) {
           throw new Error(`Provided incorrect InputType: Function[${inspect(def)}]`);
         }
-        return tc;
+        return tc as any;
       });
     } else if (typeDef instanceof GraphQLList || typeDef instanceof GraphQLNonNull) {
       const type = this.convertGraphQLTypeToComposer(typeDef);
       if (isSomeInputTypeComposer(type)) {
-        return (type: any);
+        return type;
       } else {
         throw new Error(`Provided incorrect InputType: ${inspect(type)}`);
       }
@@ -531,10 +542,10 @@ export class TypeMapper<TContext> {
       typeDef instanceof GraphQLScalarType ||
       typeDef instanceof GraphQLEnumType
     ) {
-      return (this.convertGraphQLTypeToComposer(typeDef): any);
+      return this.convertGraphQLTypeToComposer(typeDef) as any;
     }
 
-    if ((typeDef: any) instanceof ObjectTypeComposer) {
+    if (typeDef instanceof ObjectTypeComposer) {
       throw new Error(`Should be InputType, but provided ObjectTypeComposer ${inspect(typeDef)}`);
     }
 
@@ -543,8 +554,8 @@ export class TypeMapper<TContext> {
 
   convertInputFieldConfig(
     composeIFC: InputTypeComposerFieldConfigDefinition,
-    fieldName?: string = '',
-    typeName?: string = ''
+    fieldName: string = '',
+    typeName: string = ''
   ): InputTypeComposerFieldConfig {
     try {
       if (!composeIFC) {
@@ -552,14 +563,14 @@ export class TypeMapper<TContext> {
       }
 
       // convert type when its provided as composeIFC
-      const tcFromIFC = this.convertInputTypeDefinition(composeIFC, fieldName, typeName);
+      const tcFromIFC = this.convertInputTypeDefinition(composeIFC as any, fieldName, typeName);
       if (tcFromIFC) {
         return { type: tcFromIFC };
       }
 
       // convert type when its provided in composeIFC.type
       if (isObject(composeIFC)) {
-        const { type, ...rest } = (composeIFC: any);
+        const { type, ...rest } = composeIFC as any;
         if (!type) {
           throw new Error(
             `Definition object should contain 'type' property: ${inspect(composeIFC)}`
@@ -571,7 +582,7 @@ export class TypeMapper<TContext> {
           return {
             type: tc,
             ...rest,
-          };
+          } as any;
         }
       }
 
@@ -584,7 +595,7 @@ export class TypeMapper<TContext> {
 
   convertInputFieldConfigMap(
     composeFields: InputTypeComposerFieldConfigMapDefinition,
-    typeName?: string = ''
+    typeName: string = ''
   ): InputTypeComposerFieldConfigMap {
     const fields: InputTypeComposerFieldConfigMap = {};
     Object.keys(composeFields).forEach((name) => {
@@ -615,8 +626,8 @@ export class TypeMapper<TContext> {
     } else if (typeDef instanceof InterfaceTypeComposer || typeDef instanceof ThunkComposer) {
       return typeDef;
     } else if (isFunction(typeDef)) {
-      return new ThunkComposer(() =>
-        this.convertInterfaceTypeDefinition(typeDef(this.schemaComposer))
+      return new ThunkComposer(
+        () => this.convertInterfaceTypeDefinition(typeDef(this.schemaComposer)) as any
       );
     }
 
@@ -659,7 +670,6 @@ export class TypeMapper<TContext> {
   }
 
   typeFromAST(typeNode: TypeNode): AnyTypeComposer<TContext> {
-    let innerType;
     if (typeNode.kind === Kind.LIST_TYPE) {
       return new ListComposer(this.typeFromAST(typeNode.type));
     } else if (typeNode.kind === Kind.NON_NULL_TYPE) {
@@ -685,7 +695,7 @@ export class TypeMapper<TContext> {
     if (!isSomeInputTypeComposer(tc)) {
       throw new Error(`TypeAST should be for Input types. But received ${inspect(typeNode)}`);
     }
-    return (tc: any);
+    return tc;
   }
 
   typeFromASTOutput(typeNode: TypeNode): ComposeOutputType<TContext> {
@@ -693,7 +703,7 @@ export class TypeMapper<TContext> {
     if (!isSomeOutputTypeComposer(tc)) {
       throw new Error(`TypeAST should be for Output types. But received ${inspect(typeNode)}`);
     }
-    return (tc: any);
+    return tc;
   }
 
   makeSchemaDef(def: DefinitionNode): NamedTypeComposer<any> | null {
@@ -741,22 +751,21 @@ export class TypeMapper<TContext> {
   }
 
   makeArguments(
-    values: ?$ReadOnlyArray<InputValueDefinitionNode>
+    values?: ReadonlyArray<InputValueDefinitionNode>
   ): ObjectTypeComposerArgumentConfigMap<any> {
     if (!values) {
       return {};
     }
-    const result = {};
+    const result = {} as ObjectTypeComposerArgumentConfigMap<any>;
     values.forEach((value) => {
       const key = value.name.value;
-      let val;
       const typeName = this.getNamedTypeAST(value.type).name.value;
       const type = this.typeFromASTInput(value.type);
 
-      const ac: ObjectTypeComposerArgumentConfigAsObjectDefinition = {
+      const ac = {
         type,
         description: getDescription(value),
-      };
+      } as ObjectTypeComposerArgumentConfig;
 
       if (value.directives) {
         const directives = this.parseDirectives(value.directives);
@@ -766,15 +775,15 @@ export class TypeMapper<TContext> {
       }
 
       if (value.defaultValue) {
-        if (!this.schemaComposer.has(typeName) && value.defaultValue && value.defaultValue.value) {
-          ac.defaultValue = value.defaultValue.value;
+        if (!this.schemaComposer.has(typeName) && (value?.defaultValue as any)?.value) {
+          ac.defaultValue = (value.defaultValue as any).value;
         } else {
           const typeDef = this.schemaComposer.get(typeName);
           const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
           if (isSomeInputTypeComposer(wrappedType)) {
             ac.defaultValue = valueFromAST(
               value.defaultValue,
-              ((wrappedType.getType(): any): GraphQLInputType)
+              wrappedType.getType() as GraphQLInputType
             );
           } else {
             throw new Error('Non-input type as an argument.');
@@ -797,8 +806,8 @@ export class TypeMapper<TContext> {
     if (!def.fields) return {};
     return keyValMap(
       def.fields,
-      (field) => field.name.value,
-      (field) => {
+      (field: FieldDefinitionNode) => field.name.value,
+      (field: FieldDefinitionNode) => {
         const fc: ObjectTypeComposerFieldConfig<any, any, any> = {
           type: this.typeFromASTOutput(field.type),
           description: getDescription(field),
@@ -825,8 +834,8 @@ export class TypeMapper<TContext> {
     if (!def.fields) return {};
     return keyValMap(
       def.fields,
-      (field) => field.name.value,
-      (field) => {
+      (field: InputValueDefinitionNode) => field.name.value,
+      (field: InputValueDefinitionNode) => {
         const fc: InputTypeComposerFieldConfigAsObjectDefinition = {
           type: this.typeFromASTInput(field.type),
           description: getDescription(field),
@@ -866,8 +875,8 @@ export class TypeMapper<TContext> {
     if (!def.values) return {};
     return keyValMap(
       def.values,
-      (enumValue) => enumValue.name.value,
-      (enumValue) => {
+      (enumValue: EnumValueDefinitionNode) => enumValue.name.value,
+      (enumValue: EnumValueDefinitionNode) => {
         const ec: EnumTypeComposerValueConfigDefinition = {
           description: getDescription(enumValue),
           deprecationReason: this.getDeprecationReason(enumValue.directives),
@@ -900,8 +909,8 @@ export class TypeMapper<TContext> {
   }
 
   makeDirectiveDef(def: DirectiveDefinitionNode): GraphQLDirective {
-    const locations = def.locations.map(({ value }) => (value: any));
-    const args = {};
+    const locations = def.locations.map(({ value }) => value) as DirectiveLocationEnum[];
+    const args = {} as GraphQLFieldConfigArgumentMap;
     (def.arguments || []).forEach((value) => {
       const key = value.name.value;
       let val;
@@ -910,10 +919,7 @@ export class TypeMapper<TContext> {
         val = {
           type: wrappedType.getType(),
           description: getDescription(value),
-          defaultValue: valueFromAST(
-            value.defaultValue,
-            ((wrappedType.getType(): any): GraphQLInputType)
-          ),
+          defaultValue: valueFromAST(value.defaultValue, wrappedType.getType() as GraphQLInputType),
         };
       } else {
         throw new Error('Non-input type as an argument.');
@@ -930,49 +936,49 @@ export class TypeMapper<TContext> {
     });
   }
 
-  getBuiltInType(name: string): ?ScalarTypeComposer<TContext> {
-    let gtype: ?GraphQLScalarType;
+  getBuiltInType(name: string): ScalarTypeComposer<TContext> | undefined {
+    let type: GraphQLScalarType | undefined;
     switch (name) {
       case 'String':
-        gtype = GraphQLString;
+        type = GraphQLString;
         break;
       case 'Float':
-        gtype = GraphQLFloat;
+        type = GraphQLFloat;
         break;
       case 'Int':
-        gtype = GraphQLInt;
+        type = GraphQLInt;
         break;
       case 'Boolean':
-        gtype = GraphQLBoolean;
+        type = GraphQLBoolean;
         break;
       case 'ID':
-        gtype = GraphQLID;
+        type = GraphQLID;
         break;
       case 'JSON':
-        gtype = GraphQLJSON;
+        type = GraphQLJSON;
         break;
       case 'JSONObject':
-        gtype = GraphQLJSONObject;
+        type = GraphQLJSONObject;
         break;
       case 'Date':
-        gtype = GraphQLDate;
+        type = GraphQLDate;
         break;
       case 'Buffer':
-        gtype = GraphQLBuffer;
+        type = GraphQLBuffer;
         break;
       default:
-        gtype = null;
+        type = undefined;
         break;
     }
 
-    if (gtype) {
-      return this.schemaComposer.createScalarTC(gtype);
+    if (type) {
+      return this.schemaComposer.createScalarTC(type);
     }
-    return null;
+    return undefined;
   }
 
   makeScalarDef(def: ScalarTypeDefinitionNode): ScalarTypeComposer<TContext> {
-    let tc: ?ScalarTypeComposer<TContext>;
+    let tc: ScalarTypeComposer<TContext> | undefined;
     const stc = this.getBuiltInType(def.name.value);
     if (stc) {
       tc = stc;
@@ -1045,7 +1051,7 @@ export class TypeMapper<TContext> {
   }
 
   makeUnionDef(def: UnionTypeDefinitionNode): UnionTypeComposer<any, TContext> {
-    const types: ?$ReadOnlyArray<NamedTypeNode> = def.types;
+    const types = def.types;
     const tc = this.schemaComposer.createUnionTC({
       name: def.name.value,
       description: getDescription(def),
@@ -1058,7 +1064,7 @@ export class TypeMapper<TContext> {
     return tc;
   }
 
-  checkSchemaDef(def: SchemaDefinitionNode) {
+  checkSchemaDef(def: SchemaDefinitionNode): void {
     const validNames = {
       query: 'Query',
       mutation: 'Mutation',
@@ -1100,7 +1106,7 @@ export class TypeMapper<TContext> {
     return innerType;
   }
 
-  getDeprecationReason(directives: ?$ReadOnlyArray<DirectiveNode>): ?string {
+  getDeprecationReason(directives: ReadonlyArray<DirectiveNode> | undefined): string | undefined {
     const deprecatedAST = directives?.find(
       (directive) => directive.name.value === GraphQLDeprecatedDirective.name
     );
@@ -1108,11 +1114,11 @@ export class TypeMapper<TContext> {
       return;
     }
     const { reason } = getArgumentValues(GraphQLDeprecatedDirective, deprecatedAST);
-    return (reason: any); // eslint-disable-line
+    return reason;
   }
 
-  parseDirectives(directives: $ReadOnlyArray<DirectiveNode>): Array<ExtensionsDirective> {
-    const result = [];
+  parseDirectives(directives: ReadonlyArray<DirectiveNode>): Array<ExtensionsDirective> {
+    const result = [] as Array<ExtensionsDirective>;
     directives.forEach((directive) => {
       const name = directive.name.value;
 
@@ -1125,11 +1131,11 @@ export class TypeMapper<TContext> {
       const directiveDef = this.schemaComposer._getDirective(name);
       const args = directiveDef
         ? getArgumentValues(directiveDef, directive)
-        : (keyValMap(
+        : keyValMap(
             directive.arguments || [],
-            (arg) => arg.name.value,
-            (arg) => GraphQLJSON.parseLiteral(arg.value)
-          ): any);
+            (arg: ArgumentNode) => arg.name.value,
+            (arg: ArgumentNode) => GraphQLJSON.parseLiteral(arg.value, {})
+          );
       result.push({ name, args });
     });
     return result;
@@ -1164,7 +1170,7 @@ export class TypeMapper<TContext> {
   }
 
   makeExtendUnionDef(def: UnionTypeExtensionNode): UnionTypeComposer<any, TContext> {
-    const types: ?$ReadOnlyArray<NamedTypeNode> = def.types;
+    const types = def.types;
     const tc = this.schemaComposer.getOrCreateUTC(def.name.value);
     tc.addTypes((types || []).map((ref) => this.getNamedTypeAST(ref).name.value));
     if (def.directives) {
