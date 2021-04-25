@@ -5,6 +5,7 @@ import {
   GraphQLOutputType,
   GraphQLResolveInfo,
   GraphQLFieldConfigArgumentMap,
+  GraphQLFieldResolver,
 } from 'graphql';
 import { InputTypeComposer } from './InputTypeComposer';
 import { SchemaComposer } from './SchemaComposer';
@@ -79,8 +80,6 @@ export type ResolverSortArgFn<TSource, TContext, TArgs = any> = (
 export type ResolverSortArgConfig<TSource, TContext, TArgs = any> = {
   name: string;
   sortTypeNameFallback?: string;
-  // value also can be an `Object`, but flow does not understande union with object and function
-  // see https://github.com/facebook/flow/issues/1948
   value:
     | { [key: string]: any }
     | ResolverSortArgFn<TSource, TContext, TArgs>
@@ -126,12 +125,12 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
   public type: ComposeOutputType<TContext>;
   public args: ObjectTypeComposerArgumentConfigMap<any>;
   public name: string;
-  public displayName: string | void;
-  public kind: ResolverKinds | void;
-  public description: string | void;
+  public displayName: string | undefined;
+  public kind: ResolverKinds | undefined;
+  public description: string | undefined;
   public projection: ProjectionType;
-  public parent: Resolver<TSource, TContext, any> | void;
-  public extensions: Extensions | void;
+  public parent: Resolver<TSource, TContext, any> | undefined;
+  public extensions: Extensions | undefined;
   public resolve: (
     resolveParams: Partial<ResolverResolveParams<TSource, TContext, TArgs>>
   ) => Promise<any> | any;
@@ -322,6 +321,10 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
   public getFieldConfig(opts?: {
     projection?: ProjectionType;
   }): GraphQLFieldConfig<TSource, TContext, TArgs>;
+
+  public getFieldResolver(opts?: {
+    projection?: ProjectionType;
+  }): GraphQLFieldResolver<TSource, TContext, TArgs>;
 
   public getKind(): ResolverKinds | void;
 

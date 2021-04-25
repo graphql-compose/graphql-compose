@@ -1,5 +1,4 @@
 /* eslint-disable no-unused-vars */
-/* @flow strict */
 
 import { isFunction } from './utils/is';
 import type { GraphQLType } from './graphql';
@@ -9,10 +8,13 @@ import { NonNullComposer } from './NonNullComposer';
 import { inspect } from './utils/misc';
 import type { SchemaComposer } from './SchemaComposer';
 
-export class ThunkComposer<T = NamedTypeComposer<any>, G = GraphQLType> {
-  _thunk: Function;
-  _typeName: string | void;
-  _typeFromThunk: T | void;
+export class ThunkComposer<
+  T extends NamedTypeComposer<any> = NamedTypeComposer<any>,
+  G extends GraphQLType = GraphQLType
+> {
+  _thunk: () => T;
+  _typeName: string | undefined;
+  _typeFromThunk: T | undefined;
 
   get ofType(): T {
     if (!this._typeFromThunk) {
@@ -28,14 +30,11 @@ export class ThunkComposer<T = NamedTypeComposer<any>, G = GraphQLType> {
     return this._typeFromThunk;
   }
 
-  constructor(thunk: Function, typeName?: string): ThunkComposer<T, G> {
+  constructor(thunk: () => T, typeName?: string) {
     this._thunk = thunk;
     if (typeName && typeof typeName === 'string') {
       this._typeName = typeName;
     }
-
-    // alive proper Flow type casting in autosuggestions for class with Generics
-    /* :: return this; */
   }
 
   getUnwrappedTC(): T {
@@ -43,16 +42,16 @@ export class ThunkComposer<T = NamedTypeComposer<any>, G = GraphQLType> {
   }
 
   getType(): G {
-    return (this.ofType: any).getType();
+    return (this.ofType as any).getType();
   }
 
   getTypeName(): string {
-    if (this._typeFromThunk && isFunction((this._typeFromThunk: any).getTypeName)) {
-      return (this._typeFromThunk: any).getTypeName();
+    if (this._typeFromThunk && isFunction(this._typeFromThunk.getTypeName)) {
+      return this._typeFromThunk.getTypeName();
     } else if (this._typeName) {
       return this._typeName;
     }
-    return (this.getUnwrappedTC(): any).getTypeName();
+    return this.getUnwrappedTC().getTypeName();
   }
 
   getTypePlural(): ListComposer<ThunkComposer<T, G>> {
@@ -79,13 +78,13 @@ export class ThunkComposer<T = NamedTypeComposer<any>, G = GraphQLType> {
 
   /**
    * Clone this type to another SchemaComposer.
-   * Also will be clonned all wrapped types.
+   * Also will be cloned all wrapped types.
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
-    cloneMap?: Map<any, any> = new Map()
+    cloneMap: Map<any, any> = new Map()
   ): ThunkComposer<NamedTypeComposer<any>, G> {
-    const cloned = (this.ofType: any).cloneTo(anotherSchemaComposer, cloneMap);
+    const cloned = (this.ofType as any).cloneTo(anotherSchemaComposer, cloneMap);
     return new ThunkComposer(() => cloned, this._typeName);
   }
 }

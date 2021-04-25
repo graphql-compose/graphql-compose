@@ -103,7 +103,6 @@ describe('SchemaComposer', () => {
     it('should get description', () => {
       if (graphqlVersion >= 15) {
         const sc = new SchemaComposer(
-          // $FlowFixMe `description` was added only in graphql@15.0.0
           new GraphQLSchema({
             description: 'My schema',
           })
@@ -117,7 +116,6 @@ describe('SchemaComposer', () => {
         const sc = new SchemaComposer();
         sc.setDescription('ABC');
         const schema = sc.buildSchema();
-        // $FlowFixMe `description` was added only in graphql@15.0.0
         expect(schema.description).toBe('ABC');
       }
     });

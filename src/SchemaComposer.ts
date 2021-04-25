@@ -1,22 +1,18 @@
-/* @flow strict */
 /* eslint-disable class-methods-use-this */
 
 import deprecate from './utils/deprecate';
 import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
-import { ObjectTypeComposer, type ObjectTypeComposerDefinition } from './ObjectTypeComposer';
-import { InputTypeComposer, type InputTypeComposerDefinition } from './InputTypeComposer';
-import { ScalarTypeComposer, type ScalarTypeComposerDefinition } from './ScalarTypeComposer';
-import { EnumTypeComposer, type EnumTypeComposerDefinition } from './EnumTypeComposer';
-import {
-  InterfaceTypeComposer,
-  type InterfaceTypeComposerDefinition,
-} from './InterfaceTypeComposer';
-import { UnionTypeComposer, type UnionTypeComposerDefinition } from './UnionTypeComposer';
+import { ObjectTypeComposer, ObjectTypeComposerDefinition } from './ObjectTypeComposer';
+import { InputTypeComposer, InputTypeComposerDefinition } from './InputTypeComposer';
+import { ScalarTypeComposer, ScalarTypeComposerDefinition } from './ScalarTypeComposer';
+import { EnumTypeComposer, EnumTypeComposerDefinition } from './EnumTypeComposer';
+import { InterfaceTypeComposer, InterfaceTypeComposerDefinition } from './InterfaceTypeComposer';
+import { UnionTypeComposer, UnionTypeComposerDefinition } from './UnionTypeComposer';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { ThunkComposer } from './ThunkComposer';
-import { Resolver, type ResolverDefinition } from './Resolver';
+import { Resolver, ResolverDefinition } from './Resolver';
 import { isFunction } from './utils/is';
 import { inspect, forEachKey } from './utils/misc';
 import { dedent } from './utils/dedent';
@@ -33,8 +29,10 @@ import {
   isInterfaceTypeDefinitionString,
   isUnionTypeDefinitionString,
   cloneTypeTo,
-  type AnyType,
-  type NamedTypeComposer,
+  AnyType,
+  NamedTypeComposer,
+  ComposeInputTypeDefinition,
+  ComposeOutputTypeDefinition,
 } from './utils/typeHelpers';
 import {
   GraphQLSchema,
@@ -53,39 +51,39 @@ import {
   defaultFieldResolver,
   buildSchema,
   getNamedType,
-  type GraphQLType,
-  type GraphQLNamedType,
-  type SchemaDefinitionNode,
-  type GraphQLResolveInfo,
-  type SchemaExtensionNode,
+  GraphQLType,
+  GraphQLNamedType,
+  SchemaDefinitionNode,
+  GraphQLResolveInfo,
+  SchemaExtensionNode,
 } from './graphql';
 import {
   printSchemaComposer,
-  type SchemaPrinterOptions,
-  type SchemaComposerPrinterOptions,
+  SchemaPrinterOptions,
+  SchemaComposerPrinterOptions,
 } from './utils/schemaPrinter';
 import { visitSchema } from './utils/schemaVisitor';
 
-type ExtraSchemaConfig = {|
-  +description?: string | null,
-  +types?: GraphQLNamedType[] | null,
-  +directives?: GraphQLDirective[] | null,
-  +extensions?: any | null,
-  +astNode?: SchemaDefinitionNode | null,
-  +extensionASTNodes?: $ReadOnlyArray<SchemaExtensionNode> | null,
+type ExtraSchemaConfig = {
+  description?: string | null;
+  types?: GraphQLNamedType[] | null;
+  directives?: GraphQLDirective[] | null;
+  extensions?: any | null;
+  astNode?: SchemaDefinitionNode | null;
+  extensionASTNodes?: ReadonlyArray<SchemaExtensionNode> | null;
   /** You may pass all unused types from type registry to GraphQL schema if set this option to `true` */
-  +keepUnusedTypes?: boolean | null,
-|};
+  keepUnusedTypes?: boolean | null;
+};
 
 type GraphQLToolsResolveMethods<TContext> = {
   [typeName: string]: {
     [fieldName: string]: (
       source: any,
-      args: Object,
+      args: Record<string, any>,
       context: TContext,
       info: GraphQLResolveInfo
-    ) => any,
-  },
+    ) => any;
+  };
 };
 
 export const BUILT_IN_DIRECTIVES = [
@@ -94,11 +92,14 @@ export const BUILT_IN_DIRECTIVES = [
   GraphQLDeprecatedDirective,
 ];
 
-export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer<TContext>> {
+/**
+ * `SchemaComposer` is a class which helps to create `GraphQLSchema`.
+ */
+export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeComposer<TContext>> {
   typeMapper: TypeMapper<TContext>;
   _schemaMustHaveTypes: Array<AnyType<TContext>> = [];
   _directives: Array<GraphQLDirective> = [...BUILT_IN_DIRECTIVES];
-  _description: string | void;
+  _description: string | undefined;
 
   /**
    * Create SchemaComposer from
@@ -108,7 +109,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    *
    * @param {undefined | GraphQLSchema | string} schema
    */
-  constructor(schemaOrSDL?: GraphQLSchema | string): SchemaComposer<TContext> {
+  constructor(schemaOrSDL?: GraphQLSchema | string) {
     super();
     this.typeMapper = new TypeMapper(this);
 
@@ -135,28 +136,53 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       if (m) this.set('Mutation', this.get(m));
       const s = schema.getSubscriptionType();
       if (s) this.set('Subscription', this.get(s));
-      // $FlowFixMe `description` was added only in graphql@15.0.0
       if (schema.description) this.setDescription(schema.description);
     }
-
-    // alive proper Flow type casting in autosuggestions for class with Generics
-    /* :: return this; */
   }
 
+  /**
+   * Returns `ObjectTypeComposer` of `Query` root type.
+   *
+   * @example
+   *     import { schemaComposer } from 'graphql-compose';
+   *     schemaComposer.Query.addFields({ field1: 'String' });
+   */
   get Query(): ObjectTypeComposer<any, TContext> {
     return this.getOrCreateOTC('Query');
   }
 
+  /**
+   * Returns `ObjectTypeComposer` of `Mutation` root type.
+   *
+   * @example
+   *     import { schemaComposer } from 'graphql-compose';
+   *     schemaComposer.Mutation.addFields({ field1: 'String' });
+   */
   get Mutation(): ObjectTypeComposer<any, TContext> {
     return this.getOrCreateOTC('Mutation');
   }
 
+  /**
+   * Returns `ObjectTypeComposer` of `Subscription` root type.
+   *
+   * @example
+   *     import { schemaComposer } from 'graphql-compose';
+   *     schemaComposer.Subscription.addFields({ field1: 'String' });
+   */
   get Subscription(): ObjectTypeComposer<any, TContext> {
     return this.getOrCreateOTC('Subscription');
   }
 
+  /**
+   * Create `GraphQLSchema` instance from defined types.
+   * This instance can be provided to `express-graphql`, `apollo-server`, `graphql-yoga` etc.
+   */
   buildSchema(extraConfig?: ExtraSchemaConfig): GraphQLSchema {
-    const roots: {| query?: any, mutation?: any, subscription?: any |} = ({}: any);
+    const roots = {} as {
+      query?: GraphQLObjectType;
+      mutation?: GraphQLObjectType;
+      subscription?: GraphQLObjectType;
+    };
 
     if (this.has('Query')) {
       const tc = this.getOTC('Query');
@@ -193,19 +219,18 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       typesSet.add(getNamedType(getGraphQLType(type)));
     });
     if (Array.isArray(extraConfig?.types)) {
-      extraConfig.types.forEach((type) => {
+      extraConfig?.types.forEach((type) => {
         typesSet.add(getNamedType(getGraphQLType(type)));
       });
     }
 
     const directives = [
       ...this._directives,
-      ...(Array.isArray(extraConfig?.directives) ? [...extraConfig.directives] : []),
+      ...(Array.isArray(extraConfig?.directives) ? [...(extraConfig as any).directives] : []),
     ];
 
     const description = this.getDescription() || reducedConfig.description || undefined;
 
-    // $FlowFixMe `description` was added only in graphql@15.0.0
     return new GraphQLSchema({
       ...reducedConfig,
       ...roots,
@@ -215,11 +240,18 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     });
   }
 
+  /**
+   * When using Interfaces you may have such Types which are hidden under Interface.resolveType method. In such cases you should add these types explicitly. Cause `buildSchema()` will take only real used types and types which added via `addSchemaMustHaveType()` method.
+   */
   addSchemaMustHaveType(type: AnyType<TContext>): SchemaComposer<TContext> {
     this._schemaMustHaveTypes.push(type);
     return this;
   }
 
+  /**
+   * Deeply traverse fields in Query, Mutation, Subscription & sub-objects
+   * where will be removed all fields with empty object types (without sub-fields).
+   */
   removeEmptyTypes(
     tc: ObjectTypeComposer<any, TContext>,
     passedTypes: Set<string> = new Set()
@@ -258,19 +290,30 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
     const cloneMap = new Map();
     this.forEach((type, key) => {
-      sc.set(key, (cloneTypeTo(type, sc, cloneMap): any));
+      sc.set(key, cloneTypeTo(type, sc, cloneMap) as any);
     });
 
     sc._schemaMustHaveTypes = this._schemaMustHaveTypes.map(
-      (t) => (cloneTypeTo(t, sc, cloneMap): any)
+      (t) => cloneTypeTo(t, sc, cloneMap) as any
     );
     sc._directives = [...this._directives];
 
     return sc;
   }
 
+  /**
+   * Load all types from GraphQLSchema and merge with current SchemaComposer's types.
+   *
+   * @example
+   *     import { schemaComposer } from 'graphql-compose';
+   *     schemaComposer.merge(someSchema1);
+   *     schemaComposer.merge(someSchema2);
+   *     schemaComposer.merge(someSchema3);
+   *     const schemaComposer.getOTC('User').removeField('password');
+   *     const newSchema = schemaComposer.buildSchema();
+   */
   merge(schema: GraphQLSchema | SchemaComposer<any>): SchemaComposer<TContext> {
-    let sc;
+    let sc: SchemaComposer<any>;
     if (schema instanceof SchemaComposer) {
       sc = schema;
     } else if (schema instanceof GraphQLSchema) {
@@ -306,13 +349,13 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
       // merge regular types
       if (this.has(key)) {
         // merge by key (key prefer, cause it may be reference and types not yet resolved)
-        this.getAnyTC(key).merge((type: any));
+        this.getAnyTC(key).merge(type as any);
       } else if (typeName && this.has(typeName)) {
         // merge by type name (key may be different)
-        this.getAnyTC(typeName).merge((type: any));
+        this.getAnyTC(typeName).merge(type as any);
       } else {
         // add a new type
-        const tc = type.cloneTo(this);
+        const tc = type.cloneTo(this) as NamedTypeComposer<any>;
         this.set(key, tc);
         if (typeName && typeName !== key) {
           this.set(typeName, tc);
@@ -327,11 +370,11 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     return this;
   }
 
-  getDescription(): string | void {
+  getDescription(): string | undefined {
     return this._description;
   }
 
-  setDescription(description: string | void): SchemaComposer<TContext> {
+  setDescription(description: string | undefined): SchemaComposer<TContext> {
     this._description = description;
     return this;
   }
@@ -342,6 +385,40 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    * -----------------------------------------------
    */
 
+  /**
+   * Add types to Schema via SDL string. Returns a Map of parsed types.
+   *
+   * @example
+   *     const schemaComposer = new SchemaComposer();
+   *     schemaComposer.addTypeDefs(`
+   *       type Post {
+   *         id: Int!
+   *         title: String
+   *         votes: Int
+   *       }
+   *       enum Sort {
+   *         ASC
+   *         DESC
+   *       }
+   *     `);
+   *
+   * @description
+   * After that your added types will be available for referencing via string, eg.
+   *
+   * @example
+   *     ObjectTypeComposer.create({
+   *       name: 'Author',
+   *       fields: {
+   *         posts: {
+   *           type: '[Post!]',
+   *           args: {
+   *             sort: 'Sort',
+   *           },
+   *           resolve: () => {},
+   *         }
+   *       }
+   *     });
+   */
   addTypeDefs(typeDefs: string): TypeStorage<string, NamedTypeComposer<any>> {
     const types = this.typeMapper.parseTypesFromString(typeDefs);
     types.forEach((type: NamedTypeComposer<any>) => {
@@ -374,6 +451,24 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     return types;
   }
 
+  /**
+   * Define `resolve` methods for Types in `graphql-tools` manner.
+   *
+   * @example
+   *     declare function addResolveMethods(typesFieldsResolve: {
+   *       [typeName: string]: {
+   *         [fieldName: string]: (
+   *           source: any,
+   *           args: Object,
+   *           context: TContext,
+   *           info: GraphQLResolveInfo
+   *         ) => any,
+   *       },
+   *     }): void
+   *
+   * @description
+   *   More details can be found in [issue #142](https://github.com/graphql-compose/graphql-compose/issues/142).
+   */
   addResolveMethods(typesFieldsResolve: GraphQLToolsResolveMethods<TContext>): void {
     const typeNames = Object.keys(typesFieldsResolve);
     typeNames.forEach((typeName) => {
@@ -458,7 +553,13 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     return new Resolver<any, TContext, any>(opts, this);
   }
 
-  createTC(typeOrSDL: any): NamedTypeComposer<TContext> {
+  /**
+   * Creates or return existed TypeComposer from SDL or object.
+   * If you call this method again with same params should be returned the same TypeComposer instance.
+   */
+  createTC(
+    typeOrSDL: ComposeOutputTypeDefinition<any> | ComposeInputTypeDefinition
+  ): NamedTypeComposer<TContext> {
     if (this.has(typeOrSDL)) {
       return this.get(typeOrSDL);
     }
@@ -469,7 +570,12 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     return tc;
   }
 
-  createTempTC(typeOrSDL: any): NamedTypeComposer<TContext> {
+  /**
+   * Creates TypeComposer from SDL or object without adding it to the type storage.
+   */
+  createTempTC(
+    typeOrSDL: ComposeOutputTypeDefinition<any> | ComposeInputTypeDefinition
+  ): NamedTypeComposer<TContext> {
     let type;
     if (typeof typeOrSDL === 'string') {
       type = this.typeMapper.convertSDLTypeDefinition(typeOrSDL);
@@ -484,9 +590,9 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
         type instanceof ThunkComposer
       ) {
         const unwrappedTC = type.getUnwrappedTC();
-        return (unwrappedTC: any);
+        return unwrappedTC;
       }
-      return type;
+      return type as any;
     } else if (type instanceof GraphQLObjectType) {
       return ObjectTypeComposer.createTemp(type, this);
     } else if (type instanceof GraphQLInputObjectType) {
@@ -510,7 +616,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   /* @deprecated 8.0.0 */
   getOrCreateTC(
     typeName: string,
-    onCreate?: (ObjectTypeComposer<any, TContext>) => any
+    onCreate?: (tc: ObjectTypeComposer<any, TContext>) => any
   ): ObjectTypeComposer<any, TContext> {
     deprecate(`Use SchemaComposer.getOrCreateOTC() method instead`);
     return this.getOrCreateOTC(typeName, onCreate);
@@ -518,7 +624,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   getOrCreateOTC(
     typeName: string,
-    onCreate?: (ObjectTypeComposer<any, TContext>) => any
+    onCreate?: (tc: ObjectTypeComposer<any, TContext>) => any
   ): ObjectTypeComposer<any, TContext> {
     try {
       return this.getOTC(typeName);
@@ -532,7 +638,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   getOrCreateITC(
     typeName: string,
-    onCreate?: (InputTypeComposer<TContext>) => any
+    onCreate?: (tc: InputTypeComposer<TContext>) => any
   ): InputTypeComposer<TContext> {
     try {
       return this.getITC(typeName);
@@ -546,7 +652,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   getOrCreateETC(
     typeName: string,
-    onCreate?: (EnumTypeComposer<TContext>) => any
+    onCreate?: (tc: EnumTypeComposer<TContext>) => any
   ): EnumTypeComposer<TContext> {
     try {
       return this.getETC(typeName);
@@ -560,7 +666,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   getOrCreateIFTC(
     typeName: string,
-    onCreate?: (InterfaceTypeComposer<any, TContext>) => any
+    onCreate?: (tc: InterfaceTypeComposer<any, TContext>) => any
   ): InterfaceTypeComposer<any, TContext> {
     try {
       return this.getIFTC(typeName);
@@ -574,7 +680,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   getOrCreateUTC(
     typeName: string,
-    onCreate?: (UnionTypeComposer<any, TContext>) => any
+    onCreate?: (tc: UnionTypeComposer<any, TContext>) => any
   ): UnionTypeComposer<any, TContext> {
     try {
       return this.getUTC(typeName);
@@ -588,7 +694,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
 
   getOrCreateSTC(
     typeName: string,
-    onCreate?: (ScalarTypeComposer<TContext>) => any
+    onCreate?: (tc: ScalarTypeComposer<TContext>) => any
   ): ScalarTypeComposer<TContext> {
     try {
       return this.getSTC(typeName);
@@ -600,62 +706,62 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     }
   }
 
-  getOTC(typeName: any): ObjectTypeComposer<any, TContext> {
+  getOTC(typeName: unknown): ObjectTypeComposer<any, TContext> {
     if (this.hasInstance(typeName, GraphQLObjectType)) {
-      return ObjectTypeComposer.create((this.get(typeName): any), this);
+      return ObjectTypeComposer.create(this.get(typeName) as any, this);
     }
     if (this.hasInstance(typeName, ObjectTypeComposer)) {
-      return (this.get(typeName): any);
+      return this.get(typeName) as any;
     }
     throw new Error(`Cannot find ObjectTypeComposer with name ${typeName}`);
   }
 
-  getITC(typeName: any): InputTypeComposer<TContext> {
+  getITC(typeName: unknown): InputTypeComposer<TContext> {
     if (this.hasInstance(typeName, GraphQLInputObjectType)) {
-      return InputTypeComposer.create((this.get(typeName): any), this);
+      return InputTypeComposer.create(this.get(typeName) as any, this);
     }
     if (this.hasInstance(typeName, InputTypeComposer)) {
-      return (this.get(typeName): any);
+      return this.get(typeName) as any;
     }
     throw new Error(`Cannot find InputTypeComposer with name ${typeName}`);
   }
 
-  getETC(typeName: any): EnumTypeComposer<TContext> {
+  getETC(typeName: unknown): EnumTypeComposer<TContext> {
     if (this.hasInstance(typeName, GraphQLEnumType)) {
-      return EnumTypeComposer.create((this.get(typeName): any), this);
+      return EnumTypeComposer.create(this.get(typeName) as any, this);
     }
     if (this.hasInstance(typeName, EnumTypeComposer)) {
-      return (this.get(typeName): any);
+      return this.get(typeName) as any;
     }
     throw new Error(`Cannot find EnumTypeComposer with name ${typeName}`);
   }
 
-  getIFTC(typeName: any): InterfaceTypeComposer<any, TContext> {
+  getIFTC(typeName: unknown): InterfaceTypeComposer<any, TContext> {
     if (this.hasInstance(typeName, GraphQLInterfaceType)) {
-      return InterfaceTypeComposer.create((this.get(typeName): any), this);
+      return InterfaceTypeComposer.create(this.get(typeName) as any, this);
     }
     if (this.hasInstance(typeName, InterfaceTypeComposer)) {
-      return (this.get(typeName): any);
+      return this.get(typeName) as any;
     }
     throw new Error(`Cannot find InterfaceTypeComposer with name ${typeName}`);
   }
 
-  getUTC(typeName: any): UnionTypeComposer<any, TContext> {
+  getUTC(typeName: unknown): UnionTypeComposer<any, TContext> {
     if (this.hasInstance(typeName, GraphQLUnionType)) {
-      return UnionTypeComposer.create((this.get(typeName): any), this);
+      return UnionTypeComposer.create(this.get(typeName) as any, this);
     }
     if (this.hasInstance(typeName, UnionTypeComposer)) {
-      return (this.get(typeName): any);
+      return this.get(typeName) as any;
     }
     throw new Error(`Cannot find UnionTypeComposer with name ${typeName}`);
   }
 
-  getSTC(typeName: any): ScalarTypeComposer<TContext> {
+  getSTC(typeName: unknown): ScalarTypeComposer<TContext> {
     if (this.hasInstance(typeName, GraphQLScalarType)) {
-      return ScalarTypeComposer.create((this.get(typeName): any), this);
+      return ScalarTypeComposer.create(this.get(typeName) as any, this);
     }
     if (this.hasInstance(typeName, ScalarTypeComposer)) {
-      return (this.get(typeName): any);
+      return this.get(typeName) as any;
     }
     throw new Error(`Cannot find ScalarTypeComposer with name ${typeName}`);
   }
@@ -669,7 +775,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     }
 
     if (type == null) {
-      throw new Error(`Cannot find type with name ${(typeOrName: any)}`);
+      throw new Error(`Cannot find type with name ${typeOrName}`);
     } else if (isNamedTypeComposer(type)) {
       return type;
     }
@@ -699,7 +805,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   }
 
   /* @deprecated 8.0.0 */
-  addAsComposer(typeOrSDL: mixed): string {
+  addAsComposer(typeOrSDL: ComposeOutputTypeDefinition<any> | ComposeInputTypeDefinition): string {
     deprecate(
       'Use schemaComposer.add() method instead. From v7 all types in storage saved as TypeComposers.'
     );
@@ -754,12 +860,12 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     this._directives = BUILT_IN_DIRECTIVES;
   }
 
-  add(typeOrSDL: mixed): string {
+  add(typeOrSDL: ComposeOutputTypeDefinition<any> | ComposeInputTypeDefinition): string {
     const tc = this.createTC(typeOrSDL);
     return tc.getTypeName();
   }
 
-  set(key: any, value: NamedTypeComposer<TContext>): SchemaComposer<TContext> {
+  set(key: unknown, value: NamedTypeComposer<TContext>): SchemaComposer<TContext> {
     if (!isNamedTypeComposer(value)) {
       // eslint-disable-next-line
       deprecate(
@@ -802,7 +908,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   /**
    * This method is used in TypeMapper and does not throw error if directive absent
    */
-  _getDirective(name: string): ?GraphQLDirective {
+  _getDirective(name: string): GraphQLDirective | undefined {
     const directives = this.getDirectives();
     return directives.find((d) => d.name === name);
   }
@@ -839,11 +945,11 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
     return 'SchemaComposer';
   }
 
-  toJSON() {
+  toJSON(): string {
     return 'SchemaComposer';
   }
 
-  inspect() {
+  inspect(): string {
     return 'SchemaComposer';
   }
 
@@ -856,9 +962,9 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
   getTypeSDL(
     typeName: string,
     opts?: SchemaPrinterOptions & {
-      deep?: ?boolean,
-      sortTypes?: ?boolean,
-      exclude?: ?(string[]),
+      deep?: boolean;
+      sortTypes?: boolean;
+      exclude?: string[];
     }
   ): string {
     return this.getAnyTC(typeName).toSDL(opts);
@@ -894,8 +1000,8 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
    * @param {Object} options
    * @param {String[]} options.exclude - do not add resolvers from provided types
    */
-  getResolveMethods(opts?: { exclude?: ?(string[]) }): GraphQLToolsResolveMethods<TContext> {
-    const resolveMethods = {};
+  getResolveMethods(opts?: { exclude?: string[] | null }): GraphQLToolsResolveMethods<TContext> {
+    const resolveMethods = {} as Record<string, any>;
     const exclude = opts?.exclude || [];
     visitSchema(this, {
       OBJECT_TYPE: (tc: ObjectTypeComposer<any, any>) => {
@@ -911,7 +1017,7 @@ export class SchemaComposer<TContext> extends TypeStorage<any, NamedTypeComposer
         const typename = tc.getTypeName();
         if (exclude.includes(typename)) return;
         let hasDifferentIntervalValues = false;
-        const internalValues = {};
+        const internalValues = {} as Record<string, any>;
         forEachKey(tc.getFields(), (fc, fieldName) => {
           if (fc.value !== fieldName) hasDifferentIntervalValues = true;
           internalValues[fieldName] = fc.value;

@@ -1,4 +1,3 @@
-/* @flow strict */
 /* eslint-disable no-use-before-define */
 
 import { GraphQLInterfaceType, GraphQLObjectType } from './graphql';
@@ -102,8 +101,6 @@ export class InterfaceTypeComposer<TSource, TContext> {
   _gqcFallbackResolveType: ObjectTypeComposer<any, TContext> | GraphQLObjectType | null = null;
   _gqcExtensions: void | Extensions;
 
-  // Also supported `GraphQLInterfaceType` but in such case FlowType force developers
-  // to explicitly write annotations in their code. But it's bad.
   static create<TSrc, TCtx>(
     typeDef: InterfaceTypeComposerDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>
@@ -154,10 +151,7 @@ export class InterfaceTypeComposer<TSource, TContext> {
       IFTC = new InterfaceTypeComposer(typeDef, sc);
     } else if (typeDef instanceof InterfaceTypeComposer) {
       IFTC = typeDef;
-    } else if (
-      isObject(typeDef) &&
-      !(typeDef instanceof InterfaceTypeComposer) // hate Flow 😈
-    ) {
+    } else if (isObject(typeDef) && !(typeDef instanceof InterfaceTypeComposer)) {
       const type = new GraphQLInterfaceType({
         ...(typeDef: any),
         fields: () => ({}),
@@ -238,9 +232,6 @@ export class InterfaceTypeComposer<TSource, TContext> {
         this.schemaComposer.typeMapper.parseDirectives(graphqlType?.astNode?.directives)
       );
     }
-
-    // alive proper Flow type casting in autosuggestions for class with Generics
-    /* :: return this; */
   }
 
   // -----------------------------------------------
@@ -260,7 +251,6 @@ export class InterfaceTypeComposer<TSource, TContext> {
     // In most cases FieldConfig is an object,
     // but for solving hoisting problems it's quite good to wrap it in function.
     if (isFunction(this._gqcFields[fieldName])) {
-      // $FlowFixMe
       const unwrappedFieldConfig = this._gqcFields[fieldName](this.schemaComposer);
       this.setField(fieldName, unwrappedFieldConfig);
     }

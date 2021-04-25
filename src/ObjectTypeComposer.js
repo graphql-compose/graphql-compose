@@ -1,4 +1,3 @@
-/* @flow strict */
 /* eslint-disable no-use-before-define */
 
 import { GraphQLObjectType, GraphQLInputObjectType, GraphQLInterfaceType } from './graphql';
@@ -365,9 +364,6 @@ export class ObjectTypeComposer<TSource, TContext> {
         this.schemaComposer.typeMapper.parseDirectives(graphqlType?.astNode?.directives)
       );
     }
-
-    // alive proper Flow type casting in autosuggestions for class with Generics
-    /* :: return this; */
   }
 
   // -----------------------------------------------
@@ -389,7 +385,6 @@ export class ObjectTypeComposer<TSource, TContext> {
     // In most cases FieldConfig is an object,
     // but for solving hoisting problems it's quite good to wrap it in function.
     if (isFunction(this._gqcFields[fieldName])) {
-      // $FlowFixMe
       const unwrappedFieldConfig = this._gqcFields[fieldName](this.schemaComposer);
       this.setField(fieldName, unwrappedFieldConfig);
     }

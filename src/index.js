@@ -1,4 +1,4 @@
-/* @flow strict */
+/* @flow */
 
 import * as graphql from './graphql';
 import { SchemaComposer } from './SchemaComposer';

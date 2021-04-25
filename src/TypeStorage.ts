@@ -1,17 +1,12 @@
-/* @flow strict */
-
 import { isFunction } from './utils/is';
 import { inspect } from './utils/misc';
 
 // TypeStorage has all methods from Map class
-export class TypeStorage<K, V> {
+export class TypeStorage<K = any, V = any> {
   types: Map<K | string, V>;
 
-  constructor(): TypeStorage<K, V> {
+  constructor() {
     this.types = new Map();
-
-    // alive proper Flow type casting in autosuggestions for class with Generics
-    /* :: return this; */
   }
 
   get size(): number {
@@ -31,7 +26,7 @@ export class TypeStorage<K, V> {
   }
 
   forEach(
-    callbackfn: (value: V, index: K | string, map: Map<K | string, V>) => mixed,
+    callbackfn: (value: V, index: K | string, map: Map<K | string, V>) => unknown,
     thisArg?: any
   ): void {
     return this.types.forEach(callbackfn, thisArg);
@@ -62,14 +57,13 @@ export class TypeStorage<K, V> {
     return this.types.values();
   }
 
-  add(value: V): ?string {
+  add(value: V): string | null {
     if (value) {
-      let typeName: ?string;
-      if (value.getTypeName && value.getTypeName.call) {
-        // $FlowFixMe
-        typeName = (value.getTypeName(): any);
-      } else if (value.name) {
-        typeName = (value.name: any);
+      let typeName: string | undefined;
+      if ((value as any).getTypeName && (value as any).getTypeName.call) {
+        typeName = (value as any).getTypeName();
+      } else if ((value as any).name) {
+        typeName = (value as any).name;
       }
 
       if (typeName) {
@@ -90,12 +84,12 @@ export class TypeStorage<K, V> {
   }
 
   getOrSet(typeName: K, typeOrThunk: V | ((schemaComposer: this) => V)): V {
-    const existedType = (this.types.get(typeName): any);
+    const existedType = this.types.get(typeName);
     if (existedType) {
       return existedType;
     }
 
-    const gqType: any = isFunction(typeOrThunk) ? (typeOrThunk: any)(this) : typeOrThunk;
+    const gqType: any = isFunction(typeOrThunk) ? typeOrThunk(this) : typeOrThunk;
     if (gqType) {
       this.set(typeName, gqType);
     }
