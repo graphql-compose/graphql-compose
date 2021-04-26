@@ -140,7 +140,9 @@ export function convertObjectFieldMapToConfig(
         args[argName] = {
           ...ac,
           type: isThunk
-            ? new ThunkComposer(() => sc.typeMapper.convertInputTypeDefinition(ac.type || arg))
+            ? new ThunkComposer(
+                () => sc.typeMapper.convertInputTypeDefinition(ac.type || arg) as any
+              )
             : sc.typeMapper.convertInputTypeDefinition(ac.type || arg),
         };
         if (ac?.astNode?.directives) {
@@ -159,10 +161,11 @@ export function convertObjectFieldMapToConfig(
         args[argName] = {
           ...(isObject(sourceArgs[argName]) ? sourceArgs[argName] : null),
           type: isThunk
-            ? new ThunkComposer(() =>
-                sc.typeMapper.convertInputTypeDefinition(
-                  sourceArgs[argName].type || sourceArgs[argName]
-                )
+            ? new ThunkComposer(
+                () =>
+                  sc.typeMapper.convertInputTypeDefinition(
+                    sourceArgs[argName].type || sourceArgs[argName]
+                  ) as any
               )
             : sc.typeMapper.convertInputTypeDefinition(
                 sourceArgs[argName].type || sourceArgs[argName]
@@ -175,7 +178,9 @@ export function convertObjectFieldMapToConfig(
     fields[n] = {
       ...fc,
       type: isThunk
-        ? new ThunkComposer(() => sc.typeMapper.convertOutputTypeDefinition(fc.type || _fields[n]))
+        ? new ThunkComposer(
+            () => sc.typeMapper.convertOutputTypeDefinition(fc.type || _fields[n]) as any
+          )
         : sc.typeMapper.convertOutputTypeDefinition(fc.type || _fields[n]),
     };
 
@@ -290,7 +295,9 @@ export function convertInputFieldMapToConfig(
     fields[n] = {
       ...fc,
       type: isThunk
-        ? new ThunkComposer(() => sc.typeMapper.convertInputTypeDefinition(fc.type || _fields[n]))
+        ? new ThunkComposer(
+            () => sc.typeMapper.convertInputTypeDefinition(fc.type || _fields[n]) as any
+          )
         : sc.typeMapper.convertInputTypeDefinition(fc.type || _fields[n]),
     };
     if (fc?.astNode?.directives) {
@@ -325,7 +332,7 @@ export function convertObjectTypeArrayAsThunk(
     const tc = sc.typeMapper.convertOutputTypeDefinition(type);
     if (!tc && isThunk) {
       return new ThunkComposer(
-        () => sc.typeMapper.convertOutputTypeDefinition(type),
+        () => sc.typeMapper.convertOutputTypeDefinition(type) as any,
         getComposeTypeName(type, sc)
       );
     }
@@ -356,7 +363,7 @@ export function convertInterfaceArrayAsThunk(
 
     return isThunk
       ? new ThunkComposer(
-          () => sc.typeMapper.convertInterfaceTypeDefinition(type),
+          () => sc.typeMapper.convertInterfaceTypeDefinition(type) as any,
           getComposeTypeName(type, sc)
         )
       : sc.typeMapper.convertInterfaceTypeDefinition(type);

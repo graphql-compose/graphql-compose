@@ -54,7 +54,7 @@ export type InputTypeComposerFieldConfigMap = ObjMap<InputTypeComposerFieldConfi
 export type InputTypeComposerFieldConfigMapDefinition = ObjMap<InputTypeComposerFieldConfigDefinition>;
 
 export type InputTypeComposerFieldConfigDefinition =
-  | InputTypeComposerFieldConfigAsObjectDefinition
+  | ThunkWithSchemaComposer<InputTypeComposerFieldConfigAsObjectDefinition, SchemaComposer<any>>
   | ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<any>>;
 
 export type InputTypeComposerFieldConfigAsObjectDefinition = {
@@ -87,7 +87,7 @@ export class InputTypeComposer<TContext = any> {
   /**
    * Create `InputTypeComposer` with adding it by name to the `SchemaComposer`.
    */
-  static create<TCtx>(
+  static create<TCtx = any>(
     typeDef: InputTypeComposerDefinition,
     schemaComposer: SchemaComposer<TCtx>
   ): InputTypeComposer<TCtx> {
@@ -109,7 +109,7 @@ export class InputTypeComposer<TContext = any> {
   /**
    * Create `InputTypeComposer` without adding it to the `SchemaComposer`. This method may be useful in plugins, when you need to create type temporary.
    */
-  static createTemp<TCtx>(
+  static createTemp<TCtx = any>(
     typeDef: InputTypeComposerDefinition,
     schemaComposer?: SchemaComposer<TCtx>
   ): InputTypeComposer<TCtx> {

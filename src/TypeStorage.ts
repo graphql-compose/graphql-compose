@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { isFunction } from './utils/is';
 import { inspect } from './utils/misc';
 

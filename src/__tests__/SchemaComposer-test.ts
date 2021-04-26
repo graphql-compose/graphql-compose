@@ -1081,7 +1081,7 @@ describe('SchemaComposer', () => {
       sc.addResolveMethods({
         Date: {
           name: 'Date',
-          serialize(value) {
+          serialize: (value: any) => {
             return new Date(value).toISOString().slice(0, 10);
           },
         },

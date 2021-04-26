@@ -17,7 +17,7 @@ export function toDottedObject(
 ): Record<string, any> {
   Object.keys(obj).forEach((key) => {
     if (Object(obj[key]) === obj[key]) {
-      return toDottedObject(obj[key], target, path.concat(key));
+      toDottedObject(obj[key], target, path.concat(key));
     } else {
       target[path.concat(key).join('.')] = obj[key];
     }
