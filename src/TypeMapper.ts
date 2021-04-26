@@ -136,7 +136,7 @@ export type TypeAsString = TypeDefinitionString | TypeWrappedString | TypeNameSt
  * This is slightly rewritten [buildASTSchema](https://github.com/graphql/graphql-js/blob/master/src/utilities/buildASTSchema.js)
  * utility from `graphql-js` that allows to create type from a string (SDL).
  */
-export class TypeMapper<TContext> {
+export class TypeMapper<TContext = any> {
   schemaComposer: SchemaComposer<TContext>;
 
   constructor(schemaComposer: SchemaComposer<TContext>) {
@@ -232,9 +232,7 @@ export class TypeMapper<TContext> {
     throw new Error(`Cannot convert to Composer the following value: ${inspect(type)}`);
   }
 
-  convertSDLWrappedTypeName(
-    str: TypeWrappedString | TypeNameString
-  ): AnyTypeComposer<TContext> | void {
+  convertSDLWrappedTypeName(str: TypeWrappedString | TypeNameString): AnyTypeComposer<TContext> {
     const typeAST: TypeNode = parseType(str);
     return this.typeFromAST(typeAST);
   }

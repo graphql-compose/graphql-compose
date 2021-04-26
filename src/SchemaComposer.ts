@@ -56,6 +56,7 @@ import {
   SchemaDefinitionNode,
   GraphQLResolveInfo,
   SchemaExtensionNode,
+  GraphQLScalarTypeConfig,
 } from './graphql';
 import {
   printSchemaComposer,
@@ -75,15 +76,22 @@ type ExtraSchemaConfig = {
   keepUnusedTypes?: boolean | null;
 };
 
-type GraphQLToolsResolveMethods<TContext> = {
-  [typeName: string]: {
-    [fieldName: string]: (
-      source: any,
-      args: Record<string, any>,
-      context: TContext,
-      info: GraphQLResolveInfo
-    ) => any;
-  };
+export type GraphQLToolsResolveMethods<TContext> = {
+  [typeName: string]:
+    | {
+        [fieldName: string]:
+          | ((
+              source: any,
+              args: Record<string, any>,
+              context: TContext,
+              info: GraphQLResolveInfo
+            ) => any)
+          | string
+          | number
+          | Record<string, any>;
+      }
+    | GraphQLNamedType
+    | GraphQLScalarTypeConfig<any, any>;
 };
 
 export const BUILT_IN_DIRECTIVES = [
@@ -243,7 +251,7 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
   /**
    * When using Interfaces you may have such Types which are hidden under Interface.resolveType method. In such cases you should add these types explicitly. Cause `buildSchema()` will take only real used types and types which added via `addSchemaMustHaveType()` method.
    */
-  addSchemaMustHaveType(type: AnyType<TContext>): SchemaComposer<TContext> {
+  addSchemaMustHaveType(type: AnyType<TContext>): this {
     this._schemaMustHaveTypes.push(type);
     return this;
   }
@@ -312,7 +320,7 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
    *     const schemaComposer.getOTC('User').removeField('password');
    *     const newSchema = schemaComposer.buildSchema();
    */
-  merge(schema: GraphQLSchema | SchemaComposer<any>): SchemaComposer<TContext> {
+  merge(schema: GraphQLSchema | SchemaComposer<any>): this {
     let sc: SchemaComposer<any>;
     if (schema instanceof SchemaComposer) {
       sc = schema;
@@ -374,7 +382,7 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
     return this._description;
   }
 
-  setDescription(description: string | undefined): SchemaComposer<TContext> {
+  setDescription(description: string | undefined): this {
     this._description = description;
     return this;
   }
@@ -488,7 +496,7 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
           return;
         }
       } else if (tc instanceof ObjectTypeComposer) {
-        const fieldsResolve = typesFieldsResolve[typeName];
+        const fieldsResolve = typesFieldsResolve[typeName] as any;
         const fieldNames = Object.keys(fieldsResolve);
         fieldNames.forEach((fieldName) => {
           tc.extendField(fieldName, {
@@ -497,7 +505,7 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
         });
         return;
       } else if (tc instanceof EnumTypeComposer) {
-        const enumValuesMap = typesFieldsResolve[typeName];
+        const enumValuesMap = typesFieldsResolve[typeName] as any;
         const fieldNames = Object.keys(enumValuesMap);
         fieldNames.forEach((fieldName) => {
           tc.extendField(fieldName, {
@@ -865,7 +873,7 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
     return tc.getTypeName();
   }
 
-  set(key: unknown, value: NamedTypeComposer<TContext>): SchemaComposer<TContext> {
+  set(key: unknown, value: NamedTypeComposer<TContext>): this {
     if (!isNamedTypeComposer(value)) {
       // eslint-disable-next-line
       deprecate(
@@ -883,7 +891,7 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
    * -----------------------------------------------
    */
 
-  addDirective(directive: GraphQLDirective): SchemaComposer<TContext> {
+  addDirective(directive: GraphQLDirective): this {
     if (!(directive instanceof GraphQLDirective)) {
       throw new Error(dedent`
         You should provide GraphQLDirective to schemaComposer.addDirective(), but received: 
@@ -896,7 +904,7 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
     return this;
   }
 
-  removeDirective(directive: GraphQLDirective): SchemaComposer<TContext> {
+  removeDirective(directive: GraphQLDirective): this {
     this._directives = this._directives.filter((o) => o !== directive);
     return this;
   }

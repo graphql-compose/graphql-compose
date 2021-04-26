@@ -15,17 +15,17 @@ export function createThunkedObjectProxy<T extends Record<string, any>>(thunk: (
   };
 
   const proxy = new Proxy(data, {
-    get(o, k) {
+    get(_o, k) {
       return getFC()[k];
     },
-    set(o, k, v) {
+    set(_o, k, v) {
       getFC()[k] = v;
       return true;
     },
-    has(o, k) {
+    has(_o, k) {
       return k in getFC();
     },
-    deleteProperty(o, k) {
+    deleteProperty(_o, k) {
       delete getFC()[k];
       return true;
     },
@@ -42,7 +42,7 @@ export function createThunkedObjectProxy<T extends Record<string, any>>(thunk: (
     //   console.log('hasOwn');
     //   return Object.
     // },
-    defineProperty(o, k, d: any) {
+    defineProperty(_o, k, d: any) {
       return Object.defineProperty(getFC(), k, d);
     },
     // getPropertyNames() {
@@ -55,7 +55,7 @@ export function createThunkedObjectProxy<T extends Record<string, any>>(thunk: (
     // getPropertyDescriptor(o, k) {
     //   return Object.getPropertyDescriptor(getFC(), k);
     // },
-    getOwnPropertyDescriptor(o, k: any) {
+    getOwnPropertyDescriptor(_o, k: any) {
       return Object.getOwnPropertyDescriptor(getFC(), k);
     },
   });

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable no-nested-ternary */
 
 import { isObject } from './is';
@@ -120,13 +121,13 @@ export function forEachKey<V>(
  *      const result = mapEachKey(obj, (v, k) => `${v}${k}`);
  *      // result = { a: '1a', b: '2b', c: '3c' }
  */
-export function mapEachKey<V, NewV, NonObjectValue>(
-  obj: { [key: string]: V } | ObjMap<V> | NonObjectValue,
-  callback: (value: V, key: string) => NewV
-): ObjMap<NewV> | NonObjectValue {
-  if (!isObject(obj)) return obj;
+export function mapEachKey<NewV = any, T extends Object | undefined = {}>(
+  obj: T,
+  callback: (value: NonNullable<T>[keyof NonNullable<T>], key: keyof NonNullable<T>) => NewV
+): T extends undefined ? undefined : ObjMap<NewV> {
+  if (!isObject(obj)) return obj as any;
   const result = {} as any;
-  Object.keys(obj as any).forEach((key) => {
+  Object.keys(obj).forEach((key: any) => {
     result[key] = callback((obj as any)[key], key);
   });
   return result;

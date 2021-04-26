@@ -20,7 +20,7 @@ describe('ThunkComposer', () => {
   describe('getter ofType', () => {
     it('should call `thunk` once and memoize result', () => {
       const fn = jest.fn(() => 'Some calculated type');
-      const tc2 = new ThunkComposer(fn, 'SomeType');
+      const tc2 = new ThunkComposer(fn as any, 'SomeType');
       expect(fn).toHaveBeenCalledTimes(0);
       expect(tc2.ofType).toBe('Some calculated type');
       expect(fn).toHaveBeenCalledTimes(1);

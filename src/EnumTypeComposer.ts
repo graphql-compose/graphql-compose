@@ -57,7 +57,7 @@ export type EnumTypeComposerValueConfigMapDefinition = ObjMapReadOnly<EnumTypeCo
 /**
  * `EnumTypeComposer` is a class which helps to create and modify `GraphQLEnumType`.
  */
-export class EnumTypeComposer<TContext> {
+export class EnumTypeComposer<TContext = any> {
   schemaComposer: SchemaComposer<TContext>;
   _gqType: GraphQLEnumType;
   _gqcExtensions?: Extensions;
@@ -66,7 +66,7 @@ export class EnumTypeComposer<TContext> {
   /**
    * Create `EnumTypeComposer` with adding it by name to the `SchemaComposer`. This type became available in SDL by its name.
    */
-  static create<TCtx>(
+  static create<TCtx = any>(
     typeDef: EnumTypeComposerDefinition,
     schemaComposer: SchemaComposer<TCtx>
   ): EnumTypeComposer<TCtx> {
@@ -88,7 +88,7 @@ export class EnumTypeComposer<TContext> {
   /**
    * Create `EnumTypeComposer` without adding it to the `SchemaComposer`. This method may be useful in plugins, when you need to create type temporary.
    */
-  static createTemp<TCtx>(
+  static createTemp<TCtx = any>(
     typeDef: EnumTypeComposerDefinition,
     schemaComposer?: SchemaComposer<TCtx>
   ): EnumTypeComposer<TCtx> {
