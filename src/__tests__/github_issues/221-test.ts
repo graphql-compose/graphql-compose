@@ -1,4 +1,4 @@
-import { find, filter } from 'lodash'; // eslint-disable-line
+import { EnumTypeComposer } from 'src/EnumTypeComposer';
 import { SchemaComposer } from '../..';
 
 describe('github issue #221: addTypeDefs crashes with argument having default enum value', () => {
@@ -18,6 +18,8 @@ describe('github issue #221: addTypeDefs crashes with argument having default en
     }).not.toThrowError('Type with name "ImageFormat" does not exists');
 
     expect(sc.getOTC('Image').getFieldArg('random', 'format').defaultValue).toBe('JPG');
-    expect(sc.getOTC('Image').getFieldArgTC('random', 'format').getFieldNames()).toEqual(['JPG']);
+    expect(
+      (sc.getOTC('Image').getFieldArgTC('random', 'format') as EnumTypeComposer).getFieldNames()
+    ).toEqual(['JPG']);
   });
 });

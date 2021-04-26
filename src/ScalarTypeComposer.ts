@@ -31,7 +31,7 @@ export type ScalarTypeComposerAsObjectDefinition = GraphQLScalarTypeConfig<any, 
 /**
  * `ScalarTypeComposer` is a class which helps to create and modify `GraphQLScalarType`.
  */
-export class ScalarTypeComposer<TContext> {
+export class ScalarTypeComposer<TContext = any> {
   schemaComposer: SchemaComposer<TContext>;
   _gqType: GraphQLScalarType;
   _gqcExtensions: Extensions | undefined;
@@ -46,7 +46,7 @@ export class ScalarTypeComposer<TContext> {
    * Create `ScalarTypeComposer` with adding it by name to the `SchemaComposer`.
    * This type became available in SDL by its name.
    */
-  static create<TCtx>(
+  static create<TCtx = any>(
     typeDef: ScalarTypeComposerDefinition,
     schemaComposer: SchemaComposer<TCtx>
   ): ScalarTypeComposer<TCtx> {
@@ -69,7 +69,7 @@ export class ScalarTypeComposer<TContext> {
    * Create `ScalarTypeComposer` without adding it to the `SchemaComposer`.
    * This method may be useful in plugins, when you need to create type temporary.
    */
-  static createTemp<TCtx>(
+  static createTemp<TCtx = any>(
     typeDef: ScalarTypeComposerDefinition,
     schemaComposer?: SchemaComposer<TCtx>
   ): ScalarTypeComposer<TCtx> {

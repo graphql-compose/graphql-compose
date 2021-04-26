@@ -78,7 +78,7 @@ export type UnionTypeComposerThunked<TReturn, TContext> =
 /**
  * Class that helps to create `UnionTypeComposer`s and provide ability to modify them.
  */
-export class UnionTypeComposer<TSource, TContext> {
+export class UnionTypeComposer<TSource = any, TContext = any> {
   schemaComposer: SchemaComposer<TContext>;
   _gqType: GraphQLUnionType;
   _gqcTypes: Set<ObjectTypeComposerThunked<any, TContext>>;
@@ -89,7 +89,7 @@ export class UnionTypeComposer<TSource, TContext> {
   /**
    * Create `UnionTypeComposer` with adding it by name to the `SchemaComposer`.
    */
-  static create<TSrc, TCtx>(
+  static create<TSrc = any, TCtx = any>(
     typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
     schemaComposer: SchemaComposer<TCtx>
   ): UnionTypeComposer<TSrc, TCtx> {
@@ -111,7 +111,7 @@ export class UnionTypeComposer<TSource, TContext> {
   /**
    * Create `UnionTypeComposer` without adding it to the `SchemaComposer`. This method may be useful in plugins, when you need to create type temporary.
    */
-  static createTemp<TSrc, TCtx>(
+  static createTemp<TSrc = any, TCtx = any>(
     typeDef: UnionTypeComposerDefinition<TSrc, TCtx>,
     schemaComposer?: SchemaComposer<TCtx>
   ): UnionTypeComposer<TSrc, TCtx> {
@@ -514,7 +514,7 @@ export class UnionTypeComposer<TSource, TContext> {
   getTypeResolverNames(): string[] {
     const typeResolversMap = this.getTypeResolvers();
     const names = [] as string[];
-    typeResolversMap.forEach((resolveFn, tc) => {
+    typeResolversMap.forEach((_, tc) => {
       names.push(tc.getTypeName());
     });
     return names;
@@ -769,7 +769,7 @@ export class UnionTypeComposer<TSource, TContext> {
    */
   getNestedTCs(
     opts: {
-      exclude?: string[] | null;
+      exclude?: string[] | undefined;
     } = {},
     passedTypes: Set<NamedTypeComposer<any>> = new Set()
   ): Set<NamedTypeComposer<any>> {

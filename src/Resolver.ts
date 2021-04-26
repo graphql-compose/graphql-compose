@@ -28,7 +28,7 @@ import { isFunction, isString } from './utils/is';
 import { filterByDotPaths } from './utils/filterByDotPaths';
 import { getProjectionFromAST } from './utils/projection';
 import type { ProjectionType } from './utils/projection';
-import { typeByPath, type TypeInPath } from './utils/typeByPath';
+import { typeByPath, TypeInPath } from './utils/typeByPath';
 import {
   unwrapOutputTC,
   unwrapInputTC,
@@ -52,30 +52,30 @@ export type ResolverKinds = 'query' | 'mutation' | 'subscription';
 
 export type ResolverDefinition<TSource, TContext, TArgs = any> = {
   type?: ThunkWithSchemaComposer<
-    | $ReadOnly<ComposeOutputType<TContext>>
+    | Readonly<ComposeOutputType<TContext>>
     | ComposeOutputTypeDefinition<TContext>
-    | $ReadOnly<Resolver<any, TContext, any>>,
+    | Readonly<Resolver<any, TContext, any>>,
     SchemaComposer<TContext>
-  >,
-  resolve?: ResolverRpCb<TSource, TContext, TArgs>,
-  args?: ObjectTypeComposerArgumentConfigMapDefinition<TArgs>,
-  name?: string,
-  displayName?: string,
-  kind?: ResolverKinds,
-  description?: string,
-  deprecationReason?: string | null,
-  projection?: ProjectionType,
-  parent?: Resolver<any, TContext, any>,
-  extensions?: Extensions,
+  >;
+  resolve?: ResolverRpCb<TSource, TContext, TArgs>;
+  args?: ObjectTypeComposerArgumentConfigMapDefinition<TArgs>;
+  name?: string;
+  displayName?: string;
+  kind?: ResolverKinds;
+  description?: string;
+  deprecationReason?: string | null;
+  projection?: ProjectionType;
+  parent?: Resolver<any, TContext, any>;
+  extensions?: Extensions;
 };
 
 export type ResolverResolveParams<TSource, TContext, TArgs = any> = {
-  source: TSource,
-  args: TArgs,
-  context: TContext,
-  info: GraphQLResolveInfo,
-  projection: $Shape<ProjectionType>,
-  [opt: string]: any,
+  source: TSource;
+  args: TArgs;
+  context: TContext;
+  info: GraphQLResolveInfo;
+  projection: Partial<ProjectionType>;
+  [opt: string]: any;
 };
 
 export type ResolverFilterArgFn<TSource, TContext, TArgs = any> = (
@@ -85,12 +85,12 @@ export type ResolverFilterArgFn<TSource, TContext, TArgs = any> = (
 ) => any;
 
 export type ResolverFilterArgConfigDefinition<TSource, TContext, TArgs = any> = {
-  name: string,
-  type: ComposeInputTypeDefinition,
-  description?: string | null | void,
-  query?: ResolverFilterArgFn<TSource, TContext, TArgs>,
-  filterTypeNameFallback?: string,
-  defaultValue?: any,
+  name: string;
+  type: ComposeInputTypeDefinition;
+  description?: string | null | void;
+  query?: ResolverFilterArgFn<TSource, TContext, TArgs>;
+  filterTypeNameFallback?: string;
+  defaultValue?: any;
 };
 
 export type ResolverSortArgFn<TSource, TContext, TArgs = any> = (
@@ -98,17 +98,17 @@ export type ResolverSortArgFn<TSource, TContext, TArgs = any> = (
 ) => any;
 
 export type ResolverSortArgConfig<TSource, TContext, TArgs = any> = {
-  name: string,
-  sortTypeNameFallback?: string,
+  name: string;
+  sortTypeNameFallback?: string;
   value:
     | { [key: string]: any }
     | ResolverSortArgFn<TSource, TContext, TArgs>
     | string
     | number
     | boolean
-    | any[],
-  deprecationReason?: string | null,
-  description?: string | null,
+    | any[];
+  deprecationReason?: string | null;
+  description?: string | null;
 };
 
 export type ResolverWrapCb<TNewSource, TPrevSource, TContext, TNewArgs = any, TPrevArgs = any> = (
@@ -124,9 +124,9 @@ export type ResolverNextRpCb<TSource, TContext, TArgs = any> = (
 ) => ResolverRpCb<TSource, TContext, TArgs>;
 
 export type ResolverDebugOpts = {
-  showHidden?: boolean,
-  depth?: number,
-  colors?: boolean,
+  showHidden?: boolean;
+  depth?: number;
+  colors?: boolean;
 };
 
 export type ResolverMiddleware<TSource, TContext, TArgs = any> = (
@@ -137,26 +137,29 @@ export type ResolverMiddleware<TSource, TContext, TArgs = any> = (
   info: GraphQLResolveInfo
 ) => any;
 
-export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
+/**
+ * The most interesting class in `graphql-compose`. The main goal of `Resolver` is to keep available resolve methods for Type and use them for building relation with other types.
+ */
+export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any> {
   schemaComposer: SchemaComposer<TContext>;
+  // @ts-ignore defined in constructor via setter
   type: ComposeOutputType<TContext>;
+  // @ts-ignore defined in constructor via setter
   args: ObjectTypeComposerArgumentConfigMap<any>;
   name: string;
-  displayName: string | void;
-  kind: ResolverKinds | void;
-  description: string | void;
-  deprecationReason: string | null | void;
+  displayName: string | undefined;
+  kind: ResolverKinds | undefined;
+  description: string | undefined;
+  deprecationReason: string | null | undefined;
   projection: ProjectionType;
-  parent: Resolver<TSource, TContext, any> | void;
-  extensions: Extensions | void;
-  resolve: (
-    resolveParams: $Shape<ResolverResolveParams<TSource, TContext, TArgs>>
-  ) => Promise<any> | any;
+  parent: Resolver<TSource, TContext, any> | undefined;
+  extensions: Extensions | undefined;
+  resolve: ResolverRpCb<TSource, TContext, TArgs> = () => Promise.resolve();
 
   constructor(
     opts: ResolverDefinition<TSource, TContext, TArgs>,
     schemaComposer: SchemaComposer<TContext>
-  ): Resolver<TSource, TContext, TArgs> {
+  ) {
     if (!(schemaComposer instanceof SchemaComposer)) {
       throw new Error(
         'You must provide SchemaComposer instance as a second argument for `new Resolver(opts, SchemaComposer)`'
@@ -180,7 +183,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
       this.setType(opts.type);
     }
 
-    this.setArgs(opts.args || {});
+    this.setArgs(opts.args || ({} as ObjectTypeComposerArgumentConfigMapDefinition<any>));
 
     if (opts.resolve) {
       this.resolve = opts.resolve;
@@ -210,6 +213,10 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     return unwrapOutputTC(anyTC);
   }
 
+  /**
+   * Almost alias for `getTypeComposer`, but returns only ObjectTypeComposer.
+   * It will throw an error if resolver has another kind of type.
+   */
   getOTC(): ObjectTypeComposer<TReturn, TContext> {
     const anyTC = this.getTypeComposer();
     if (!(anyTC instanceof ObjectTypeComposer)) {
@@ -223,9 +230,9 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
 
   setType<TNewReturn>(
     typeDef: ThunkWithSchemaComposer<
-      | $ReadOnly<ComposeOutputType<TContext>>
+      | Readonly<ComposeOutputType<TContext>>
       | ComposeOutputTypeDefinition<TContext>
-      | $ReadOnly<Resolver<any, TContext, any>>,
+      | Readonly<Resolver<any, TContext, any>>,
       SchemaComposer<TContext>
     >
   ): Resolver<TSource, TContext, TArgs, TNewReturn> {
@@ -240,7 +247,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     }
 
     this.type = tc;
-    return (this: any);
+    return this as any;
   }
 
   // -----------------------------------------------
@@ -263,18 +270,18 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     if (isFunction(arg)) arg = arg(this.schemaComposer);
 
     if (typeof arg === 'string' || isComposeInputType(arg) || Array.isArray(arg)) {
-      return { type: (arg: any) };
+      return { type: arg as any };
     }
 
-    return (arg: any);
+    return arg;
   }
 
   getArgConfig(argName: string): GraphQLArgumentConfig {
     const ac = this.getArg(argName);
-    return ({
+    return {
       ...ac,
       type: ac.type.getType(),
-    }: any);
+    };
   }
 
   getArgType(argName: string): GraphQLInputType {
@@ -298,13 +305,10 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     args: ObjectTypeComposerArgumentConfigMapDefinition<TNewArgs>
   ): Resolver<TSource, TContext, TNewArgs> {
     this.args = this.schemaComposer.typeMapper.convertArgConfigMap(args, this.name, 'Resolver');
-    return (this: any);
+    return this as any;
   }
 
-  setArg(
-    argName: string,
-    argConfig: ObjectTypeComposerArgumentConfigDefinition
-  ): Resolver<TSource, TContext, TArgs> {
+  setArg(argName: string, argConfig: ObjectTypeComposerArgumentConfigDefinition): this {
     this.args[argName] = this.schemaComposer.typeMapper.convertArgConfig(
       argConfig,
       argName,
@@ -314,10 +318,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     return this;
   }
 
-  setArgType(
-    argName: string,
-    typeDef: Thunk<ComposeInputTypeDefinition>
-  ): Resolver<TSource, TContext, TArgs> {
+  setArgType(argName: string, typeDef: Thunk<ComposeInputTypeDefinition>): this {
     const ac = this.getArg(argName);
     const tc = this.schemaComposer.typeMapper.convertInputTypeDefinition(
       typeDef,
@@ -336,8 +337,8 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
 
   extendArg(
     argName: string,
-    partialArgConfig: $Shape<ObjectTypeComposerArgumentConfigAsObjectDefinition>
-  ): Resolver<TSource, TContext, TArgs> {
+    partialArgConfig: Partial<ObjectTypeComposerArgumentConfigAsObjectDefinition>
+  ): this {
     let prevArgConfig;
     try {
       prevArgConfig = this.getArgConfig(argName);
@@ -349,20 +350,18 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
 
     this.setArg(argName, {
       ...prevArgConfig,
-      ...(partialArgConfig: any),
+      ...(partialArgConfig as any),
     });
 
     return this;
   }
 
-  addArgs(
-    newArgs: ObjectTypeComposerArgumentConfigMapDefinition<any>
-  ): Resolver<TSource, TContext, TArgs> {
-    this.setArgs({ ...this.getArgs(), ...(newArgs: any) });
+  addArgs(newArgs: ObjectTypeComposerArgumentConfigMapDefinition<any>): this {
+    this.setArgs({ ...this.getArgs(), ...newArgs });
     return this;
   }
 
-  removeArg(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
+  removeArg(argNameOrArray: string | string[]): this {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     argNames.forEach((argName) => {
       delete this.args[argName];
@@ -370,7 +369,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     return this;
   }
 
-  removeOtherArgs(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
+  removeOtherArgs(argNameOrArray: string | string[]): this {
     const keepArgNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     Object.keys(this.args).forEach((argName) => {
       if (keepArgNames.indexOf(argName) === -1) {
@@ -380,8 +379,8 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     return this;
   }
 
-  reorderArgs(names: string[]): Resolver<TSource, TContext, TArgs> {
-    const orderedArgs = {};
+  reorderArgs(names: string[]): this {
+    const orderedArgs = {} as any;
     names.forEach((name) => {
       if (this.args[name]) {
         orderedArgs[name] = this.args[name];
@@ -417,7 +416,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     return this.getArg(argName).type instanceof NonNullComposer;
   }
 
-  makeArgNonNull(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
+  makeArgNonNull(argNameOrArray: string | string[]): this {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     argNames.forEach((argName) => {
       if (this.hasArg(argName)) {
@@ -431,11 +430,11 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
   }
 
   // alias for makeArgNonNull()
-  makeRequired(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
+  makeRequired(argNameOrArray: string | string[]): this {
     return this.makeArgNonNull(argNameOrArray);
   }
 
-  makeArgNullable(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
+  makeArgNullable(argNameOrArray: string | string[]): this {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     argNames.forEach((argName) => {
       if (this.hasArg(argName)) {
@@ -448,7 +447,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     return this;
   }
 
-  makeOptional(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
+  makeOptional(argNameOrArray: string | string[]): this {
     return this.makeArgNullable(argNameOrArray);
   }
 
@@ -460,7 +459,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     );
   }
 
-  makeArgPlural(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
+  makeArgPlural(argNameOrArray: string | string[]): this {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     argNames.forEach((argName) => {
       const ac = this.args[argName];
@@ -471,7 +470,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     return this;
   }
 
-  makeArgNonPlural(argNameOrArray: string | string[]): Resolver<TSource, TContext, TArgs> {
+  makeArgNonPlural(argNameOrArray: string | string[]): this {
     const argNames = Array.isArray(argNameOrArray) ? argNameOrArray : [argNameOrArray];
     argNames.forEach((argName) => {
       const ac = this.args[argName];
@@ -489,7 +488,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     return this;
   }
 
-  cloneArg(argName: string, newTypeName: string): Resolver<TSource, TContext, TArgs> {
+  cloneArg(argName: string, newTypeName: string): this {
     if (!{}.hasOwnProperty.call(this.args, argName)) {
       throw new Error(
         `Can not clone arg ${inspect(argName)} for resolver ${this.name}. Argument does not exist.`
@@ -498,7 +497,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
 
     const argTC = this.getArg(argName).type;
 
-    const clonnedTC = replaceTC(argTC, (unwrappedTC) => {
+    const clonedTC = replaceTC(argTC, (unwrappedTC) => {
       if (!(unwrappedTC instanceof InputTypeComposer)) {
         throw new Error(
           `Cannot clone arg ${inspect(argName)} for resolver ${inspect(this.name)}. ` +
@@ -516,14 +515,12 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
       return unwrappedTC.clone(newTypeName);
     });
 
-    if (clonnedTC) this.setArgType(argName, clonnedTC);
+    if (clonedTC) this.setArgType(argName, clonedTC);
 
     return this;
   }
 
-  addFilterArg(
-    opts: ResolverFilterArgConfigDefinition<TSource, TContext, TArgs>
-  ): Resolver<TSource, TContext, TArgs> {
+  addFilterArg(opts: ResolverFilterArgConfigDefinition<TSource, TContext, TArgs>): this {
     if (!opts.name) {
       throw new Error('For Resolver.addFilterArg the arg name `opts.name` is required.');
     }
@@ -535,9 +532,9 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     const resolver = this.wrap(null, { name: 'addFilterArg' });
 
     // get filterTC or create new one
-    let filterITC: ?InputTypeComposer<any>;
+    let filterITC: InputTypeComposer<any> | undefined;
     if (resolver.hasArg('filter')) {
-      filterITC = (resolver.getArgTC('filter'): any);
+      filterITC = resolver.getArgTC('filter') as any;
     }
 
     if (!(filterITC instanceof InputTypeComposer)) {
@@ -555,11 +552,11 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     }
 
     const { name, type, defaultValue, description } = opts;
-    filterITC.setField(name, ({ type, description }: any));
+    filterITC.setField(name, { type, description } as any);
 
     // default value can be written only on argConfig
     if (defaultValue !== undefined) {
-      resolver.args.filter.defaultValue = (resolver.args.filter.defaultValue || {}: any);
+      resolver.args.filter.defaultValue = resolver.args.filter.defaultValue || {};
       resolver.args.filter.defaultValue[name] = defaultValue;
     }
 
@@ -578,12 +575,10 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
       });
     }
 
-    return resolver;
+    return resolver as any;
   }
 
-  addSortArg(
-    opts: ResolverSortArgConfig<TSource, TContext, TArgs>
-  ): Resolver<TSource, TContext, TArgs> {
+  addSortArg(opts: ResolverSortArgConfig<TSource, TContext, TArgs>): this {
     if (!opts.name) {
       throw new Error('For Resolver.addSortArg the `opts.name` is required.');
     }
@@ -595,9 +590,9 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     const resolver = this.wrap(null, { name: 'addSortArg' });
 
     // get sortETC or create new one
-    let sortETC: ?EnumTypeComposer<TContext>;
+    let sortETC: EnumTypeComposer<TContext> | undefined;
     if (resolver.hasArg('sort')) {
-      sortETC = (resolver.getArgTC('sort'): any);
+      sortETC = resolver.getArgTC('sort') as any;
     }
 
     if (!sortETC) {
@@ -627,46 +622,33 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
       value,
     });
 
-    // If sort value is evaluable (function), then wrap resolve method
+    // If sort value is computable (function), then wrap resolve method
     const resolveNext = resolver.getResolve();
     if (isFunction(value)) {
       sortETC.extendField(name, { value: name });
-      const getValue: Function = value;
+      const getValue = value as any;
       resolver.setResolve((resolveParams) => {
         const v = objectPath.get(resolveParams, ['args', 'sort']);
         if (v === name) {
           const newSortValue = getValue(resolveParams);
-          (resolveParams.args: any).sort = newSortValue; // eslint-disable-line
+          (resolveParams.args as any).sort = newSortValue;
         }
         return resolveNext(resolveParams);
       });
     }
 
-    return resolver;
+    return resolver as any;
   }
 
   // -----------------------------------------------
   // Resolve methods
   // -----------------------------------------------
 
-  /*
-   * This method should be overriden via constructor
-   */
-  /* eslint-disable */
-  resolve(
-    resolveParams:
-      | ResolverResolveParams<TSource, TContext, TArgs>
-      | $Shape<ResolverResolveParams<TSource, TContext, TArgs>>
-  ): Promise<mixed> {
-    return Promise.resolve();
-  }
-  /* eslint-enable */
-
   getResolve(): ResolverRpCb<TSource, TContext, TArgs> {
     return this.resolve;
   }
 
-  setResolve(resolve: ResolverRpCb<TSource, TContext, TArgs>): Resolver<TSource, TContext, TArgs> {
+  setResolve(resolve: ResolverRpCb<TSource, TContext, TArgs>): this {
     this.resolve = resolve;
     return this;
   }
@@ -675,6 +657,37 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
   // Wrap methods
   // -----------------------------------------------
 
+  /**
+   * You may construct a new resolver with wrapped logic:
+   *
+   * @example
+   *     const log = [];
+   *
+   *     const mw1 = async (resolve, source, args, context, info) => {
+   *       log.push('m1.before');
+   *       const res = await resolve(source, args, context, info);
+   *       log.push('m1.after');
+   *       return res;
+   *     };
+   *
+   *     const mw2 = async (resolve, source, args, context, info) => {
+   *       log.push('m2.before');
+   *       const res = await resolve(source, args, context, info);
+   *       log.push('m2.after');
+   *       return res;
+   *     };
+   *
+   *     const newResolver = Resolver.withMiddlewares([mw1, mw2]);
+   *     await newResolver.resolve({});
+   *
+   *     expect(log).toEqual([
+   *       'm1.before',
+   *       'm2.before',
+   *       'call resolve',
+   *       'm2.after',
+   *       'm1.after'
+   *     ]);
+   */
   withMiddlewares(
     middlewares: Array<ResolverMiddleware<TSource, TContext, TArgs>>
   ): Resolver<TSource, TContext, TArgs> {
@@ -686,12 +699,12 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
       );
     }
 
-    let resolver = this;
+    let resolver = this as Resolver<TSource, TContext, TArgs>;
     middlewares.reverse().forEach((mw) => {
       let name;
       if (mw.name) {
         name = mw.name;
-      } else if ((mw: any).constructor && mw.constructor.name) {
+      } else if ((mw as any).constructor && mw.constructor.name) {
         name = mw.constructor.name;
       } else {
         name = 'middleware';
@@ -703,30 +716,28 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
           (source, args, context, info) => {
             return resolve({ ...rp, source, args, context, info });
           },
-          rp.source,
-          rp.args,
+          rp.source as any,
+          rp.args as any,
           rp.context,
           rp.info
         )
       );
-      resolver = newResolver;
+      resolver = newResolver as any;
     });
 
     return resolver;
   }
 
   wrap<TNewSource, TNewArgs>(
-    cb: ?ResolverWrapCb<TNewSource, TSource, TContext, TNewArgs, TArgs>,
-    newResolverOpts: ?$Shape<ResolverDefinition<TNewSource, TContext, TNewArgs>> = {}
+    cb?: ResolverWrapCb<TNewSource, TSource, TContext, TNewArgs, TArgs> | null,
+    newResolverOpts: Partial<ResolverDefinition<TNewSource, TContext, TNewArgs>> = {}
   ): Resolver<TNewSource, TContext, TNewArgs> {
-    const prevResolver: Resolver<TSource, TContext, TArgs> = this;
-    const newResolver = this.clone(
-      ({
-        name: 'wrap',
-        parent: prevResolver,
-        ...newResolverOpts,
-      }: any)
-    );
+    const prevResolver = this as Resolver<TSource, TContext, TArgs>;
+    const newResolver = this.clone({
+      name: 'wrap',
+      parent: prevResolver,
+      ...newResolverOpts,
+    });
 
     if (isFunction(cb)) {
       const resolver = cb(newResolver, prevResolver);
@@ -738,7 +749,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
 
   wrapResolve(
     cb: ResolverNextRpCb<TSource, TContext, TArgs>,
-    wrapperName?: string = 'wrapResolve'
+    wrapperName: string = 'wrapResolve'
   ): Resolver<TSource, TContext, TArgs> {
     return this.wrap(
       (newResolver, prevResolver) => {
@@ -754,14 +765,14 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     cb: (
       prevArgs: GraphQLFieldConfigArgumentMap
     ) => ObjectTypeComposerArgumentConfigMapDefinition<TArgs>,
-    wrapperName?: string = 'wrapArgs'
+    wrapperName: string = 'wrapArgs'
   ): Resolver<TSource, TContext, TNewArgs> {
     return this.wrap(
       (newResolver, prevResolver) => {
         // clone prevArgs, to avoid changing args in callback
         const prevArgs: any = { ...prevResolver.getArgs() };
         const newArgs = cb(prevArgs) || prevArgs;
-        newResolver.setArgs((newArgs: any));
+        newResolver.setArgs(newArgs);
         return newResolver;
       },
       { name: wrapperName }
@@ -776,7 +787,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
 
   wrapType(
     cb: (prevType: ComposeOutputType<TContext>) => ComposeOutputTypeDefinition<TContext>,
-    wrapperName?: string = 'wrapType'
+    wrapperName: string = 'wrapType'
   ): Resolver<TSource, TContext, TArgs> {
     return this.wrap(
       (newResolver, prevResolver) => {
@@ -795,12 +806,12 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
 
   getFieldConfig(
     opts: {
-      projection?: ProjectionType,
+      projection?: ProjectionType;
     } = {}
   ): GraphQLFieldConfig<TSource, TContext, TArgs> {
     const fc: GraphQLFieldConfig<TSource, TContext, TArgs> = {
       type: this.getType(),
-      args: mapEachKey((this.getArgs(): any), (ac) => ({
+      args: mapEachKey(this.getArgs(), (ac) => ({
         ...ac,
         type: ac.type.getType(),
       })),
@@ -813,17 +824,17 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
 
   getFieldResolver(
     opts: {
-      projection?: ProjectionType,
+      projection?: ProjectionType;
     } = {}
   ): GraphQLFieldResolver<TSource, TContext, TArgs> {
     const resolve = this.getResolve();
     return (source: TSource, args: TArgs, context: TContext, info: GraphQLResolveInfo) => {
       let projection = getProjectionFromAST(info);
       if (this.projection) {
-        projection = ((deepmerge(projection, this.projection): any): ProjectionType);
+        projection = deepmerge(projection, this.projection) as ProjectionType;
       }
       if (opts.projection) {
-        projection = ((deepmerge(projection, opts.projection): any): ProjectionType);
+        projection = deepmerge(projection, opts.projection) as ProjectionType;
       }
       return resolve({ source, args, context, info, projection });
     };
@@ -833,7 +844,7 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     return this.kind;
   }
 
-  setKind(kind: string): Resolver<TSource, TContext, TArgs> {
+  setKind(kind: string): this {
     if (kind !== 'query' && kind !== 'mutation' && kind !== 'subscription') {
       throw new Error(
         `You provide incorrect value '${kind}' for Resolver.setKind method. ` +
@@ -844,20 +855,20 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     return this;
   }
 
-  getDescription(): ?string {
+  getDescription(): string | undefined {
     return this.description;
   }
 
-  setDescription(description: string | void): Resolver<TSource, TContext, TArgs> {
+  setDescription(description: string | undefined): this {
     this.description = description;
     return this;
   }
 
-  getDeprecationReason(): ?string {
+  getDeprecationReason(): string | undefined | null {
     return this.deprecationReason;
   }
 
-  setDeprecationReason(reason: string | void): Resolver<TSource, TContext, TArgs> {
+  setDeprecationReason(reason: string | undefined): this {
     this.deprecationReason = reason;
     return this;
   }
@@ -866,15 +877,20 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     return typeByPath(this, path);
   }
 
+  /**
+   * Clone this Resolver with overriding of some options.
+   * Internally it just copies all properties.
+   * But for `args` and `projection` it recreates objects with the same type & values (it allows to add or remove properties without affection old Resolver).
+   */
   clone<TNewSource, TNewArgs>(
-    opts: $Shape<ResolverDefinition<TNewSource, TContext, TNewArgs>> = {}
+    opts: Partial<ResolverDefinition<TNewSource, TContext, TNewArgs>> = {}
   ): Resolver<TNewSource, TContext, TNewArgs> {
-    const oldOpts = {};
+    const oldOpts = {} as ResolverDefinition<TNewSource, TContext>;
 
-    const self: Resolver<TSource, TContext, TArgs> = this;
+    const self = this as Resolver<TSource, TContext, TArgs>;
     for (const key in self) {
       if (self.hasOwnProperty(key)) {
-        oldOpts[key] = self[key];
+        (oldOpts as any)[key] = (self as any)[key];
       }
     }
     oldOpts.displayName = undefined;
@@ -882,22 +898,22 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     if (this.projection) {
       oldOpts.projection = { ...this.projection };
     }
-    return new Resolver({ ...oldOpts, ...(opts: any) }, this.schemaComposer);
+    return new Resolver({ ...oldOpts, ...opts }, this.schemaComposer);
   }
 
   /**
    * Clone this resolver to another SchemaComposer.
-   * Also will be clonned all sub-types.
+   * Also will be cloned all sub-types.
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
-    cloneMap?: Map<any, any> = new Map()
+    cloneMap: Map<any, any> = new Map()
   ): Resolver<any, any, any> {
     if (!anotherSchemaComposer) {
       throw new Error('You should provide SchemaComposer for InterfaceTypeComposer.cloneTo()');
     }
 
-    if (cloneMap.has(this)) return (cloneMap.get(this): any);
+    if (cloneMap.has(this)) return cloneMap.get(this);
     const cloned = new Resolver(
       {
         name: this.name,
@@ -914,18 +930,18 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     cloneMap.set(this, cloned);
 
     if (this.type) {
-      cloned.type = (this.type.cloneTo(anotherSchemaComposer, cloneMap): any);
+      cloned.type = this.type.cloneTo(anotherSchemaComposer, cloneMap) as any;
     }
 
     if (this.parent) {
       cloned.parent = this.parent.cloneTo(anotherSchemaComposer, cloneMap);
     }
 
-    cloned.args = (mapEachKey((this.args: any), (argConfig) => ({
+    cloned.args = mapEachKey(this.args, (argConfig) => ({
       ...argConfig,
       type: cloneTypeTo(argConfig.type, anotherSchemaComposer, cloneMap),
       extensions: { ...argConfig.extensions },
-    })): any);
+    })) as any;
 
     return cloned;
   }
@@ -942,26 +958,26 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     }
   }
 
-  setExtensions(extensions: Extensions): Resolver<TSource, TContext, TArgs> {
+  setExtensions(extensions: Extensions): this {
     this.extensions = extensions;
     return this;
   }
 
-  extendExtensions(extensions: Extensions): Resolver<TSource, TContext, TArgs> {
+  extendExtensions(extensions: Extensions): this {
     const current = this.getExtensions();
     this.setExtensions({
       ...current,
-      ...(extensions: any),
+      ...extensions,
     });
     return this;
   }
 
-  clearExtensions(): Resolver<TSource, TContext, TArgs> {
+  clearExtensions(): this {
     this.setExtensions({});
     return this;
   }
 
-  getExtension(extensionName: string): ?any {
+  getExtension(extensionName: string): unknown {
     const extensions = this.getExtensions();
     return extensions[extensionName];
   }
@@ -971,14 +987,14 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     return extensionName in extensions;
   }
 
-  setExtension(extensionName: string, value: any): Resolver<TSource, TContext, TArgs> {
+  setExtension(extensionName: string, value: unknown): this {
     this.extendExtensions({
       [extensionName]: value,
     });
     return this;
   }
 
-  removeExtension(extensionName: string): Resolver<TSource, TContext, TArgs> {
+  removeExtension(extensionName: string): this {
     const extensions = { ...this.getExtensions() };
     delete extensions[extensionName];
     this.setExtensions(extensions);
@@ -1001,12 +1017,12 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
     return util.inspect(this.toDebugStructure(false), { depth: 20, colors }).replace(/\\n/g, '\n');
   }
 
-  setDisplayName(name: string): Resolver<TSource, TContext, TArgs> {
+  setDisplayName(name: string): this {
     this.displayName = name;
     return this;
   }
 
-  toDebugStructure(colors: boolean = true): Object {
+  toDebugStructure(colors: boolean = true): Record<string, any> {
     const info: any = {
       name: this.name,
       displayName: this.displayName,
@@ -1036,20 +1052,20 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
   }
 
   debugParams(
-    filterPaths?: ?(string | string[]),
-    opts?: ResolverDebugOpts = { colors: true, depth: 5 }
+    filterPaths?: string | string[] | undefined | null,
+    opts: ResolverDebugOpts = { colors: true, depth: 5 }
   ): Resolver<TSource, TContext, TArgs> {
     /* eslint-disable no-console */
     return this.wrapResolve(
-      (next) => (rp) => {
+      (next) => (rp: any) => {
         console.log(`ResolverResolveParams for ${this.getNestedName()}:`);
         const data = filterByDotPaths(rp, filterPaths, {
           // is hidden (use debugParams(["info"])) or debug({ params: ["info"]})
           // `is hidden (use debugParams(["context.*"])) or debug({ params: ["context.*"]})`,
           hideFields:
-            rp && rp.context && rp.context.res && rp.context.params && rp.context.headers
+            rp?.context && rp.context?.res && rp.context?.params && rp.context?.headers
               ? {
-                  // looks like context is express request, colapse it
+                  // looks like context is express request, collapse it
                   info: '[[hidden]]',
                   context: '[[hidden]]',
                 }
@@ -1069,8 +1085,8 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
   }
 
   debugPayload(
-    filterPaths?: ?(string | string[]),
-    opts?: ResolverDebugOpts = { colors: true, depth: 5 }
+    filterPaths?: string | string[] | undefined | null,
+    opts: ResolverDebugOpts = { colors: true, depth: 5 }
   ): Resolver<TSource, TContext, TArgs> {
     /* eslint-disable no-console */
     return this.wrapResolve(
@@ -1104,10 +1120,10 @@ export class Resolver<TSource, TContext, TArgs = any, TReturn = any> {
 
   debug(
     filterDotPaths?: {
-      params?: ?(string | string[]),
-      payload?: ?(string | string[]),
+      params?: string | string[] | undefined | null;
+      payload?: string | string[] | undefined | null;
     },
-    opts?: ResolverDebugOpts = { colors: true, depth: 2 }
+    opts: ResolverDebugOpts = { colors: true, depth: 2 }
   ): Resolver<TSource, TContext, TArgs> {
     return this.debugExecTime()
       .debugParams(filterDotPaths ? filterDotPaths.params : null, opts)

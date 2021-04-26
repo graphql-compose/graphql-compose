@@ -3,8 +3,8 @@ import { SchemaComposer } from './SchemaComposer';
 
 export { graphql };
 
-declare const schemaComposer: SchemaComposer<any>;
-declare const sc: SchemaComposer<any>;
+const schemaComposer = new SchemaComposer<any>();
+const sc = schemaComposer;
 export {
   SchemaComposer, // SchemaComposer class
   schemaComposer, // SchemaComposer default global instance
@@ -38,12 +38,13 @@ export * from './utils/definitions';
 export * from './utils/graphqlVersion';
 export * from './utils/schemaPrinter';
 export { toDottedObject } from './utils/toDottedObject';
+export { createThunkedObjectProxy } from './utils/createThunkedObjectProxy';
 export { deepmerge } from './utils/deepmerge';
 export { filterByDotPaths } from './utils/filterByDotPaths';
 export { pluralize } from './utils/pluralize';
 export { dedent } from './utils/dedent';
 
-export {
+export type {
   ObjectTypeComposerThunked,
   ObjectTypeComposerDefinition,
   ObjectTypeComposerAsObjectDefinition,
@@ -65,7 +66,7 @@ export {
   ObjectTypeComposerGetRecordIdFn,
 } from './ObjectTypeComposer';
 
-export {
+export type {
   InputTypeComposerThunked,
   InputTypeComposerDefinition,
   InputTypeComposerAsObjectDefinition,
@@ -76,12 +77,12 @@ export {
   InputTypeComposerFieldConfig,
 } from './InputTypeComposer';
 
-export {
+export type {
   ScalarTypeComposerDefinition,
   ScalarTypeComposerAsObjectDefinition,
 } from './ScalarTypeComposer';
 
-export {
+export type {
   EnumTypeComposerDefinition,
   EnumTypeComposerAsObjectDefinition,
   EnumTypeComposerValueConfig,
@@ -90,7 +91,7 @@ export {
   EnumTypeComposerValueConfigMapDefinition,
 } from './EnumTypeComposer';
 
-export {
+export type {
   UnionTypeComposerThunked,
   UnionTypeComposerDefinition,
   UnionTypeComposerAsObjectDefinition,
@@ -99,7 +100,7 @@ export {
   UnionTypeComposerResolverCheckFn,
 } from './UnionTypeComposer';
 
-export {
+export type {
   InterfaceTypeComposerThunked,
   InterfaceTypeComposerDefinition,
   InterfaceTypeComposerAsObjectDefinition,
@@ -107,7 +108,7 @@ export {
   InterfaceTypeComposerResolverCheckFn,
 } from './InterfaceTypeComposer';
 
-export {
+export type {
   ResolverDefinition,
   ResolverResolveParams,
   ResolverKinds,
@@ -122,6 +123,6 @@ export {
   ResolverMiddleware,
 } from './Resolver';
 
-export { ProjectionType, ProjectionNode } from './utils/projection';
+export type { ProjectionType, ProjectionNode } from './utils/projection';
 
-export { TypeDefinitionString, TypeWrappedString, TypeNameString } from './TypeMapper';
+export type { TypeDefinitionString, TypeWrappedString, TypeNameString } from './TypeMapper';

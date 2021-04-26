@@ -132,9 +132,9 @@ export function getUnionTypeDefinitionNode(
   };
 }
 
-// eslint-disable-next-line no-unused-vars
-function getDescriptionNode(value?: string | null): StringValueNode | undefined {
-  // Do not add comments to astNode for memory consuption by Scalar types
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getDescriptionNode(_value?: string | null): StringValueNode | undefined {
+  // Do not add comments to astNode for memory consumption by Scalar types
   // In every place where is used Scalar type will be added the same text.
   //
   // if (!value) return;
@@ -266,6 +266,7 @@ function getTypeNode(atc: AnyTypeComposer<any>): TypeNode | undefined {
       name: { kind: 'Name', value: atc.getTypeName() },
     };
   }
+  return undefined;
 }
 
 function getArgumentsDefinitionNodes(
