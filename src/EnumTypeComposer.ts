@@ -360,9 +360,9 @@ export class EnumTypeComposer<TContext = any> {
    * @example
    *   const ColorTC = schemaComposer.createEnumTC(`enum Color { RED GREEN }`);
    *   schemaComposer.Query.addFields({
-   *     color1: { type: ColorTC.List }  // in SDL: color1: [Color]
-   *     color2: { type: ColorTC.NonNull.List }  // in SDL: color2: [Color!]
-   *     color3: { type: ColorTC.NonNull.List.NonNull }  // in SDL: color2: [Color!]!
+   *     color1: { type: ColorTC.List },  // in SDL: color1: [Color]
+   *     color2: { type: ColorTC.NonNull.List },  // in SDL: color2: [Color!]
+   *     color3: { type: ColorTC.NonNull.List.NonNull },  // in SDL: color2: [Color!]!
    *   })
    */
   get List(): ListComposer<EnumTypeComposer<TContext>> {
@@ -375,9 +375,9 @@ export class EnumTypeComposer<TContext = any> {
    * @example
    *   const ColorTC = schemaComposer.createEnumTC(`enum Color { RED GREEN }`);
    *   schemaComposer.Query.addFields({
-   *     color1: { type: ColorTC.List }  // in SDL: color1: [Color]
-   *     color2: { type: ColorTC.NonNull.List }  // in SDL: color2: [Color!]
-   *     color3: { type: ColorTC.NonNull.List.NonNull }  // in SDL: color2: [Color!]!
+   *     color1: { type: ColorTC.List },  // in SDL: color1: [Color]
+   *     color2: { type: ColorTC.NonNull.List },  // in SDL: color2: [Color!]
+   *     color3: { type: ColorTC.NonNull.List.NonNull },  // in SDL: color2: [Color!]!
    *   })
    */
   get NonNull(): NonNullComposer<EnumTypeComposer<TContext>> {
