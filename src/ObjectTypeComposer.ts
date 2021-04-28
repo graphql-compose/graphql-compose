@@ -729,11 +729,9 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     return this;
   }
 
-  /**
-   * -----------------------------------------------
-   * Field Args methods
-   * -----------------------------------------------
-   */
+  // -----------------------------------------------
+  // Field Args methods
+  // -----------------------------------------------
 
   getFieldArgs<TArgs = any>(fieldName: string): ObjectTypeComposerArgumentConfigMap<TArgs> {
     try {
@@ -1553,18 +1551,16 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     return this;
   }
 
-  /**
-   * -----------------------------------------------
-   * Directive methods
-   *
-   * Directive methods are useful if you declare your schemas via SDL.
-   * Users who actively use `graphql-tools` can open new abilities for writing
-   * your own directive handlers.
-   *
-   * If you create your schemas via config objects, then probably you
-   * no need in `directives`. Instead directives better to use `extensions`.
-   * -----------------------------------------------
-   */
+  // -----------------------------------------------
+  // Directive methods
+  //
+  // Directive methods are useful if you declare your schemas via SDL.
+  // Users who actively use `graphql-tools` can open new abilities for writing
+  // your own directive handlers.
+  //
+  // If you create your schemas via config objects, then probably you
+  // no need in `directives`. Instead directives better to use `extensions`.
+  // -----------------------------------------------
 
   getDirectives(): Array<ExtensionsDirective> {
     const directives = this.getExtension('directives');

@@ -387,11 +387,9 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
     return this;
   }
 
-  /**
-   * -----------------------------------------------
-   * Like graphql-tools methods
-   * -----------------------------------------------
-   */
+  // -----------------------------------------------
+  // Like graphql-tools methods
+  // -----------------------------------------------
 
   /**
    * Add types to Schema via SDL string. Returns a Map of parsed types.
@@ -521,11 +519,9 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
     });
   }
 
-  /**
-   * -----------------------------------------------
-   * Type methods
-   * -----------------------------------------------
-   */
+  // -----------------------------------------------
+  // Type methods
+  // -----------------------------------------------
 
   createObjectTC(
     typeDef: ObjectTypeComposerDefinition<any, TContext>
@@ -856,11 +852,9 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
     return this.getAnyTC(type) instanceof UnionTypeComposer;
   }
 
-  /**
-   * -----------------------------------------------
-   * Storage methods
-   * -----------------------------------------------
-   */
+  // -----------------------------------------------
+  // Storage methods
+  // -----------------------------------------------
 
   clear(): void {
     super.clear();
@@ -885,11 +879,9 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
     return this;
   }
 
-  /**
-   * -----------------------------------------------
-   * Directive methods
-   * -----------------------------------------------
-   */
+  // -----------------------------------------------
+  // Directive methods
+  // -----------------------------------------------
 
   addDirective(directive: GraphQLDirective): this {
     if (!(directive instanceof GraphQLDirective)) {
@@ -942,11 +934,9 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
     return false;
   }
 
-  /**
-   * -----------------------------------------------
-   * Misc methods
-   * -----------------------------------------------
-   */
+  // -----------------------------------------------
+  // Misc methods
+  // -----------------------------------------------
 
   // disable redundant noise in console.logs
   toString(): string {
