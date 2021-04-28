@@ -317,7 +317,7 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
    *     schemaComposer.merge(someSchema1);
    *     schemaComposer.merge(someSchema2);
    *     schemaComposer.merge(someSchema3);
-   *     const schemaComposer.getOTC('User').removeField('password');
+   *     schemaComposer.getOTC('User').removeField('password');
    *     const newSchema = schemaComposer.buildSchema();
    */
   merge(schema: GraphQLSchema | SchemaComposer<any>): this {
