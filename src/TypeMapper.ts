@@ -649,11 +649,9 @@ export class TypeMapper<TContext = any> {
     return typeStorage;
   }
 
-  /**
-   * -----------------------------------------------
-   * Internal methods
-   * -----------------------------------------------
-   */
+  // -----------------------------------------------
+  // Internal methods
+  // -----------------------------------------------
 
   parseTypes(astDocument: DocumentNode): Array<NamedTypeComposer<TContext>> {
     const types = [];

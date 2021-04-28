@@ -438,11 +438,9 @@ export class ScalarTypeComposer<TContext = any> {
     return directive.args;
   }
 
-  /**
-   * -----------------------------------------------
-   * Misc methods
-   * -----------------------------------------------
-   */
+  // -----------------------------------------------
+  // Misc methods
+  // -----------------------------------------------
 
   /**
    * Prints SDL for current type.
