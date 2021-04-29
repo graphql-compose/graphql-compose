@@ -553,8 +553,10 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
     return ScalarTypeComposer.create(typeDef, this);
   }
 
-  createResolver(opts: ResolverDefinition<any, TContext>): Resolver<any, TContext> {
-    return new Resolver<any, TContext, any>(opts, this);
+  createResolver<TSource = any, TArgs = any>(
+    opts: ResolverDefinition<TSource, TContext, TArgs>
+  ): Resolver<any, TContext> {
+    return new Resolver<TSource, TContext, TArgs>(opts, this);
   }
 
   /**

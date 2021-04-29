@@ -119,6 +119,9 @@ export type ResolverWrapCb<TNewSource, TPrevSource, TContext, TNewArgs = any, TP
 export type ResolverRpCb<TSource, TContext, TArgs = any> = (
   resolveParams: ResolverResolveParams<TSource, TContext, TArgs>
 ) => Promise<any> | any;
+export type ResolverRpCbPartial<TSource, TContext, TArgs = any> = (
+  resolveParams: Partial<ResolverResolveParams<TSource, TContext, TArgs>>
+) => Promise<any> | any;
 export type ResolverNextRpCb<TSource, TContext, TArgs = any> = (
   next: ResolverRpCb<TSource, TContext, TArgs>
 ) => ResolverRpCb<TSource, TContext, TArgs>;
@@ -154,7 +157,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
   projection: ProjectionType;
   parent: Resolver<TSource, TContext, any> | undefined;
   extensions: Extensions | undefined;
-  resolve: ResolverRpCb<TSource, TContext, TArgs> = () => Promise.resolve();
+  resolve: ResolverRpCbPartial<TSource, TContext, TArgs> = () => Promise.resolve();
 
   constructor(
     opts: ResolverDefinition<TSource, TContext, TArgs>,
@@ -186,7 +189,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
     this.setArgs(opts.args || ({} as ObjectTypeComposerArgumentConfigMapDefinition<any>));
 
     if (opts.resolve) {
-      this.resolve = opts.resolve;
+      this.resolve = opts.resolve as any;
     }
   }
 
@@ -649,7 +652,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
   }
 
   setResolve(resolve: ResolverRpCb<TSource, TContext, TArgs>): this {
-    this.resolve = resolve;
+    this.resolve = resolve as any;
     return this;
   }
 
