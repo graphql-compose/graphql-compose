@@ -3,12 +3,9 @@
   "version": "0.0.0-semantically-released",
   "description": "GraphQL schema builder from different data sources with middleware extensions.",
   "files": [
-    "lib",
-    "esm",
-    "mjs"
+    "lib"
   ],
   "main": "lib/index.js",
-  "module": "mjs/index.mjs",
   "types": "lib/index.d.ts",
   "repository": {
     "type": "git",
