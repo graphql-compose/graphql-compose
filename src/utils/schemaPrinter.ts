@@ -37,13 +37,27 @@ import {
 } from 'graphql/type/definition';
 import { astFromValue } from 'graphql/utilities/astFromValue';
 
-import { BUILT_IN_DIRECTIVES, SchemaComposer } from '../SchemaComposer';
-import { ObjectTypeComposer } from '../ObjectTypeComposer';
-import { InputTypeComposer } from '../InputTypeComposer';
+import { SchemaComposer } from '../SchemaComposer';
+import {
+  SchemaFilterTypes,
+  getTypesFromSchema,
+  getDirectivesFromSchema,
+} from './getFromSchema';
+import { ScalarTypeComposer } from '../ScalarTypeComposer';
+import { EnumTypeComposer } from '../EnumTypeComposer';
 import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
+import { InputTypeComposer } from '../InputTypeComposer';
+import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { UnionTypeComposer } from '../UnionTypeComposer';
-import type { NamedTypeComposer } from './typeHelpers';
 import { Maybe } from 'graphql/jsutils/Maybe';
+import { NamedTypeComposer } from './typeHelpers';
+
+type SortTC = (
+  tc1: NamedTypeComposer<any>,
+  tc2: NamedTypeComposer<any>,
+) => number;
+
+type SortTCOptions = (opt?: SchemaFilterTypes) => SortTC;
 
 type Options = {
   /**
@@ -89,15 +103,61 @@ type Options = {
   sortInterfaces?: boolean;
   sortUnions?: boolean;
   sortEnums?: boolean;
+  sortCustom?: SortTC;
+  sortCustomOptions?: SortTCOptions;
 };
 
 export type SchemaPrinterOptions = Options;
 
-export type SchemaComposerPrinterOptions = Options & {
-  include?: string[];
-  exclude?: string[];
-  omitDirectiveDefinitions?: boolean;
-};
+export type SchemaComposerPrinterOptions = Options & SchemaFilterTypes;
+
+interface PrinterFilterOptions {
+  optPrinter: SchemaPrinterOptions,
+  optFilter: SchemaFilterTypes,
+}
+
+export function printSortAlpha(
+  tc1: NamedTypeComposer<any>,
+  tc2: NamedTypeComposer<any>,
+) {
+  return tc1.getTypeName().localeCompare(tc2.getTypeName())
+}
+
+function sortGetPositionOfType(
+  tc: NamedTypeComposer<any>,
+  rootTypes: string[] = [],
+): number {
+  switch (true) {
+    case tc instanceof ScalarTypeComposer: return 1;
+    case tc instanceof EnumTypeComposer: return 3;
+    case tc instanceof InterfaceTypeComposer: return 4;
+    case tc instanceof InputTypeComposer: return 5;
+    case tc instanceof ObjectTypeComposer:
+      return rootTypes.includes(tc.getTypeName()) ? 2 : 6;
+    case tc instanceof UnionTypeComposer: return 7;
+  }
+  throw new Error(`Unknown kind of type ${tc.getTypeName()}`);
+}
+
+export function printSortOptionsByType(opt?: SchemaFilterTypes): SortTC {
+  const rootTypes = opt?.include || ['Query', 'Mutation', 'Subscription'];
+  return function (
+    tc1: NamedTypeComposer<any>,
+    tc2: NamedTypeComposer<any>,
+  ) {
+    const diff = sortGetPositionOfType(tc1, rootTypes) -
+      sortGetPositionOfType(tc2, rootTypes);
+    return diff || printSortAlpha(tc1, tc2);
+  }
+}
+
+function splitOptionsFilterPrinter(
+  options?: SchemaComposerPrinterOptions,
+): PrinterFilterOptions {
+  const { exclude = [], include, omitDirectiveDefinitions, ...optPrinter } = options || {};
+  const optFilter = { exclude, include, omitDirectiveDefinitions };
+  return { optPrinter, optFilter };
+}
 
 /**
  * Return schema as a SDL string.
@@ -106,56 +166,16 @@ export function printSchemaComposer(
   sc: SchemaComposer<any>,
   options?: SchemaComposerPrinterOptions
 ): string {
-  const { exclude = [], include, omitDirectiveDefinitions, ...innerOpts } = options || {};
+  const { optPrinter, optFilter } = splitOptionsFilterPrinter(options);
+  const printTypeSet = getTypesFromSchema(sc, optFilter);
+  const { sortCustomOptions } = optPrinter;
+  const sortCustom = sortCustomOptions
+    ? sortCustomOptions(options)
+    : optPrinter?.sortCustom || printSortAlpha;
+  const printTypes = Array.from(printTypeSet).sort(sortCustom);
+  const res = getDirectivesFromSchema(sc);
 
-  const includeTypes = new Set();
-  if (Array.isArray(include) && include.length) {
-    include.forEach((s) => {
-      if (s && typeof s === 'string') {
-        includeTypes.add(sc.getAnyTC(s));
-      }
-    });
-  } else {
-    if (sc.has('Query')) includeTypes.add(sc.getOTC('Query'));
-    if (sc.has('Mutation')) includeTypes.add(sc.getOTC('Mutation'));
-    if (sc.has('Subscription')) includeTypes.add(sc.getOTC('Subscription'));
-  }
-
-  const res = [];
-  if (!omitDirectiveDefinitions) {
-    const directives = sc._directives.filter((d) => !BUILT_IN_DIRECTIVES.includes(d));
-    res.push(...directives.map((d) => printDirective(d, innerOpts)));
-    // directives may have specific types in arguments, so add them to includeTypes
-    directives.forEach((d) => {
-      if (!Array.isArray(d.args)) return;
-      d.args.forEach((ac) => {
-        const tc = sc.getAnyTC(ac.type);
-        if (!(exclude as any).includes(tc.getTypeName())) {
-          includeTypes.add(tc);
-        }
-      });
-    });
-  }
-
-  const printTypeSet: Set<NamedTypeComposer<any>> = new Set();
-  includeTypes.forEach((tc) => {
-    if (
-      tc instanceof ObjectTypeComposer ||
-      tc instanceof InputTypeComposer ||
-      tc instanceof InterfaceTypeComposer ||
-      tc instanceof UnionTypeComposer
-    ) {
-      printTypeSet.add(tc);
-      tc.getNestedTCs({ exclude }, printTypeSet);
-    } else {
-      printTypeSet.add(tc as any);
-    }
-  });
-  const printTypes = Array.from(printTypeSet).sort((tc1, tc2) =>
-    tc1.getTypeName().localeCompare(tc2.getTypeName())
-  );
-
-  res.push(...printTypes.map((tc) => tc.toSDL(innerOpts)));
+  res.push(...printTypes.map((tc) => tc.toSDL(optPrinter)));
 
   return res.filter(Boolean).join('\n\n');
 }
