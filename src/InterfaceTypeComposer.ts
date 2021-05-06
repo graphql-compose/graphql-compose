@@ -61,6 +61,7 @@ import { graphqlVersion } from './utils/graphqlVersion';
 import type { ComposeNamedInputType, ComposeNamedOutputType } from './utils/typeHelpers';
 import { printInterface, SchemaPrinterOptions } from './utils/schemaPrinter';
 import { getInterfaceTypeDefinitionNode } from './utils/definitionNode';
+import { getSortMethodFromOption } from './utils/sortTypes';
 
 export type InterfaceTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -1594,7 +1595,6 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   toSDL(
     opts?: SchemaPrinterOptions & {
       deep?: boolean;
-      sortTypes?: boolean;
       exclude?: string[];
     }
   ): string {
@@ -1605,8 +1605,9 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       r += printInterface(this.getType(), innerOpts);
 
       let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
-      if (opts?.sortAll || opts?.sortTypes) {
-        nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
+      const sortMethod = getSortMethodFromOption(opts?.sortTypes || opts?.sortAll);
+      if (sortMethod) {
+        nestedTypes.sort(sortMethod);
       }
       nestedTypes.forEach((t) => {
         if (t !== this && !exclude.includes(t.getTypeName())) {

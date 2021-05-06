@@ -43,21 +43,12 @@ import {
   getTypesFromSchema,
   getDirectivesFromSchema,
 } from './getFromSchema';
-import { ScalarTypeComposer } from '../ScalarTypeComposer';
-import { EnumTypeComposer } from '../EnumTypeComposer';
-import { InterfaceTypeComposer } from '../InterfaceTypeComposer';
-import { InputTypeComposer } from '../InputTypeComposer';
-import { ObjectTypeComposer } from '../ObjectTypeComposer';
-import { UnionTypeComposer } from '../UnionTypeComposer';
 import { Maybe } from 'graphql/jsutils/Maybe';
-import { NamedTypeComposer } from './typeHelpers';
 
-type SortTC = (
-  tc1: NamedTypeComposer<any>,
-  tc2: NamedTypeComposer<any>,
-) => number;
-
-type SortTCOptions = (opt?: SchemaFilterTypes) => SortTC;
+import {
+  CompareTypeComposersOption,
+  getSortMethodFromOption,
+} from './sortTypes';
 
 type Options = {
   /**
@@ -103,8 +94,7 @@ type Options = {
   sortInterfaces?: boolean;
   sortUnions?: boolean;
   sortEnums?: boolean;
-  sortCustom?: SortTC;
-  sortCustomOptions?: SortTCOptions;
+  sortTypes?: CompareTypeComposersOption;
 };
 
 export type SchemaPrinterOptions = Options;
@@ -114,41 +104,6 @@ export type SchemaComposerPrinterOptions = Options & SchemaFilterTypes;
 interface PrinterFilterOptions {
   optPrinter: SchemaPrinterOptions,
   optFilter: SchemaFilterTypes,
-}
-
-export function printSortAlpha(
-  tc1: NamedTypeComposer<any>,
-  tc2: NamedTypeComposer<any>,
-) {
-  return tc1.getTypeName().localeCompare(tc2.getTypeName())
-}
-
-function sortGetPositionOfType(
-  tc: NamedTypeComposer<any>,
-  rootTypes: string[] = [],
-): number {
-  switch (true) {
-    case tc instanceof ScalarTypeComposer: return 1;
-    case tc instanceof EnumTypeComposer: return 3;
-    case tc instanceof InterfaceTypeComposer: return 4;
-    case tc instanceof InputTypeComposer: return 5;
-    case tc instanceof ObjectTypeComposer:
-      return rootTypes.includes(tc.getTypeName()) ? 2 : 6;
-    case tc instanceof UnionTypeComposer: return 7;
-  }
-  throw new Error(`Unknown kind of type ${tc.getTypeName()}`);
-}
-
-export function printSortOptionsByType(opt?: SchemaFilterTypes): SortTC {
-  const rootTypes = opt?.include || ['Query', 'Mutation', 'Subscription'];
-  return function (
-    tc1: NamedTypeComposer<any>,
-    tc2: NamedTypeComposer<any>,
-  ) {
-    const diff = sortGetPositionOfType(tc1, rootTypes) -
-      sortGetPositionOfType(tc2, rootTypes);
-    return diff || printSortAlpha(tc1, tc2);
-  }
 }
 
 function splitOptionsFilterPrinter(
@@ -168,13 +123,12 @@ export function printSchemaComposer(
 ): string {
   const { optPrinter, optFilter } = splitOptionsFilterPrinter(options);
   const printTypeSet = getTypesFromSchema(sc, optFilter);
-  const { sortCustomOptions } = optPrinter;
-  const sortCustom = sortCustomOptions
-    ? sortCustomOptions(options)
-    : optPrinter?.sortCustom || printSortAlpha;
-  const printTypes = Array.from(printTypeSet).sort(sortCustom);
-  const res = getDirectivesFromSchema(sc);
+  const printTypes = Array.from(printTypeSet);
 
+  const sortMethod = getSortMethodFromOption(optPrinter?.sortTypes, optFilter);
+  if (sortMethod) printTypes.sort(sortMethod);
+
+  const res = getDirectivesFromSchema(sc);
   res.push(...printTypes.map((tc) => tc.toSDL(optPrinter)));
 
   return res.filter(Boolean).join('\n\n');

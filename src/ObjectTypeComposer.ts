@@ -72,6 +72,7 @@ import type {
 import { createThunkedObjectProxy } from './utils/createThunkedObjectProxy';
 import { printObject, SchemaPrinterOptions } from './utils/schemaPrinter';
 import { getObjectTypeDefinitionNode } from './utils/definitionNode';
+import { getSortMethodFromOption } from './utils/sortTypes';
 
 export type ObjectTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -1859,7 +1860,6 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   toSDL(
     opts?: SchemaPrinterOptions & {
       deep?: boolean;
-      sortTypes?: boolean;
       exclude?: string[];
     }
   ): string {
@@ -1870,8 +1870,9 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
       r += printObject(this.getType(), innerOpts);
 
       let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
-      if (opts?.sortAll || opts?.sortTypes) {
-        nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
+      const sortMethod = getSortMethodFromOption(opts?.sortTypes || opts?.sortAll);
+      if (sortMethod) {
+        nestedTypes.sort(sortMethod);
       }
       nestedTypes.forEach((t) => {
         if (t !== this && !exclude.includes(t.getTypeName())) {
