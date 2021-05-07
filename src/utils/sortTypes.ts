@@ -6,6 +6,7 @@ import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { UnionTypeComposer } from '../UnionTypeComposer';
 import { NamedTypeComposer } from './typeHelpers';
 import { SchemaFilterTypes } from './getFromSchema';
+import { isFunction } from './is';
 
 export type CompareTypeComposersResult = -1 | 0 | 1;
 
@@ -26,27 +27,12 @@ const rootOrderDefault = [
   'Subscription',
 ];
 
-function numberToCompareResult(n: number): CompareTypeComposersResult {
-  return n < 0 ? -1
-    : n > 0 ? 1
-    : 0;
-}
-
 export function printSortAlpha(
   tc1: NamedTypeComposer<any>,
   tc2: NamedTypeComposer<any>,
 ): CompareTypeComposersResult {
-  return numberToCompareResult(
-    tc1.getTypeName().localeCompare(tc2.getTypeName())
-  );
-}
-
-function sortGetPositionFromArray(
-  tc: NamedTypeComposer<any>,
-  orderArray: string[],
-): number {
-  const order = orderArray.indexOf(tc.getTypeName());
-  return order === -1 ? Infinity : order;
+  const comp = tc1.getTypeName().localeCompare(tc2.getTypeName());
+  return comp as CompareTypeComposersResult;
 }
 
 function sortGetPositionOfType(
@@ -59,9 +45,9 @@ function sortGetPositionOfType(
     case tc instanceof UnionTypeComposer: return [4];
     case tc instanceof InterfaceTypeComposer: return [5];
     case tc instanceof ObjectTypeComposer:
-      const isRoot = rootTypes.includes(tc.getTypeName());
-      if (isRoot) {
-        return [1, sortGetPositionFromArray(tc, rootTypes)];
+      const rootPos = rootTypes.indexOf(tc.getTypeName());
+      if (rootPos !== -1) {
+        return [1, rootPos];
       } else {
         return [6];
       }
@@ -101,17 +87,20 @@ export function getSortMethodFromOption(
   sortOption?: CompareTypeComposersOption,
   printFilter?: SchemaFilterTypes,
 ): CompareTypeComposersFn | undefined {
-  switch (sortOption) {
-    case null:
-    case undefined:
-    case false:
-      return;
-    case true:
-    case 'ALPHABETIC':
-      return printSortAlpha;
-    case 'GROUP_BY_TYPE':
-      return fnPrintSortByType(printFilter);
-    default:
-      return sortOption;
+  // if null or undefined, default order is alphabetic
+  if (
+    sortOption === undefined ||
+    sortOption === null ||
+    sortOption === true ||
+    sortOption === 'ALPHABETIC'
+  ) {
+    return printSortAlpha;
+  } else if (sortOption === 'GROUP_BY_TYPE') {
+    return fnPrintSortByType(printFilter);
+  } else if (isFunction(sortOption)) {
+    return sortOption;
   }
+
+  // if (false) or any other value, disable sorting
+  return;
 }

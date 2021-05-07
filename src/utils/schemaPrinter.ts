@@ -122,8 +122,8 @@ export function printSchemaComposer(
   options?: SchemaComposerPrinterOptions
 ): string {
   const { optPrinter, optFilter } = splitOptionsFilterPrinter(options);
-  const printTypeSet = getTypesFromSchema(sc, optFilter);
-  const printTypes = Array.from(printTypeSet);
+
+  const printTypes = Array.from(getTypesFromSchema(sc, optFilter));
 
   const sortMethod = getSortMethodFromOption(optPrinter?.sortTypes, optFilter);
   if (sortMethod) printTypes.sort(sortMethod);

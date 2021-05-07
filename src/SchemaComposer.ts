@@ -963,10 +963,13 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
     typeName: string,
     opts?: SchemaPrinterOptions & {
       deep?: boolean;
-      sortTypes?: boolean;
       exclude?: string[];
     }
   ): string {
+    opts = {
+      sortTypes: false,
+      ...opts
+    };
     return this.getAnyTC(typeName).toSDL(opts);
   }
 
