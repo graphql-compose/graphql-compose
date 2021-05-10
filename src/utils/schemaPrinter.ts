@@ -128,7 +128,10 @@ export function printSchemaComposer(
   const sortMethod = getSortMethodFromOption(optPrinter?.sortTypes, optFilter);
   if (sortMethod) printTypes.sort(sortMethod);
 
-  const res = getDirectivesFromSchema(sc);
+  const res = [];
+  if (!optFilter.omitDirectiveDefinitions) {
+    res.push(...getDirectivesFromSchema(sc).map((d) => printDirective(d, optPrinter)));
+  }
   res.push(...printTypes.map((tc) => tc.toSDL(optPrinter)));
 
   return res.filter(Boolean).join('\n\n');

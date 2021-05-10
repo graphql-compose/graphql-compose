@@ -796,13 +796,14 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
     }
   ): string {
     const { deep, ...innerOpts } = opts || {};
+    innerOpts.sortTypes = innerOpts.sortTypes || false;
     const exclude = Array.isArray(innerOpts.exclude) ? innerOpts.exclude : [];
     if (deep) {
       let r = '';
       r += printUnion(this.getType(), innerOpts);
 
       let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
-      const sortMethod = getSortMethodFromOption(opts?.sortTypes || opts?.sortAll);
+      const sortMethod = getSortMethodFromOption(innerOpts.sortAll || innerOpts.sortTypes);
       if (sortMethod) {
         nestedTypes.sort(sortMethod);
       }

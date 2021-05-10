@@ -1864,13 +1864,14 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     }
   ): string {
     const { deep, ...innerOpts } = opts || {};
+    innerOpts.sortTypes = innerOpts.sortTypes || false;
     const exclude = Array.isArray(innerOpts.exclude) ? innerOpts.exclude : [];
     if (deep) {
       let r = '';
       r += printObject(this.getType(), innerOpts);
 
       let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
-      const sortMethod = getSortMethodFromOption(opts?.sortAll || opts?.sortTypes);
+      const sortMethod = getSortMethodFromOption(innerOpts.sortAll || innerOpts.sortTypes);
       if (sortMethod) {
         nestedTypes.sort(sortMethod);
       }
