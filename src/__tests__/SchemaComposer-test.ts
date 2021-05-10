@@ -1448,7 +1448,6 @@ describe('SchemaComposer', () => {
   });
 
   describe('misc methods', () => {
-
     const toSDL_sortTypeDefs = dedent`
       type Starship {
         id: ID!
@@ -1544,7 +1543,6 @@ describe('SchemaComposer', () => {
     });
 
     describe('toSDL({ sortTypes })', () => {
-
       it('should print types in alphabetic order by default', () => {
         const sc = new SchemaComposer();
         sc.addTypeDefs(toSDL_sortTypeDefs);
@@ -1552,7 +1550,7 @@ describe('SchemaComposer', () => {
         const printed = sc.toSDL();
         const printedUndefined = sc.toSDL({ sortTypes: undefined });
         const printedTrue = sc.toSDL({ sortTypes: true });
-        const printedAlpha = sc.toSDL({ sortTypes: "ALPHABETIC" });
+        const printedAlpha = sc.toSDL({ sortTypes: 'ALPHABETIC' });
 
         expect(printed).toBe(dedent`
           interface Character {
@@ -1651,7 +1649,7 @@ describe('SchemaComposer', () => {
         const sc = new SchemaComposer();
         sc.addTypeDefs(toSDL_sortTypeDefs);
 
-        const printed = sc.toSDL({ sortTypes: "GROUP_BY_TYPE" });
+        const printed = sc.toSDL({ sortTypes: 'GROUP_BY_TYPE' });
 
         expect(printed).toBe(dedent`
           type Query {
@@ -1747,10 +1745,12 @@ describe('SchemaComposer', () => {
         const sc = new SchemaComposer();
         sc.addTypeDefs(toSDL_sortTypeDefs);
 
-        const printed = sc.toSDL({ sortTypes: function (tc1, tc2) {
-          const diff = tc2.getTypeName().localeCompare(tc1.getTypeName());
-          return diff < 0 ? -1 : diff > 0 ? +1 : 0;
-        } });
+        const printed = sc.toSDL({
+          sortTypes: function (tc1, tc2) {
+            const diff = tc2.getTypeName().localeCompare(tc1.getTypeName());
+            return diff < 0 ? -1 : diff > 0 ? +1 : 0;
+          },
+        });
 
         expect(printed).toBe(dedent`
           """
@@ -1937,7 +1937,6 @@ describe('SchemaComposer', () => {
           }
         `);
       });
-
     });
 
     describe('getTypeSDL()', () => {

@@ -802,7 +802,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
       let r = '';
       r += printUnion(this.getType(), innerOpts);
 
-      let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
+      const nestedTypes = Array.from(this.getNestedTCs({ exclude }));
       const sortMethod = getSortMethodFromOption(innerOpts.sortAll || innerOpts.sortTypes);
       if (sortMethod) {
         nestedTypes.sort(sortMethod);

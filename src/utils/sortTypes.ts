@@ -12,7 +12,7 @@ export type CompareTypeComposersResult = -1 | 0 | 1;
 
 export type CompareTypeComposersFn = (
   tc1: NamedTypeComposer<any>,
-  tc2: NamedTypeComposer<any>,
+  tc2: NamedTypeComposer<any>
 ) => CompareTypeComposersResult;
 
 export type CompareTypeComposersOption =
@@ -21,29 +21,26 @@ export type CompareTypeComposersOption =
   | 'GROUP_BY_TYPE'
   | CompareTypeComposersFn;
 
-const rootOrderDefault = [
-  'Query',
-  'Mutation',
-  'Subscription',
-];
+const rootOrderDefault = ['Query', 'Mutation', 'Subscription'];
 
 export function printSortAlpha(
   tc1: NamedTypeComposer<any>,
-  tc2: NamedTypeComposer<any>,
+  tc2: NamedTypeComposer<any>
 ): CompareTypeComposersResult {
   const comp = tc1.getTypeName().localeCompare(tc2.getTypeName());
   return comp as CompareTypeComposersResult;
 }
 
-function sortGetPositionOfType(
-  tc: NamedTypeComposer<any>,
-  rootTypes: string[] = [],
-): number[] {
+function sortGetPositionOfType(tc: NamedTypeComposer<any>, rootTypes: string[] = []): number[] {
   switch (true) {
-    case tc instanceof ScalarTypeComposer: return [2];
-    case tc instanceof EnumTypeComposer: return [3];
-    case tc instanceof UnionTypeComposer: return [4];
-    case tc instanceof InterfaceTypeComposer: return [5];
+    case tc instanceof ScalarTypeComposer:
+      return [2];
+    case tc instanceof EnumTypeComposer:
+      return [3];
+    case tc instanceof UnionTypeComposer:
+      return [4];
+    case tc instanceof InterfaceTypeComposer:
+      return [5];
     case tc instanceof ObjectTypeComposer:
       const rootPos = rootTypes.indexOf(tc.getTypeName());
       if (rootPos !== -1) {
@@ -51,16 +48,14 @@ function sortGetPositionOfType(
       } else {
         return [6];
       }
-    case tc instanceof InputTypeComposer: return [7];
+    case tc instanceof InputTypeComposer:
+      return [7];
   }
   throw new Error(`Unknown kind of type ${tc.getTypeName()}`);
 }
 
-function comparePositionLists(
-  p1: number[],
-  p2: number[],
-): CompareTypeComposersResult {
-  let common = Math.min(p1.length, p2.length);
+function comparePositionLists(p1: number[], p2: number[]): CompareTypeComposersResult {
+  const common = Math.min(p1.length, p2.length);
   for (let i = 0; i < common; i++) {
     if (p1[i] < p2[i]) return -1;
     if (p1[i] > p2[i]) return +1;
@@ -68,24 +63,22 @@ function comparePositionLists(
   return 0;
 }
 
-export function fnPrintSortByType(
-  opt?: SchemaFilterTypes,
-): CompareTypeComposersFn {
+export function fnPrintSortByType(opt?: SchemaFilterTypes): CompareTypeComposersFn {
   const rootTypes = opt?.include || rootOrderDefault;
   return function (
     tc1: NamedTypeComposer<any>,
-    tc2: NamedTypeComposer<any>,
+    tc2: NamedTypeComposer<any>
   ): CompareTypeComposersResult {
     const pos1 = sortGetPositionOfType(tc1, rootTypes);
     const pos2 = sortGetPositionOfType(tc2, rootTypes);
     const diff = comparePositionLists(pos1, pos2);
     return diff || printSortAlpha(tc1, tc2);
-  }
+  };
 }
 
 export function getSortMethodFromOption(
   sortOption?: CompareTypeComposersOption,
-  printFilter?: SchemaFilterTypes,
+  printFilter?: SchemaFilterTypes
 ): CompareTypeComposersFn | undefined {
   // if null or undefined, default order is alphabetic
   if (

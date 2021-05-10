@@ -906,7 +906,7 @@ export class InputTypeComposer<TContext = any> {
       let r = '';
       r += printInputObject(this.getType(), innerOpts);
 
-      let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
+      const nestedTypes = Array.from(this.getNestedTCs({ exclude }));
       const sortMethod = getSortMethodFromOption(innerOpts.sortAll || innerOpts.sortTypes);
       if (sortMethod) {
         nestedTypes.sort(sortMethod);

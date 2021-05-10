@@ -1605,7 +1605,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       let r = '';
       r += printInterface(this.getType(), innerOpts);
 
-      let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
+      const nestedTypes = Array.from(this.getNestedTCs({ exclude }));
       const sortMethod = getSortMethodFromOption(innerOpts.sortAll || innerOpts.sortTypes);
       if (sortMethod) {
         nestedTypes.sort(sortMethod);

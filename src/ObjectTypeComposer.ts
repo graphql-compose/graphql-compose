@@ -1870,7 +1870,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
       let r = '';
       r += printObject(this.getType(), innerOpts);
 
-      let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
+      const nestedTypes = Array.from(this.getNestedTCs({ exclude }));
       const sortMethod = getSortMethodFromOption(innerOpts.sortAll || innerOpts.sortTypes);
       if (sortMethod) {
         nestedTypes.sort(sortMethod);

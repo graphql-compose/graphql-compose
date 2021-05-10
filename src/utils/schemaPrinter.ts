@@ -38,17 +38,10 @@ import {
 import { astFromValue } from 'graphql/utilities/astFromValue';
 
 import { SchemaComposer } from '../SchemaComposer';
-import {
-  SchemaFilterTypes,
-  getTypesFromSchema,
-  getDirectivesFromSchema,
-} from './getFromSchema';
+import { SchemaFilterTypes, getTypesFromSchema, getDirectivesFromSchema } from './getFromSchema';
 import { Maybe } from 'graphql/jsutils/Maybe';
 
-import {
-  CompareTypeComposersOption,
-  getSortMethodFromOption,
-} from './sortTypes';
+import { CompareTypeComposersOption, getSortMethodFromOption } from './sortTypes';
 
 type Options = {
   /**
@@ -102,13 +95,11 @@ export type SchemaPrinterOptions = Options;
 export type SchemaComposerPrinterOptions = Options & SchemaFilterTypes;
 
 interface PrinterFilterOptions {
-  optPrinter: SchemaPrinterOptions,
-  optFilter: SchemaFilterTypes,
+  optPrinter: SchemaPrinterOptions;
+  optFilter: SchemaFilterTypes;
 }
 
-function splitOptionsFilterPrinter(
-  options?: SchemaComposerPrinterOptions,
-): PrinterFilterOptions {
+function splitOptionsFilterPrinter(options?: SchemaComposerPrinterOptions): PrinterFilterOptions {
   const { exclude = [], include, omitDirectiveDefinitions, ...optPrinter } = options || {};
   const optFilter = { exclude, include, omitDirectiveDefinitions };
   return { optPrinter, optFilter };

@@ -13,7 +13,7 @@ export type SchemaFilterTypes = {
 
 export function getTypesFromSchema(
   sc: SchemaComposer<any>,
-  filter?: SchemaFilterTypes,
+  filter?: SchemaFilterTypes
 ): Set<NamedTypeComposer<any>> {
   const { exclude = [], include, omitDirectiveDefinitions } = filter || {};
 
@@ -61,8 +61,6 @@ export function getTypesFromSchema(
   return typeSet;
 }
 
-export function getDirectivesFromSchema(
-  sc: SchemaComposer<any>,
-): any[] {
+export function getDirectivesFromSchema(sc: SchemaComposer<any>): any[] {
   return sc._directives.filter((d) => !BUILT_IN_DIRECTIVES.includes(d));
 }
