@@ -10,22 +10,28 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [10.x, 12.x, 14.x, 16.x]
+        node-version: [10, 12, 14, 16]
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install node_modules
         run: yarn
-      - name: Test & lint
-        run: yarn test
+      - name: Test – Jest
+        run: yarn coverage
         env:
           CI: true
+      - name: Test – Eslint
+        if: ${{ always() && matrix.node-version == '12' }}
+        run: yarn eslint-junit
+      - name: Test – TSCheck
+        if: ${{ always() && matrix.node-version == '12' }}
+        run: yarn tscheck
       - name: Publish Test Report
-        if: ${{ always() && matrix.node-version }}
+        if: ${{ always() && matrix.node-version == '12' }}
         uses: mikepenz/action-junit-report@v2
         with:
           check_name: JUnit Annotations for Node ${{ matrix.node-version }}
@@ -35,7 +41,7 @@ jobs:
         env:
           CI: true      
       - name: Send codecov.io stats
-        if: matrix.node-version == '12.x'
+        if: matrix.node-version == '12'
         run: bash <(curl -s https://codecov.io/bash) || echo ''
 
   publish:
@@ -45,9 +51,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 12
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: 12.x
+          node-version: 12
       - name: Install node_modules
         run: yarn install
       - name: Build
