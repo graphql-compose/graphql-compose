@@ -445,10 +445,13 @@ export function printDescription(
   indentation: string = '',
   firstInBlock: boolean = true
 ): string {
-  const { description } = def;
+  let { description } = def;
   if (description == null || options?.omitDescriptions) {
     return '';
   }
+
+  // remove trailing spaces for old GraphQL versions
+  description = (description as string).trimRight();
 
   if (options && options.commentDescriptions) {
     return printDescriptionWithComments(description, indentation, firstInBlock);
