@@ -21,12 +21,8 @@ jobs:
       - name: Install node_modules
         run: yarn
       - name: Test – Jest
-        uses: mattallty/jest-github-action@v1
-        with:
-          test-command: "yarn coverage"
-          coverage-comment: false # we are using codecov.io below in separate step
+        run: yarn coverage
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CI: true
       - name: Test – Eslint
         if: ${{ always() && matrix.node-version == '12' }}
