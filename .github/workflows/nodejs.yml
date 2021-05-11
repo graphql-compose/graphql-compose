@@ -26,7 +26,7 @@ jobs:
           CI: true
       - name: Test – Eslint
         if: ${{ always() && matrix.node-version == '12' }}
-        run: yarn eslint-junit
+        run: yarn eslint
       - name: Test – TSCheck
         if: ${{ always() && matrix.node-version == '12' }}
         run: yarn tscheck
