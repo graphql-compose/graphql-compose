@@ -21,7 +21,10 @@ jobs:
       - name: Install node_modules
         run: yarn
       - name: Test – Jest
-        run: yarn coverage
+        uses: mattallty/jest-github-action@v1
+        with:
+          test-command: "yarn coverage"
+          coverage-comment: false # we are using codecov.io below in separate step
         env:
           CI: true
       - name: Test – Eslint

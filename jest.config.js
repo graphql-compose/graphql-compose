@@ -14,20 +14,4 @@ module.exports = {
   },
   roots: ['<rootDir>/src'],
   testPathIgnorePatterns: ['/node_modules/', '/lib/'],
-  reporters: [
-    'default',
-    [
-      'jest-junit',
-      {
-        outputDirectory: 'coverage/junit/',
-        outputName: 'jest-junit.xml',
-        classNameTemplate: '{classname} › {title}',
-        titleTemplate: '{classname} › {title}',
-        suiteName: '{filepath}',
-        addFileAttribute: 'true',
-        ancestorSeparator: ' › ',
-        usePathForSuiteName: 'true',
-      },
-    ],
-  ],
 };
