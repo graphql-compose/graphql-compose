@@ -981,6 +981,7 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
    * @param {Boolean} options.omitDirectiveDefinitions - do not add directives definitions to SDL
    * @param {Boolean} options.commentDescriptions - print descriptions like comments, starting with #
    * @param {Boolean} options.sortAll - sort fields, args, values, interfaces by its names. Useful for snapshot testing.
+   * @param {CompareTypeComposersOption} options.sortTypes - sort types. Available options: true, false, 'GROUP_BY_TYPE'
    * @param {Boolean} options.sortFields - sort fields by name
    * @param {Boolean} options.sortArgs - sort args by name
    * @param {Boolean} options.sortInterfaces  - sort interfaces by name
@@ -988,7 +989,11 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
    * @param {Boolean} options.sortEnums - sort enum values by name
    */
   toSDL(options?: SchemaComposerPrinterOptions): string {
-    return printSchemaComposer(this, options);
+    const opts = {
+      sortTypes: 'GROUP_BY_TYPE',
+      ...options,
+    } as SchemaComposerPrinterOptions;
+    return printSchemaComposer(this, opts);
   }
 
   /**

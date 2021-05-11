@@ -24,8 +24,6 @@ describe('github issue #287: Can we merge schemas with overriding types in field
     sc.merge(schemaB);
 
     expect(sc.toSDL({ omitScalars: true, omitDirectiveDefinitions: true })).toEqual(dedent`
-      type Mutation
-
       type Query {
         """BBB"""
         field1: String
@@ -35,6 +33,8 @@ describe('github issue #287: Can we merge schemas with overriding types in field
         field3: String
         field22: Int
       }
+
+      type Mutation
 
       type Subscription
     `);
@@ -95,7 +95,14 @@ describe('github issue #287: Can we merge schemas with overriding types in field
     sc.merge(schemaB);
 
     expect(sc.toSDL({ omitScalars: true, omitDirectiveDefinitions: true })).toEqual(dedent`
+      type Query {
+        post: Post
+        node(id: ID!): Node
+      }
+      
       type Mutation
+      
+      type Subscription
       
       interface Node {
         id: ID!
@@ -107,13 +114,6 @@ describe('github issue #287: Can we merge schemas with overriding types in field
         fieldA: Int
         fieldB: String
       }
-      
-      type Query {
-        post: Post
-        node(id: ID!): Node
-      }
-      
-      type Subscription
     `);
   });
 

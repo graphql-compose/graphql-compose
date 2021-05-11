@@ -1523,36 +1523,35 @@ describe('SchemaComposer', () => {
       sc.createTC(`type User { age: Int }`);
 
       expect(sc.toSDL()).toBe(dedent`
+        type Query {
+          existedInQuery: String
+        }
+
         type Mutation {
           existedInMutation: String
         }
 
-        type Query {
-          existedInQuery: String
+        type Subscription {
+          existedInSubscription: String
         }
 
         """
         The \`String\` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
         """
         scalar String
-
-        type Subscription {
-          existedInSubscription: String
-        }
       `);
     });
 
     describe('toSDL({ sortTypes })', () => {
-      it('should print types in alphabetic order by default', () => {
+      it('should print types in alphabetic order', () => {
         const sc = new SchemaComposer();
         sc.addTypeDefs(toSDL_sortTypeDefs);
 
-        const printed = sc.toSDL();
         const printedUndefined = sc.toSDL({ sortTypes: undefined });
         const printedTrue = sc.toSDL({ sortTypes: true });
         const printedAlpha = sc.toSDL({ sortTypes: 'ALPHABETIC' });
 
-        expect(printed).toBe(dedent`
+        expect(printedUndefined).toBe(dedent`
           interface Character {
             id: ID!
             name: String!
@@ -1640,18 +1639,18 @@ describe('SchemaComposer', () => {
           """
           scalar String
         `);
-        expect(printed).toBe(printedUndefined);
-        expect(printed).toBe(printedTrue);
-        expect(printed).toBe(printedAlpha);
+        expect(printedUndefined).toBe(printedTrue);
+        expect(printedUndefined).toBe(printedAlpha);
       });
 
-      it('should allow to print types grouped by type', () => {
+      it('should allow to print types grouped by type by default', () => {
         const sc = new SchemaComposer();
         sc.addTypeDefs(toSDL_sortTypeDefs);
 
-        const printed = sc.toSDL({ sortTypes: 'GROUP_BY_TYPE' });
+        const printedByDefault = sc.toSDL();
+        const printedGrouped = sc.toSDL({ sortTypes: 'GROUP_BY_TYPE' });
 
-        expect(printed).toBe(dedent`
+        expect(printedGrouped).toBe(dedent`
           type Query {
             heroes(episode: Episode): [SearchResult]
             droid(id: ID!): Droid
@@ -1739,6 +1738,8 @@ describe('SchemaComposer', () => {
             commentary: String
           }
         `);
+
+        expect(printedGrouped).toBe(printedByDefault);
       });
 
       it('should allow to print types with custom sorting function', () => {

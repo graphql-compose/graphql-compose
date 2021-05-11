@@ -39,16 +39,16 @@ describe('github issue #262: SchemaComposer fails to map enum values in field di
         url: String!
       ) on SCALAR
 
+      type Note {
+        id: ID!
+        title: String! @auth(permissions: [CREATE, READ])
+      }
+
       enum CrudPermissions {
         CREATE
         READ
         UPDATE
         DELETE
-      }
-
-      type Note {
-        id: ID!
-        title: String! @auth(permissions: [CREATE, READ])
       }"
     `);
   });
@@ -92,16 +92,16 @@ describe('github issue #262: SchemaComposer fails to map enum values in field di
         url: String!
       ) on SCALAR
 
+      type Note {
+        id: ID!
+        title: String! @auth(permissions: [CREATE, READ])
+      }
+
       enum CrudPermissions {
         CREATE
         READ
         UPDATE
         DELETE
-      }
-
-      type Note {
-        id: ID!
-        title: String! @auth(permissions: [CREATE, READ])
       }"
     `);
 

@@ -42,21 +42,21 @@ describe('github issue #273: Object directives are removed from schema', () => {
         url: String!
       ) on SCALAR
 
-      enum Enum @test
-
-      input Input @test {
-        id: ID!
-      }
-
-      type ModifyMe @test {
-        id: ID!
-      }
-
       type Query {
         hello(a: Input, s: Scalar, e: Enum): ModifyMe
       }
 
       scalar Scalar @test
+
+      enum Enum @test
+
+      type ModifyMe @test {
+        id: ID!
+      }
+
+      input Input @test {
+        id: ID!
+      }
     `);
   });
 });

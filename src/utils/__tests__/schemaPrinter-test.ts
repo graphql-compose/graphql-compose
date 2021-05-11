@@ -25,13 +25,13 @@ describe('schemaPrinter', () => {
       ).toBe(dedent`
         directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
 
-        scalar _FieldSet
-
-        scalar ID
-
         type Query {
           me: User
         }
+
+        scalar _FieldSet
+
+        scalar ID
 
         type User @key(fields: "id") {
           id: ID!
@@ -46,11 +46,11 @@ describe('schemaPrinter', () => {
           omitDirectiveDefinitions: true,
         })
       ).toBe(dedent`
-        scalar ID
-
         type Query {
           me: User
         }
+
+        scalar ID
 
         type User @key(fields: "id") {
           id: ID!
@@ -67,11 +67,11 @@ describe('schemaPrinter', () => {
       ).toBe(dedent`
         directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
 
-        scalar _FieldSet
-
         type Query {
           me: User
         }
+
+        scalar _FieldSet
       `);
     });
 
@@ -84,13 +84,13 @@ describe('schemaPrinter', () => {
       ).toBe(dedent`
         directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
 
-        scalar _FieldSet
-
-        scalar ID
-
         type User @key(fields: "id") {
           id: ID!
         }
+
+        scalar _FieldSet
+
+        scalar ID
       `);
     });
 
@@ -104,11 +104,11 @@ describe('schemaPrinter', () => {
       ).toBe(dedent`
         directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
 
-        scalar _FieldSet
-
         type User @key(fields: "id") {
           id: ID!
         }
+
+        scalar _FieldSet
       `);
     });
 

@@ -24,6 +24,8 @@ describe('github issue #238: `setTypeName` doesnt update the usage of the type',
 
       scalar String
 
+      union T_U = T_A | T_B
+
       type T_A {
         a: String
       }
@@ -31,8 +33,6 @@ describe('github issue #238: `setTypeName` doesnt update the usage of the type',
       type T_B {
         b: String
       }
-
-      union T_U = T_A | T_B
     `);
   });
 
