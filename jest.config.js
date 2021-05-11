@@ -20,7 +20,7 @@ module.exports = {
       'jest-junit',
       {
         outputDirectory: 'coverage/junit/',
-        outputName: 'main.xml',
+        outputName: 'jest-junit.xml',
         classNameTemplate: '{classname} › {title}',
         titleTemplate: '{classname} › {title}',
         suiteName: '{filepath}',

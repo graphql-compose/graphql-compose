@@ -32,6 +32,7 @@
     "eslint": "7.25.0",
     "eslint-config-airbnb-base": "14.2.1",
     "eslint-config-prettier": "8.3.0",
+    "eslint-output": "^2.0.4",
     "eslint-plugin-import": "2.22.1",
     "eslint-plugin-prettier": "3.4.0",
     "graphql": "15.5.0",
@@ -60,7 +61,8 @@
     "lint": "npm run eslint",
     "tscheck": "tsc --noEmit",
     "eslint": "eslint --ext .ts ./src",
-    "test": "npm run coverage && npm run lint && npm run tscheck",
+    "eslint-junit": "eslint-output",
+    "test": "npm run coverage && npm run eslint-junit && npm run tscheck",
     "semantic-release": "semantic-release",
     "test-prev-vers": "yarn add graphql@14.2.0 --dev && jest && yarn remove graphql && yarn add graphql --dev --exact && git checkout HEAD -- package.json yarn.lock"
   },

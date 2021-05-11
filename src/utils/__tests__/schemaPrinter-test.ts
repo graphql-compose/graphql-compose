@@ -37,7 +37,7 @@ describe('schemaPrinter', () => {
         type User @key(fields: "id") {
           id: ID!
         }
-      `);
+      `)
     });
 
     it('should print schema in SDL without directives', () => {

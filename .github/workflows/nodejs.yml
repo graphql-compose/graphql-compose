@@ -25,7 +25,7 @@ jobs:
         env:
           CI: true
       - name: Publish Test Report
-        if: ${{ always() }}
+        if: ${{ always() && matrix.node-version }}
         uses: mikepenz/action-junit-report@v2
         with:
           check_name: JUnit Annotations for Node ${{ matrix.node-version }}
