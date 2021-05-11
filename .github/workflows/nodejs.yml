@@ -11,6 +11,7 @@ jobs:
     strategy:
       matrix:
         node-version: [10.x, 12.x, 14.x, 16.x]
+      fail-fast: false
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
@@ -24,6 +25,7 @@ jobs:
         env:
           CI: true
       - name: Publish Test Report
+        if: ${{ always() }}
         uses: mikepenz/action-junit-report@v2
         with:
           report_paths: '**/coverage/junit/**/*.xml'
