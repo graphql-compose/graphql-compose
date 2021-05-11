@@ -18,12 +18,7 @@ describe('schemaPrinter', () => {
     `);
 
     it('should print schema in SDL without descriptions', () => {
-      expect(
-        sc.toSDL({
-          sortTypes: true,
-          omitDescriptions: true,
-        })
-      ).toBe(dedent`
+      expect(sc.toSDL({ omitDescriptions: true })).toBe(dedent`
         directive @key(fields: _FieldSet!) on OBJECT | INTERFACE
 
         type Query {
@@ -37,7 +32,7 @@ describe('schemaPrinter', () => {
         type User @key(fields: "id") {
           id: ID!
         }
-      `)
+      `);
     });
 
     it('should print schema in SDL without directives', () => {
