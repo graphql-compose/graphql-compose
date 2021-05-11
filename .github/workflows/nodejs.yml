@@ -28,7 +28,7 @@ jobs:
         if: ${{ always() }}
         uses: mikepenz/action-junit-report@v2
         with:
-          check_name: Jest test for Node ${{ matrix.node-version }}
+          check_name: JUnit Annotations for Node ${{ matrix.node-version }}
           report_paths: '**/coverage/junit/**/*.xml'
       - name: Testing with previous graphql versions
         run: yarn test-prev-vers
