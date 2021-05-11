@@ -20,7 +20,7 @@ describe('schemaPrinter', () => {
     it('should print schema in SDL without descriptions', () => {
       expect(
         sc.toSDL({
-          sortTypes: undefined,
+          sortTypes: true,
           omitDescriptions: true,
         })
       ).toBe(dedent`
