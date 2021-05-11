@@ -38,7 +38,7 @@ import {
 import { graphqlVersion } from './utils/graphqlVersion';
 import { printUnion, SchemaPrinterOptions } from './utils/schemaPrinter';
 import { getUnionTypeDefinitionNode } from './utils/definitionNode';
-import { getSortMethodFromOption } from './utils/sortTypes';
+import { getSortMethodFromOption } from './utils/schemaPrinterSortTypes';
 
 export type UnionTypeComposerDefinition<TSource, TContext> =
   | TypeAsString

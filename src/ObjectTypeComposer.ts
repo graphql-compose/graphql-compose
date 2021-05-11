@@ -72,7 +72,7 @@ import type {
 import { createThunkedObjectProxy } from './utils/createThunkedObjectProxy';
 import { printObject, SchemaPrinterOptions } from './utils/schemaPrinter';
 import { getObjectTypeDefinitionNode } from './utils/definitionNode';
-import { getSortMethodFromOption } from './utils/sortTypes';
+import { getSortMethodFromOption } from './utils/schemaPrinterSortTypes';
 
 export type ObjectTypeComposerDefinition<TSource, TContext> =
   | TypeAsString

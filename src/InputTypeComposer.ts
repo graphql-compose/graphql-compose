@@ -36,7 +36,7 @@ import {
 } from './utils/typeHelpers';
 import { printInputObject, SchemaPrinterOptions } from './utils/schemaPrinter';
 import { getInputObjectTypeDefinitionNode } from './utils/definitionNode';
-import { getSortMethodFromOption } from './utils/sortTypes';
+import { getSortMethodFromOption } from './utils/schemaPrinterSortTypes';
 
 export type InputTypeComposerDefinition =
   | TypeAsString

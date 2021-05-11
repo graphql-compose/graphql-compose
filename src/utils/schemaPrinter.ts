@@ -41,7 +41,7 @@ import { SchemaComposer } from '../SchemaComposer';
 import { SchemaFilterTypes, getTypesFromSchema, getDirectivesFromSchema } from './getFromSchema';
 import { Maybe } from 'graphql/jsutils/Maybe';
 
-import { CompareTypeComposersOption, getSortMethodFromOption } from './sortTypes';
+import { CompareTypeComposersOption, getSortMethodFromOption } from './schemaPrinterSortTypes';
 
 type Options = {
   /**

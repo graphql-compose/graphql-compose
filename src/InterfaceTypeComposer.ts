@@ -61,7 +61,7 @@ import { graphqlVersion } from './utils/graphqlVersion';
 import type { ComposeNamedInputType, ComposeNamedOutputType } from './utils/typeHelpers';
 import { printInterface, SchemaPrinterOptions } from './utils/schemaPrinter';
 import { getInterfaceTypeDefinitionNode } from './utils/definitionNode';
-import { getSortMethodFromOption } from './utils/sortTypes';
+import { getSortMethodFromOption } from './utils/schemaPrinterSortTypes';
 
 export type InterfaceTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
