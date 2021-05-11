@@ -38,6 +38,7 @@ import {
 import { graphqlVersion } from './utils/graphqlVersion';
 import { printUnion, SchemaPrinterOptions } from './utils/schemaPrinter';
 import { getUnionTypeDefinitionNode } from './utils/definitionNode';
+import { getSortMethodFromOption } from './utils/sortTypes';
 
 export type UnionTypeComposerDefinition<TSource, TContext> =
   | TypeAsString
@@ -791,19 +792,20 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   toSDL(
     opts?: SchemaPrinterOptions & {
       deep?: boolean;
-      sortTypes?: boolean;
       exclude?: string[];
     }
   ): string {
     const { deep, ...innerOpts } = opts || {};
+    innerOpts.sortTypes = innerOpts.sortTypes || false;
     const exclude = Array.isArray(innerOpts.exclude) ? innerOpts.exclude : [];
     if (deep) {
       let r = '';
       r += printUnion(this.getType(), innerOpts);
 
-      let nestedTypes = Array.from(this.getNestedTCs({ exclude }));
-      if (opts?.sortAll || opts?.sortTypes) {
-        nestedTypes = nestedTypes.sort((a, b) => a.getTypeName().localeCompare(b.getTypeName()));
+      const nestedTypes = Array.from(this.getNestedTCs({ exclude }));
+      const sortMethod = getSortMethodFromOption(innerOpts.sortAll || innerOpts.sortTypes);
+      if (sortMethod) {
+        nestedTypes.sort(sortMethod);
       }
       nestedTypes.forEach((t) => {
         if (t !== this && !exclude.includes(t.getTypeName())) {

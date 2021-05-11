@@ -1448,6 +1448,73 @@ describe('SchemaComposer', () => {
   });
 
   describe('misc methods', () => {
+    const toSDL_sortTypeDefs = dedent`
+      type Starship {
+        id: ID!
+        name: String!
+        length(unit: LengthUnit = METER): Float
+      }
+      scalar Date
+      enum Episode {
+        NEWHOPE
+        EMPIRE
+        JEDI
+      }
+      enum LengthUnit {
+        CENTIMETER
+        METER
+        KILOMETER
+      }
+      interface Character {
+        id: ID!
+        name: String!
+        friends: [Character]
+        appearsIn: [Episode!]!
+      }
+      type Human implements Character {
+        id: ID!
+        name: String!
+        friends: [Character]
+        appearsIn: [Episode!]!
+        starships: [Starship]
+        totalCredits: Int
+      }
+      type Droid implements Character {
+        id: ID!
+        name: String!
+        friends: [Character]
+        appearsIn: [Episode!]!
+        primaryFunction: String
+      }
+      union SearchResult = Human | Droid | Starship
+      type Query {
+        heroes(episode: Episode): [SearchResult]
+        droid(id: ID!): Droid
+        searchReviews(
+          episodes: [Episode]
+          dateStart: Date
+          dateEnd: Date
+          minStars: Int
+          maxStars: Int
+        ): [Review]
+      }
+      input ReviewInput {
+        stars: Int!
+        commentary: String
+      }
+      type Review {
+        stars: Int!
+        commentary: String
+        dateCreated: Date
+      }
+      type Mutation {
+        createReview(
+          episode: Episode!
+          review: ReviewInput!
+        ): Review
+      }
+    `;
+
     it('toSDL()', () => {
       const sc = new SchemaComposer();
       sc.Query.addFields({ existedInQuery: 'String' });
@@ -1473,6 +1540,403 @@ describe('SchemaComposer', () => {
           existedInSubscription: String
         }
       `);
+    });
+
+    describe('toSDL({ sortTypes })', () => {
+      it('should print types in alphabetic order by default', () => {
+        const sc = new SchemaComposer();
+        sc.addTypeDefs(toSDL_sortTypeDefs);
+
+        const printed = sc.toSDL();
+        const printedUndefined = sc.toSDL({ sortTypes: undefined });
+        const printedTrue = sc.toSDL({ sortTypes: true });
+        const printedAlpha = sc.toSDL({ sortTypes: 'ALPHABETIC' });
+
+        expect(printed).toBe(dedent`
+          interface Character {
+            id: ID!
+            name: String!
+            friends: [Character]
+            appearsIn: [Episode!]!
+          }
+
+          scalar Date
+
+          type Droid implements Character {
+            id: ID!
+            name: String!
+            friends: [Character]
+            appearsIn: [Episode!]!
+            primaryFunction: String
+          }
+
+          enum Episode {
+            NEWHOPE
+            EMPIRE
+            JEDI
+          }
+
+          """
+          The \`Float\` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).
+          """
+          scalar Float
+
+          type Human implements Character {
+            id: ID!
+            name: String!
+            friends: [Character]
+            appearsIn: [Episode!]!
+            starships: [Starship]
+            totalCredits: Int
+          }
+
+          """
+          The \`ID\` scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as \`"4"\`) or integer (such as \`4\`) input value will be accepted as an ID.
+          """
+          scalar ID
+
+          """
+          The \`Int\` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.
+          """
+          scalar Int
+
+          enum LengthUnit {
+            CENTIMETER
+            METER
+            KILOMETER
+          }
+
+          type Mutation {
+            createReview(episode: Episode!, review: ReviewInput!): Review
+          }
+
+          type Query {
+            heroes(episode: Episode): [SearchResult]
+            droid(id: ID!): Droid
+            searchReviews(episodes: [Episode], dateStart: Date, dateEnd: Date, minStars: Int, maxStars: Int): [Review]
+          }
+
+          type Review {
+            stars: Int!
+            commentary: String
+            dateCreated: Date
+          }
+
+          input ReviewInput {
+            stars: Int!
+            commentary: String
+          }
+
+          union SearchResult = Human | Droid | Starship
+
+          type Starship {
+            id: ID!
+            name: String!
+            length(unit: LengthUnit = METER): Float
+          }
+
+          """
+          The \`String\` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
+          """
+          scalar String
+        `);
+        expect(printed).toBe(printedUndefined);
+        expect(printed).toBe(printedTrue);
+        expect(printed).toBe(printedAlpha);
+      });
+
+      it('should allow to print types grouped by type', () => {
+        const sc = new SchemaComposer();
+        sc.addTypeDefs(toSDL_sortTypeDefs);
+
+        const printed = sc.toSDL({ sortTypes: 'GROUP_BY_TYPE' });
+
+        expect(printed).toBe(dedent`
+          type Query {
+            heroes(episode: Episode): [SearchResult]
+            droid(id: ID!): Droid
+            searchReviews(episodes: [Episode], dateStart: Date, dateEnd: Date, minStars: Int, maxStars: Int): [Review]
+          }
+
+          type Mutation {
+            createReview(episode: Episode!, review: ReviewInput!): Review
+          }
+
+          scalar Date
+
+          """
+          The \`Float\` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).
+          """
+          scalar Float
+
+          """
+          The \`ID\` scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as \`"4"\`) or integer (such as \`4\`) input value will be accepted as an ID.
+          """
+          scalar ID
+
+          """
+          The \`Int\` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.
+          """
+          scalar Int
+
+          """
+          The \`String\` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
+          """
+          scalar String
+
+          enum Episode {
+            NEWHOPE
+            EMPIRE
+            JEDI
+          }
+
+          enum LengthUnit {
+            CENTIMETER
+            METER
+            KILOMETER
+          }
+
+          union SearchResult = Human | Droid | Starship
+
+          interface Character {
+            id: ID!
+            name: String!
+            friends: [Character]
+            appearsIn: [Episode!]!
+          }
+
+          type Droid implements Character {
+            id: ID!
+            name: String!
+            friends: [Character]
+            appearsIn: [Episode!]!
+            primaryFunction: String
+          }
+
+          type Human implements Character {
+            id: ID!
+            name: String!
+            friends: [Character]
+            appearsIn: [Episode!]!
+            starships: [Starship]
+            totalCredits: Int
+          }
+
+          type Review {
+            stars: Int!
+            commentary: String
+            dateCreated: Date
+          }
+
+          type Starship {
+            id: ID!
+            name: String!
+            length(unit: LengthUnit = METER): Float
+          }
+
+          input ReviewInput {
+            stars: Int!
+            commentary: String
+          }
+        `);
+      });
+
+      it('should allow to print types with custom sorting function', () => {
+        const sc = new SchemaComposer();
+        sc.addTypeDefs(toSDL_sortTypeDefs);
+
+        const printed = sc.toSDL({
+          sortTypes: function (tc1, tc2) {
+            const diff = tc2.getTypeName().localeCompare(tc1.getTypeName());
+            return diff < 0 ? -1 : diff > 0 ? +1 : 0;
+          },
+        });
+
+        expect(printed).toBe(dedent`
+          """
+          The \`String\` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
+          """
+          scalar String
+
+          type Starship {
+            id: ID!
+            name: String!
+            length(unit: LengthUnit = METER): Float
+          }
+
+          union SearchResult = Human | Droid | Starship
+
+          input ReviewInput {
+            stars: Int!
+            commentary: String
+          }
+
+          type Review {
+            stars: Int!
+            commentary: String
+            dateCreated: Date
+          }
+
+          type Query {
+            heroes(episode: Episode): [SearchResult]
+            droid(id: ID!): Droid
+            searchReviews(episodes: [Episode], dateStart: Date, dateEnd: Date, minStars: Int, maxStars: Int): [Review]
+          }
+
+          type Mutation {
+            createReview(episode: Episode!, review: ReviewInput!): Review
+          }
+
+          enum LengthUnit {
+            CENTIMETER
+            METER
+            KILOMETER
+          }
+
+          """
+          The \`Int\` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.
+          """
+          scalar Int
+
+          """
+          The \`ID\` scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as \`"4"\`) or integer (such as \`4\`) input value will be accepted as an ID.
+          """
+          scalar ID
+
+          type Human implements Character {
+            id: ID!
+            name: String!
+            friends: [Character]
+            appearsIn: [Episode!]!
+            starships: [Starship]
+            totalCredits: Int
+          }
+
+          """
+          The \`Float\` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).
+          """
+          scalar Float
+
+          enum Episode {
+            NEWHOPE
+            EMPIRE
+            JEDI
+          }
+
+          type Droid implements Character {
+            id: ID!
+            name: String!
+            friends: [Character]
+            appearsIn: [Episode!]!
+            primaryFunction: String
+          }
+
+          scalar Date
+
+          interface Character {
+            id: ID!
+            name: String!
+            friends: [Character]
+            appearsIn: [Episode!]!
+          }
+        `);
+      });
+
+      it('should allow to print types without sorting', () => {
+        const sc = new SchemaComposer();
+        sc.addTypeDefs(toSDL_sortTypeDefs);
+
+        const printed = sc.toSDL({ sortTypes: false });
+
+        expect(printed).toBe(dedent`
+          type Query {
+            heroes(episode: Episode): [SearchResult]
+            droid(id: ID!): Droid
+            searchReviews(episodes: [Episode], dateStart: Date, dateEnd: Date, minStars: Int, maxStars: Int): [Review]
+          }
+
+          union SearchResult = Human | Droid | Starship
+
+          type Human implements Character {
+            id: ID!
+            name: String!
+            friends: [Character]
+            appearsIn: [Episode!]!
+            starships: [Starship]
+            totalCredits: Int
+          }
+
+          """
+          The \`ID\` scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as \`"4"\`) or integer (such as \`4\`) input value will be accepted as an ID.
+          """
+          scalar ID
+
+          """
+          The \`String\` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
+          """
+          scalar String
+
+          interface Character {
+            id: ID!
+            name: String!
+            friends: [Character]
+            appearsIn: [Episode!]!
+          }
+
+          enum Episode {
+            NEWHOPE
+            EMPIRE
+            JEDI
+          }
+
+          type Starship {
+            id: ID!
+            name: String!
+            length(unit: LengthUnit = METER): Float
+          }
+
+          """
+          The \`Float\` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).
+          """
+          scalar Float
+
+          enum LengthUnit {
+            CENTIMETER
+            METER
+            KILOMETER
+          }
+
+          """
+          The \`Int\` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.
+          """
+          scalar Int
+
+          type Droid implements Character {
+            id: ID!
+            name: String!
+            friends: [Character]
+            appearsIn: [Episode!]!
+            primaryFunction: String
+          }
+
+          type Review {
+            stars: Int!
+            commentary: String
+            dateCreated: Date
+          }
+
+          scalar Date
+
+          type Mutation {
+            createReview(episode: Episode!, review: ReviewInput!): Review
+          }
+
+          input ReviewInput {
+            stars: Int!
+            commentary: String
+          }
+        `);
+      });
     });
 
     describe('getTypeSDL()', () => {
