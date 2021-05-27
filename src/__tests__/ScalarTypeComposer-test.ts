@@ -216,6 +216,7 @@ describe('ScalarTypeComposer', () => {
       const tc2 = schemaComposer.createScalarTC({
         name: 'MyScalar2',
         directives: [{ name: 'ok', args: { a: 1, b: '123', c: true } }, { name: 'go' }],
+        serialize: () => {},
       });
       expect(tc2.toSDL()).toEqual('scalar MyScalar2 @ok(a: 1, b: "123", c: true) @go');
     });
@@ -224,6 +225,7 @@ describe('ScalarTypeComposer', () => {
       const tc2 = schemaComposer.createScalarTC({
         name: 'MyScalar2',
         directives: [{ name: 'ok', args: { a: 1 } }],
+        serialize: () => {},
       });
       tc2.setDirectiveByName('go');
       expect(tc2.toSDL()).toEqual('scalar MyScalar2 @ok(a: 1) @go');
@@ -233,6 +235,7 @@ describe('ScalarTypeComposer', () => {
       const tc2 = schemaComposer.createScalarTC({
         name: 'MyScalar2',
         directives: [{ name: 'ok', args: { a: 1 } }, { name: 'go' }],
+        serialize: () => {},
       });
       tc2.setDirectiveByName('ok', { b: 2 });
       expect(tc2.toSDL()).toEqual('scalar MyScalar2 @ok(b: 2) @go');
