@@ -1,5 +1,3 @@
-/* eslint-disable no-use-before-define */
-
 import { GraphQLInterfaceType, GraphQLObjectType } from './graphql';
 import { isObject, isString, isFunction } from './utils/is';
 import { resolveMaybeThunk, inspect, mapEachKey } from './utils/misc';
@@ -37,7 +35,7 @@ import type {
   Extensions,
   MaybePromise,
   DirectiveArgs,
-  ExtensionsDirective,
+  Directive,
   ThunkWithSchemaComposer,
 } from './utils/definitions';
 import { toInputObjectType } from './utils/toInputType';
@@ -80,6 +78,7 @@ export type InterfaceTypeComposerAsObjectDefinition<TSource, TContext> = {
   resolveType?: null | GraphQLTypeResolver<TSource, TContext>;
   description?: null | string;
   extensions?: Extensions;
+  directives?: Directive[];
 };
 
 export type InterfaceTypeComposerResolversMap<TContext> = Map<
@@ -108,7 +107,9 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   _gqcInterfaces: Array<InterfaceTypeComposerThunked<TSource, TContext>> = [];
   _gqcTypeResolvers: undefined | InterfaceTypeComposerResolversMap<TContext>;
   _gqcFallbackResolveType: ObjectTypeComposer<any, TContext> | GraphQLObjectType | null = null;
-  _gqcExtensions: undefined | Extensions;
+  _gqcExtensions?: Extensions;
+  _gqcDirectives?: Directive[];
+  _gqcIsModified?: boolean;
 
   /**
    * Create `InterfaceTypeComposer` with adding it by name to the `SchemaComposer`.
@@ -190,7 +191,10 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
         IFTC.setInterfaces(convertInterfaceArrayAsThunk(interfaces, sc));
       }
 
-      IFTC._gqcExtensions = (typeDef as any).extensions || {};
+      IFTC.setExtensions((typeDef as any).extensions);
+      if (Array.isArray((typeDef as any)?.directives)) {
+        IFTC.setDirectives((typeDef as any).directives);
+      }
     } else {
       throw new Error(
         `You should provide GraphQLInterfaceTypeConfig or string with interface name or SDL definition. Provided:\n${inspect(
@@ -244,12 +248,10 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       );
     }
 
-    if (graphqlType?.astNode?.directives) {
-      this.setExtension(
-        'directives',
-        this.schemaComposer.typeMapper.parseDirectives(graphqlType?.astNode?.directives)
-      );
+    if (!this._gqType.astNode) {
+      this._gqType.astNode = getInterfaceTypeDefinitionNode(this);
     }
+    this._gqcIsModified = false;
   }
 
   // -----------------------------------------------
@@ -305,6 +307,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
           fieldName,
           this.getTypeName()
         );
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -338,6 +341,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       if (names.length === 0) {
         // single field
         delete this._gqcFields[name];
+        this._gqcIsModified = true;
       } else {
         // nested field
         // eslint-disable-next-line no-lonely-if
@@ -357,6 +361,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     Object.keys(this._gqcFields).forEach((fieldName) => {
       if (keepFieldNames.indexOf(fieldName) === -1) {
         delete this._gqcFields[fieldName];
+        this._gqcIsModified = true;
       }
     });
     return this;
@@ -372,6 +377,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       }
     });
     this._gqcFields = { ...orderedFields, ...fields };
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -395,6 +401,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
         ...(prevFieldConfig.extensions || {}),
         ...(partialFieldConfig.extensions || {}),
       },
+      directives: [...(prevFieldConfig.directives || []), ...(partialFieldConfig.directives || [])],
     });
     return this;
   }
@@ -466,6 +473,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       const fc = this._gqcFields[fieldName];
       if (fc && !(fc.type instanceof NonNullComposer)) {
         fc.type = new NonNullComposer(fc.type);
+        this._gqcIsModified = true;
       }
     });
     return this;
@@ -477,6 +485,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       const fc = this._gqcFields[fieldName];
       if (fc && fc.type instanceof NonNullComposer) {
         fc.type = fc.type.ofType;
+        this._gqcIsModified = true;
       }
     });
     return this;
@@ -496,6 +505,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       const fc = this._gqcFields[fieldName];
       if (fc && !(fc.type instanceof ListComposer)) {
         fc.type = new ListComposer(fc.type);
+        this._gqcIsModified = true;
       }
     });
     return this;
@@ -508,11 +518,13 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       if (fc) {
         if (fc.type instanceof ListComposer) {
           fc.type = fc.type.ofType;
+          this._gqcIsModified = true;
         } else if (fc.type instanceof NonNullComposer && fc.type.ofType instanceof ListComposer) {
           fc.type =
             fc.type.ofType.ofType instanceof NonNullComposer
               ? fc.type.ofType.ofType
               : new NonNullComposer(fc.type.ofType.ofType);
+          this._gqcIsModified = true;
         }
       }
     });
@@ -640,6 +652,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       fieldName,
       this.getTypeName()
     );
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -652,6 +665,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       ...fc.args,
       ...this.schemaComposer.typeMapper.convertArgConfigMap(newArgs, fieldName, this.getTypeName()),
     };
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -668,6 +682,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       fieldName,
       this.getTypeName()
     );
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -687,6 +702,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       const ac = args[argName];
       if (ac && !(ac.type instanceof ListComposer)) {
         ac.type = new ListComposer(ac.type);
+        this._gqcIsModified = true;
       }
     });
     return this;
@@ -701,11 +717,13 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       if (ac) {
         if (ac.type instanceof ListComposer) {
           ac.type = ac.type.ofType;
+          this._gqcIsModified = true;
         } else if (ac.type instanceof NonNullComposer && ac.type.ofType instanceof ListComposer) {
           ac.type =
             ac.type.ofType.ofType instanceof NonNullComposer
               ? ac.type.ofType.ofType
               : new NonNullComposer(ac.type.ofType.ofType);
+          this._gqcIsModified = true;
         }
       }
     });
@@ -725,6 +743,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       const ac = args[argName];
       if (ac && !(ac.type instanceof NonNullComposer)) {
         ac.type = new NonNullComposer(ac.type);
+        this._gqcIsModified = true;
       }
     });
     return this;
@@ -738,6 +757,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       const ac = args[argName];
       if (ac && ac.type instanceof NonNullComposer) {
         ac.type = ac.type.ofType;
+        this._gqcIsModified = true;
       }
     });
     return this;
@@ -748,27 +768,30 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   // -----------------------------------------------
 
   getType(): GraphQLInterfaceType {
-    this._gqType.astNode = getInterfaceTypeDefinitionNode(this);
-    if (graphqlVersion >= 15) {
-      (this._gqType as any)._fields = () =>
-        defineFieldMap(
-          this._gqType,
-          mapEachKey(this._gqcFields, (_, name) => this.getFieldConfig(name)),
-          this._gqType.astNode
-        );
-      (this._gqType as any)._interfaces = () => this.getInterfacesTypes();
-    } else if (graphqlVersion >= 14) {
-      (this._gqType as any)._fields = () =>
-        defineFieldMap(
-          this._gqType,
-          mapEachKey(this._gqcFields, (_, name) => this.getFieldConfig(name)),
-          this._gqType.astNode
-        );
-    } else {
-      (this._gqType as any)._typeConfig.fields = () => {
-        return mapEachKey(this._gqcFields, (_, name) => this.getFieldConfig(name));
-      };
-      (this._gqType as any)._fields = {}; // clear builded fields in type
+    if (this._gqcIsModified) {
+      this._gqcIsModified = false;
+      this._gqType.astNode = getInterfaceTypeDefinitionNode(this);
+      if (graphqlVersion >= 15) {
+        (this._gqType as any)._fields = () =>
+          defineFieldMap(
+            this._gqType,
+            mapEachKey(this._gqcFields, (_, name) => this.getFieldConfig(name)),
+            this._gqType.astNode
+          );
+        (this._gqType as any)._interfaces = () => this.getInterfacesTypes();
+      } else if (graphqlVersion >= 14) {
+        (this._gqType as any)._fields = () =>
+          defineFieldMap(
+            this._gqType,
+            mapEachKey(this._gqcFields, (_, name) => this.getFieldConfig(name)),
+            this._gqType.astNode
+          );
+      } else {
+        (this._gqType as any)._typeConfig.fields = () => {
+          return mapEachKey(this._gqcFields, (_, name) => this.getFieldConfig(name));
+        };
+        (this._gqType as any)._fields = {}; // clear builded fields in type
+      }
     }
     return this._gqType;
   }
@@ -817,6 +840,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   setTypeName(name: string): this {
     this._gqType.name = name;
+    this._gqcIsModified = true;
     this.schemaComposer.add(this);
     return this;
   }
@@ -827,6 +851,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   setDescription(description: string): this {
     this._gqType.description = description;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -852,8 +877,10 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       args: mapEachKey(fieldConfig.args, (argConfig) => ({
         ...argConfig,
         extensions: { ...argConfig.extensions },
+        directives: [...(argConfig.directives || [])],
       })),
       extensions: { ...fieldConfig.extensions },
+      directives: [...(fieldConfig.directives || [])],
     }));
     cloned._gqcInterfaces = [...this._gqcInterfaces];
     if (this._gqcTypeResolvers) {
@@ -862,6 +889,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     cloned._gqcFallbackResolveType = this._gqcFallbackResolveType;
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
+    cloned.setDirectives(this.getDirectives());
 
     return cloned;
   }
@@ -889,8 +917,10 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
         ...argConfig,
         type: cloneTypeTo(argConfig.type, anotherSchemaComposer, cloneMap),
         extensions: { ...argConfig.extensions },
+        directives: [...(argConfig.directives || [])],
       })),
       extensions: { ...fieldConfig.extensions },
+      directives: [...(fieldConfig.directives || [])],
     })) as any;
     cloned._gqcInterfaces = this._gqcInterfaces.map((i) =>
       i.cloneTo(anotherSchemaComposer, cloneMap)
@@ -1020,6 +1050,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   setResolveType(fn: GraphQLTypeResolver<TSource, TContext> | undefined | null): this {
     this._gqType.resolveType = fn;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -1236,6 +1267,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   setInterfaces(interfaces: ReadonlyArray<InterfaceTypeComposerDefinition<any, TContext>>): this {
     this._gqcInterfaces = convertInterfaceArrayAsThunk(interfaces, this.schemaComposer);
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -1253,6 +1285,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       this._gqcInterfaces.push(
         this.schemaComposer.typeMapper.convertInterfaceTypeDefinition(iface)
       );
+      this._gqcIsModified = true;
     }
     return this;
   }
@@ -1274,6 +1307,7 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   removeInterface(iface: InterfaceTypeComposerDefinition<any, TContext>): this {
     const typeName = getComposeTypeName(iface, this.schemaComposer);
     this._gqcInterfaces = this._gqcInterfaces.filter((i) => i.getTypeName() !== typeName);
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -1289,8 +1323,9 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     }
   }
 
-  setExtensions(extensions: Extensions): this {
+  setExtensions(extensions: Extensions | undefined): this {
     this._gqcExtensions = extensions;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -1439,16 +1474,13 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
   // Directive methods
   // -----------------------------------------------
 
-  getDirectives(): Array<ExtensionsDirective> {
-    const directives = this.getExtension('directives');
-    if (Array.isArray(directives)) {
-      return directives;
-    }
-    return [];
+  getDirectives(): Array<Directive> {
+    return this._gqcDirectives || [];
   }
 
-  setDirectives(directives: Array<ExtensionsDirective>): this {
-    this.setExtension('directives', directives);
+  setDirectives(directives: Array<Directive>): this {
+    this._gqcDirectives = directives;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -1456,10 +1488,30 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     return this.getDirectives().map((d) => d.name);
   }
 
+  /**
+   * Returns arguments of first found directive by name.
+   * If directive does not exists then will be returned undefined.
+   */
   getDirectiveByName(directiveName: string): DirectiveArgs | undefined {
     const directive = this.getDirectives().find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  /**
+   * Set arguments of first found directive by name.
+   * If directive does not exists then will be created new one.
+   */
+  setDirectiveByName(directiveName: string, args?: DirectiveArgs): this {
+    const directives = this.getDirectives();
+    const idx = directives.findIndex((d) => d.name === directiveName);
+    if (idx >= 0) {
+      directives[idx].args = args;
+    } else {
+      directives.push({ name: directiveName, args });
+    }
+    this.setDirectives(directives);
+    return this;
   }
 
   getDirectiveById(idx: number): DirectiveArgs | undefined {
@@ -1468,16 +1520,15 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     return directive.args;
   }
 
-  getFieldDirectives(fieldName: string): Array<ExtensionsDirective> {
-    const directives = this.getFieldExtension(fieldName, 'directives');
-    if (Array.isArray(directives)) {
-      return directives;
-    }
-    return [];
+  getFieldDirectives(fieldName: string): Array<Directive> {
+    return this.getField(fieldName).directives || [];
   }
 
-  setFieldDirectives(fieldName: string, directives: Array<ExtensionsDirective>): this {
-    this.setFieldExtension(fieldName, 'directives', directives);
+  setFieldDirectives(fieldName: string, directives: Array<Directive> | undefined): this {
+    const fc = this.getField(fieldName);
+    fc.directives = directives;
+    this._gqcIsModified = true;
+
     return this;
   }
 
@@ -1485,10 +1536,30 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     return this.getFieldDirectives(fieldName).map((d) => d.name);
   }
 
+  /**
+   * Returns arguments of first found directive by name.
+   * If directive does not exists then will be returned undefined.
+   */
   getFieldDirectiveByName(fieldName: string, directiveName: string): DirectiveArgs | undefined {
     const directive = this.getFieldDirectives(fieldName).find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  /**
+   * Set arguments of first found directive by name.
+   * If directive does not exists then will be created new one.
+   */
+  setFieldDirectiveByName(fieldName: string, directiveName: string, args?: DirectiveArgs): this {
+    const directives = this.getFieldDirectives(fieldName);
+    const idx = directives.findIndex((d) => d.name === directiveName);
+    if (idx >= 0) {
+      directives[idx].args = args;
+    } else {
+      directives.push({ name: directiveName, args });
+    }
+    this.setFieldDirectives(fieldName, directives);
+    return this;
   }
 
   getFieldDirectiveById(fieldName: string, idx: number): DirectiveArgs | undefined {
@@ -1497,20 +1568,14 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     return directive.args;
   }
 
-  getFieldArgDirectives(fieldName: string, argName: string): Array<ExtensionsDirective> {
-    const directives = this.getFieldArgExtension(fieldName, argName, 'directives');
-    if (Array.isArray(directives)) {
-      return directives;
-    }
-    return [];
+  getFieldArgDirectives(fieldName: string, argName: string): Array<Directive> {
+    return this.getFieldArg(fieldName, argName).directives || [];
   }
 
-  setFieldArgDirectives(
-    fieldName: string,
-    argName: string,
-    directives: Array<ExtensionsDirective>
-  ): this {
-    this.setFieldArgExtension(fieldName, argName, 'directives', directives);
+  setFieldArgDirectives(fieldName: string, argName: string, directives: Array<Directive>): this {
+    const ac = this.getFieldArg(fieldName, argName);
+    ac.directives = directives;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -1518,6 +1583,10 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     return this.getFieldArgDirectives(fieldName, argName).map((d) => d.name);
   }
 
+  /**
+   * Returns arguments of first found directive by name.
+   * If directive does not exists then will be returned undefined.
+   */
   getFieldArgDirectiveByName(
     fieldName: string,
     argName: string,
@@ -1528,6 +1597,27 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     );
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  /**
+   * Set arguments of first found directive by name.
+   * If directive does not exists then will be created new one.
+   */
+  setFieldArgDirectiveByName(
+    fieldName: string,
+    argName: string,
+    directiveName: string,
+    args?: DirectiveArgs
+  ): this {
+    const directives = this.getFieldArgDirectives(fieldName, argName);
+    const idx = directives.findIndex((d) => d.name === directiveName);
+    if (idx >= 0) {
+      directives[idx].args = args;
+    } else {
+      directives.push({ name: directiveName, args });
+    }
+    this.setFieldArgDirectives(fieldName, argName, directives);
+    return this;
   }
 
   getFieldArgDirectiveById(

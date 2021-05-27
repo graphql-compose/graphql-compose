@@ -11,11 +11,11 @@ export type Thunk<T> = (() => any) | T;
 export type ThunkWithSchemaComposer<T, SC> = ((schemaComposer: SC) => T) | T;
 
 export type DirectiveArgs = { [key: string]: any };
-export type ExtensionsDirective = {
+export type Directive = {
   name: string;
-  args: DirectiveArgs;
+  args?: DirectiveArgs;
 };
 export type Extensions = {
   [key: string]: any;
-  directives?: ExtensionsDirective[];
+  directives?: Directive[];
 };

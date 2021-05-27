@@ -693,6 +693,83 @@ describe('InputTypeComposer', () => {
         }
       `);
     });
+
+    it('should create directives via config as object', () => {
+      const tc2 = schemaComposer.createInputTC({
+        name: 'MyInput',
+        fields: {
+          red: { type: 'Int', directives: [{ name: 'skip', args: { if: true } }] },
+        },
+        directives: [{ name: 'ok', args: { a: 1, b: '123', c: true } }, { name: 'go' }],
+      });
+      expect(tc2.toSDL()).toEqual(dedent`
+        input MyInput @ok(a: 1, b: "123", c: true) @go {
+          red: Int @skip(if: true)
+        }
+      `);
+    });
+
+    it('setDirectiveByName should add directive if does not exist', () => {
+      const tc2 = schemaComposer.createInputTC({
+        name: 'MyInput',
+        fields: {
+          red: { type: 'Int', directives: [{ name: 'skip', args: { if: true } }] },
+        },
+        directives: [{ name: 'ok', args: { a: 1 } }],
+      });
+      tc2.setDirectiveByName('go');
+      expect(tc2.toSDL()).toEqual(dedent`
+        input MyInput @ok(a: 1) @go {
+          red: Int @skip(if: true)
+        }
+      `);
+    });
+
+    it('setDirectiveByName should replace first directive args if exists', () => {
+      const tc2 = schemaComposer.createInputTC({
+        name: 'MyInput',
+        fields: {
+          red: { type: 'Int', directives: [{ name: 'skip', args: { if: true } }] },
+        },
+        directives: [{ name: 'ok', args: { a: 1 } }, { name: 'go' }],
+      });
+      tc2.setDirectiveByName('ok', { b: 2 });
+      expect(tc2.toSDL()).toEqual(dedent`
+        input MyInput @ok(b: 2) @go {
+          red: Int @skip(if: true)
+        }
+      `);
+    });
+
+    it('setFieldDirectiveByName should add directive if does not exist', () => {
+      const tc2 = schemaComposer.createInputTC({
+        name: 'MyInput',
+        fields: {
+          red: { type: 'Int', directives: [{ name: 'ok', args: { a: 1 } }] },
+        },
+      });
+      tc2.setFieldDirectiveByName('red', 'go');
+      expect(tc2.toSDL()).toEqual(dedent`
+        input MyInput {
+          red: Int @ok(a: 1) @go
+        }
+      `);
+    });
+
+    it('setFieldDirectiveByName should replace first directive args if exists', () => {
+      const tc2 = schemaComposer.createInputTC({
+        name: 'MyInput',
+        fields: {
+          red: { type: 'Int', directives: [{ name: 'ok', args: { a: 1 } }, { name: 'go' }] },
+        },
+      });
+      tc2.setFieldDirectiveByName('red', 'ok', { b: 2 });
+      expect(tc2.toSDL()).toEqual(dedent`
+        input MyInput {
+          red: Int @ok(b: 2) @go
+        }
+      `);
+    });
   });
 
   describe('merge()', () => {

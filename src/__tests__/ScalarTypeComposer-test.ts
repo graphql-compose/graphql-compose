@@ -211,6 +211,32 @@ describe('ScalarTypeComposer', () => {
         expect(scalar1.toSDL()).toBe('scalar S @specifiedBy(url: "other_url")');
       });
     }
+
+    it('should create directives via config as object', () => {
+      const tc2 = schemaComposer.createScalarTC({
+        name: 'MyScalar2',
+        directives: [{ name: 'ok', args: { a: 1, b: '123', c: true } }, { name: 'go' }],
+      });
+      expect(tc2.toSDL()).toEqual('scalar MyScalar2 @ok(a: 1, b: "123", c: true) @go');
+    });
+
+    it('setDirectiveByName should add directive if does not exist', () => {
+      const tc2 = schemaComposer.createScalarTC({
+        name: 'MyScalar2',
+        directives: [{ name: 'ok', args: { a: 1 } }],
+      });
+      tc2.setDirectiveByName('go');
+      expect(tc2.toSDL()).toEqual('scalar MyScalar2 @ok(a: 1) @go');
+    });
+
+    it('setDirectiveByName should replace first directive args if exists', () => {
+      const tc2 = schemaComposer.createScalarTC({
+        name: 'MyScalar2',
+        directives: [{ name: 'ok', args: { a: 1 } }, { name: 'go' }],
+      });
+      tc2.setDirectiveByName('ok', { b: 2 });
+      expect(tc2.toSDL()).toEqual('scalar MyScalar2 @ok(b: 2) @go');
+    });
   });
 
   describe('merge()', () => {

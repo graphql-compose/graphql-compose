@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-/* eslint-disable no-use-before-define */
 
 // This is internal methods of graphql-js (introduced in 14.0.0)
 // required for correct config conversion to internal field definition of types
@@ -144,14 +143,8 @@ export function convertObjectFieldMapToConfig(
                 () => sc.typeMapper.convertInputTypeDefinition(ac.type || arg) as any
               )
             : sc.typeMapper.convertInputTypeDefinition(ac.type || arg),
+          directives: sc.typeMapper.parseDirectives(ac?.astNode?.directives),
         };
-        if (ac?.astNode?.directives) {
-          const directives = sc.typeMapper.parseDirectives(ac.astNode.directives);
-          if (directives) {
-            if (!args[argName].extensions) args[argName].extensions = {};
-            args[argName]!.extensions!.directives = directives;
-          }
-        }
       });
       fc.args = args;
     } else if (isObject(fc.args)) {
@@ -182,15 +175,8 @@ export function convertObjectFieldMapToConfig(
             () => sc.typeMapper.convertOutputTypeDefinition(fc.type || _fields[n]) as any
           )
         : sc.typeMapper.convertOutputTypeDefinition(fc.type || _fields[n]),
+      directives: sc.typeMapper.parseDirectives(fc?.astNode?.directives),
     };
-
-    if (fc?.astNode?.directives) {
-      const directives = sc.typeMapper.parseDirectives(fc.astNode.directives);
-      if (directives) {
-        if (!fields[n].extensions) fields[n].extensions = {};
-        fields[n]!.extensions!.directives = directives;
-      }
-    }
   });
   return fields;
 }
@@ -243,8 +229,7 @@ export function convertEnumValuesToConfig(
     if (fc?.astNode?.directives) {
       const directives = schemaComposer.typeMapper.parseDirectives(fc.astNode.directives);
       if (directives) {
-        if (!fields[name].extensions) fields[name].extensions = {};
-        fields[name]!.extensions!.directives = directives;
+        fields[name].directives = directives;
       }
     }
   });
@@ -299,14 +284,8 @@ export function convertInputFieldMapToConfig(
             () => sc.typeMapper.convertInputTypeDefinition(fc.type || _fields[n]) as any
           )
         : sc.typeMapper.convertInputTypeDefinition(fc.type || _fields[n]),
+      directives: sc.typeMapper.parseDirectives(fc?.astNode?.directives),
     };
-    if (fc?.astNode?.directives) {
-      const directives = sc.typeMapper.parseDirectives(fc.astNode.directives);
-      if (directives) {
-        if (!fields[n].extensions) fields[n].extensions = {};
-        fields[n]!.extensions!.directives = directives;
-      }
-    }
   });
   return fields;
 }

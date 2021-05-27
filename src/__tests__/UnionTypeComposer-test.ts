@@ -601,6 +601,41 @@ describe('UnionTypeComposer', () => {
         union My1 @d0(a: false) @d1(b: "3") @d0(a: true) = My2 | My3
       `);
     });
+
+    it('should create directives via config as object', () => {
+      const tc2 = schemaComposer.createUnionTC({
+        name: 'MyUnion',
+        types: [`type SubType1 { a: Int }`, `type SubType2 { b: Int }`],
+        directives: [{ name: 'ok', args: { a: 1, b: '123', c: true } }, { name: 'go' }],
+      });
+      expect(tc2.toSDL()).toEqual(dedent`
+        union MyUnion @ok(a: 1, b: "123", c: true) @go = SubType1 | SubType2
+      `);
+    });
+
+    it('setDirectiveByName should add directive if does not exist', () => {
+      const tc2 = schemaComposer.createUnionTC({
+        name: 'MyUnion',
+        types: [`type SubType1 { a: Int }`, `type SubType2 { b: Int }`],
+        directives: [{ name: 'ok', args: { a: 1 } }],
+      });
+      tc2.setDirectiveByName('go');
+      expect(tc2.toSDL()).toEqual(dedent`
+        union MyUnion @ok(a: 1) @go = SubType1 | SubType2
+      `);
+    });
+
+    it('setDirectiveByName should replace first directive args if exists', () => {
+      const tc2 = schemaComposer.createUnionTC({
+        name: 'MyUnion',
+        types: [`type SubType1 { a: Int }`, `type SubType2 { b: Int }`],
+        directives: [{ name: 'ok', args: { a: 1 } }, { name: 'go' }],
+      });
+      tc2.setDirectiveByName('ok', { b: 2 });
+      expect(tc2.toSDL()).toEqual(dedent`
+        union MyUnion @ok(b: 2) @go = SubType1 | SubType2
+      `);
+    });
   });
 
   describe('merge()', () => {

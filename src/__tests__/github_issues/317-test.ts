@@ -15,6 +15,14 @@ describe.skip('github issue #317: Directive @deprecated for arguments in SDL is 
 
     const type = typeComposer.getType();
 
+    expect(typeComposer.toSDL()).toEqual(dedent`
+      type Foo {
+        foo(
+          arg: String @deprecated(reason: "Tired")
+        ): String
+      }
+    `);
+
     expect(printType(type)).toEqual(dedent`
       type Foo {
         foo(

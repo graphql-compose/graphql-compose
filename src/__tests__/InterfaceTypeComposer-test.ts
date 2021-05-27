@@ -1309,6 +1309,121 @@ describe('InterfaceTypeComposer', () => {
         }
       `);
     });
+
+    it('should create directives via config as object', () => {
+      const tc2 = schemaComposer.createInterfaceTC({
+        name: 'MyObject',
+        fields: {
+          red: { type: 'Int', directives: [{ name: 'skip', args: { if: true } }] },
+        },
+        directives: [{ name: 'ok', args: { a: 1, b: '123', c: true } }, { name: 'go' }],
+      });
+      expect(tc2.toSDL()).toEqual(dedent`
+        interface MyObject @ok(a: 1, b: "123", c: true) @go {
+          red: Int @skip(if: true)
+        }
+      `);
+    });
+
+    it('setDirectiveByName should add directive if does not exist', () => {
+      const tc2 = schemaComposer.createInterfaceTC({
+        name: 'MyObject',
+        fields: {
+          red: { type: 'Int', directives: [{ name: 'skip', args: { if: true } }] },
+        },
+        directives: [{ name: 'ok', args: { a: 1 } }],
+      });
+      tc2.setDirectiveByName('go');
+      expect(tc2.toSDL()).toEqual(dedent`
+        interface MyObject @ok(a: 1) @go {
+          red: Int @skip(if: true)
+        }
+      `);
+    });
+
+    it('setDirectiveByName should replace first directive args if exists', () => {
+      const tc2 = schemaComposer.createInterfaceTC({
+        name: 'MyObject',
+        fields: {
+          red: { type: 'Int', directives: [{ name: 'skip', args: { if: true } }] },
+        },
+        directives: [{ name: 'ok', args: { a: 1 } }, { name: 'go' }],
+      });
+      tc2.setDirectiveByName('ok', { b: 2 });
+      expect(tc2.toSDL()).toEqual(dedent`
+        interface MyObject @ok(b: 2) @go {
+          red: Int @skip(if: true)
+        }
+      `);
+    });
+
+    it('setFieldDirectiveByName should add directive if does not exist', () => {
+      const tc2 = schemaComposer.createInterfaceTC({
+        name: 'MyObject',
+        fields: {
+          red: { type: 'Int', directives: [{ name: 'ok', args: { a: 1 } }] },
+        },
+      });
+      tc2.setFieldDirectiveByName('red', 'go');
+      expect(tc2.toSDL()).toEqual(dedent`
+        interface MyObject {
+          red: Int @ok(a: 1) @go
+        }
+      `);
+    });
+
+    it('setFieldDirectiveByName should replace first directive args if exists', () => {
+      const tc2 = schemaComposer.createInterfaceTC({
+        name: 'MyObject',
+        fields: {
+          red: { type: 'Int', directives: [{ name: 'ok', args: { a: 1 } }, { name: 'go' }] },
+        },
+      });
+      tc2.setFieldDirectiveByName('red', 'ok', { b: 2 });
+      expect(tc2.toSDL()).toEqual(dedent`
+        interface MyObject {
+          red: Int @ok(b: 2) @go
+        }
+      `);
+    });
+
+    it('setFieldArgDirectiveByName should add directive if does not exist', () => {
+      const tc2 = schemaComposer.createInterfaceTC({
+        name: 'MyObject',
+        fields: {
+          red: {
+            type: 'Int',
+            args: { a1: { type: 'Int', directives: [{ name: 'ok', args: { a: 1 } }] } },
+          },
+        },
+      });
+      tc2.setFieldArgDirectiveByName('red', 'a1', 'go');
+      expect(tc2.toSDL()).toEqual(dedent`
+        interface MyObject {
+          red(a1: Int @ok(a: 1) @go): Int
+        }
+      `);
+    });
+
+    it('setFieldArgDirectiveByName should replace first directive args if exists', () => {
+      const tc2 = schemaComposer.createInterfaceTC({
+        name: 'MyObject',
+        fields: {
+          red: {
+            type: 'Int',
+            args: {
+              a1: { type: 'Int', directives: [{ name: 'ok', args: { a: 1 } }, { name: 'go' }] },
+            },
+          },
+        },
+      });
+      tc2.setFieldArgDirectiveByName('red', 'a1', 'ok', { b: 2 });
+      expect(tc2.toSDL()).toEqual(dedent`
+        interface MyObject {
+          red(a1: Int @ok(b: 2) @go): Int
+        }
+      `);
+    });
   });
 
   describe('merge()', () => {
