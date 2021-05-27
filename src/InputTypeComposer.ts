@@ -710,6 +710,16 @@ export class InputTypeComposer<TContext = any> {
 
   // -----------------------------------------------
   // Extensions methods
+  //
+  // `Extensions` is a property on type/field/arg definitions to pass private extra metadata.
+  // It's used only on the server-side with the Code-First approach,
+  // mostly for 3rd party server middlewares & plugins.
+  // Property `extensions` may contain private server metadata of any type (even functions)
+  // and does not available via SDL.
+  //
+  // @see https://github.com/graphql/graphql-js/issues/1527
+  // @note
+  //   If you need to provide public metadata to clients then use `directives` instead.
   // -----------------------------------------------
 
   getExtensions(): Extensions {
@@ -816,12 +826,19 @@ export class InputTypeComposer<TContext = any> {
   // -----------------------------------------------
   // Directive methods
   //
-  // Directive methods are useful if you declare your schemas via SDL.
-  // Users who actively use `graphql-tools` can open new abilities for writing
-  // your own directive handlers.
+  // Directives provide the ability to work with public metadata which is available via SDL.
+  // Directives can be used on type/field/arg definitions. The most famous directives are
+  // `@deprecated(reason: "...")` and `@specifiedBy(url: "...")` which are present in GraphQL spec.
+  // GraphQL spec allows to you add any own directives.
   //
-  // If you create your schemas via config objects, then probably you
-  // no need in `directives`. Instead directives better to use `extensions`.
+  // @example
+  //   type Article @directive1 {
+  //     name @directive2
+  //     comments(limit: Int @directive3)
+  //   }
+  //
+  // @note
+  //   If you need private metadata then use `extensions` instead.
   // -----------------------------------------------
 
   getDirectives(): Array<Directive> {
