@@ -1,5 +1,3 @@
-/* eslint-disable no-use-before-define */
-
 import type { SchemaComposer } from '../SchemaComposer';
 import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { InputTypeComposer } from '../InputTypeComposer';

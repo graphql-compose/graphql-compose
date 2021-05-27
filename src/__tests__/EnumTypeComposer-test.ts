@@ -386,6 +386,83 @@ describe('EnumTypeComposer', () => {
         }
       `);
     });
+
+    it('should create directives via config as object', () => {
+      const tc2 = schemaComposer.createEnumTC({
+        name: 'MyEnum',
+        values: {
+          red: { value: 'RED', directives: [{ name: 'skip', args: { if: true } }] },
+        },
+        directives: [{ name: 'ok', args: { a: 1, b: '123', c: true } }, { name: 'go' }],
+      });
+      expect(tc2.toSDL()).toEqual(dedent`
+        enum MyEnum @ok(a: 1, b: "123", c: true) @go {
+          red @skip(if: true)
+        }
+      `);
+    });
+
+    it('setDirectiveByName should add directive if does not exist', () => {
+      const tc2 = schemaComposer.createEnumTC({
+        name: 'MyEnum2',
+        values: {
+          red: { value: 'RED' },
+        },
+        directives: [{ name: 'ok', args: { a: 1 } }],
+      });
+      tc2.setDirectiveByName('go');
+      expect(tc2.toSDL()).toEqual(dedent`
+        enum MyEnum2 @ok(a: 1) @go {
+          red
+        }
+      `);
+    });
+
+    it('setDirectiveByName should replace first directive args if exists', () => {
+      const tc2 = schemaComposer.createEnumTC({
+        name: 'MyEnum2',
+        values: {
+          red: { value: 'RED' },
+        },
+        directives: [{ name: 'ok', args: { a: 1 } }, { name: 'go' }],
+      });
+      tc2.setDirectiveByName('ok', { b: 2 });
+      expect(tc2.toSDL()).toEqual(dedent`
+        enum MyEnum2 @ok(b: 2) @go {
+          red
+        }
+      `);
+    });
+
+    it('setFieldDirectiveByName should add directive if does not exist', () => {
+      const tc2 = schemaComposer.createEnumTC({
+        name: 'MyEnum2',
+        values: {
+          red: { value: 'RED', directives: [{ name: 'ok', args: { a: 1 } }] },
+        },
+      });
+      tc2.setFieldDirectiveByName('red', 'go');
+      expect(tc2.toSDL()).toEqual(dedent`
+        enum MyEnum2 {
+          red @ok(a: 1) @go
+        }
+      `);
+    });
+
+    it('setFieldDirectiveByName should replace first directive args if exists', () => {
+      const tc2 = schemaComposer.createEnumTC({
+        name: 'MyEnum2',
+        values: {
+          red: { value: 'RED', directives: [{ name: 'ok', args: { a: 1 } }, { name: 'go' }] },
+        },
+      });
+      tc2.setFieldDirectiveByName('red', 'ok', { b: 2 });
+      expect(tc2.toSDL()).toEqual(dedent`
+        enum MyEnum2 {
+          red @ok(b: 2) @go
+        }
+      `);
+    });
   });
 
   describe('merge()', () => {

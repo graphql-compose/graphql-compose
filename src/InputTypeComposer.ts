@@ -1,5 +1,3 @@
-/* eslint-disable no-use-before-define */
-
 import { GraphQLInputObjectType } from './graphql';
 import { resolveMaybeThunk, upperFirst, inspect, mapEachKey } from './utils/misc';
 import { isObject, isFunction, isString } from './utils/is';
@@ -9,7 +7,7 @@ import type {
   ThunkWithSchemaComposer,
   ObjMap,
   Extensions,
-  ExtensionsDirective,
+  Directive,
   DirectiveArgs,
 } from './utils/definitions';
 import { SchemaComposer } from './SchemaComposer';
@@ -49,6 +47,7 @@ export type InputTypeComposerAsObjectDefinition = {
   fields: ThunkWithSchemaComposer<InputTypeComposerFieldConfigMapDefinition, SchemaComposer<any>>;
   description?: null | string;
   extensions?: Extensions;
+  directives?: Directive[];
 };
 
 export type InputTypeComposerFieldConfigMap = ObjMap<InputTypeComposerFieldConfig>;
@@ -62,7 +61,8 @@ export type InputTypeComposerFieldConfigAsObjectDefinition = {
   type: ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<any>>;
   defaultValue?: unknown;
   description?: string | null;
-  extensions?: Extensions | null;
+  extensions?: Extensions;
+  directives?: Directive[];
   [key: string]: unknown;
 };
 
@@ -72,6 +72,7 @@ export type InputTypeComposerFieldConfig = {
   description?: string | null;
   astNode?: InputValueDefinitionNode | null;
   extensions?: Extensions;
+  directives?: Directive[];
   [key: string]: unknown;
 };
 
@@ -84,6 +85,8 @@ export class InputTypeComposer<TContext = any> {
   _gqType: GraphQLInputObjectType;
   _gqcFields: InputTypeComposerFieldConfigMap;
   _gqcExtensions?: Extensions;
+  _gqcDirectives?: Directive[];
+  _gqcIsModified?: boolean;
 
   /**
    * Create `InputTypeComposer` with adding it by name to the `SchemaComposer`.
@@ -153,7 +156,10 @@ export class InputTypeComposer<TContext = any> {
         ITC.addFields(convertInputFieldMapToConfig(fields, sc));
       }
       if (isObject(fields)) ITC.addFields(fields);
-      ITC._gqcExtensions = typeDef?.extensions || {};
+      ITC.setExtensions(typeDef.extensions || undefined);
+      if (Array.isArray((typeDef as any)?.directives)) {
+        ITC.setDirectives((typeDef as any).directives);
+      }
     } else {
       throw new Error(
         `You should provide InputObjectConfig or string with type name to InputTypeComposer.create(typeDef). Provided:\n${inspect(
@@ -196,12 +202,10 @@ export class InputTypeComposer<TContext = any> {
       );
     }
 
-    if (graphqlType?.astNode?.directives) {
-      this.setExtension(
-        'directives',
-        this.schemaComposer.typeMapper.parseDirectives(graphqlType?.astNode?.directives)
-      );
+    if (!this._gqType.astNode) {
+      this._gqType.astNode = getInputObjectTypeDefinitionNode(this);
     }
+    this._gqcIsModified = false;
   }
 
   // -----------------------------------------------
@@ -236,6 +240,7 @@ export class InputTypeComposer<TContext = any> {
           fieldName,
           this.getTypeName()
         );
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -325,6 +330,7 @@ export class InputTypeComposer<TContext = any> {
       if (names.length === 0) {
         // single field
         delete this._gqcFields[name];
+        this._gqcIsModified = true;
       } else {
         // nested field
         // eslint-disable-next-line no-lonely-if
@@ -344,6 +350,7 @@ export class InputTypeComposer<TContext = any> {
     Object.keys(this._gqcFields).forEach((fieldName) => {
       if (keepFieldNames.indexOf(fieldName) === -1) {
         delete this._gqcFields[fieldName];
+        this._gqcIsModified = true;
       }
     });
     return this;
@@ -369,6 +376,7 @@ export class InputTypeComposer<TContext = any> {
         ...(prevFieldConfig.extensions || {}),
         ...(partialFieldConfig.extensions || {}),
       },
+      directives: [...(prevFieldConfig.directives || []), ...(partialFieldConfig.directives || [])],
     });
     return this;
   }
@@ -383,6 +391,7 @@ export class InputTypeComposer<TContext = any> {
       }
     });
     this._gqcFields = { ...orderedFields, ...fields };
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -452,6 +461,7 @@ export class InputTypeComposer<TContext = any> {
       const fc = this._gqcFields[fieldName];
       if (fc && !(fc.type instanceof NonNullComposer)) {
         fc.type = new NonNullComposer(fc.type);
+        this._gqcIsModified = true;
       }
     });
     return this;
@@ -470,6 +480,7 @@ export class InputTypeComposer<TContext = any> {
       const fc = this._gqcFields[fieldName];
       if (fc && fc.type instanceof NonNullComposer) {
         fc.type = fc.type.ofType;
+        this._gqcIsModified = true;
       }
     });
     return this;
@@ -496,6 +507,7 @@ export class InputTypeComposer<TContext = any> {
       const fc = this._gqcFields[fieldName];
       if (fc && !(fc.type instanceof ListComposer)) {
         fc.type = new ListComposer(fc.type);
+        this._gqcIsModified = true;
       }
     });
     return this;
@@ -508,11 +520,13 @@ export class InputTypeComposer<TContext = any> {
       if (fc) {
         if (fc.type instanceof ListComposer) {
           fc.type = fc.type.ofType;
+          this._gqcIsModified = true;
         } else if (fc.type instanceof NonNullComposer && fc.type.ofType instanceof ListComposer) {
           fc.type =
             fc.type.ofType.ofType instanceof NonNullComposer
               ? fc.type.ofType.ofType
               : new NonNullComposer(fc.type.ofType.ofType);
+          this._gqcIsModified = true;
         }
       }
     });
@@ -524,20 +538,23 @@ export class InputTypeComposer<TContext = any> {
   // -----------------------------------------------
 
   getType(): GraphQLInputObjectType {
-    this._gqType.astNode = getInputObjectTypeDefinitionNode(this);
-    if (graphqlVersion >= 14) {
-      (this._gqType as any)._fields = () => {
-        return defineInputFieldMap(
-          this._gqType,
-          mapEachKey(this._gqcFields, (_, name) => this.getFieldConfig(name)) as any,
-          this._gqType.astNode
-        );
-      };
-    } else {
-      (this._gqType as any)._typeConfig.fields = () => {
-        return mapEachKey(this._gqcFields, (_, name) => this.getFieldConfig(name));
-      };
-      delete (this._gqType as any)._fields;
+    if (this._gqcIsModified) {
+      this._gqcIsModified = false;
+      this._gqType.astNode = getInputObjectTypeDefinitionNode(this);
+      if (graphqlVersion >= 14) {
+        (this._gqType as any)._fields = () => {
+          return defineInputFieldMap(
+            this._gqType,
+            mapEachKey(this._gqcFields, (_, name) => this.getFieldConfig(name)) as any,
+            this._gqType.astNode
+          );
+        };
+      } else {
+        (this._gqType as any)._typeConfig.fields = () => {
+          return mapEachKey(this._gqcFields, (_, name) => this.getFieldConfig(name));
+        };
+        delete (this._gqType as any)._fields;
+      }
     }
     return this._gqType;
   }
@@ -594,6 +611,7 @@ export class InputTypeComposer<TContext = any> {
 
   setTypeName(name: string): this {
     this._gqType.name = name;
+    this._gqcIsModified = true;
     this.schemaComposer.set(name, this);
     return this;
   }
@@ -604,6 +622,7 @@ export class InputTypeComposer<TContext = any> {
 
   setDescription(description: string): this {
     this._gqType.description = description;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -625,9 +644,11 @@ export class InputTypeComposer<TContext = any> {
     cloned._gqcFields = mapEachKey(this._gqcFields, (fieldConfig) => ({
       ...fieldConfig,
       extensions: { ...fieldConfig.extensions },
+      directives: fieldConfig.directives && [...(fieldConfig.directives || [])],
     }));
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
+    cloned.setDirectives(this.getDirectives());
 
     return cloned;
   }
@@ -699,8 +720,9 @@ export class InputTypeComposer<TContext = any> {
     }
   }
 
-  setExtensions(extensions: Extensions): this {
-    this._gqcExtensions = extensions;
+  setExtensions(extensions: Extensions | undefined): this {
+    this._gqcExtensions = extensions || undefined;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -802,16 +824,13 @@ export class InputTypeComposer<TContext = any> {
   // no need in `directives`. Instead directives better to use `extensions`.
   // -----------------------------------------------
 
-  getDirectives(): Array<ExtensionsDirective> {
-    const directives = this.getExtension('directives');
-    if (Array.isArray(directives)) {
-      return directives;
-    }
-    return [];
+  getDirectives(): Array<Directive> {
+    return this._gqcDirectives || [];
   }
 
-  setDirectives(directives: Array<ExtensionsDirective>): this {
-    this.setExtension('directives', directives);
+  setDirectives(directives: Array<Directive>): this {
+    this._gqcDirectives = directives;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -819,10 +838,30 @@ export class InputTypeComposer<TContext = any> {
     return this.getDirectives().map((d) => d.name);
   }
 
+  /**
+   * Returns arguments of first found directive by name.
+   * If directive does not exists then will be returned undefined.
+   */
   getDirectiveByName(directiveName: string): DirectiveArgs | undefined {
     const directive = this.getDirectives().find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  /**
+   * Set arguments of first found directive by name.
+   * If directive does not exists then will be created new one.
+   */
+  setDirectiveByName(directiveName: string, args?: DirectiveArgs): this {
+    const directives = this.getDirectives();
+    const idx = directives.findIndex((d) => d.name === directiveName);
+    if (idx >= 0) {
+      directives[idx].args = args;
+    } else {
+      directives.push({ name: directiveName, args });
+    }
+    this.setDirectives(directives);
+    return this;
   }
 
   getDirectiveById(idx: number): DirectiveArgs | undefined {
@@ -831,16 +870,15 @@ export class InputTypeComposer<TContext = any> {
     return directive.args;
   }
 
-  getFieldDirectives(fieldName: string): Array<ExtensionsDirective> {
-    const directives = this.getFieldExtension(fieldName, 'directives');
-    if (Array.isArray(directives)) {
-      return directives;
-    }
-    return [];
+  getFieldDirectives(fieldName: string): Array<Directive> {
+    return this.getField(fieldName).directives || [];
   }
 
-  setFieldDirectives(fieldName: string, directives: Array<ExtensionsDirective>): this {
-    this.setFieldExtension(fieldName, 'directives', directives);
+  setFieldDirectives(fieldName: string, directives: Array<Directive> | undefined): this {
+    const fc = this.getField(fieldName);
+    fc.directives = directives;
+    this._gqcIsModified = true;
+
     return this;
   }
 
@@ -848,10 +886,30 @@ export class InputTypeComposer<TContext = any> {
     return this.getFieldDirectives(fieldName).map((d) => d.name);
   }
 
+  /**
+   * Returns arguments of first found directive by name.
+   * If directive does not exists then will be returned undefined.
+   */
   getFieldDirectiveByName(fieldName: string, directiveName: string): DirectiveArgs | undefined {
     const directive = this.getFieldDirectives(fieldName).find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  /**
+   * Set arguments of first found directive by name.
+   * If directive does not exists then will be created new one.
+   */
+  setFieldDirectiveByName(fieldName: string, directiveName: string, args?: DirectiveArgs): this {
+    const directives = this.getFieldDirectives(fieldName);
+    const idx = directives.findIndex((d) => d.name === directiveName);
+    if (idx >= 0) {
+      directives[idx].args = args;
+    } else {
+      directives.push({ name: directiveName, args });
+    }
+    this.setFieldDirectives(fieldName, directives);
+    return this;
   }
 
   getFieldDirectiveById(fieldName: string, idx: number): DirectiveArgs | undefined {

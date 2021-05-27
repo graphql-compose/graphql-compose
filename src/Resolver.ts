@@ -43,7 +43,7 @@ import type {
   ComposeNamedInputType,
   ComposeInputTypeDefinition,
 } from './utils/typeHelpers';
-import type { Thunk, ThunkWithSchemaComposer, Extensions } from './utils/definitions';
+import type { Thunk, ThunkWithSchemaComposer, Extensions, Directive } from './utils/definitions';
 import { GraphQLJSON } from './type';
 import { NonNullComposer } from './NonNullComposer';
 import { ListComposer } from './ListComposer';
@@ -67,6 +67,7 @@ export type ResolverDefinition<TSource, TContext, TArgs = any> = {
   projection?: ProjectionType;
   parent?: Resolver<any, TContext, any>;
   extensions?: Extensions;
+  directives?: Directive[];
 };
 
 export type ResolverResolveParams<TSource, TContext, TArgs = any> = {
@@ -157,6 +158,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
   projection: ProjectionType;
   parent: Resolver<TSource, TContext, any> | undefined;
   extensions: Extensions | undefined;
+  directives: Directive[] | undefined;
   resolve: ResolverRpCbPartial<TSource, TContext, TArgs> = () => Promise.resolve();
 
   constructor(
@@ -190,6 +192,10 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
 
     if (opts.resolve) {
       this.resolve = opts.resolve as any;
+    }
+
+    if (opts.directives) {
+      this.directives = opts.directives;
     }
   }
 

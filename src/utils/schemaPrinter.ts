@@ -246,20 +246,9 @@ export function printType(type: GraphQLNamedType, options?: Options): string {
 
 export function printScalar(type: GraphQLScalarType, options?: Options): string {
   if (options?.omitScalars) return '';
-  return `${printDescription(type, options)}scalar ${type.name}${printSpecifiedByUrl(
-    type,
-    options
-  )}${printNodeDirectives(type.astNode)}`;
-}
-
-export function printSpecifiedByUrl(type: GraphQLScalarType, options?: Options): string {
-  if (!type.specifiedByUrl || options?.omitSpecifiedByUrl) {
-    return '';
-  }
-  const url = type.specifiedByUrl;
-  const urlAST = astFromValue(url, GraphQLString);
-  if (!urlAST) return '';
-  return ` @specifiedBy(url: ${print(urlAST)})`;
+  return `${printDescription(type, options)}scalar ${type.name}${printNodeDirectives(
+    type.astNode
+  )}`;
 }
 
 export function printImplementedInterfaces(

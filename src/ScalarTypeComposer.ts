@@ -1,5 +1,3 @@
-/* eslint-disable no-use-before-define */
-
 import { GraphQLScalarType, valueFromASTUntyped } from './graphql';
 import { isObject, isString } from './utils/is';
 import type {
@@ -13,7 +11,7 @@ import { SchemaComposer } from './SchemaComposer';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { isTypeNameString } from './utils/typeHelpers';
-import type { Extensions, ExtensionsDirective, DirectiveArgs } from './utils/definitions';
+import type { Extensions, Directive, DirectiveArgs } from './utils/definitions';
 import { inspect } from './utils/misc';
 import { graphqlVersion } from './utils/graphqlVersion';
 import { printScalar, SchemaPrinterOptions } from './utils/schemaPrinter';
@@ -26,6 +24,7 @@ export type ScalarTypeComposerDefinition =
 
 export type ScalarTypeComposerAsObjectDefinition = GraphQLScalarTypeConfig<any, any> & {
   extensions?: Extensions;
+  directives?: Directive[];
 };
 
 /**
@@ -35,6 +34,8 @@ export class ScalarTypeComposer<TContext = any> {
   schemaComposer: SchemaComposer<TContext>;
   _gqType: GraphQLScalarType;
   _gqcExtensions: Extensions | undefined;
+  _gqcDirectives: Directive[] | undefined;
+  _gqcIsModified?: boolean;
   // @ts-ignore due to initialization via setter
   _gqcSerialize: GraphQLScalarSerializer<any>;
   // @ts-ignore due to initialization via setter
@@ -102,7 +103,10 @@ export class ScalarTypeComposer<TContext = any> {
         ...(typeDef as any),
       });
       STC = new ScalarTypeComposer(type, sc);
-      STC._gqcExtensions = typeDef.extensions || {};
+      STC.setExtensions(typeDef.extensions);
+      if (Array.isArray((typeDef as any)?.directives)) {
+        STC.setDirectives((typeDef as any).directives);
+      }
     } else {
       throw new Error(
         `You should provide GraphQLScalarTypeConfig or string with scalar name or SDL. Provided:\n${inspect(
@@ -148,12 +152,10 @@ export class ScalarTypeComposer<TContext = any> {
     this.setParseValue(parseValue);
     this.setParseLiteral(parseLiteral);
 
-    if (graphqlType?.astNode?.directives) {
-      this.setExtension(
-        'directives',
-        this.schemaComposer.typeMapper.parseDirectives(graphqlType?.astNode?.directives)
-      );
+    if (!this._gqType.astNode) {
+      this._gqType.astNode = getScalarTypeDefinitionNode(this);
     }
+    this._gqcIsModified = false;
   }
 
   // -----------------------------------------------
@@ -162,6 +164,7 @@ export class ScalarTypeComposer<TContext = any> {
 
   setSerialize(fn: GraphQLScalarSerializer<any>): this {
     this._gqcSerialize = fn;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -171,6 +174,7 @@ export class ScalarTypeComposer<TContext = any> {
 
   setParseValue(fn: GraphQLScalarValueParser<any> | undefined): this {
     this._gqcParseValue = fn || ((value) => value);
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -180,6 +184,7 @@ export class ScalarTypeComposer<TContext = any> {
 
   setParseLiteral(fn: GraphQLScalarLiteralParser<any> | undefined): this {
     this._gqcParseLiteral = fn || valueFromASTUntyped;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -192,18 +197,22 @@ export class ScalarTypeComposer<TContext = any> {
   // -----------------------------------------------
 
   getType(): GraphQLScalarType {
-    this._gqType.astNode = getScalarTypeDefinitionNode(this);
-    if (graphqlVersion >= 14) {
-      this._gqType.serialize = this._gqcSerialize;
-      this._gqType.parseValue = this._gqcParseValue;
-      this._gqType.parseLiteral = this._gqcParseLiteral;
-    } else {
-      (this._gqType as any)._scalarConfig = {
-        ...(this._gqType as any)._scalarConfig,
-        serialize: this._gqcSerialize,
-        parseValue: this._gqcParseValue,
-        parseLiteral: this._gqcParseLiteral,
-      };
+    if (this._gqcIsModified) {
+      this._gqcIsModified = false;
+
+      this._gqType.astNode = getScalarTypeDefinitionNode(this);
+      if (graphqlVersion >= 14) {
+        this._gqType.serialize = this._gqcSerialize;
+        this._gqType.parseValue = this._gqcParseValue;
+        this._gqType.parseLiteral = this._gqcParseLiteral;
+      } else {
+        (this._gqType as any)._scalarConfig = {
+          ...(this._gqType as any)._scalarConfig,
+          serialize: this._gqcSerialize,
+          parseValue: this._gqcParseValue,
+          parseLiteral: this._gqcParseLiteral,
+        };
+      }
     }
     return this._gqType;
   }
@@ -252,6 +261,7 @@ export class ScalarTypeComposer<TContext = any> {
 
   setTypeName(name: string): this {
     this._gqType.name = name;
+    this._gqcIsModified = true;
     this.schemaComposer.add(this);
     return this;
   }
@@ -262,15 +272,16 @@ export class ScalarTypeComposer<TContext = any> {
 
   setDescription(description: string): this {
     this._gqType.description = description;
+    this._gqcIsModified = true;
     return this;
   }
 
-  getSpecifiedByUrl(): string | void | null {
-    return this._gqType.specifiedByUrl;
+  getSpecifiedByUrl(): string | undefined | null {
+    return this.getDirectiveByName('specifiedBy')?.url;
   }
 
-  setSpecifiedByUrl(url: string | void | null): this {
-    (this._gqType as any).specifiedByUrl = url;
+  setSpecifiedByUrl(url: string | undefined | null): this {
+    this.setDirectiveByName('specifiedBy', { url });
     return this;
   }
 
@@ -294,7 +305,7 @@ export class ScalarTypeComposer<TContext = any> {
     cloned._gqcParseLiteral = this._gqcParseLiteral;
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
-    cloned.setSpecifiedByUrl(this.getSpecifiedByUrl());
+    cloned.setDirectives(this.getDirectives());
 
     return cloned;
   }
@@ -362,8 +373,9 @@ export class ScalarTypeComposer<TContext = any> {
     }
   }
 
-  setExtensions(extensions: Extensions): this {
-    this._gqcExtensions = extensions;
+  setExtensions(extensions: Extensions | undefined | null): this {
+    this._gqcExtensions = extensions || undefined;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -409,16 +421,13 @@ export class ScalarTypeComposer<TContext = any> {
   // Directive methods
   // -----------------------------------------------
 
-  getDirectives(): Array<ExtensionsDirective> {
-    const directives = this.getExtension('directives');
-    if (Array.isArray(directives)) {
-      return directives;
-    }
-    return [];
+  getDirectives(): Array<Directive> {
+    return this._gqcDirectives || [];
   }
 
-  setDirectives(directives: Array<ExtensionsDirective>): this {
-    this.setExtension('directives', directives);
+  setDirectives(directives: Array<Directive>): this {
+    this._gqcDirectives = directives;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -426,10 +435,30 @@ export class ScalarTypeComposer<TContext = any> {
     return this.getDirectives().map((d) => d.name);
   }
 
+  /**
+   * Returns arguments of first found directive by name.
+   * If directive does not exists then will be returned undefined.
+   */
   getDirectiveByName(directiveName: string): DirectiveArgs | undefined {
     const directive = this.getDirectives().find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  /**
+   * Set arguments of first found directive by name.
+   * If directive does not exists then will be created new one.
+   */
+  setDirectiveByName(directiveName: string, args?: DirectiveArgs): this {
+    const directives = this.getDirectives();
+    const idx = directives.findIndex((d) => d.name === directiveName);
+    if (idx >= 0) {
+      directives[idx].args = args;
+    } else {
+      directives.push({ name: directiveName, args });
+    }
+    this.setDirectives(directives);
+    return this;
   }
 
   getDirectiveById(idx: number): DirectiveArgs | undefined {

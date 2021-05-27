@@ -1,5 +1,3 @@
-/* eslint-disable no-use-before-define */
-
 import keyMap from 'graphql/jsutils/keyMap';
 import { GraphQLEnumType } from './graphql';
 import { isObject, isString } from './utils/is';
@@ -15,7 +13,7 @@ import type {
   ObjMap,
   ObjMapReadOnly,
   Extensions,
-  ExtensionsDirective,
+  Directive,
   DirectiveArgs,
 } from './utils/definitions';
 import { isTypeNameString } from './utils/typeHelpers';
@@ -32,14 +30,16 @@ export type EnumTypeComposerAsObjectDefinition = {
   values?: EnumTypeComposerValueConfigMapDefinition;
   description?: string | null;
   extensions?: Extensions;
+  directives?: Directive[];
 };
 
 export type EnumTypeComposerValueConfig = {
   value: any /* T */;
   deprecationReason?: string | null;
   description?: string | null;
-  astNode?: EnumValueDefinitionNode | null | void;
+  astNode?: EnumValueDefinitionNode | null | undefined;
   extensions?: Extensions;
+  directives?: Directive[];
   [key: string]: any;
 };
 
@@ -48,6 +48,7 @@ export type EnumTypeComposerValueConfigDefinition = {
   deprecationReason?: string | null;
   description?: string | null;
   extensions?: Extensions;
+  directives?: Directive[];
   [key: string]: any;
 };
 
@@ -61,6 +62,8 @@ export class EnumTypeComposer<TContext = any> {
   schemaComposer: SchemaComposer<TContext>;
   _gqType: GraphQLEnumType;
   _gqcExtensions?: Extensions;
+  _gqcDirectives?: Directive[];
+  _gqcIsModified?: boolean;
   _gqcFields: EnumTypeComposerValueConfigMap;
 
   /**
@@ -122,8 +125,11 @@ export class EnumTypeComposer<TContext = any> {
         ...(typeDef as any),
       });
       ETC = new EnumTypeComposer(type, sc);
-      ETC.setFields((typeDef as any).values || {});
-      ETC._gqcExtensions = (typeDef as any).extensions || {};
+      ETC.setFields(typeDef.values || {});
+      ETC.setExtensions(typeDef.extensions);
+      if (Array.isArray(typeDef?.directives)) {
+        ETC.setDirectives(typeDef.directives);
+      }
     } else {
       throw new Error(
         `You should provide GraphQLEnumTypeConfig or string with enum name or SDL. Provided:\n${inspect(
@@ -155,12 +161,10 @@ export class EnumTypeComposer<TContext = any> {
 
     this._gqcFields = convertEnumValuesToConfig(this._gqType.getValues(), this.schemaComposer);
 
-    if (graphqlType?.astNode?.directives) {
-      this.setExtension(
-        'directives',
-        this.schemaComposer.typeMapper.parseDirectives(graphqlType?.astNode?.directives)
-      );
+    if (!this._gqType.astNode) {
+      this._gqType.astNode = getEnumTypeDefinitionNode(this);
     }
+    this._gqcIsModified = false;
   }
 
   // -----------------------------------------------
@@ -212,8 +216,10 @@ export class EnumTypeComposer<TContext = any> {
       description: valueConfig.description,
       deprecationReason: valueConfig.deprecationReason,
       extensions: valueConfig.extensions || {},
-      astNode: valueConfig.astNode,
+      directives: valueConfig.directives || [],
     };
+    this._gqcIsModified = true;
+
     return this;
   }
 
@@ -234,6 +240,7 @@ export class EnumTypeComposer<TContext = any> {
     const valueNames = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
     valueNames.forEach((valueName) => {
       delete this._gqcFields[valueName];
+      this._gqcIsModified = true;
     });
     return this;
   }
@@ -246,6 +253,7 @@ export class EnumTypeComposer<TContext = any> {
     Object.keys(this._gqcFields).forEach((fieldName) => {
       if (keepFieldNames.indexOf(fieldName) === -1) {
         delete this._gqcFields[fieldName];
+        this._gqcIsModified = true;
       }
     });
     return this;
@@ -261,6 +269,7 @@ export class EnumTypeComposer<TContext = any> {
       }
     });
     this._gqcFields = { ...orderedFields, ...fields };
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -277,11 +286,15 @@ export class EnumTypeComposer<TContext = any> {
       );
     }
 
-    const valueConfig: EnumTypeComposerValueConfig = {
+    this.setField(name, {
       ...prevValueConfig,
       ...partialValueConfig,
-    };
-    this.setField(name, valueConfig);
+      extensions: {
+        ...(prevValueConfig.extensions || {}),
+        ...(partialValueConfig.extensions || {}),
+      },
+      directives: [...(prevValueConfig.directives || []), ...(partialValueConfig.directives || [])],
+    });
     return this;
   }
 
@@ -329,18 +342,22 @@ export class EnumTypeComposer<TContext = any> {
 
   getType(): GraphQLEnumType {
     const gqType = this._gqType as any;
-    gqType.astNode = getEnumTypeDefinitionNode(this);
-    if (graphqlVersion >= 14) {
-      gqType._values = defineEnumValues(gqType, this._gqcFields as any, gqType.astNode);
-      gqType._valueLookup = new Map(
-        gqType._values.map((enumValue: any) => [enumValue.value, enumValue])
-      );
-      gqType._nameLookup = keyMap(gqType._values, (value: any) => value.name);
-    } else {
-      // clear builded fields in type
-      delete gqType._valueLookup;
-      delete gqType._nameLookup;
-      gqType._values = defineEnumValues(gqType, this._gqcFields as any, gqType.astNode);
+    if (this._gqcIsModified) {
+      this._gqcIsModified = false;
+
+      gqType.astNode = getEnumTypeDefinitionNode(this);
+      if (graphqlVersion >= 14) {
+        gqType._values = defineEnumValues(gqType, this._gqcFields as any, gqType.astNode);
+        gqType._valueLookup = new Map(
+          gqType._values.map((enumValue: any) => [enumValue.value, enumValue])
+        );
+        gqType._nameLookup = keyMap(gqType._values, (value: any) => value.name);
+      } else {
+        // clear builded fields in type
+        delete gqType._valueLookup;
+        delete gqType._nameLookup;
+        gqType._values = defineEnumValues(gqType, this._gqcFields as any, gqType.astNode);
+      }
     }
 
     return gqType;
@@ -390,6 +407,7 @@ export class EnumTypeComposer<TContext = any> {
 
   setTypeName(name: string): this {
     this._gqType.name = name;
+    this._gqcIsModified = true;
     this.schemaComposer.add(this);
     return this;
   }
@@ -400,6 +418,7 @@ export class EnumTypeComposer<TContext = any> {
 
   setDescription(description: string): this {
     this._gqType.description = description;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -421,16 +440,17 @@ export class EnumTypeComposer<TContext = any> {
     cloned._gqcFields = mapEachKey(this._gqcFields, (fieldConfig) => ({
       ...fieldConfig,
       extensions: { ...fieldConfig.extensions },
+      directives: fieldConfig.directives && [...(fieldConfig.directives || [])],
     }));
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
+    cloned.setDirectives(this.getDirectives());
 
     return cloned;
   }
 
   /**
    * Clone this type to another SchemaComposer.
-   * Also will be cloned all sub-types.
    */
   cloneTo(
     anotherSchemaComposer: SchemaComposer<any>,
@@ -478,8 +498,9 @@ export class EnumTypeComposer<TContext = any> {
     }
   }
 
-  setExtensions(extensions: Extensions): this {
+  setExtensions(extensions: Extensions | undefined): this {
     this._gqcExtensions = extensions;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -574,16 +595,13 @@ export class EnumTypeComposer<TContext = any> {
   // Directive methods
   // -----------------------------------------------
 
-  getDirectives(): Array<ExtensionsDirective> {
-    const directives = this.getExtension('directives');
-    if (Array.isArray(directives)) {
-      return directives;
-    }
-    return [];
+  getDirectives(): Array<Directive> {
+    return this._gqcDirectives || [];
   }
 
-  setDirectives(directives: Array<ExtensionsDirective>): this {
-    this.setExtension('directives', directives);
+  setDirectives(directives: Array<Directive>): this {
+    this._gqcDirectives = directives;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -591,10 +609,30 @@ export class EnumTypeComposer<TContext = any> {
     return this.getDirectives().map((d) => d.name);
   }
 
+  /**
+   * Returns arguments of first found directive by name.
+   * If directive does not exists then will be returned undefined.
+   */
   getDirectiveByName(directiveName: string): DirectiveArgs | undefined {
     const directive = this.getDirectives().find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  /**
+   * Set arguments of first found directive by name.
+   * If directive does not exists then will be created new one.
+   */
+  setDirectiveByName(directiveName: string, args?: DirectiveArgs): this {
+    const directives = this.getDirectives();
+    const idx = directives.findIndex((d) => d.name === directiveName);
+    if (idx >= 0) {
+      directives[idx].args = args;
+    } else {
+      directives.push({ name: directiveName, args });
+    }
+    this.setDirectives(directives);
+    return this;
   }
 
   getDirectiveById(idx: number): DirectiveArgs | undefined {
@@ -603,16 +641,14 @@ export class EnumTypeComposer<TContext = any> {
     return directive.args;
   }
 
-  getFieldDirectives(fieldName: string): Array<ExtensionsDirective> {
-    const directives = this.getFieldExtension(fieldName, 'directives');
-    if (Array.isArray(directives)) {
-      return directives;
-    }
-    return [];
+  getFieldDirectives(fieldName: string): Array<Directive> {
+    return this.getField(fieldName).directives || [];
   }
 
-  setFieldDirectives(fieldName: string, directives: Array<ExtensionsDirective>): this {
-    this.setFieldExtension(fieldName, 'directives', directives);
+  setFieldDirectives(fieldName: string, directives: Array<Directive> | undefined): this {
+    const fc = this.getField(fieldName);
+    fc.directives = directives;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -620,10 +656,30 @@ export class EnumTypeComposer<TContext = any> {
     return this.getFieldDirectives(fieldName).map((d) => d.name);
   }
 
+  /**
+   * Returns arguments of first found directive by name.
+   * If directive does not exists then will be returned undefined.
+   */
   getFieldDirectiveByName(fieldName: string, directiveName: string): DirectiveArgs | undefined {
     const directive = this.getFieldDirectives(fieldName).find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  /**
+   * Set arguments of first found directive by name.
+   * If directive does not exists then will be created new one.
+   */
+  setFieldDirectiveByName(fieldName: string, directiveName: string, args?: DirectiveArgs): this {
+    const directives = this.getFieldDirectives(fieldName);
+    const idx = directives.findIndex((d) => d.name === directiveName);
+    if (idx >= 0) {
+      directives[idx].args = args;
+    } else {
+      directives.push({ name: directiveName, args });
+    }
+    this.setFieldDirectives(fieldName, directives);
+    return this;
   }
 
   getFieldDirectiveById(fieldName: string, idx: number): DirectiveArgs | undefined {

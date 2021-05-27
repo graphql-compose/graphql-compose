@@ -1,6 +1,3 @@
-/* eslint-disable no-use-before-define */
-
-// import invariant from 'graphql/jsutils/invariant';
 import {
   GraphQLUnionType,
   GraphQLObjectType,
@@ -23,7 +20,7 @@ import type {
   Thunk,
   Extensions,
   MaybePromise,
-  ExtensionsDirective,
+  Directive,
   DirectiveArgs,
 } from './utils/definitions';
 import { convertObjectTypeArrayAsThunk } from './utils/configToDefine';
@@ -52,6 +49,7 @@ export type UnionTypeComposerAsObjectDefinition<TSource, TContext> = {
   resolveType?: GraphQLTypeResolver<TSource, TContext> | null;
   description?: string | null;
   extensions?: Extensions;
+  directives?: Directive[];
 };
 
 export type UnionTypeComposerResolversMap<TSource, TContext> = Map<
@@ -85,7 +83,9 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   _gqcTypes: Set<ObjectTypeComposerThunked<any, TContext>>;
   _gqcTypeResolvers: UnionTypeComposerResolversMap<TSource, TContext>;
   _gqcFallbackResolveType: ObjectTypeComposer<any, TContext> | GraphQLObjectType | null = null;
-  _gqcExtensions: Extensions | undefined;
+  _gqcExtensions?: Extensions;
+  _gqcDirectives?: Directive[];
+  _gqcIsModified?: boolean;
 
   /**
    * Create `UnionTypeComposer` with adding it by name to the `SchemaComposer`.
@@ -155,7 +155,10 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
         UTC.setTypes(convertObjectTypeArrayAsThunk(types, sc));
       }
 
-      UTC._gqcExtensions = typeDef.extensions || {};
+      UTC.setExtensions(typeDef.extensions);
+      if (Array.isArray(typeDef?.directives)) {
+        UTC.setDirectives(typeDef.directives);
+      }
     } else {
       throw new Error(
         `You should provide GraphQLUnionTypeConfig or string with union name or SDL definition. Provided:\n${inspect(
@@ -201,12 +204,10 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
     this._gqcTypeResolvers = new Map();
 
-    if (graphqlType?.astNode?.directives) {
-      this.setExtension(
-        'directives',
-        this.schemaComposer.typeMapper.parseDirectives(graphqlType?.astNode?.directives)
-      );
+    if (!this._gqType.astNode) {
+      this._gqType.astNode = getUnionTypeDefinitionNode(this);
     }
+    this._gqcIsModified = false;
   }
 
   // -----------------------------------------------
@@ -237,6 +238,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   clearTypes(): this {
     this._gqcTypes.clear();
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -247,6 +249,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   ): this {
     const tcs = convertObjectTypeArrayAsThunk(types, this.schemaComposer);
     this._gqcTypes = new Set(tcs);
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -258,6 +261,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
     this.removeType(tc.getTypeName());
 
     this._gqcTypes.add(tc);
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -279,6 +283,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
       for (const type of this._gqcTypes) {
         if (type.getTypeName() === typeName) {
           this._gqcTypes.delete(type);
+          this._gqcIsModified = true;
         }
       }
     });
@@ -290,6 +295,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
     for (const type of this._gqcTypes) {
       if (keepTypeNames.indexOf(type.getTypeName()) === -1) {
         this._gqcTypes.delete(type);
+        this._gqcIsModified = true;
       }
     }
     return this;
@@ -300,20 +306,23 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   // -----------------------------------------------
 
   getType(): GraphQLUnionType {
-    this._gqType.astNode = getUnionTypeDefinitionNode(this);
-    const prepareTypes = () => {
-      try {
-        return this.getTypes().map((tc) => tc.getType());
-      } catch (e) {
-        e.message = `UnionError[${this.getTypeName()}]: ${e.message}`;
-        throw e;
+    if (this._gqcIsModified) {
+      this._gqcIsModified = false;
+      this._gqType.astNode = getUnionTypeDefinitionNode(this);
+      const prepareTypes = () => {
+        try {
+          return this.getTypes().map((tc) => tc.getType());
+        } catch (e) {
+          e.message = `UnionError[${this.getTypeName()}]: ${e.message}`;
+          throw e;
+        }
+      };
+      if (graphqlVersion >= 14) {
+        (this._gqType as any)._types = prepareTypes;
+      } else {
+        (this._gqType as any)._types = null;
+        (this._gqType as any)._typeConfig.types = prepareTypes;
       }
-    };
-    if (graphqlVersion >= 14) {
-      (this._gqType as any)._types = prepareTypes;
-    } else {
-      (this._gqType as any)._types = null;
-      (this._gqType as any)._typeConfig.types = prepareTypes;
     }
     return this._gqType;
   }
@@ -362,6 +371,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   setTypeName(name: string): this {
     this._gqType.name = name;
+    this._gqcIsModified = true;
     this.schemaComposer.add(this);
     return this;
   }
@@ -372,6 +382,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   setDescription(description: string): this {
     this._gqType.description = description;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -395,6 +406,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
     cloned._gqcTypeResolvers = new Map(this._gqcTypeResolvers);
     cloned._gqcFallbackResolveType = this._gqcFallbackResolveType;
     cloned.setDescription(this.getDescription());
+    cloned.setDirectives(this.getDirectives());
 
     return cloned;
   }
@@ -480,6 +492,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
 
   setResolveType(fn: GraphQLTypeResolver<TSource, TContext> | undefined | null): this {
     this._gqType.resolveType = fn;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -530,6 +543,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
     typeResolversMap: UnionTypeComposerResolversMapDefinition<TSource, TContext>
   ): this {
     this._gqcTypeResolvers = this._convertTypeResolvers(typeResolversMap);
+    this._gqcIsModified = true;
     this._initResolveTypeFn();
     return this;
   }
@@ -665,6 +679,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
     }
 
     this._gqcFallbackResolveType = type;
+    this._gqcIsModified = true;
     this._initResolveTypeFn();
     return this;
   }
@@ -681,8 +696,9 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
     }
   }
 
-  setExtensions(extensions: Extensions): this {
+  setExtensions(extensions: Extensions | undefined): this {
     this._gqcExtensions = extensions;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -728,16 +744,13 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   // Directive methods
   // -----------------------------------------------
 
-  getDirectives(): Array<ExtensionsDirective> {
-    const directives = this.getExtension('directives');
-    if (Array.isArray(directives)) {
-      return directives;
-    }
-    return [];
+  getDirectives(): Array<Directive> {
+    return this._gqcDirectives || [];
   }
 
-  setDirectives(directives: Array<ExtensionsDirective>): this {
-    this.setExtension('directives', directives);
+  setDirectives(directives: Array<Directive>): this {
+    this._gqcDirectives = directives;
+    this._gqcIsModified = true;
     return this;
   }
 
@@ -745,10 +758,30 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
     return this.getDirectives().map((d) => d.name);
   }
 
+  /**
+   * Returns arguments of first found directive by name.
+   * If directive does not exists then will be returned undefined.
+   */
   getDirectiveByName(directiveName: string): DirectiveArgs | undefined {
     const directive = this.getDirectives().find((d) => d.name === directiveName);
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  /**
+   * Set arguments of first found directive by name.
+   * If directive does not exists then will be created new one.
+   */
+  setDirectiveByName(directiveName: string, args?: DirectiveArgs): this {
+    const directives = this.getDirectives();
+    const idx = directives.findIndex((d) => d.name === directiveName);
+    if (idx >= 0) {
+      directives[idx].args = args;
+    } else {
+      directives.push({ name: directiveName, args });
+    }
+    this.setDirectives(directives);
+    return this;
   }
 
   getDirectiveById(idx: number): DirectiveArgs | undefined {

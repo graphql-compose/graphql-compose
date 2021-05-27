@@ -1108,16 +1108,14 @@ describe('TypeMapper', () => {
       expect(ts.get('S').getDirectiveNames()).toEqual(['ok']);
     });
 
-    if (graphqlVersion >= 15.1) {
-      it('extract specifiedByUrl directive in Scalar', async () => {
-        const ts = typeMapper.parseTypesFromString(`
-          scalar S @specifiedBy(url: "https://example.com/foo_spec")
-        `);
-        const scalarTC = ts.get('S') as ScalarTypeComposer;
-        expect(scalarTC.getDirectiveNames()).toEqual([]);
-        expect(scalarTC.getSpecifiedByUrl()).toBe('https://example.com/foo_spec');
-      });
-    }
+    it('extract specifiedByUrl directive in Scalar', async () => {
+      const ts = typeMapper.parseTypesFromString(`
+        scalar S @specifiedBy(url: "https://example.com/foo_spec")
+      `);
+      const scalarTC = ts.get('S') as ScalarTypeComposer;
+      expect(scalarTC.getDirectiveNames()).toEqual(['specifiedBy']);
+      expect(scalarTC.getSpecifiedByUrl()).toBe('https://example.com/foo_spec');
+    });
   });
 
   describe('convertSDLTypeDefinition()', () => {
@@ -1145,30 +1143,22 @@ describe('TypeMapper', () => {
         }`) as ObjectTypeComposer;
 
       expect(tc).toBeInstanceOf(ObjectTypeComposer);
-      expect(tc.getExtensions()).toEqual({
-        directives: [{ args: { a: false }, name: 'typeDirective' }],
-      });
+      expect(tc.getDirectives()).toEqual([{ args: { a: false }, name: 'typeDirective' }]);
 
-      expect(tc.getFieldExtensions('a')).toEqual({
-        directives: [{ args: { value: 1 }, name: 'cost' }],
-      });
-      expect(tc.getFieldExtensions('b')).toEqual({
-        directives: [{ args: { e: 's', q: 1, w: true }, name: 'inexistent' }],
-      });
-      expect(tc.getFieldExtensions('c')).toEqual({
-        directives: [
-          { args: {}, name: 'me' },
-          { args: {}, name: 'they' },
-          { args: {}, name: 'me' },
-        ],
-      });
-      expect(tc.getFieldArgExtensions('d', 'arg')).toEqual({
-        directives: [
-          { args: { v: 2 }, name: 'darg' },
-          { args: { w: '3' }, name: 'darg2' },
-        ],
-      });
-      expect(tc.getFieldExtensions('d')).toEqual({ directives: [{ args: {}, name: 'ddd' }] });
+      expect(tc.getFieldDirectives('a')).toEqual([{ args: { value: 1 }, name: 'cost' }]);
+      expect(tc.getFieldDirectives('b')).toEqual([
+        { args: { e: 's', q: 1, w: true }, name: 'inexistent' },
+      ]);
+      expect(tc.getFieldDirectives('c')).toEqual([
+        { args: {}, name: 'me' },
+        { args: {}, name: 'they' },
+        { args: {}, name: 'me' },
+      ]);
+      expect(tc.getFieldArgDirectives('d', 'arg')).toEqual([
+        { args: { v: 2 }, name: 'darg' },
+        { args: { w: '3' }, name: 'darg2' },
+      ]);
+      expect(tc.getFieldDirectives('d')).toEqual([{ args: {}, name: 'ddd' }]);
     });
 
     it('InterfaceType', () => {
@@ -1181,32 +1171,24 @@ describe('TypeMapper', () => {
         }`) as InterfaceTypeComposer;
 
       expect(tc).toBeInstanceOf(InterfaceTypeComposer);
-      expect(tc.getExtensions()).toEqual({
-        directives: [{ args: { a: false }, name: 'typeDirective' }],
-      });
+      expect(tc.getDirectives()).toEqual([{ args: { a: false }, name: 'typeDirective' }]);
 
-      expect(tc.getFieldExtensions('a')).toEqual({
-        directives: [{ args: { value: 1 }, name: 'cost' }],
-      });
-      expect(tc.getFieldExtensions('b')).toEqual({
-        directives: [{ args: { e: 's', q: 1, w: true }, name: 'inexistent' }],
-      });
-      expect(tc.getFieldExtensions('c')).toEqual({
-        directives: [
-          { args: {}, name: 'me' },
-          { args: {}, name: 'they' },
-          { args: {}, name: 'me' },
-        ],
-      });
+      expect(tc.getFieldDirectives('a')).toEqual([{ args: { value: 1 }, name: 'cost' }]);
+      expect(tc.getFieldDirectives('b')).toEqual([
+        { args: { e: 's', q: 1, w: true }, name: 'inexistent' },
+      ]);
+      expect(tc.getFieldDirectives('c')).toEqual([
+        { args: {}, name: 'me' },
+        { args: {}, name: 'they' },
+        { args: {}, name: 'me' },
+      ]);
 
       expect(tc.getFieldArg('d', 'arg').defaultValue).toBe(15);
-      expect(tc.getFieldArgExtensions('d', 'arg')).toEqual({
-        directives: [
-          { args: { v: 2 }, name: 'darg' },
-          { args: { w: '3' }, name: 'darg2' },
-        ],
-      });
-      expect(tc.getFieldExtensions('d')).toEqual({ directives: [{ args: {}, name: 'ddd' }] });
+      expect(tc.getFieldArgDirectives('d', 'arg')).toEqual([
+        { args: { v: 2 }, name: 'darg' },
+        { args: { w: '3' }, name: 'darg2' },
+      ]);
+      expect(tc.getFieldDirectives('d')).toEqual([{ args: {}, name: 'ddd' }]);
     });
 
     it('InputType', () => {
@@ -1218,23 +1200,17 @@ describe('TypeMapper', () => {
         }`) as InputTypeComposer;
 
       expect(tc).toBeInstanceOf(InputTypeComposer);
-      expect(tc.getExtensions()).toEqual({
-        directives: [{ args: { a: false }, name: 'typeDirective' }],
-      });
+      expect(tc.getDirectives()).toEqual([{ args: { a: false }, name: 'typeDirective' }]);
 
-      expect(tc.getFieldExtensions('a')).toEqual({
-        directives: [{ args: { value: 1 }, name: 'cost' }],
-      });
-      expect(tc.getFieldExtensions('b')).toEqual({
-        directives: [{ args: { e: 's', q: 1, w: true }, name: 'inexistent' }],
-      });
-      expect(tc.getFieldExtensions('c')).toEqual({
-        directives: [
-          { args: {}, name: 'me' },
-          { args: {}, name: 'they' },
-          { args: {}, name: 'me' },
-        ],
-      });
+      expect(tc.getFieldDirectives('a')).toEqual([{ args: { value: 1 }, name: 'cost' }]);
+      expect(tc.getFieldDirectives('b')).toEqual([
+        { args: { e: 's', q: 1, w: true }, name: 'inexistent' },
+      ]);
+      expect(tc.getFieldDirectives('c')).toEqual([
+        { args: {}, name: 'me' },
+        { args: {}, name: 'they' },
+        { args: {}, name: 'me' },
+      ]);
     });
   });
 });

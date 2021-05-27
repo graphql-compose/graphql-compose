@@ -93,7 +93,7 @@ import { NonNullComposer } from './NonNullComposer';
 import { ThunkComposer } from './ThunkComposer';
 import { Resolver } from './Resolver';
 import { TypeStorage } from './TypeStorage';
-import type { ThunkWithSchemaComposer, ExtensionsDirective } from './utils/definitions';
+import type { ThunkWithSchemaComposer, Directive } from './utils/definitions';
 import { isFunction, isObject } from './utils/is';
 import {
   AnyTypeComposer,
@@ -113,6 +113,7 @@ import {
   isScalarTypeDefinitionString,
   isUnionTypeDefinitionString,
 } from './utils/typeHelpers';
+import { parseValueNode } from './utils/definitionNode';
 
 /**
  * Eg. `type Name { field: Int }`
@@ -367,6 +368,7 @@ export class TypeMapper<TContext = any> {
           resolve: composeFC.getFieldResolver(),
           description: composeFC.getDescription(),
           extensions: composeFC.extensions,
+          directives: composeFC.directives || [],
           projection: composeFC.projection,
         };
       }
@@ -761,14 +763,8 @@ export class TypeMapper<TContext = any> {
       const ac = {
         type,
         description: getDescription(value),
+        directives: this.parseDirectives(value.directives),
       } as ObjectTypeComposerArgumentConfig;
-
-      if (value.directives) {
-        const directives = this.parseDirectives(value.directives);
-        if (directives) {
-          ac.extensions = { directives };
-        }
-      }
 
       if (value.defaultValue) {
         if (!this.schemaComposer.has(typeName) && (value?.defaultValue as any)?.value) {
@@ -810,14 +806,8 @@ export class TypeMapper<TContext = any> {
           args: this.makeArguments(field.arguments),
           deprecationReason: this.getDeprecationReason(field.directives),
           astNode: field,
+          directives: this.parseDirectives(field.directives),
         };
-
-        if (field.directives) {
-          const directives = this.parseDirectives(field.directives);
-          if (directives) {
-            fc.extensions = { directives };
-          }
-        }
 
         return fc;
       }
@@ -837,14 +827,8 @@ export class TypeMapper<TContext = any> {
           description: getDescription(field),
           deprecationReason: this.getDeprecationReason(field.directives),
           astNode: field,
+          directives: this.parseDirectives(field.directives),
         };
-
-        if (field.directives) {
-          const directives = this.parseDirectives(field.directives);
-          if (directives) {
-            fc.extensions = { directives };
-          }
-        }
 
         return fc;
       }
@@ -856,12 +840,10 @@ export class TypeMapper<TContext = any> {
       name: def.name.value,
       description: getDescription(def),
       values: this.makeEnumValuesDef(def),
+      directives: this.parseDirectives(def.directives),
       astNode: def,
     });
 
-    if (def.directives) {
-      tc.setExtension('directives', this.parseDirectives(def.directives));
-    }
     return tc;
   }
 
@@ -876,15 +858,8 @@ export class TypeMapper<TContext = any> {
         const ec: EnumTypeComposerValueConfigDefinition = {
           description: getDescription(enumValue),
           deprecationReason: this.getDeprecationReason(enumValue.directives),
+          directives: this.parseDirectives(enumValue.directives),
         };
-
-        if (enumValue.directives) {
-          const directives = this.parseDirectives(enumValue.directives);
-          if (directives) {
-            ec.extensions = { directives };
-          }
-        }
-
         return ec;
       }
     );
@@ -896,11 +871,8 @@ export class TypeMapper<TContext = any> {
       description: getDescription(def),
       fields: this.makeInputFieldDef(def),
       astNode: def,
+      directives: this.parseDirectives(def.directives),
     });
-
-    if (def.directives) {
-      tc.setExtension('directives', this.parseDirectives(def.directives));
-    }
     return tc;
   }
 
@@ -988,15 +960,7 @@ export class TypeMapper<TContext = any> {
       });
     }
     if (def.directives) {
-      const directives = this.parseDirectives(def.directives).filter(({ name, args }) => {
-        // extract `specifiedByUrl` from directives
-        if (name === 'specifiedBy' && tc) {
-          tc.setSpecifiedByUrl(args.url);
-          return false;
-        }
-        return true;
-      });
-      tc.setExtension('directives', directives);
+      tc.setDirectives(this.parseDirectives(def.directives));
     }
     return tc;
   }
@@ -1025,10 +989,8 @@ export class TypeMapper<TContext = any> {
       fields: this.makeFieldDefMap(def),
       interfaces: this.makeImplementedInterfaces(def),
       astNode: def,
+      directives: this.parseDirectives(def.directives),
     });
-    if (def.directives) {
-      tc.setExtension('directives', this.parseDirectives(def.directives));
-    }
     return tc;
   }
 
@@ -1039,10 +1001,8 @@ export class TypeMapper<TContext = any> {
       fields: this.makeFieldDefMap(def),
       interfaces: this.makeImplementedInterfaces(def),
       astNode: def,
+      directives: this.parseDirectives(def.directives),
     });
-    if (def.directives) {
-      tc.setExtension('directives', this.parseDirectives(def.directives));
-    }
     return tc;
   }
 
@@ -1055,7 +1015,7 @@ export class TypeMapper<TContext = any> {
       astNode: def,
     });
     if (def.directives) {
-      tc.setExtension('directives', this.parseDirectives(def.directives));
+      tc.setDirectives(this.parseDirectives(def.directives));
     }
     return tc;
   }
@@ -1113,8 +1073,9 @@ export class TypeMapper<TContext = any> {
     return reason;
   }
 
-  parseDirectives(directives: ReadonlyArray<DirectiveNode>): Array<ExtensionsDirective> {
-    const result = [] as Array<ExtensionsDirective>;
+  parseDirectives(directives: ReadonlyArray<DirectiveNode> | undefined): Array<Directive> {
+    const result = [] as Array<Directive>;
+    if (!directives) return result;
     directives.forEach((directive) => {
       const name = directive.name.value;
 
@@ -1122,6 +1083,9 @@ export class TypeMapper<TContext = any> {
         // @deprecated directive should be parsed via getDeprecationReason() method
         // It's due to fact that deprecated is stored as separate type instance's field.
         return;
+        // TODO: rewrite this logic in TypeComposers which updates directive via:
+        // - setFieldArgDirectiveByName
+        // - setFieldDirectiveByName
       }
 
       const directiveDef = this.schemaComposer._getDirective(name);
@@ -1130,7 +1094,7 @@ export class TypeMapper<TContext = any> {
         : keyValMap(
             directive.arguments || [],
             (arg: ArgumentNode) => arg.name.value,
-            (arg: ArgumentNode) => GraphQLJSON.parseLiteral(arg.value, {})
+            (arg: ArgumentNode) => parseValueNode(arg.value)
           );
       result.push({ name, args });
     });
@@ -1142,7 +1106,7 @@ export class TypeMapper<TContext = any> {
     tc.addInterfaces(this.makeImplementedInterfaces(def));
     tc.addFields(this.makeFieldDefMap(def));
     if (def.directives) {
-      tc.setExtension('directives', this.parseDirectives(def.directives));
+      tc.setDirectives([...tc.getDirectives(), ...this.parseDirectives(def.directives)]);
     }
     return tc;
   }
@@ -1151,7 +1115,7 @@ export class TypeMapper<TContext = any> {
     const tc = this.schemaComposer.getOrCreateITC(def.name.value);
     tc.addFields(this.makeInputFieldDef(def));
     if (def.directives) {
-      tc.setExtension('directives', this.parseDirectives(def.directives));
+      tc.setDirectives([...tc.getDirectives(), ...this.parseDirectives(def.directives)]);
     }
     return tc;
   }
@@ -1160,7 +1124,7 @@ export class TypeMapper<TContext = any> {
     const tc = this.schemaComposer.getOrCreateIFTC(def.name.value);
     tc.addFields(this.makeFieldDefMap(def));
     if (def.directives) {
-      tc.setExtension('directives', this.parseDirectives(def.directives));
+      tc.setDirectives([...tc.getDirectives(), ...this.parseDirectives(def.directives)]);
     }
     return tc;
   }
@@ -1170,7 +1134,7 @@ export class TypeMapper<TContext = any> {
     const tc = this.schemaComposer.getOrCreateUTC(def.name.value);
     tc.addTypes((types || []).map((ref) => this.getNamedTypeAST(ref).name.value));
     if (def.directives) {
-      tc.setExtension('directives', this.parseDirectives(def.directives));
+      tc.setDirectives([...tc.getDirectives(), ...this.parseDirectives(def.directives)]);
     }
     return tc;
   }
@@ -1179,7 +1143,7 @@ export class TypeMapper<TContext = any> {
     const tc = this.schemaComposer.getOrCreateETC(def.name.value);
     tc.addFields(this.makeEnumValuesDef(def));
     if (def.directives) {
-      tc.setExtension('directives', this.parseDirectives(def.directives));
+      tc.setDirectives([...tc.getDirectives(), ...this.parseDirectives(def.directives)]);
     }
     return tc;
   }
@@ -1187,7 +1151,7 @@ export class TypeMapper<TContext = any> {
   makeExtendScalarDef(def: ScalarTypeExtensionNode): ScalarTypeComposer<TContext> {
     const tc = this.schemaComposer.getSTC(def.name.value);
     if (def.directives) {
-      tc.setExtension('directives', this.parseDirectives(def.directives));
+      tc.setDirectives([...tc.getDirectives(), ...this.parseDirectives(def.directives)]);
     }
     return tc;
   }

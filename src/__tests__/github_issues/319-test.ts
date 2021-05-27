@@ -1,8 +1,6 @@
-// TODO: enable after migration to TypeScript
-
 import { SchemaComposer } from '../..';
 
-describe.skip('github issue #319: Memoize type.getFields in ObjectTypeComposer.js', () => {
+describe('github issue #319: Memoize type.getFields in ObjectTypeComposer.js', () => {
   it('should build schema successfully', async () => {
     const sc = new SchemaComposer(`
       type User {
@@ -31,6 +29,6 @@ describe.skip('github issue #319: Memoize type.getFields in ObjectTypeComposer.j
     `);
 
     const schema = sc.buildSchema();
-    console.log(schema);
+    expect(schema).toBeDefined();
   });
 });
