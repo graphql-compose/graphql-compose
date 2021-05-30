@@ -111,6 +111,8 @@ export function defineFieldMap(
           name: argName,
           description: arg.description === undefined ? null : arg.description,
           type: arg.type,
+          isDeprecated: Boolean(fieldConfig.deprecationReason),
+          deprecationReason: arg?.deprecationReason,
           defaultValue: arg.defaultValue,
           astNode: fieldArgNodeMap[argName],
         };

@@ -390,11 +390,26 @@ export class TypeMapper<TContext = any> {
 
         const tc = this.convertOutputTypeDefinition(type, fieldName, typeName);
         if (tc) {
-          return {
+          const fc = {
             type: tc,
             args: this.convertArgConfigMap(args || {}, fieldName, typeName),
             ...rest,
-          };
+          } as ObjectTypeComposerFieldConfig<any, any, any>;
+
+          const deprecatedDirectiveIdx =
+            fc?.directives?.findIndex((d) => d.name === 'deprecated') ?? -1;
+          if (fc.deprecationReason) {
+            if (!fc.directives) fc.directives = [];
+            if (deprecatedDirectiveIdx >= 0) {
+              fc.directives[deprecatedDirectiveIdx].args = { reason: fc.deprecationReason };
+            } else {
+              fc.directives.push({ name: 'deprecated', args: { reason: fc.deprecationReason } });
+            }
+          } else if (deprecatedDirectiveIdx >= 0) {
+            fc.deprecationReason = fc?.directives?.[deprecatedDirectiveIdx]?.args?.reason;
+          }
+
+          return fc;
         }
       }
 
@@ -445,10 +460,25 @@ export class TypeMapper<TContext = any> {
 
         const tc = this.convertInputTypeDefinition(type);
         if (tc) {
-          return {
+          const ac = {
             type: tc,
             ...rest,
-          };
+          } as ObjectTypeComposerArgumentConfig;
+
+          const deprecatedDirectiveIdx =
+            ac?.directives?.findIndex((d) => d.name === 'deprecated') ?? -1;
+          if (ac.deprecationReason) {
+            if (!ac.directives) ac.directives = [];
+            if (deprecatedDirectiveIdx >= 0) {
+              ac.directives[deprecatedDirectiveIdx].args = { reason: ac.deprecationReason };
+            } else {
+              ac.directives.push({ name: 'deprecated', args: { reason: ac.deprecationReason } });
+            }
+          } else if (deprecatedDirectiveIdx >= 0) {
+            ac.deprecationReason = ac?.directives?.[deprecatedDirectiveIdx]?.args?.reason;
+          }
+
+          return ac;
         }
       }
 
@@ -579,10 +609,25 @@ export class TypeMapper<TContext = any> {
 
         const tc = this.convertInputTypeDefinition(type, fieldName, typeName);
         if (tc) {
-          return {
+          const fc = {
             type: tc,
             ...rest,
-          } as any;
+          } as InputTypeComposerFieldConfig;
+
+          const deprecatedDirectiveIdx =
+            fc?.directives?.findIndex((d) => d.name === 'deprecated') ?? -1;
+          if (fc.deprecationReason) {
+            if (!fc.directives) fc.directives = [];
+            if (deprecatedDirectiveIdx >= 0) {
+              fc.directives[deprecatedDirectiveIdx].args = { reason: fc.deprecationReason };
+            } else {
+              fc.directives.push({ name: 'deprecated', args: { reason: fc.deprecationReason } });
+            }
+          } else if (deprecatedDirectiveIdx >= 0) {
+            fc.deprecationReason = fc?.directives?.[deprecatedDirectiveIdx]?.args?.reason;
+          }
+
+          return fc;
         }
       }
 
@@ -764,6 +809,8 @@ export class TypeMapper<TContext = any> {
         type,
         description: getDescription(value),
         directives: this.parseDirectives(value.directives),
+        deprecationReason: this.getDeprecationReason(value.directives),
+        astNode: value,
       } as ObjectTypeComposerArgumentConfig;
 
       if (value.defaultValue) {
@@ -1078,15 +1125,6 @@ export class TypeMapper<TContext = any> {
     if (!directives) return result;
     directives.forEach((directive) => {
       const name = directive.name.value;
-
-      if (name === GraphQLDeprecatedDirective.name) {
-        // @deprecated directive should be parsed via getDeprecationReason() method
-        // It's due to fact that deprecated is stored as separate type instance's field.
-        return;
-        // TODO: rewrite this logic in TypeComposers which updates directive via:
-        // - setFieldArgDirectiveByName
-        // - setFieldDirectiveByName
-      }
 
       const directiveDef = this.schemaComposer._getDirective(name);
       const args = directiveDef
