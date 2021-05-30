@@ -11,12 +11,8 @@ import { printBlockString } from 'graphql/language/blockString';
 import type { DirectiveNode } from 'graphql/language/ast';
 import type { GraphQLSchema } from 'graphql/type/schema';
 import { isIntrospectionType } from 'graphql/type/introspection';
-import { GraphQLString, isSpecifiedScalarType } from 'graphql/type/scalars';
-import {
-  GraphQLDirective,
-  DEFAULT_DEPRECATION_REASON,
-  isSpecifiedDirective,
-} from 'graphql/type/directives';
+import { isSpecifiedScalarType } from 'graphql/type/scalars';
+import { GraphQLDirective, isSpecifiedDirective } from 'graphql/type/directives';
 import {
   GraphQLArgument,
   GraphQLNamedType,
@@ -39,7 +35,6 @@ import { astFromValue } from 'graphql/utilities/astFromValue';
 
 import { SchemaComposer } from '../SchemaComposer';
 import { SchemaFilterTypes, getTypesFromSchema, getDirectivesFromSchema } from './getFromSchema';
-import { Maybe } from 'graphql/jsutils/Maybe';
 
 import { CompareTypeComposersOption, getSortMethodFromOption } from './schemaPrinterSortTypes';
 
@@ -301,7 +296,7 @@ export function printEnum(type: GraphQLEnumType, options?: Options): string {
     (value, i) =>
       `${printDescription(value, options, '  ', !i)}  ${value.name}${printNodeDirectives(
         value.astNode
-      )}${printDeprecated(value)}`
+      )}`
   );
 
   return `${printDescription(type, options)}enum ${type.name}${printNodeDirectives(
@@ -338,7 +333,7 @@ export function printFields(
         f.args,
         options,
         '  '
-      )}: ${String(f.type)}${printNodeDirectives(f.astNode)}${printDeprecated(f)}`
+      )}: ${String(f.type)}${printNodeDirectives(f.astNode)}`
   );
   return printBlock(fieldsList);
 }
@@ -410,21 +405,6 @@ export function printNodeDirectives(
       return `@${d.name.value}${args}`;
     })
     .join(' ')}`;
-}
-
-export function printDeprecated(fieldOrEnumVal: {
-  isDeprecated?: boolean;
-  deprecationReason?: Maybe<string>;
-}): string {
-  if (!fieldOrEnumVal.isDeprecated) {
-    return '';
-  }
-  const reason = fieldOrEnumVal.deprecationReason;
-  const reasonAST = astFromValue(reason, GraphQLString);
-  if (reasonAST && reason !== DEFAULT_DEPRECATION_REASON) {
-    return ` @deprecated(reason: ${print(reasonAST)})`;
-  }
-  return ' @deprecated';
 }
 
 export function printDescription(

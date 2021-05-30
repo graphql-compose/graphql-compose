@@ -152,6 +152,7 @@ export type ObjectTypeComposerArgumentConfigAsObjectDefinition = {
   type: ThunkWithSchemaComposer<ComposeInputTypeDefinition, SchemaComposer<any>>;
   defaultValue?: any;
   description?: string | null;
+  deprecationReason?: string | null;
   extensions?: Extensions;
   directives?: Directive[];
   [key: string]: any;
@@ -161,6 +162,7 @@ export type ObjectTypeComposerArgumentConfig = {
   type: ComposeInputType;
   defaultValue?: any;
   description?: string | null;
+  deprecationReason?: string | null;
   astNode?: InputValueDefinitionNode | null;
   extensions?: Extensions;
   directives?: Directive[];
