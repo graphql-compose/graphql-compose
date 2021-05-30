@@ -94,9 +94,9 @@ describe('github issue #142: Add schema definition in `graphql-tools` way', () =
 
   it('test graphql query', async () => {
     expect(
-      await graphql.graphql(
+      await graphql.graphql({
         schema,
-        `
+        source: `
           query { 
             author(id: 2) {
               id
@@ -109,8 +109,8 @@ describe('github issue #142: Add schema definition in `graphql-tools` way', () =
               }
             }
           }
-        `
-      )
+        `,
+      })
     ).toEqual({
       data: {
         author: { firstName: 'Sashko', id: 2 },

@@ -1,4 +1,6 @@
+// @ts-ignore
 import { printType } from 'graphql';
+import { graphqlVersion } from '../../utils/graphqlVersion';
 import { schemaComposer, dedent, ObjectTypeComposer } from '../..';
 
 describe('github issue #317: Directive @deprecated for arguments in SDL is ignored', () => {
@@ -19,11 +21,13 @@ describe('github issue #317: Directive @deprecated for arguments in SDL is ignor
 
     const type = typeComposer.getType();
 
-    expect(printType(type)).toEqual(dedent`
+    if (graphqlVersion >= 15) {
+      expect(printType(type)).toEqual(dedent`
       type Foo {
         foo(arg: String @deprecated(reason: "Tired")): String
       }
     `);
+    }
   });
 
   it('should print correct SDL 2', async () => {
@@ -51,11 +55,13 @@ describe('github issue #317: Directive @deprecated for arguments in SDL is ignor
 
     const type = typeComposer.getType();
 
-    expect(printType(type)).toEqual(dedent`
+    if (graphqlVersion >= 15) {
+      expect(printType(type)).toEqual(dedent`
       type Foo2 {
         foo(arg: String @deprecated(reason: "ArgTired")): String @deprecated(reason: "FieldTired")
       }
     `);
+    }
   });
 
   it('should print correct SDL 3', async () => {
@@ -77,10 +83,12 @@ describe('github issue #317: Directive @deprecated for arguments in SDL is ignor
 
     const type = typeComposer.getType();
 
-    expect(printType(type)).toEqual(dedent`
+    if (graphqlVersion >= 15) {
+      expect(printType(type)).toEqual(dedent`
       input Foo3 {
         foo: String @deprecated(reason: "FieldTired")
       }
     `);
+    }
   });
 });

@@ -141,7 +141,7 @@ describe('SchemaComposer', () => {
           }
         `);
         sc.setDescription('Description');
-        expect(printSchema(sc.buildSchema())).toBe(dedent`
+        expect(printSchema(sc.buildSchema()).trim()).toBe(dedent`
           """Description"""
           schema {
             query: Query
@@ -149,14 +149,14 @@ describe('SchemaComposer', () => {
 
           type Query {
             a: Int
-          }\n
+          }
         `);
 
         sc.setDescription('');
-        expect(printSchema(sc.buildSchema())).toBe(dedent`
+        expect(printSchema(sc.buildSchema()).trim()).toBe(dedent`
           type Query {
             a: Int
-          }\n
+          }
         `);
       }
     });
@@ -1049,7 +1049,7 @@ describe('SchemaComposer', () => {
 
       const schema = sc.buildSchema();
 
-      expect(await graphql(schema, '{ posts { id title votes } }')).toEqual({
+      expect(await graphql({ schema, source: '{ posts { id title votes } }' })).toEqual({
         data: { posts: [{ id: 1, title: 'Post title', votes: 10 }] },
       });
     });
@@ -1064,7 +1064,7 @@ describe('SchemaComposer', () => {
         Date: new GraphQLScalarType({
           name: 'Date',
           serialize(value) {
-            return new Date(value).toISOString().slice(0, 10);
+            return new Date(value as any).toISOString().slice(0, 10);
           },
         }),
       });

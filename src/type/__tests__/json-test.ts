@@ -51,8 +51,12 @@ describe('GraphQLJSON', () => {
 
   describe('parseValue', () => {
     it('should support parsing values', (done) => {
-      graphql(schema, 'query ($arg: JSON) { value(arg: $arg) }', null, null, {
-        arg: FIXTURE,
+      graphql({
+        schema,
+        source: 'query ($arg: JSON) { value(arg: $arg) }',
+        variableValues: {
+          arg: FIXTURE,
+        },
       }).then(({ data }: any) => {
         expect(data.value).toEqual(FIXTURE);
         done();
@@ -62,9 +66,9 @@ describe('GraphQLJSON', () => {
 
   describe('parseLiteral', () => {
     it('should support parsing literals', (done) => {
-      graphql(
+      graphql({
         schema,
-        `
+        source: `
           {
             value(
               arg: {
@@ -86,8 +90,8 @@ describe('GraphQLJSON', () => {
               }
             )
           }
-        `
-      ).then(({ data }: any) => {
+        `,
+      }).then(({ data }: any) => {
         expect(data.value).toEqual({
           string: 'string',
           int: 3,
@@ -110,15 +114,15 @@ describe('GraphQLJSON', () => {
     });
 
     it('should reject invalid literals', async () => {
-      const { data } = await graphql(
+      const { data } = await graphql({
         schema,
-        `
+        source: `
         {
           value(arg: NaN){
             string: "string"
         }
-      `
-      );
+      `,
+      });
       expect(data).toBeUndefined();
     });
   });

@@ -72,6 +72,7 @@ function inspectObject(value: Record<any, any>): string {
   }
 
   const props = `{ ${Object.keys(value)
+    .filter((n) => n !== 'loc')
     .map((k) => `${k}: ${inspect((value as any)[k])}`)
     .join(', ')} }`;
 
@@ -131,4 +132,72 @@ export function mapEachKey<NewV = any, T extends Object | undefined = {}>(
     result[key] = callback((obj as any)[key], key);
   });
   return result;
+}
+
+/**
+ * Creates a keyed JS object from an array, given a function to produce the keys
+ * and a function to produce the values from each item in the array.
+ *
+ *     const phoneBook = [
+ *       { name: 'Jon', num: '555-1234' },
+ *       { name: 'Jenny', num: '867-5309' }
+ *     ]
+ *
+ *     // { Jon: '555-1234', Jenny: '867-5309' }
+ *     const phonesByName = keyValMap(
+ *       phoneBook,
+ *       entry => entry.name,
+ *       entry => entry.num
+ *     )
+ *
+ */
+export function keyValMap<T, V>(
+  list: ReadonlyArray<T>,
+  keyFn: (item: T) => string,
+  valFn: (item: T) => V
+): ObjMap<V> {
+  const result = Object.create(null);
+  for (const item of list) {
+    result[keyFn(item)] = valFn(item);
+  }
+  return result;
+}
+
+/**
+ * Creates a keyed JS object from an array, given a function to produce the keys
+ * for each value in the array.
+ *
+ * This provides a convenient lookup for the array items if the key function
+ * produces unique results.
+ *
+ *     const phoneBook = [
+ *       { name: 'Jon', num: '555-1234' },
+ *       { name: 'Jenny', num: '867-5309' }
+ *     ]
+ *
+ *     // { Jon: { name: 'Jon', num: '555-1234' },
+ *     //   Jenny: { name: 'Jenny', num: '867-5309' } }
+ *     const entriesByName = keyMap(
+ *       phoneBook,
+ *       entry => entry.name
+ *     )
+ *
+ *     // { name: 'Jenny', num: '857-6309' }
+ *     const jennyEntry = entriesByName['Jenny']
+ *
+ */
+export function keyMap<T>(list: ReadonlyArray<T>, keyFn: (item: T) => string): ObjMap<T> {
+  const result = Object.create(null);
+  for (const item of list) {
+    result[keyFn(item)] = item;
+  }
+  return result;
+}
+
+export function invariant(condition: unknown, message?: string): asserts condition {
+  const booleanCondition = Boolean(condition);
+  // istanbul ignore else (See transformation done in './resources/inlineInvariant.js')
+  if (!booleanCondition) {
+    throw new Error(message != null ? message : 'Unexpected invariant triggered.');
+  }
 }

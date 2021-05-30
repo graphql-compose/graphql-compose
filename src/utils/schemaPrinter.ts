@@ -3,9 +3,7 @@
 // copied from https://github.com/graphql/graphql-js/blob/master/src/utilities/printSchema.js
 // added printNodeDirectives() method
 
-import objectValues from 'graphql/polyfills/objectValues';
-import inspect from 'graphql/jsutils/inspect';
-import invariant from 'graphql/jsutils/invariant';
+import { invariant, inspect } from './misc';
 import { print } from 'graphql/language/printer';
 import { printBlockString } from 'graphql/language/blockString';
 import type { DirectiveNode } from 'graphql/language/ast';
@@ -37,6 +35,15 @@ import { SchemaComposer } from '../SchemaComposer';
 import { SchemaFilterTypes, getTypesFromSchema, getDirectivesFromSchema } from './getFromSchema';
 
 import { CompareTypeComposersOption, getSortMethodFromOption } from './schemaPrinterSortTypes';
+import { graphqlVersion } from './graphqlVersion';
+
+let printBlockStringLegacy: (value: string, preferMultipleLines?: boolean | undefined) => string;
+if (graphqlVersion >= 16) {
+  printBlockStringLegacy = printBlockString as any;
+} else {
+  printBlockStringLegacy = (value: string, preferMultipleLines?: boolean | undefined) =>
+    (printBlockString as any)(value, '', preferMultipleLines);
+}
 
 type Options = {
   /**
@@ -150,7 +157,7 @@ export function printFilteredSchema(
 ): string {
   const directives = schema.getDirectives().filter(directiveFilter);
   const typeMap = schema.getTypeMap();
-  const types = (objectValues(typeMap) as GraphQLNamedType[])
+  const types = (Object.values(typeMap) as GraphQLNamedType[])
     .sort((type1, type2) => type1.name.localeCompare(type2.name))
     .filter(typeFilter);
 
@@ -305,7 +312,7 @@ export function printEnum(type: GraphQLEnumType, options?: Options): string {
 }
 
 export function printInputObject(type: GraphQLInputObjectType, options?: Options): string {
-  let fields = objectValues(type.getFields()) as GraphQLInputField[];
+  let fields = Object.values(type.getFields()) as GraphQLInputField[];
   if (options?.sortAll || options?.sortFields) {
     fields = fields.sort((a, b) => a.name.localeCompare(b.name));
   }
@@ -322,7 +329,7 @@ export function printFields(
   type: GraphQLObjectType | GraphQLInterfaceType,
   options?: Options
 ): string {
-  let fields = objectValues(type.getFields()) as GraphQLField<any, any>[];
+  let fields = Object.values(type.getFields()) as GraphQLField<any, any>[];
   if (options?.sortAll || options?.sortFields) {
     fields = fields.sort((a, b) => a.name.localeCompare(b.name));
   }
@@ -382,7 +389,7 @@ export function printInputValue(arg: GraphQLArgument | GraphQLInputField): strin
 
 export function printDirective(directive: GraphQLDirective, options?: Options): string {
   return `${printDescription(directive, options)}directive @${directive.name}${printArgs(
-    directive.args,
+    directive.args as GraphQLArgument[],
     options
   )}${directive.isRepeatable ? ' repeatable' : ''} on ${directive.locations.join(' | ')}`;
 }
@@ -427,7 +434,7 @@ export function printDescription(
   }
 
   const preferMultipleLines = description.length > 70;
-  const blockString = printBlockString(description, '', preferMultipleLines);
+  const blockString = printBlockStringLegacy(description, preferMultipleLines);
   const prefix = indentation && !firstInBlock ? `\n${indentation}` : indentation;
 
   return `${prefix + blockString.replace(/\n/g, `\n${indentation}`)}\n`;

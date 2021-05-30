@@ -551,15 +551,22 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
   _initResolveTypeFn(): this {
     const fallbackType = this._gqcFallbackResolveType
       ? (getGraphQLType(this._gqcFallbackResolveType) as GraphQLObjectType)
-      : null;
+      : undefined;
 
     // extract GraphQLObjectType from ObjectTypeComposer
-    const fastEntries = [] as Array<
-      [GraphQLObjectType, UnionTypeComposerResolverCheckFn<any, any>]
-    >;
-    for (const [composeType, checkFn] of this._gqcTypeResolvers.entries()) {
-      fastEntries.push([getGraphQLType(composeType) as GraphQLObjectType, checkFn]);
-      this.addType(composeType);
+    const fastEntries = [] as Array<[any, UnionTypeComposerResolverCheckFn<any, any>]>;
+    if (graphqlVersion >= 16) {
+      // [string, UnionTypeComposerResolverCheckFn<any, any>]
+      for (const [composeType, checkFn] of this._gqcTypeResolvers.entries()) {
+        fastEntries.push([getComposeTypeName(composeType, this.schemaComposer), checkFn]);
+        this.addType(composeType);
+      }
+    } else {
+      // [GraphQLObjectType, UnionTypeComposerResolverCheckFn<any, any>]
+      for (const [composeType, checkFn] of this._gqcTypeResolvers.entries()) {
+        fastEntries.push([getGraphQLType(composeType) as GraphQLObjectType, checkFn]);
+        this.addType(composeType);
+      }
     }
 
     let resolveType: GraphQLTypeResolver<TSource, TContext>;

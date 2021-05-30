@@ -45,7 +45,7 @@ const schema = schemaComposer.buildSchema();
 
 const getResolveInfo = async (query: string): Promise<GraphQLResolveInfo> => {
   resolve.mockClear();
-  const res = await graphql(schema, query);
+  const res = await graphql({ schema, source: query });
   if (res && res.errors) {
     throw new Error(res.errors[0].message);
   }

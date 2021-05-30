@@ -5,6 +5,7 @@ import { ObjectTypeComposer } from '../ObjectTypeComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { dedent } from '../utils/dedent';
+import { graphqlVersion } from '../utils/graphqlVersion';
 
 beforeEach(() => {
   schemaComposer.clear();
@@ -374,9 +375,9 @@ describe('UnionTypeComposer', () => {
         },
       });
 
-      const res = await graphql(
-        schemaComposer.buildSchema(),
-        `
+      const res = await graphql({
+        schema: schemaComposer.buildSchema(),
+        source: `
           query {
             test {
               __typename
@@ -395,8 +396,8 @@ describe('UnionTypeComposer', () => {
               }
             }
           }
-        `
-      );
+        `,
+      });
       expect(res).toEqual({
         data: {
           test: [
@@ -463,7 +464,11 @@ describe('UnionTypeComposer', () => {
 
         const resolveType = (utc as any)._gqType.resolveType;
         expect(resolveType()).toBeInstanceOf(Promise);
-        expect(await resolveType()).toBe(KindRedTC.getType());
+        if (graphqlVersion >= 16) {
+          expect(await resolveType()).toBe(KindRedTC.getTypeName());
+        } else {
+          expect(await resolveType()).toBe(KindRedTC.getType());
+        }
       });
 
       it('sync mode', () => {
@@ -475,7 +480,11 @@ describe('UnionTypeComposer', () => {
         utc.setTypeResolvers(map);
 
         const resolveType = (utc as any)._gqType.resolveType;
-        expect(resolveType()).toBe(KindBlueTC.getType());
+        if (graphqlVersion >= 16) {
+          expect(resolveType()).toBe(KindBlueTC.getTypeName());
+        } else {
+          expect(resolveType()).toBe(KindBlueTC.getType());
+        }
       });
 
       it('throw error on wrong type', () => {
@@ -527,7 +536,7 @@ describe('UnionTypeComposer', () => {
             if (value.a) return 'A';
             else if (value.b) return 'B';
           }
-          return null;
+          return undefined;
         };
 
         utc1.setResolveType(resolveType);
@@ -539,9 +548,9 @@ describe('UnionTypeComposer', () => {
             resolve: () => [{ a: 1 }, { b: 2 }, { c: 3 }],
           },
         });
-        const res = await graphql(
-          schemaComposer.buildSchema(),
-          `
+        const res = await graphql({
+          schema: schemaComposer.buildSchema(),
+          source: `
             query {
               check {
                 __typename
@@ -553,8 +562,8 @@ describe('UnionTypeComposer', () => {
                 }
               }
             }
-          `
-        );
+          `,
+        });
         expect(res.data).toEqual({
           check: [{ __typename: 'A', a: 1 }, { __typename: 'B', b: 2 }, null],
         });
