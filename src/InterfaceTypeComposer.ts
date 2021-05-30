@@ -1118,11 +1118,17 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
       : null;
 
     // extract GraphQLObjectType from ObjectTypeComposer
-    const fastEntries = [] as Array<
-      [GraphQLObjectType, InterfaceTypeComposerResolverCheckFn<any, any>]
-    >;
-    for (const [composeType, checkFn] of typeResolversMap.entries()) {
-      fastEntries.push([getGraphQLType(composeType) as GraphQLObjectType, checkFn]);
+    const fastEntries = [] as Array<[any, InterfaceTypeComposerResolverCheckFn<any, any>]>;
+    if (graphqlVersion >= 16) {
+      for (const [composeType, checkFn] of typeResolversMap.entries()) {
+        // [string, InterfaceTypeComposerResolverCheckFn<any, any>]
+        fastEntries.push([getComposeTypeName(composeType, this.schemaComposer), checkFn]);
+      }
+    } else {
+      for (const [composeType, checkFn] of typeResolversMap.entries()) {
+        // [GraphQLObjectType, InterfaceTypeComposerResolverCheckFn<any, any>]
+        fastEntries.push([getGraphQLType(composeType) as GraphQLObjectType, checkFn]);
+      }
     }
 
     let resolveType: GraphQLTypeResolver<TSource, TContext>;

@@ -451,7 +451,9 @@ describe('Resolver', () => {
         b: (): InputTypeComposer<any> =>
           schemaComposer.createInputTC(`input ArgAsThunk1 { b: Int }`),
         c: (): GraphQLInputType =>
-          GraphQLNonNull(schemaComposer.createInputTC(`input ArgAsThunk2 { b: Int }`).getType()),
+          new GraphQLNonNull(
+            schemaComposer.createInputTC(`input ArgAsThunk2 { b: Int }`).getType()
+          ),
       });
       expect(resolver.getArgType('a')).toBe(GraphQLString);
       expect((resolver.getArgType('b') as any).name).toBe('ArgAsThunk1');
@@ -626,7 +628,7 @@ describe('Resolver', () => {
     });
 
     const schema = schemaComposer.buildSchema();
-    const result = await graphql(schema, '{ resolveUser { name } }');
+    const result = await graphql({ schema, source: '{ resolveUser { name } }' });
     expect(result).toEqual({
       data: {
         resolveUser: {

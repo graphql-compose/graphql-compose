@@ -84,9 +84,9 @@ describe('github issue #107 merge Schema types on GQL', () => {
 
     const schema = schemaComposer.buildSchema();
     expect(
-      await graphql(
+      await graphql({
         schema,
-        `
+        source: `
           query {
             tag {
               id
@@ -96,8 +96,8 @@ describe('github issue #107 merge Schema types on GQL', () => {
               age
             }
           }
-        `
-      )
+        `,
+      })
     ).toEqual({
       data: { tag: { id: 1, title: 'Some tag' }, users: [{ age: 10 }, { age: 20 }, { age: 30 }] },
     });
@@ -125,9 +125,9 @@ describe('github issue #107 merge Schema types on GQL', () => {
 
     const schema = schemaComposer.buildSchema();
     expect(
-      await graphql(
+      await graphql({
         schema,
-        `
+        source: `
           query {
             tag {
               id
@@ -139,8 +139,8 @@ describe('github issue #107 merge Schema types on GQL', () => {
               }
             }
           }
-        `
-      )
+        `,
+      })
     ).toEqual({
       data: {
         tag: { id: 1, title: 'Some tag' },
@@ -168,7 +168,7 @@ describe('github issue #107 merge Schema types on GQL', () => {
             args: { ...remoteUsersFC.args } as any,
             resolve: (source, args, context, info) => {
               if (!remoteUsersFC.resolve) return null;
-              const users = remoteUsersFC.resolve(source, args, context, info);
+              const users = remoteUsersFC.resolve(source, args, context, info) as any;
               // for simplicity return first user
               return users[0];
             },
@@ -185,9 +185,9 @@ describe('github issue #107 merge Schema types on GQL', () => {
 
       const schema = schemaComposer.buildSchema();
       expect(
-        await graphql(
+        await graphql({
           schema,
-          `
+          source: `
             query {
               article {
                 text
@@ -200,8 +200,8 @@ describe('github issue #107 merge Schema types on GQL', () => {
                 }
               }
             }
-          `
-        )
+          `,
+        })
       ).toEqual({
         data: {
           article: {

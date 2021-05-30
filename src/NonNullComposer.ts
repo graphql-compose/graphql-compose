@@ -1,8 +1,8 @@
-import invariant from 'graphql/jsutils/invariant';
 import { GraphQLNonNull } from './graphql';
 import { isNamedTypeComposer, AnyTypeComposer, NamedTypeComposer } from './utils/typeHelpers';
 import { ListComposer } from './ListComposer';
 import type { SchemaComposer } from './SchemaComposer';
+import { invariant } from './utils/misc';
 
 export class NonNullComposer<T extends AnyTypeComposer<any> = AnyTypeComposer<any>> {
   ofType: T;

@@ -1067,7 +1067,11 @@ describe('InterfaceTypeComposer', () => {
 
         const resolveType = (iftc as any)._gqType.resolveType as any;
         expect(resolveType()).toBeInstanceOf(Promise);
-        expect(await resolveType()).toBe(KindRedTC.getType());
+        if (graphqlVersion >= 16) {
+          expect(await resolveType()).toBe(KindRedTC.getTypeName());
+        } else {
+          expect(await resolveType()).toBe(KindRedTC.getType());
+        }
       });
 
       it('sync mode', () => {
@@ -1079,7 +1083,11 @@ describe('InterfaceTypeComposer', () => {
         iftc.setTypeResolvers(map);
 
         const resolveType = (iftc as any)._gqType.resolveType;
-        expect(resolveType()).toBe(KindBlueTC.getType());
+        if (graphqlVersion >= 16) {
+          expect(resolveType()).toBe(KindBlueTC.getTypeName());
+        } else {
+          expect(resolveType()).toBe(KindBlueTC.getType());
+        }
       });
 
       it('throw error on wrong type', () => {
@@ -1131,7 +1139,7 @@ describe('InterfaceTypeComposer', () => {
             if (value.a) return 'A';
             else if (value.b) return 'B';
           }
-          return null;
+          return undefined;
         };
 
         iftc1.setResolveType(resolveType);
@@ -1147,9 +1155,9 @@ describe('InterfaceTypeComposer', () => {
             ],
           },
         });
-        const res = await graphql(
-          schemaComposer.buildSchema(),
-          `
+        const res = await graphql({
+          schema: schemaComposer.buildSchema(),
+          source: `
             query {
               check {
                 __typename
@@ -1161,8 +1169,8 @@ describe('InterfaceTypeComposer', () => {
                 }
               }
             }
-          `
-        );
+          `,
+        });
         expect(res.data).toEqual({
           check: [{ __typename: 'A', a: 1 }, { __typename: 'B', b: 2 }, null],
         });

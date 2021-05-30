@@ -29,7 +29,7 @@ export default new GraphQLScalarType({
     // will be serialized to '2019-01-10T08:55:04.913Z'
     return value.toJSON();
   },
-  parseValue(value: string) {
+  parseValue(value: any) {
     const date = new Date(value);
 
     if (Number.isNaN(date.getTime())) {

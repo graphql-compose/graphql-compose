@@ -1,7 +1,6 @@
-import keyMap from 'graphql/jsutils/keyMap';
 import { GraphQLEnumType } from './graphql';
 import { isObject, isString } from './utils/is';
-import { inspect, mapEachKey } from './utils/misc';
+import { inspect, mapEachKey, keyMap } from './utils/misc';
 import type { EnumValueDefinitionNode } from './graphql';
 import { defineEnumValues, convertEnumValuesToConfig } from './utils/configToDefine';
 import { graphqlVersion } from './utils/graphqlVersion';

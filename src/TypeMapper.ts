@@ -1,10 +1,8 @@
 /* eslint-disable no-use-before-define, class-methods-use-this, no-unused-vars, no-param-reassign */
 
 import { parse, parseType } from 'graphql/language/parser';
-import { DirectiveLocationEnum, Kind } from 'graphql/language';
-import { getDescription } from 'graphql/utilities';
-import keyValMap from 'graphql/jsutils/keyValMap';
-import invariant from 'graphql/jsutils/invariant';
+import { DirectiveLocationEnum, Kind, TokenKind } from 'graphql/language';
+import { invariant } from './utils/misc';
 import { getArgumentValues } from 'graphql/execution/values';
 import type {
   DocumentNode,
@@ -30,9 +28,11 @@ import type {
   FieldDefinitionNode,
   EnumValueDefinitionNode,
   ArgumentNode,
+  StringValueNode,
+  Location,
 } from 'graphql/language/ast';
 import deprecate from './utils/deprecate';
-import { inspect } from './utils/misc';
+import { inspect, keyValMap } from './utils/misc';
 import {
   GraphQLInt,
   GraphQLFloat,
@@ -114,6 +114,7 @@ import {
   isUnionTypeDefinitionString,
 } from './utils/typeHelpers';
 import { parseValueNode } from './utils/definitionNode';
+import { dedentBlockStringValue } from 'graphql/language/blockString';
 
 /**
  * Eg. `type Name { field: Int }`
@@ -245,7 +246,7 @@ export class TypeMapper<TContext = any> {
 
     const astDocument: DocumentNode = parse(str);
 
-    if (!astDocument || astDocument.kind !== 'Document') {
+    if (!astDocument || astDocument.kind !== Kind.DOCUMENT) {
       throw new Error(
         'You should provide correct type syntax. ' +
           "Eg. convertSDLTypeDefinition('type IntRange { min: Int, max: Int }')"
@@ -1116,7 +1117,7 @@ export class TypeMapper<TContext = any> {
     if (!deprecatedAST) {
       return;
     }
-    const { reason } = getArgumentValues(GraphQLDeprecatedDirective, deprecatedAST);
+    const { reason } = getArgumentValues(GraphQLDeprecatedDirective, deprecatedAST) as any;
     return reason;
   }
 
@@ -1193,4 +1194,54 @@ export class TypeMapper<TContext = any> {
     }
     return tc;
   }
+}
+
+/**
+ * Given an ast node, returns its string description.
+ *
+ * Accepts options as a second argument:
+ *
+ *    - commentDescriptions:
+ *        Provide true to use preceding comments as the description.
+ *
+ */
+export function getDescription(
+  node: { description?: StringValueNode; loc?: Location },
+  options?: { commentDescriptions?: boolean }
+): string | null | undefined {
+  if (node.description) {
+    return node.description.value;
+  }
+  if (options?.commentDescriptions === true) {
+    const rawValue = getLeadingCommentBlock(node);
+    if (rawValue !== undefined) {
+      return dedentBlockStringValue('\n' + rawValue);
+    }
+  }
+  return undefined;
+}
+
+function getLeadingCommentBlock(node: {
+  description?: StringValueNode;
+  loc?: Location;
+}): string | null | undefined {
+  const loc = node.loc;
+  if (!loc) {
+    return;
+  }
+  const comments = [];
+  let token = loc.startToken.prev;
+  while (
+    token != null &&
+    token.kind === TokenKind.COMMENT &&
+    token.next &&
+    token.prev &&
+    token.line + 1 === token.next.line &&
+    token.line !== token.prev.line
+  ) {
+    const value = String(token.value);
+    comments.push(value);
+    token = token.prev;
+  }
+  return comments.length > 0 ? comments.reverse().join('\n') : undefined;
 }

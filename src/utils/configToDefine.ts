@@ -5,9 +5,8 @@
 // required for correct config conversion to internal field definition of types
 // copy pasted from https://github.com/graphql/graphql-js/blame/master/src/type/definition.js
 
-import invariant from 'graphql/jsutils/invariant';
 import type { Thunk } from './definitions';
-import { inspect } from './misc';
+import { inspect, invariant } from './misc';
 import { isFunction, isObject } from './is';
 import { SchemaComposer } from '../SchemaComposer';
 import { ThunkComposer } from '../ThunkComposer';
@@ -226,7 +225,7 @@ export function convertEnumValuesToConfig(
   schemaComposer: SchemaComposer<any>
 ): EnumTypeComposerValueConfigMap {
   const fields = {} as EnumTypeComposerValueConfigMap;
-  values.forEach(({ name, isDeprecated, ...fc }) => {
+  values.forEach(({ name, isDeprecated, ...fc }: any) => {
     fields[name] = fc as any;
     if (fc?.astNode?.directives) {
       const directives = schemaComposer.typeMapper.parseDirectives(fc.astNode.directives);

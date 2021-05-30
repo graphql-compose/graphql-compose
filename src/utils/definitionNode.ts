@@ -220,7 +220,9 @@ function getDirectiveArgumentNodes(
 export function getDirectiveNodes(
   values: Directive[],
   sc: SchemaComposer<any>
-): ReadonlyArray<DirectiveNode> | undefined {
+  // Relax type definitions, because in Graphql@16 it became ConstDirectiveNode
+  // was definition ReadonlyArray<DirectiveNode> | undefined
+): ReadonlyArray<any> | undefined {
   if (!values || !values.length) return;
   return values.map(
     (v) =>

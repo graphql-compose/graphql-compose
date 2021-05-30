@@ -1510,9 +1510,9 @@ describe('ObjectTypeComposer', () => {
           ],
         },
       });
-      const res = await graphql(
-        schemaComposer.buildSchema(),
-        `
+      const res = await graphql({
+        schema: schemaComposer.buildSchema(),
+        source: `
           query {
             check {
               __typename
@@ -1524,8 +1524,8 @@ describe('ObjectTypeComposer', () => {
               }
             }
           }
-        `
-      );
+        `,
+      });
       expect(res.data).toEqual({
         check: [{ __typename: 'A', a: 1 }, { __typename: 'B', b: 2 }, null],
       });
