@@ -2,6 +2,7 @@
 
 import { graphql, GraphQLObjectType, GraphQLSchema } from '../../graphql';
 import { GraphQLJSON } from '..';
+import { dedent, schemaComposer, graphqlVersion } from '../../';
 
 const FIXTURE = {
   string: 'string',
@@ -20,6 +21,10 @@ const FIXTURE = {
   },
   array: ['string', 3, Math.PI, true, false, null],
 };
+
+beforeEach(() => {
+  schemaComposer.clear();
+});
 
 describe('GraphQLJSON', () => {
   let schema: GraphQLSchema;
@@ -65,8 +70,8 @@ describe('GraphQLJSON', () => {
   });
 
   describe('parseLiteral', () => {
-    it('should support parsing literals', (done) => {
-      graphql({
+    it('should support parsing literals', async () => {
+      const { data } = await graphql({
         schema,
         source: `
           {
@@ -91,25 +96,24 @@ describe('GraphQLJSON', () => {
             )
           }
         `,
-      }).then(({ data }: any) => {
-        expect(data.value).toEqual({
+      });
+
+      expect(data?.value).toEqual({
+        string: 'string',
+        int: 3,
+        float: 3.14,
+        true: true,
+        false: false,
+        null: null,
+        object: {
           string: 'string',
           int: 3,
           float: 3.14,
           true: true,
           false: false,
           null: null,
-          object: {
-            string: 'string',
-            int: 3,
-            float: 3.14,
-            true: true,
-            false: false,
-            null: null,
-          },
-          array: ['string', 3, 3.14, true, false, null],
-        });
-        done();
+        },
+        array: ['string', 3, 3.14, true, false, null],
       });
     });
 
@@ -125,5 +129,17 @@ describe('GraphQLJSON', () => {
       });
       expect(data).toBeUndefined();
     });
+  });
+
+  it('check SDL', () => {
+    if (graphqlVersion >= 15 && graphqlVersion < 16) {
+      schemaComposer.add(GraphQLJSON);
+      expect(schemaComposer.getSTC('JSON').toSDL()).toBe(dedent`
+        """
+        The \`JSON\` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+        """
+        scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+      `);
+    }
   });
 });

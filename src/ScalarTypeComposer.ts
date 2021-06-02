@@ -152,6 +152,15 @@ export class ScalarTypeComposer<TContext = any> {
     this.setParseValue(parseValue);
     this.setParseLiteral(parseLiteral);
 
+    // v15.x
+    if ((this._gqType as any).specifiedByUrl) {
+      this.setDirectiveByName('specifiedBy', { url: (this._gqType as any).specifiedByUrl });
+    }
+    // v16.x see https://github.com/graphql/graphql-js/issues/3156
+    if ((this._gqType as any).specifiedByURL) {
+      this.setDirectiveByName('specifiedBy', { url: (this._gqType as any).specifiedByURL });
+    }
+
     if (!this._gqType.astNode) {
       this._gqType.astNode = getScalarTypeDefinitionNode(this);
     }
@@ -202,6 +211,8 @@ export class ScalarTypeComposer<TContext = any> {
 
       this._gqType.astNode = getScalarTypeDefinitionNode(this);
       if (graphqlVersion >= 14) {
+        (this._gqType as any).specifiedByUrl = this.getSpecifiedByUrl(); // v15.x
+        (this._gqType as any).specifiedByURL = this.getSpecifiedByUrl(); // v16.x see https://github.com/graphql/graphql-js/issues/3156
         this._gqType.serialize = this._gqcSerialize;
         this._gqType.parseValue = this._gqcParseValue;
         this._gqType.parseLiteral = this._gqcParseLiteral;
