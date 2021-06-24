@@ -130,7 +130,7 @@ Variable Namings
 ```ts
   import mongoose from 'mongoose';
   import { schemaComposer } from 'graphql-compose';
-  import { composeMongooseDiscriminators } from 'graphql-compose-mongoose';
+  import { composeWithMongooseDiscriminators } from 'graphql-compose-mongoose';
 
   // pick a discriminatorKey
   const DKey = 'type';
@@ -184,7 +184,7 @@ Variable Namings
       remove: ['friends'],
     }
   }
-  const CharacterDTC = composeMongooseDiscriminators(CharacterModel, baseOptions);
+  const CharacterDTC = composeWithMongooseDiscriminators(CharacterModel, baseOptions);
 
   // create Discriminator Types
   const droidTypeConverterOptions = {  // this options will be merged with baseOptions -> customizationsOptions
