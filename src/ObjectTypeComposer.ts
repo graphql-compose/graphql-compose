@@ -105,8 +105,8 @@ export type ObjectTypeComposerFieldConfigDefinition<TSource, TContext, TArgs = a
       ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs>,
       SchemaComposer<TContext>
     >
-  | ThunkWithSchemaComposer<ComposeOutputTypeDefinition<TContext>, SchemaComposer<TContext>>
-  | Readonly<Resolver<any, TContext, any>>;
+  | ThunkWithSchemaComposer<ComposeOutputTypeDefinition<TContext>, SchemaComposer<TContext>>;
+// | Readonly<Resolver<any, TContext, any>>;
 
 export type ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs = any> = {
   type: ThunkWithSchemaComposer<

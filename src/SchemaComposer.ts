@@ -523,9 +523,9 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
   // Type methods
   // -----------------------------------------------
 
-  createObjectTC(
-    typeDef: ObjectTypeComposerDefinition<any, TContext>
-  ): ObjectTypeComposer<any, TContext> {
+  createObjectTC<TSource = any>(
+    typeDef: ObjectTypeComposerDefinition<TSource, TContext>
+  ): ObjectTypeComposer<TSource, TContext> {
     return ObjectTypeComposer.create(typeDef, this);
   }
 
@@ -537,15 +537,15 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
     return EnumTypeComposer.create(typeDef, this);
   }
 
-  createInterfaceTC(
-    typeDef: InterfaceTypeComposerDefinition<any, TContext>
-  ): InterfaceTypeComposer<any, TContext> {
+  createInterfaceTC<TSource = any>(
+    typeDef: InterfaceTypeComposerDefinition<TSource, TContext>
+  ): InterfaceTypeComposer<TSource, TContext> {
     return InterfaceTypeComposer.create(typeDef, this);
   }
 
-  createUnionTC(
-    typeDef: UnionTypeComposerDefinition<any, TContext>
-  ): UnionTypeComposer<any, TContext> {
+  createUnionTC<TSource = any>(
+    typeDef: UnionTypeComposerDefinition<TSource, TContext>
+  ): UnionTypeComposer<TSource, TContext> {
     return UnionTypeComposer.create(typeDef, this);
   }
 
