@@ -415,7 +415,7 @@ export class TypeMapper<TContext = any> {
       }
 
       throw new Error(`Cannot convert to OutputType the following value: ${inspect(composeFC)}`);
-    } catch (e) {
+    } catch (e: any) {
       e.message = `TypeError[${typeName}.${fieldName}]: ${e.message}`;
       throw e;
     }
@@ -484,7 +484,7 @@ export class TypeMapper<TContext = any> {
       }
 
       throw new Error(`Cannot convert to InputType the following value: ${inspect(tcFromAC)}`);
-    } catch (e) {
+    } catch (e: any) {
       e.message = `TypeError[${typeName}.${fieldName}.${argName}]: ${e.message}`;
       throw e;
     }
@@ -633,7 +633,7 @@ export class TypeMapper<TContext = any> {
       }
 
       throw new Error(`Cannot convert to InputType the following value: ${inspect(composeIFC)}`);
-    } catch (e) {
+    } catch (e: any) {
       e.message = `TypeError[${typeName}.${fieldName}]: ${e.message}`;
       throw e;
     }

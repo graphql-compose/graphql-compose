@@ -312,7 +312,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
       const prepareTypes = () => {
         try {
           return this.getTypes().map((tc) => tc.getType());
-        } catch (e) {
+        } catch (e: any) {
           e.message = `UnionError[${this.getTypeName()}]: ${e.message}`;
           throw e;
         }
