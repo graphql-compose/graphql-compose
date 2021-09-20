@@ -46,7 +46,7 @@
   "dependencies": {
     "@types/object-path": "0.11.1",
     "graphql-type-json": "0.3.2",
-    "object-path": "0.11.7"
+    "object-path": "0.11.8"
   },
   "config": {
     "commitizen": {
