@@ -143,7 +143,7 @@ After constructing a Schema, let's see how to implement a server to handle clien
 
 ```js
 import express from 'express';
-import graphqlHTTP from 'express-graphql';
+import { graphqlHTTP } from 'express-graphql';
 import { schema } from './schema';
 
 const PORT = 4000;
