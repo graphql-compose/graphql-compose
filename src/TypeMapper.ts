@@ -879,9 +879,7 @@ export class TypeMapper<TContext = any> {
           directives: this.parseDirectives(field.directives),
         };
         if (field.defaultValue) {
-          fc.getDefaultValueFromConstValueNode = function () {
-            return valueFromAST(field.defaultValue, (fc.type as ComposeInputType).getType());
-          };
+          fc.defaultValue = valueFromAST(field.defaultValue, (fc as any).type.getType());
         }
         return fc;
       }

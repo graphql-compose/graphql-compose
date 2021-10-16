@@ -5,9 +5,9 @@ describe('github issue 363', () => {
   it('TypeMapper.makeSchemaDef should create default values from ast', () => {
     const documentNode = parse(`
       input AnInput {
-        nonNullable:String!
-        nullable:String
-        defaultValue:String = "Default input value"
+        nonNullable: String!
+        nullable: String
+        defaultValue: String = "Default input value"
       }
     `);
     const inputDefinition = documentNode.definitions[0];
