@@ -398,11 +398,6 @@ export class InputTypeComposer<TContext = any> {
 
   getFieldConfig(fieldName: string): GraphQLInputFieldConfig {
     const { type, ...rest } = this.getField(fieldName);
-    const getDefaultValueFromConstValueNode = (rest as any).getDefaultValueFromConstValueNode;
-    if (getDefaultValueFromConstValueNode) {
-      const defaultValue = getDefaultValueFromConstValueNode(this._gqType);
-      rest.defaultValue = defaultValue;
-    }
     return {
       type: type.getType(),
       ...rest,
