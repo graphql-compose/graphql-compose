@@ -1,22 +1,21 @@
-import { schemaComposer} from '../..';
-import {parse, GraphQLInputObjectType} from 'graphql'
+import { schemaComposer } from '../..';
+import { parse, GraphQLInputObjectType } from 'graphql';
 
 describe('github issue 363', () => {
-  it('Typemapper.makeSchemaDef should create default values from ast', () => {
+  it('TypeMapper.makeSchemaDef should create default values from ast', () => {
     const documentNode = parse(`
-    input AnInput {
-        nonnullable:String!
+      input AnInput {
+        nonNullable:String!
         nullable:String
-        defaultvalue:String = "Default input value"
-    }
-    `) 
-    var inputDefinition = documentNode.definitions[0];
+        defaultValue:String = "Default input value"
+      }
+    `);
+    const inputDefinition = documentNode.definitions[0];
     schemaComposer.typeMapper.makeSchemaDef(inputDefinition);
-    const schema = schemaComposer.buildSchema({keepUnusedTypes:true});
-    var inputType = schema.getType("AnInput") as GraphQLInputObjectType;
-    var fields = inputType.getFields();
-    var defaultValueField = fields.defaultvalue;
-    expect(defaultValueField.defaultValue).toBe("Default input value");
-
+    const schema = schemaComposer.buildSchema({ keepUnusedTypes: true });
+    const inputType = schema.getType('AnInput') as GraphQLInputObjectType;
+    const fields = inputType.getFields();
+    const defaultValueField = fields.defaultValue;
+    expect(defaultValueField.defaultValue).toBe('Default input value');
   });
 });
