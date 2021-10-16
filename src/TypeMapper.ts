@@ -4,6 +4,7 @@ import { parse, parseType } from 'graphql/language/parser';
 import { DirectiveLocationEnum, Kind, TokenKind } from 'graphql/language';
 import { invariant } from './utils/misc';
 import { getArgumentValues } from 'graphql/execution/values';
+
 import type {
   DocumentNode,
   ScalarTypeDefinitionNode,
@@ -877,7 +878,11 @@ export class TypeMapper<TContext = any> {
           astNode: field,
           directives: this.parseDirectives(field.directives),
         };
-
+        if (field.defaultValue){
+          fc.getDefaultValueFromConstValueNode = function(){
+            return valueFromAST(field.defaultValue,(fc.type as ComposeInputType).getType())
+          }
+        }
         return fc;
       }
     );

@@ -29,6 +29,21 @@
       "internalConsoleOptions": "neverOpen",
       "runtimeArgs": ["--nolazy"], // tells v8 to compile your code ahead of time, so that breakpoints work correctly
       "disableOptimisticBPs": true // also helps that breakpoints work correctly
+    },
+    {
+      "name": "Jest Current File windows",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/jest/bin/jest.js",
+      "args": [
+        "${fileBasenameNoExtension}",
+        "--config",
+        "jest.config.js"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "runtimeArgs": ["--nolazy"], // tells v8 to compile your code ahead of time, so that breakpoints work correctly
+      "disableOptimisticBPs": true // also helps that breakpoints work correctly
     }
   ]
 }
