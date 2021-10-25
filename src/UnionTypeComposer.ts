@@ -11,7 +11,7 @@ import {
   ObjectTypeComposerDefinition,
   ObjectTypeComposerThunked,
 } from './ObjectTypeComposer';
-import type { TypeAsString, TypeDefinitionString } from './TypeMapper';
+import type { TypeDefinitionString, TypeNameString } from './TypeMapper';
 import { SchemaComposer } from './SchemaComposer';
 import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
@@ -38,8 +38,8 @@ import { getUnionTypeDefinitionNode } from './utils/definitionNode';
 import { getSortMethodFromOption } from './utils/schemaPrinterSortTypes';
 
 export type UnionTypeComposerDefinition<TSource, TContext> =
-  | TypeAsString
   | TypeDefinitionString
+  | TypeNameString
   | UnionTypeComposerAsObjectDefinition<TSource, TContext>
   | GraphQLUnionType;
 
