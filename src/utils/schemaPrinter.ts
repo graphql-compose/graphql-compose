@@ -285,7 +285,7 @@ export function printInterface(type: GraphQLInterfaceType, options?: Options): s
 export function printUnion(type: GraphQLUnionType, options?: Options): string {
   let types = type.getTypes();
   if (options?.sortAll || options?.sortUnions) {
-    types = types.sort();
+    types = [...types].sort();
   }
   const possibleTypes = types.length ? ` = ${types.join(' | ')}` : '';
   return `${printDescription(type, options)}union ${type.name}${printNodeDirectives(
@@ -296,7 +296,7 @@ export function printUnion(type: GraphQLUnionType, options?: Options): string {
 export function printEnum(type: GraphQLEnumType, options?: Options): string {
   let values = type.getValues();
   if (options?.sortAll || options?.sortEnums) {
-    values = values.sort((a, b) => a.name.localeCompare(b.name));
+    values = [...values].sort((a, b) => a.name.localeCompare(b.name));
   }
 
   const valuesList = values.map(
@@ -350,7 +350,7 @@ export function printBlock(items: Array<string>): string {
 }
 
 export function printArgs(
-  _args: Array<GraphQLArgument>,
+  _args: ReadonlyArray<GraphQLArgument>,
   options?: Options,
   indentation: string = ''
 ): string {
@@ -360,7 +360,7 @@ export function printArgs(
 
   const args =
     options?.sortAll || options?.sortArgs
-      ? _args.sort((a, b) => a.name.localeCompare(b.name))
+      ? [..._args].sort((a, b) => a.name.localeCompare(b.name))
       : _args;
 
   // If every arg does not have a description, print them on one line.
