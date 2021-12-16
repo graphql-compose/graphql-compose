@@ -1,6 +1,5 @@
 /* eslint-disable no-use-before-define, no-restricted-syntax */
 
-import objectPath from 'object-path';
 import util from 'util';
 import type {
   GraphQLFieldConfigArgumentMap,
@@ -572,8 +571,8 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
     const resolveNext = resolver.getResolve();
     const query = opts.query;
     if (query && isFunction(query)) {
-      resolver.setResolve(async (resolveParams) => {
-        const value = objectPath.get(resolveParams, ['args', 'filter', name]);
+      resolver.setResolve(async (resolveParams: any) => {
+        const value = resolveParams?.args?.filter?.[name];
         if (value !== null && value !== undefined) {
           if (!resolveParams.rawQuery) {
             resolveParams.rawQuery = {}; // eslint-disable-line
@@ -636,8 +635,8 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
     if (isFunction(value)) {
       sortETC.extendField(name, { value: name });
       const getValue = value as any;
-      resolver.setResolve((resolveParams) => {
-        const v = objectPath.get(resolveParams, ['args', 'sort']);
+      resolver.setResolve((resolveParams: any) => {
+        const v = resolveParams?.args?.sort;
         if (v === name) {
           const newSortValue = getValue(resolveParams);
           (resolveParams.args as any).sort = newSortValue;

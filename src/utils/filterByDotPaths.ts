@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable no-param-reassign */
 
-import objectPath from 'object-path';
-
 type FilterOpts = {
   hideFields: { [fieldPath: string]: string };
   hideFieldsNote?: string;
@@ -17,11 +15,15 @@ export function filterByDotPaths(
 ): Record<any, any> {
   let result: Record<any, any>;
 
-  const paths = preparePathsFilter(pathsFilter);
-  if (paths) {
+  const dottedPaths = preparePathsFilter(pathsFilter);
+  if (dottedPaths) {
     result = {};
-    paths.forEach((path) => {
-      result[path] = objectPath.get(obj, path);
+    dottedPaths.forEach((dottedPath) => {
+      let k = obj;
+      dottedPath.split('.').forEach((part) => {
+        k = k?.[part];
+      });
+      result[dottedPath] = k;
     });
   } else {
     result = { ...obj };
@@ -119,8 +121,13 @@ export function hideField(
   const wildcardMatch = key.match(/(.*)\.\*$/);
   if (wildcardMatch) {
     const k = wildcardMatch[1];
-    partialCloneSubpath(result, k.split('.'));
-    const res = objectPath.get(result, k, result[k]);
+    const parts = k.split('.');
+    partialCloneSubpath(result, [...parts]); // pass a new array of keys because it's mutable
+    let v = result;
+    parts.forEach((part) => {
+      v = v?.[part];
+    });
+    const res = v ?? result[k];
 
     if (res && typeof res === 'object') {
       Object.keys(res).forEach((kk) => {
