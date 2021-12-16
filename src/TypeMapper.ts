@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define, class-methods-use-this, no-unused-vars, no-param-reassign */
 
 import { parse, parseType } from 'graphql/language/parser';
-import { DirectiveLocationEnum, Kind, TokenKind } from 'graphql/language';
+import { DirectiveLocation, Kind, TokenKind } from 'graphql/language';
 import { invariant } from './utils/misc';
 import { getArgumentValues } from 'graphql/execution/values';
 
@@ -115,6 +115,7 @@ import {
   isUnionTypeDefinitionString,
 } from './utils/typeHelpers';
 import { parseValueNode } from './utils/definitionNode';
+// @ts-ignore for GraphQL 15 and below (in v16 it was removed)
 import { dedentBlockStringValue } from 'graphql/language/blockString';
 
 /**
@@ -928,7 +929,7 @@ export class TypeMapper<TContext = any> {
   }
 
   makeDirectiveDef(def: DirectiveDefinitionNode): GraphQLDirective {
-    const locations = def.locations.map(({ value }) => value) as DirectiveLocationEnum[];
+    const locations = def.locations.map(({ value }) => value) as DirectiveLocation[];
     const args = {} as GraphQLFieldConfigArgumentMap;
     (def.arguments || []).forEach((value) => {
       const key = value.name.value;
@@ -1218,7 +1219,13 @@ export function getDescription(
   if (options?.commentDescriptions === true) {
     const rawValue = getLeadingCommentBlock(node);
     if (rawValue !== undefined) {
-      return dedentBlockStringValue('\n' + rawValue);
+      if (!dedentBlockStringValue) {
+        // in GraphQL 16 `commentDescriptions` was removed
+        return undefined;
+      } else {
+        // GraphQL 15 and below
+        return dedentBlockStringValue('\n' + rawValue);
+      }
     }
   }
   return undefined;

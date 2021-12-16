@@ -31,14 +31,13 @@ describe('github issue #273: Object directives are removed from schema', () => {
 
     const sdl = sc.toSDL({
       exclude: ['ID', 'String', 'Int', 'Boolean', 'Float'],
+      omitDescriptions: true,
     });
 
     expect(sdl).toBe(dedent`
       directive @test on OBJECT | INPUT_OBJECT | SCALAR | ENUM
 
-      """Exposes a URL that specifies the behaviour of this scalar."""
       directive @specifiedBy(
-        """The URL that specifies the behaviour of this scalar."""
         url: String!
       ) on SCALAR
 

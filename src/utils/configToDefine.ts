@@ -215,13 +215,13 @@ export function defineEnumValues(
       deprecationReason: value.deprecationReason,
       astNode: astNodeMap[valueName],
       value: value.hasOwnProperty('value') ? value.value : valueName,
-      extensions: undefined,
-    };
+      extensions: {},
+    } as GraphQLEnumValue;
   });
 }
 
 export function convertEnumValuesToConfig(
-  values: GraphQLEnumValue[],
+  values: ReadonlyArray<GraphQLEnumValue>,
   schemaComposer: SchemaComposer<any>
 ): EnumTypeComposerValueConfigMap {
   const fields = {} as EnumTypeComposerValueConfigMap;

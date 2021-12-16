@@ -2163,7 +2163,7 @@ describe('SchemaComposer', () => {
     it('directives should be different', () => {
       const directive = new GraphQLDirective({
         name: 'D',
-        locations: ['QUERY'],
+        locations: ['QUERY' as any],
       });
       sc1.addDirective(directive);
       const sc2 = sc1.clone();
@@ -2171,7 +2171,7 @@ describe('SchemaComposer', () => {
 
       const directive2 = new GraphQLDirective({
         name: 'D2',
-        locations: ['QUERY'],
+        locations: ['QUERY' as any],
       });
       sc2.addDirective(directive2);
       expect(sc2.hasDirective(directive2)).toBeTruthy();
