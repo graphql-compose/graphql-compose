@@ -1017,6 +1017,31 @@ describe('SchemaComposer', () => {
       expect(sc.Mutation.getFieldNames()).toEqual(['field2', 'field5']);
       expect(sc.Subscription.getFieldNames()).toEqual(['field3', 'field6']);
     });
+
+    it('should print pretty error', async () => {
+      // Init schema with predefined directives
+      const composer = new SchemaComposer();
+      composer.addTypeDefs(`
+        directive @foo(key: String!, length: Int) on FIELD
+      `);
+
+      // extend schema with new types
+      expect(() => {
+        composer.addTypeDefs(dedent`
+          type Me {
+            a: String @foo(length: true)
+          }
+        `);
+      }).toThrowErrorMatchingInlineSnapshot(`
+        "Argument \\"key\\" of required type \\"String!\\" was not provided.
+
+        GraphQL SDL:2:13
+        1 | type Me {
+        2 |   a: String @foo(length: true)
+          |             ^
+        3 | }"
+      `);
+    });
   });
 
   describe('addResolveMethods', () => {

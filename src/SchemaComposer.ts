@@ -426,7 +426,13 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
    *     });
    */
   addTypeDefs(typeDefs: string): TypeStorage<string, NamedTypeComposer<any>> {
-    const types = this.typeMapper.parseTypesFromString(typeDefs);
+    let types: TypeStorage<string, NamedTypeComposer<TContext>>;
+    try {
+      types = this.typeMapper.parseTypesFromString(typeDefs);
+    } catch (e: any) {
+      throw new Error(e.toString());
+    }
+
     types.forEach((type: NamedTypeComposer<any>) => {
       const name = type.getTypeName();
       if (name !== 'Query' && name !== 'Mutation' && name !== 'Subscription') {

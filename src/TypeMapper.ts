@@ -1,7 +1,7 @@
 /* eslint-disable no-use-before-define, class-methods-use-this, no-unused-vars, no-param-reassign */
 
 import { parse, parseType } from 'graphql/language/parser';
-import { DirectiveLocation, Kind, TokenKind } from 'graphql/language';
+import { DirectiveLocation, Kind, Source, TokenKind } from 'graphql/language';
 import { invariant } from './utils/misc';
 import { getArgumentValues } from 'graphql/execution/values';
 
@@ -685,7 +685,9 @@ export class TypeMapper<TContext = any> {
   }
 
   parseTypesFromString(str: string): TypeStorage<string, NamedTypeComposer<TContext>> {
-    const astDocument: DocumentNode = parse(str);
+    const source = new Source(str);
+    source.name = 'GraphQL SDL';
+    const astDocument: DocumentNode = parse(source);
 
     if (!astDocument || astDocument.kind !== 'Document') {
       throw new Error('You should provide correct SDL syntax.');
@@ -1035,8 +1037,9 @@ export class TypeMapper<TContext = any> {
   }
 
   makeTypeDef(def: ObjectTypeDefinitionNode): ObjectTypeComposer<any, TContext> {
+    const name = def.name.value;
     const tc = this.schemaComposer.createObjectTC({
-      name: def.name.value,
+      name,
       description: getDescription(def),
       fields: this.makeFieldDefMap(def),
       interfaces: this.makeImplementedInterfaces(def),
