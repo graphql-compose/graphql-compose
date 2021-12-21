@@ -1032,15 +1032,15 @@ describe('SchemaComposer', () => {
             a: String @foo(length: true)
           }
         `);
-      }).toThrowErrorMatchingInlineSnapshot(`
-        "Argument \\"key\\" of required type \\"String!\\" was not provided.
 
-        GraphQL SDL:2:13
-        1 | type Me {
-        2 |   a: String @foo(length: true)
-          |             ^
-        3 | }"
-      `);
+        // Argument "key" of required type "String!" was not provided.
+        //
+        // GraphQL SDL:2:13
+        // 1 | type Me {
+        // 2 |   a: String @foo(length: true)
+        //   |             ^
+        // 3 | }
+      }).toThrow(`Argument "key" of required type "String!" was not provided.`);
     });
   });
 
