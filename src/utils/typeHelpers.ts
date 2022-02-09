@@ -335,6 +335,8 @@ export function getComposeTypeName(type: any, sc: SchemaComposer<any>): string {
     throw new Error(`Cannot get type name from string: ${inspect(type)}`);
   } else if (isFunction(type)) {
     return getComposeTypeName((type as any)(sc), sc);
+  } else if (isNamedTypeComposer(type)) {
+    return type.getTypeName();
   } else {
     try {
       const gqlType = getGraphQLType(type) as any;
