@@ -313,7 +313,7 @@ type TypeConverterInputTypeOpts = {
 };
 ```
 
-## Resolvers' customization options
+## Resolvers customization options
 
 When you are creating resolvers from `mongooseResolvers` factory, you may provide customizationOptions to it:
 
