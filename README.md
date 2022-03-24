@@ -14,8 +14,8 @@
 **`graphql-compose`** – provides a type registry with a bunch of methods for programmatic schema construction. It allows not only to extend types but also remove fields, interfaces, args. **If you want to write your graphql schema generator – `graphql-compose` is a good instrument for you.**
 
 * provides methods for editing GraphQL output/input types (add/remove fields/args/interfaces)
-* introduces `Resolver`s – the named graphql fieldConfigs, which can be used for finding, updating, removing records
-* provides an easy way for creating relations between types via `Resolver`s
+* introduces ```Resolver's``` – the named graphql fieldConfigs, which can be used for finding, updating, removing records
+* provides an easy way for creating relations between types via ```Resolver's```
 * provides converter from `OutputType` to `InputType`
 * provides `projection` parser from AST
 * provides `GraphQL schema language` for defining simple types
