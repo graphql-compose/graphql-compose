@@ -17,12 +17,15 @@ import { graphqlVersion } from './utils/graphqlVersion';
 import { printScalar, SchemaPrinterOptions } from './utils/schemaPrinter';
 import { getScalarTypeDefinitionNode } from './utils/definitionNode';
 
-export type ScalarTypeComposerDefinition =
+export type ScalarTypeComposerDefinition<TInternal, TExternal> =
   | TypeAsString
-  | Readonly<ScalarTypeComposerAsObjectDefinition>
+  | Readonly<ScalarTypeComposerAsObjectDefinition<TInternal, TExternal>>
   | Readonly<GraphQLScalarType>;
 
-export type ScalarTypeComposerAsObjectDefinition = GraphQLScalarTypeConfig<any, any> & {
+export type ScalarTypeComposerAsObjectDefinition<TInternal, TExternal> = GraphQLScalarTypeConfig<
+  TInternal,
+  TExternal
+> & {
   extensions?: Extensions;
   directives?: Directive[];
 };
@@ -47,8 +50,8 @@ export class ScalarTypeComposer<TContext = any> {
    * Create `ScalarTypeComposer` with adding it by name to the `SchemaComposer`.
    * This type became available in SDL by its name.
    */
-  static create<TCtx = any>(
-    typeDef: ScalarTypeComposerDefinition,
+  static create<TCtx = any, TInternal = any, TExternal = any>(
+    typeDef: ScalarTypeComposerDefinition<TInternal, TExternal>,
     schemaComposer: SchemaComposer<TCtx>
   ): ScalarTypeComposer<TCtx> {
     if (!(schemaComposer instanceof SchemaComposer)) {
@@ -70,8 +73,8 @@ export class ScalarTypeComposer<TContext = any> {
    * Create `ScalarTypeComposer` without adding it to the `SchemaComposer`.
    * This method may be useful in plugins, when you need to create type temporary.
    */
-  static createTemp<TCtx = any>(
-    typeDef: ScalarTypeComposerDefinition,
+  static createTemp<TCtx = any, TInternal = any, TExternal = any>(
+    typeDef: ScalarTypeComposerDefinition<TInternal, TExternal>,
     schemaComposer?: SchemaComposer<TCtx>
   ): ScalarTypeComposer<TCtx> {
     const sc = schemaComposer || new SchemaComposer();
