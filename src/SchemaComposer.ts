@@ -555,7 +555,9 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
     return UnionTypeComposer.create(typeDef, this);
   }
 
-  createScalarTC(typeDef: ScalarTypeComposerDefinition): ScalarTypeComposer<TContext> {
+  createScalarTC<TInternal = any, TExternal = any>(
+    typeDef: ScalarTypeComposerDefinition<TInternal, TExternal>
+  ): ScalarTypeComposer<TContext> {
     return ScalarTypeComposer.create(typeDef, this);
   }
 
