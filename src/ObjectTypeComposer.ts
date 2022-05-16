@@ -1884,9 +1884,8 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
       return catchErrors
         ? Promise.resolve(payload).catch((e) => {
             // eslint-disable-next-line
-            console.log(`GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`);
-            console.log(e); // eslint-disable-line
-            return null;
+            console.log(`GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error: ${e.message}`);
+            throw e;
           })
         : payload;
     };
