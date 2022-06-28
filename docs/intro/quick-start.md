@@ -57,7 +57,7 @@ const PostTC = schemaComposer.createObjectTC({
 
 ## Create relations between Types
 
-Now that we have declared Types, it’s time to link them with each other. This is the exact stage where GraphQL enormously simplifies work for clients that request data. A typical scenario when using a RESTful API goes like this: a client requests some data, and tipically makes a second or even third request based on the previous response. GraphQL allows to perform a single deeply nested query, composing the result on the server’s side and sending it back to the client.
+Now that we have declared Types, it’s time to link them with each other. This is the exact stage where GraphQL enormously simplifies work for clients that request data. A typical scenario when using a RESTful API goes like this: a client requests some data, and typically makes a second or even third request based on the previous response. GraphQL allows to perform a single deeply nested query, composing the result on the server’s side and sending it back to the client.
 
 To make such nesting possible we need to link `Author` and `Post` Types with each other. For that we will define an `author` field in your `Post` Type, which will allow GraphQL to `resolve` the author's data for every post. And for `Author` Type we will define a `posts` field to make retrieving each `Author`'s posts possible.
 
