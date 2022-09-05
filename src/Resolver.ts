@@ -1,6 +1,5 @@
 /* eslint-disable no-use-before-define, no-restricted-syntax */
 
-import util from 'util';
 import type {
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
@@ -1021,8 +1020,8 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
     return name;
   }
 
-  toString(colors: boolean = true): string {
-    return util.inspect(this.toDebugStructure(false), { depth: 20, colors }).replace(/\\n/g, '\n');
+  toString(): string {
+    return inspect(this.toDebugStructure()).replace(/\\n/g, '\n');
   }
 
   setDisplayName(name: string): this {
@@ -1030,16 +1029,16 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
     return this;
   }
 
-  toDebugStructure(colors: boolean = true): Record<string, any> {
+  toDebugStructure(): Record<string, any> {
     const info: any = {
       name: this.name,
       displayName: this.displayName,
-      type: util.inspect(this.type, { depth: 2, colors }),
+      type: inspect(this.type),
       args: this.args,
       resolve: this.resolve ? this.resolve.toString() : this.resolve,
     };
     if (this.parent) {
-      info.resolve = [info.resolve, { 'Parent resolver': this.parent.toDebugStructure(colors) }];
+      info.resolve = [info.resolve, { 'Parent resolver': this.parent.toDebugStructure() }];
     }
     return info;
   }
