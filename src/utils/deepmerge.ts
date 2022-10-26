@@ -26,7 +26,7 @@ export function deepmerge<T = any>(target: any, src: T): T {
         dst[key] = target[key];
       });
     }
-    Object.keys(src).forEach((key) => {
+    Object.keys(src as any).forEach((key) => {
       const v = (src as any)[key] as any;
       if (typeof v !== 'object' || !v) {
         dst[key] = v;

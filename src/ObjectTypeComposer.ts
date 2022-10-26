@@ -178,14 +178,19 @@ export type ObjectTypeComposerArgumentConfigDefinition =
 export type ObjectTypeComposerRelationMap<TSource, TContext> = {
   [fieldName: string]: ObjectTypeComposerRelationOpts<any, TSource, TContext>;
 };
-export type ObjectTypeComposerRelationOpts<TRelationSource, TSource, TContext, TArgs = any> =
+export type ObjectTypeComposerRelationOpts<
+  TRelationSource,
+  TSource,
+  TContext,
+  TArgs extends Record<string, any> = any
+> =
   | ObjectTypeComposerRelationOptsWithResolver<TRelationSource, TSource, TContext, TArgs>
   | ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs>;
 export type ObjectTypeComposerRelationOptsWithResolver<
   TRelationSource,
   TSource,
   TContext,
-  TArgs = any
+  TArgs extends Record<string, any> = any
 > = {
   resolver: ThunkWithSchemaComposer<
     Resolver<TRelationSource, TContext, TArgs>,
@@ -1785,7 +1790,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
   // Misc methods
   // -----------------------------------------------
 
-  addRelation<TArgs = any>(
+  addRelation<TArgs extends Record<string, any> = any>(
     fieldName: string,
     opts: Readonly<ObjectTypeComposerRelationOpts<any, TSource, TContext, TArgs>>
   ): this {

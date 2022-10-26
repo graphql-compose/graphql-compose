@@ -1907,9 +1907,9 @@ describe('ObjectTypeComposer', () => {
         }
       `);
       expect(t.toSDL()).toMatchInlineSnapshot(`
-        "\\"\\"\\"desc1\\"\\"\\"
+        """"desc1"""
         type User {
-          \\"\\"\\"desc2\\"\\"\\"
+          """desc2"""
           name(a: Int): String
         }"
       `);
