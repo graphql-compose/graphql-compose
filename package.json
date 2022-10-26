@@ -22,7 +22,6 @@
   "homepage": "https://github.com/graphql-compose/graphql-compose",
   "peerDependencies": {},
   "devDependencies": {
-    "@types/graphql": "14.2.0",
     "@types/jest": "29.2.0",
     "@types/lodash": "4.14.186",
     "@typescript-eslint/eslint-plugin": "5.41.0",
@@ -58,8 +57,7 @@
     "tscheck": "tsc --noEmit",
     "eslint": "eslint --ext .ts ./src",
     "test": "npm run coverage && npm run eslint && npm run tscheck",
-    "semantic-release": "semantic-release",
-    "test-prev-vers": "yarn add graphql@14.2.0 @types/graphql@14.2.0 --dev && jest && yarn remove graphql && yarn add graphql --dev --exact && git checkout HEAD -- package.json yarn.lock"
+    "semantic-release": "semantic-release"
   },
   "collective": {
     "type": "opencollective",
