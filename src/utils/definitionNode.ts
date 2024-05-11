@@ -30,7 +30,7 @@ import type {
   GraphQLInputType,
   NameNode,
 } from '../graphql';
-import { GraphQLDirective, astFromValue } from '../graphql';
+import { GraphQLDirective } from '../graphql';
 import type { ObjectTypeComposer } from '../ObjectTypeComposer';
 import type { InputTypeComposer } from '../InputTypeComposer';
 import type { EnumTypeComposer } from '../EnumTypeComposer';
@@ -44,7 +44,7 @@ import { ThunkComposer } from '../ThunkComposer';
 import { NonNullComposer } from '../NonNullComposer';
 import { ListComposer } from '../ListComposer';
 import { inspect } from './misc';
-import { Kind } from 'graphql';
+import { Kind, astFromValue } from 'graphql';
 
 /**
  * Get astNode for ObjectTypeComposer.
@@ -296,7 +296,7 @@ export function getArgumentsDefinitionNodes(
         ),
         defaultValue:
           (ac.defaultValue !== undefined &&
-            astFromValue(ac.defaultValue, tc.getFieldArgType(fieldName, argName))) ||
+            astFromValueSafe(ac.defaultValue, tc.getFieldArgType(fieldName, argName))) ||
           undefined,
       } as InputValueDefinitionNode;
     })
@@ -343,7 +343,7 @@ export function getInputValueDefinitionNodes(
         directives: getDirectiveNodes(tc.getFieldDirectives(fieldName), tc.schemaComposer),
         defaultValue:
           (fc.defaultValue !== undefined &&
-            astFromValue(fc.defaultValue, tc.getFieldType(fieldName))) ||
+            astFromValueSafe(fc.defaultValue, tc.getFieldType(fieldName))) ||
           undefined,
       } as InputValueDefinitionNode;
     })
@@ -396,5 +396,13 @@ export function parseValueNode(
       return variables ? variables[ast.name.value] : undefined;
     default:
       throw new TypeError(`${typeName} cannot represent value: ${inspect(ast)}`);
+  }
+}
+
+function astFromValueSafe(value: unknown, type: GraphQLInputType): ReturnType<typeof astFromValue> {
+  try {
+    return astFromValue(value, type);
+  } catch (e) {
+    return toValueNode(value);
   }
 }
