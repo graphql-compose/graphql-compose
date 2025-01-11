@@ -36,9 +36,6 @@ jobs:
         with:
           check_name: JUnit Annotations for Node ${{ matrix.node-version }}
           report_paths: '**/coverage/junit/**/*.xml'
-      - name: Send codecov.io stats
-        if: matrix.node-version == '22'
-        run: bash <(curl -s https://codecov.io/bash) || echo ''
 
   publish:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/alpha' || github.ref == 'refs/heads/beta'
