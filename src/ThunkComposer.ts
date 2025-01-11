@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-
 import { isFunction } from './utils/is';
 import type { GraphQLType } from './graphql';
 import type { NamedTypeComposer } from './utils/typeHelpers';
@@ -10,7 +8,7 @@ import type { SchemaComposer } from './SchemaComposer';
 
 export class ThunkComposer<
   T extends NamedTypeComposer<any> = NamedTypeComposer<any>,
-  G extends GraphQLType = GraphQLType
+  G extends GraphQLType = GraphQLType,
 > {
   _thunk: () => T;
   _typeName: string | undefined;

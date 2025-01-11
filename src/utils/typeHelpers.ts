@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-
 import { isType, isNamedType, parse, isOutputType, isInputType } from '../graphql';
 import type {
   GraphQLType,

@@ -1,5 +1,3 @@
-/* eslint-disable class-methods-use-this */
-
 import deprecate from './utils/deprecate';
 import { TypeStorage } from './TypeStorage';
 import { TypeMapper } from './TypeMapper';
@@ -277,7 +275,6 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
           if (fieldTC.getFieldNames().length > 0) {
             this.removeEmptyTypes(fieldTC, passedTypes);
           } else {
-            // eslint-disable-next-line
             console.log(
               `graphql-compose: Delete field '${tc.getTypeName()}.${fieldName}' ` +
                 `with type '${fieldTC.getTypeName()}', cause it does not have fields.`
@@ -879,7 +876,6 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
 
   set(key: unknown, value: NamedTypeComposer<TContext>): this {
     if (!isNamedTypeComposer(value)) {
-      // eslint-disable-next-line
       deprecate(
         `SchemaComposer.set() accept only TypeComposers. ` +
           `You provide with key ${inspect(key)} the following wrong value ${inspect(value)}.`

@@ -334,7 +334,7 @@ export class InputTypeComposer<TContext = any> {
         this._gqcIsModified = true;
       } else {
         // nested field
-        // eslint-disable-next-line no-lonely-if
+
         if (this.hasField(name)) {
           const subTC = this.getFieldTC(name);
           if (subTC instanceof InputTypeComposer) {

@@ -11,6 +11,5 @@ export default function deprecate(msg: string): void {
     });
   }
 
-  // eslint-disable-next-line
   console.log(`GRAPHQL-COMPOSE DEPRECATION: ${msg} ${stackStr}\n\n`);
 }

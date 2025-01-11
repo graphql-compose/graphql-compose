@@ -1,5 +1,3 @@
-/* eslint-disable no-use-before-define, class-methods-use-this, no-unused-vars, no-param-reassign */
-
 import { parse, parseType } from 'graphql/language/parser';
 import { DirectiveLocation, Kind, Source, TokenKind } from 'graphql/language';
 import { invariant } from './utils/misc';

@@ -401,7 +401,6 @@ describe('SchemaComposer', () => {
         stub: TypeWithoutFieldsTC,
       });
 
-      /* eslint-disable */
       const oldConsoleLog = console.log;
       global.console.log = jest.fn();
 
@@ -411,7 +410,6 @@ describe('SchemaComposer', () => {
         "graphql-compose: Delete field 'Viewer.stub' with type 'Stub', cause it does not have fields."
       );
       global.console.log = oldConsoleLog;
-      /* eslint-enable */
 
       expect(ViewerTC.hasField('stub')).toBe(false);
     });

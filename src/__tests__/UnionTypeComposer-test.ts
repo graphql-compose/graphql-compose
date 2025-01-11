@@ -269,7 +269,7 @@ describe('UnionTypeComposer', () => {
       const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
       utc.addTypeResolver(UserTC, () => true);
       const cloned = utc.cloneTo(anotherSchemaComposer);
-      const clonedUserTC = cloned.getTypeResolvers().keys().next().value;
+      const clonedUserTC = cloned.getTypeResolvers().keys().next().value!;
       // different type instances
       expect(clonedUserTC).not.toBe(UserTC);
       // but have same typename

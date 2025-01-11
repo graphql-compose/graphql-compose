@@ -585,13 +585,13 @@ describe('ObjectTypeComposer', () => {
       name: 'Node',
       description: '',
       fields: () => ({ id: { type: GraphQLInt } }),
-      resolveType: () => ({} as any),
+      resolveType: () => ({}) as any,
     });
     const iface2 = new GraphQLInterfaceType({
       name: 'Node2',
       description: '',
       fields: () => ({ id: { type: GraphQLInt } }),
-      resolveType: () => ({} as any),
+      resolveType: () => ({}) as any,
     });
     const iftc = InterfaceTypeComposer.create(
       `
@@ -629,7 +629,7 @@ describe('ObjectTypeComposer', () => {
         name: 'MyIface',
         description: '',
         fields: () => ({ id: { type: GraphQLInt } }),
-        resolveType: () => ({} as any),
+        resolveType: () => ({}) as any,
       });
       tc.addInterface(MyIface);
       expect(tc.hasInterface('MyIface123')).toBeFalsy();
@@ -1127,7 +1127,7 @@ describe('ObjectTypeComposer', () => {
       const prevResolver = tc.getResolver('update');
 
       tc.wrapResolver('update', (resolver) => {
-        resolver.resolve = () => '456'; // eslint-disable-line
+        resolver.resolve = () => '456';
         return resolver;
       });
       expect(await tc.getResolver('update').resolve({})).toBe('456');
@@ -1147,7 +1147,7 @@ describe('ObjectTypeComposer', () => {
       expect(await tc.getResolver('update').resolve({})).toBe('123');
 
       tc.wrapResolverAs('updateExt', 'update', (resolver) => {
-        resolver.resolve = () => '456'; // eslint-disable-line
+        resolver.resolve = () => '456';
         resolver.addArgs({ c: 'Boolean' });
         return resolver;
       });
@@ -1357,7 +1357,7 @@ describe('ObjectTypeComposer', () => {
 
     expect(tc.setTypeName('Type2')).toBe(tc);
     expect(tc.setDescription('Description')).toBe(tc);
-    expect(tc.setRecordIdFn(() => ({} as any))).toBe(tc);
+    expect(tc.setRecordIdFn(() => ({}) as any)).toBe(tc);
   });
 
   describe('deprecateFields()', () => {
