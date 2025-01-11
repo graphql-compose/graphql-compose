@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable global-require */
-
 export function getGraphqlVersion(): number {
   const graphql: any = require('../graphql');
   if (graphql?.versionInfo?.major) {

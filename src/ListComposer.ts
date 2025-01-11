@@ -19,7 +19,6 @@ export class ListComposer<T extends AnyTypeComposer<any> = AnyTypeComposer<any>>
   }
 
   getUnwrappedTC(): NamedTypeComposer<any> {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     let tc = this as any;
     while (!isNamedTypeComposer(tc)) {
       tc = tc.ofType;

@@ -1,5 +1,3 @@
-/* eslint-disable consistent-return */
-
 /**
  * For reference see https://github.com/graphql/graphql-js/blob/master/src/language/ast.js
  */
@@ -177,7 +175,7 @@ function toValueNode(value: any): ValueNode {
                 kind: Kind.OBJECT_FIELD,
                 name: getNameNode(k),
                 value: toValueNode(value[k]),
-              } as ObjectFieldNode)
+              }) as ObjectFieldNode
           ),
         } as ObjectValueNode;
       }
@@ -230,7 +228,7 @@ export function getDirectiveNodes(
         kind: Kind.DIRECTIVE,
         name: getNameNode(v.name),
         arguments: v.args && getDirectiveArgumentNodes(v.args, sc._getDirective(v.name)),
-      } as DirectiveNode)
+      }) as DirectiveNode
   );
 }
 

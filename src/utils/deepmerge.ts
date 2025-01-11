@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable prefer-template, no-param-reassign, no-lonely-if */
 // https://github.com/KyleAMathews/deepmerge/blob/master/index.js
 
 export function deepmerge<T = any>(target: any, src: T): T {

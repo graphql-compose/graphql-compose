@@ -485,13 +485,13 @@ describe('InterfaceTypeComposer', () => {
       name: 'Node',
       description: '',
       fields: () => ({ id: { type: GraphQLInt } }),
-      resolveType: () => ({} as any),
+      resolveType: () => ({}) as any,
     });
     const iface2 = new GraphQLInterfaceType({
       name: 'Node2',
       description: '',
       fields: () => ({ id: { type: GraphQLInt } }),
-      resolveType: () => ({} as any),
+      resolveType: () => ({}) as any,
     });
     const iface3 = InterfaceTypeComposer.create(
       `
@@ -529,7 +529,7 @@ describe('InterfaceTypeComposer', () => {
         name: 'MyIface',
         description: '',
         fields: () => ({ id: { type: GraphQLInt } }),
-        resolveType: () => ({} as any),
+        resolveType: () => ({}) as any,
       });
       iftc.addInterface(MyIface);
       expect(iftc.hasInterface('MyIface123')).toBeFalsy();
@@ -791,7 +791,7 @@ describe('InterfaceTypeComposer', () => {
       const UserTC = schemaComposer.createObjectTC(`type User { field1: String }`);
       iftc.addTypeResolver(UserTC, () => true);
       const cloned = iftc.cloneTo(anotherSchemaComposer);
-      const clonedUserTC = cloned.getTypeResolvers().keys().next().value;
+      const clonedUserTC = cloned.getTypeResolvers().keys().next().value as ObjectTypeComposer;
       expect(clonedUserTC).not.toBe(UserTC);
       expect(clonedUserTC.getTypeName()).toBe(UserTC.getTypeName());
     });

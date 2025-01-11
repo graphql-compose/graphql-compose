@@ -1,5 +1,3 @@
-/* eslint-disable no-new, no-unused-vars */
-
 import {
   graphql,
   GraphQLString,
@@ -676,8 +674,8 @@ describe('Resolver', () => {
           type: 'Int!',
           description: 'Age filter',
           query: (query, value, resolveParams) => {
-            query.age = { $gt: value }; // eslint-disable-line no-param-reassign
-            query.someKey = resolveParams.someKey; // eslint-disable-line no-param-reassign
+            query.age = { $gt: value };
+            query.someKey = resolveParams.someKey;
           },
           filterTypeNameFallback: 'FilterUniqueNameInput',
         })
@@ -686,8 +684,8 @@ describe('Resolver', () => {
           type: 'Boolean!',
           description: 'Active status filter',
           query: async (query, value) => {
-            query.checkPermissions = await Promise.resolve('accessGranted'); // eslint-disable-line no-param-reassign
-            query.isActive = value; // eslint-disable-line no-param-reassign
+            query.checkPermissions = await Promise.resolve('accessGranted');
+            query.isActive = value;
           },
           filterTypeNameFallback: 'FilterOtherUniqueNameInput',
         });
@@ -826,7 +824,7 @@ describe('Resolver', () => {
         name: 'PRICE_ASC',
         description: 'Asc sort by non-null price',
         value: (resolveParams) => {
-          resolveParams.query.where({ price: { $gt: 0 } }); // eslint-disable-line no-param-reassign
+          resolveParams.query.where({ price: { $gt: 0 } });
           return { price: 1 };
         },
         sortTypeNameFallback: 'SortEnum',
@@ -891,7 +889,6 @@ describe('Resolver', () => {
   });
 
   describe('debug methods', () => {
-    /* eslint-disable no-console */
     const origConsole = global.console;
     beforeEach(() => {
       global.console = {
@@ -1079,7 +1076,6 @@ describe('Resolver', () => {
         ]);
       });
     });
-    /* eslint-enable no-console */
   });
 
   describe('getArgTC()', () => {

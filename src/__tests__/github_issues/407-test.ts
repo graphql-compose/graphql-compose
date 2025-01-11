@@ -32,7 +32,7 @@ describe('github issue #407', () => {
         },
       ],
     });
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
     const sdl = print(inputType.astNode!);
     expect(sdl).toBe(
       /* GraphQL */ `

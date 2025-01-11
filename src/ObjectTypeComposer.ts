@@ -182,7 +182,7 @@ export type ObjectTypeComposerRelationOpts<
   TRelationSource,
   TSource,
   TContext,
-  TArgs extends Record<string, any> = any
+  TArgs extends Record<string, any> = any,
 > =
   | ObjectTypeComposerRelationOptsWithResolver<TRelationSource, TSource, TContext, TArgs>
   | ObjectTypeComposerFieldConfigAsObjectDefinition<TSource, TContext, TArgs>;
@@ -190,7 +190,7 @@ export type ObjectTypeComposerRelationOptsWithResolver<
   TRelationSource,
   TSource,
   TContext,
-  TArgs extends Record<string, any> = any
+  TArgs extends Record<string, any> = any,
 > = {
   resolver: ThunkWithSchemaComposer<
     Resolver<TRelationSource, TContext, TArgs>,
@@ -208,12 +208,12 @@ export type ObjectTypeComposerRelationOptsWithResolver<
 export type ObjectTypeComposerRelationArgsMapperFn<
   TSource,
   TContext,
-  TArgs = Record<string, any>
+  TArgs = Record<string, any>,
 > = (source: TSource, args: TArgs, context: TContext, info: GraphQLResolveInfo) => any;
 export type ObjectTypeComposerRelationArgsMapper<
   TSource,
   TContext,
-  TArgs extends Record<string, any> = Record<string, any>
+  TArgs extends Record<string, any> = Record<string, any>,
 > = {
   [argName in keyof TArgs]:
     | { [key: string]: any }
@@ -529,7 +529,7 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
         this._gqcIsModified = true;
       } else {
         // nested field
-        // eslint-disable-next-line no-lonely-if
+
         if (this.hasField(name)) {
           const subTC = this.getFieldTC(name);
           if (subTC instanceof ObjectTypeComposer || subTC instanceof EnumTypeComposer) {
@@ -1888,9 +1888,8 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
         : null;
       return catchErrors
         ? Promise.resolve(payload).catch((e) => {
-            // eslint-disable-next-line
             console.log(`GQC ERROR: relation for ${this.getTypeName()}.${fieldName} throws error:`);
-            console.log(e); // eslint-disable-line
+            console.log(e);
             return null;
           })
         : payload;

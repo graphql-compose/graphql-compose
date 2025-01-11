@@ -1,5 +1,3 @@
-/* eslint-disable no-use-before-define, no-restricted-syntax */
-
 import type {
   GraphQLFieldConfigArgumentMap,
   GraphQLArgumentConfig,
@@ -574,7 +572,7 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
         const value = resolveParams?.args?.filter?.[name];
         if (value !== null && value !== undefined) {
           if (!resolveParams.rawQuery) {
-            resolveParams.rawQuery = {}; // eslint-disable-line
+            resolveParams.rawQuery = {};
           }
           await query(resolveParams.rawQuery, value, resolveParams);
         }
@@ -1044,7 +1042,6 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
   }
 
   debugExecTime(): Resolver<TSource, TContext, TArgs> {
-    /* eslint-disable no-console */
     return this.wrapResolve(
       (next) => async (rp) => {
         const name = `Execution time for ${this.getNestedName()}`;
@@ -1055,14 +1052,12 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
       },
       'debugExecTime'
     );
-    /* eslint-enable no-console */
   }
 
   debugParams(
     filterPaths?: string | string[] | undefined | null,
     opts: ResolverDebugOpts = { colors: true, depth: 5 }
   ): Resolver<TSource, TContext, TArgs> {
-    /* eslint-disable no-console */
     return this.wrapResolve(
       (next) => (rp: any) => {
         console.log(`ResolverResolveParams for ${this.getNestedName()}:`);
@@ -1088,14 +1083,12 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
       },
       'debugParams'
     );
-    /* eslint-enable no-console */
   }
 
   debugPayload(
     filterPaths?: string | string[] | undefined | null,
     opts: ResolverDebugOpts = { colors: true, depth: 5 }
   ): Resolver<TSource, TContext, TArgs> {
-    /* eslint-disable no-console */
     return this.wrapResolve(
       (next) => async (rp) => {
         try {
@@ -1122,7 +1115,6 @@ export class Resolver<TSource = any, TContext = any, TArgs = any, TReturn = any>
       },
       'debugPayload'
     );
-    /* eslint-enable no-console */
   }
 
   debug(

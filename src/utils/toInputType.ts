@@ -106,7 +106,7 @@ export function toInputObjectType<TContext>(
     let fieldInputType: ComposeInputTypeDefinition;
     try {
       fieldInputType = toInputType(fc.type, opts);
-    } catch (e) {
+    } catch (_e) {
       if (opts?.fallbackType || opts?.fallbackType === null) {
         // Setting to null effectively skips this field
         fieldInputType = opts?.fallbackType as any;

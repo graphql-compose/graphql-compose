@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 // This is internal methods of graphql-js (introduced in 14.0.0)
 // required for correct config conversion to internal field definition of types
 // copy pasted from https://github.com/graphql/graphql-js/blame/master/src/type/definition.js
@@ -161,9 +158,9 @@ export function convertObjectFieldMapToConfig(
                     sourceArgs[argName].type || sourceArgs[argName]
                   ) as any
               )
-            : sc.typeMapper.convertInputTypeDefinition(
+            : (sc.typeMapper.convertInputTypeDefinition(
                 sourceArgs[argName].type || sourceArgs[argName]
-              ),
+              ) as any),
         };
       });
       fc.args = args;

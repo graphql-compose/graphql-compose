@@ -576,7 +576,7 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
         for (const [_gqType, checkFn] of fastEntries) {
           // should we run checkFn simultaneously or in serial?
           // Current decision is: don't SPIKE event loop - run in serial (it may be changed in future)
-          // eslint-disable-next-line no-await-in-loop
+
           if (await checkFn(value, context, info)) return _gqType;
         }
         return fallbackType;
@@ -637,7 +637,6 @@ export class UnionTypeComposer<TSource = any, TContext = any> {
     return result;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   _isTypeResolversAsync(typeResolversMap: UnionTypeComposerResolversMap<any, TContext>): boolean {
     let res = false;
     for (const [, checkFn] of typeResolversMap.entries()) {

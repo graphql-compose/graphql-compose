@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
-/* eslint-disable no-nested-ternary */
-
 import { isObject } from './is';
 import { pluralize } from './pluralize';
 import type { Thunk, ObjMap } from './definitions';
@@ -87,13 +84,13 @@ export function inspect(value: unknown): string {
     ? typeof (value as any).inspect === 'function'
       ? (value as any).inspect()
       : Array.isArray(value)
-      ? `[${value.map(inspect).join(', ')}]`
-      : inspectObject(value)
+        ? `[${value.map(inspect).join(', ')}]`
+        : inspectObject(value)
     : typeof value === 'string'
-    ? `"${value}"`
-    : typeof value === 'function'
-    ? `[function ${value.name}]`
-    : String(value);
+      ? `"${value}"`
+      : typeof value === 'function'
+        ? `[function ${value.name}]`
+        : String(value);
 }
 
 /**
@@ -122,7 +119,7 @@ export function forEachKey<V>(
  *      const result = mapEachKey(obj, (v, k) => `${v}${k}`);
  *      // result = { a: '1a', b: '2b', c: '3c' }
  */
-export function mapEachKey<NewV = any, T extends Object | undefined = {}>(
+export function mapEachKey<NewV = any, T extends object | undefined = object>(
   obj: T,
   callback: (value: NonNullable<T>[keyof NonNullable<T>], key: keyof NonNullable<T>) => NewV
 ): T extends undefined ? undefined : ObjMap<NewV> {

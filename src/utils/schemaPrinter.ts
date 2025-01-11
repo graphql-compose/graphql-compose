@@ -1,5 +1,3 @@
-/* eslint-disable consistent-return */
-
 // copied from https://github.com/graphql/graphql-js/blob/master/src/utilities/printSchema.js
 // added printNodeDirectives() method
 
@@ -415,7 +413,6 @@ export function printNodeDirectives(
 }
 
 export function printDescription(
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   def: any,
   options?: Options,
   indentation: string = '',

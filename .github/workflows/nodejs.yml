@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14, 16]
+        node-version: [20, 22]
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
@@ -25,20 +25,17 @@ jobs:
         env:
           CI: true
       - name: Test – Eslint
-        if: ${{ always() && matrix.node-version == '14' }}
+        if: ${{ always() && matrix.node-version == '22' }}
         run: yarn eslint
       - name: Test – TSCheck
-        if: ${{ always() && matrix.node-version == '14' }}
+        if: ${{ always() && matrix.node-version == '22' }}
         run: yarn tscheck
       - name: Publish Test Report
-        if: ${{ always() && matrix.node-version == '14' }}
+        if: ${{ always() && matrix.node-version == '22' }}
         uses: mikepenz/action-junit-report@v2
         with:
           check_name: JUnit Annotations for Node ${{ matrix.node-version }}
           report_paths: '**/coverage/junit/**/*.xml'
-      - name: Send codecov.io stats
-        if: matrix.node-version == '14'
-        run: bash <(curl -s https://codecov.io/bash) || echo ''
 
   publish:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/alpha' || github.ref == 'refs/heads/beta'
@@ -46,10 +43,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Use Node.js 14
+      - name: Use Node.js 22
         uses: actions/setup-node@v2
         with:
-          node-version: 14
+          node-version: 22
       - name: Install node_modules
         run: yarn install
       - name: Build

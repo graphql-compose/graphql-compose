@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-/* eslint-disable no-param-reassign */
-
 type FilterOpts = {
   hideFields: { [fieldPath: string]: string };
   hideFieldsNote?: string;
