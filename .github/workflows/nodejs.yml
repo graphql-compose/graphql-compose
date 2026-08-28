@@ -44,6 +44,8 @@ jobs:
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/alpha' || github.ref == 'refs/heads/beta'
     needs: [tests]
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 22
@@ -58,4 +60,3 @@ jobs:
         run: yarn semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
