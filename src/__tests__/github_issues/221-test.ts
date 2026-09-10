@@ -15,7 +15,7 @@ describe('github issue #221: addTypeDefs crashes with argument having default en
           JPG
         }
       `);
-    }).not.toThrow('Type with name "ImageFormat" does not exists');
+    }).not.toThrow('Type with name "ImageFormat" does not exist');
 
     expect(sc.getOTC('Image').getFieldArg('random', 'format').defaultValue).toBe('JPG');
     expect(

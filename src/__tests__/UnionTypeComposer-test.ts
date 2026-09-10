@@ -45,7 +45,7 @@ describe('UnionTypeComposer', () => {
 
       // when types A & B are not defined getTypes() throw an error
       expect(() => myUTC.getType().getTypes()).toThrow(
-        'UnionError[TestTypeTpl]: Type with name "AA" does not exists'
+        'UnionError[TestTypeTpl]: Type with name "AA" does not exist'
       );
 
       // when types A & B defined, getTypes() returns them
