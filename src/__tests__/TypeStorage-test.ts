@@ -27,6 +27,12 @@ describe('typeStorage', () => {
     expect(typeStorage.size).toEqual(0);
   });
 
+  it('should throw if type does not exist', () => {
+    expect(() => typeStorage.get('MissingType')).toThrow(
+      /^Type with name "MissingType" does not exist$/
+    );
+  });
+
   describe('getOrSet() method', () => {
     it('should return existed value', () => {
       typeStorage.set('MyType', GraphQLString);

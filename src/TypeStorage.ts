@@ -35,7 +35,7 @@ export class TypeStorage<K = any, V = any> {
   get(typeName: K): V {
     const v = this.types.get(typeName);
     if (!v) {
-      throw new Error(`Type with name ${inspect(typeName)} does not exists`);
+      throw new Error(`Type with name ${inspect(typeName)} does not exist`);
     }
     return v;
   }

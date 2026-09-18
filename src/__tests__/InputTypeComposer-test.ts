@@ -549,7 +549,7 @@ describe('InputTypeComposer', () => {
       expect(itc1).toBeInstanceOf(InputTypeComposer);
       expect(itc1.getField('f1').type).toBeInstanceOf(ThunkComposer);
       expect(() => itc1.getFieldTC('f1').getTypeName()).toThrow(
-        'Type with name "Type1" does not exists'
+        'Type with name "Type1" does not exist'
       );
       expect(itc1.isFieldNonNull('f1')).toBeFalsy();
       expect(itc1.getField('f2').type).toBeInstanceOf(NonNullComposer);
