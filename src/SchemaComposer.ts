@@ -11,7 +11,7 @@ import { ListComposer } from './ListComposer';
 import { NonNullComposer } from './NonNullComposer';
 import { ThunkComposer } from './ThunkComposer';
 import { Resolver, ResolverDefinition } from './Resolver';
-import { isFunction } from './utils/is';
+import { isFunction, isObject } from './utils/is';
 import { inspect, forEachKey } from './utils/misc';
 import { dedent } from './utils/dedent';
 import {
@@ -462,6 +462,8 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
 
   /**
    * Define `resolve` methods for Types in `graphql-tools` manner.
+   * Field values may be functions, or objects with `resolve`/`subscribe`
+   * (the graphql-tools subscription shape).
    *
    * @example
    *     declare function addResolveMethods(typesFieldsResolve: {
@@ -500,9 +502,16 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
         const fieldsResolve = typesFieldsResolve[typeName] as any;
         const fieldNames = Object.keys(fieldsResolve);
         fieldNames.forEach((fieldName) => {
-          tc.extendField(fieldName, {
-            resolve: fieldsResolve[fieldName],
-          });
+          const fieldResolve = fieldsResolve[fieldName];
+          // graphql-tools: a function is `resolve`; an object copies
+          // `resolve`/`subscribe` onto the field (IResolverOptions).
+          if (isObject(fieldResolve)) {
+            tc.extendField(fieldName, fieldResolve);
+          } else {
+            tc.extendField(fieldName, {
+              resolve: fieldResolve,
+            });
+          }
         });
         return;
       } else if (tc instanceof EnumTypeComposer) {
@@ -1016,9 +1025,18 @@ export class SchemaComposer<TContext = any> extends TypeStorage<any, NamedTypeCo
         const typename = tc.getTypeName();
         if (exclude.includes(typename)) return;
         forEachKey(tc.getFields(), (fc, fieldName) => {
-          if (!fc.resolve || fc.resolve === defaultFieldResolver) return;
+          const resolve =
+            fc.resolve && fc.resolve !== defaultFieldResolver ? fc.resolve : undefined;
+          const fieldSubscribe = fc.subscribe;
+          if (!resolve && !fieldSubscribe) return;
           if (!resolveMethods[typename]) resolveMethods[typename] = {};
-          resolveMethods[typename][fieldName] = fc.resolve;
+          if (fieldSubscribe) {
+            resolveMethods[typename][fieldName] = resolve
+              ? { resolve, subscribe: fieldSubscribe }
+              : { subscribe: fieldSubscribe };
+          } else {
+            resolveMethods[typename][fieldName] = resolve;
+          }
         });
       },
       ENUM_TYPE: (tc: EnumTypeComposer<any>) => {
