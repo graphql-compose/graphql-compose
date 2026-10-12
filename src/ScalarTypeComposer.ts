@@ -505,6 +505,12 @@ export class ScalarTypeComposer<TContext = any> {
     return directive.args;
   }
 
+  removeDirective(directiveName: string): this {
+    const directives = this.getDirectives().filter((d) => d.name !== directiveName);
+    this.setDirectives(directives);
+    return this;
+  }
+
   // -----------------------------------------------
   // Misc methods
   // -----------------------------------------------

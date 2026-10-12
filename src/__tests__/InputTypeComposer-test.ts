@@ -739,6 +739,25 @@ describe('InputTypeComposer', () => {
       `);
     });
 
+    it('check directive remove-methods', () => {
+      const tc1 = schemaComposer.createInputTC(`
+        input My1 @d0(a: true) @d1 @d0(a: false) {
+          field: Int @d0 @d2(a: false, b: true) @d0
+        }
+      `);
+      tc1.removeDirective('d0').removeFieldDirective('field', 'd0');
+      expect(tc1.toSDL()).toBe(dedent`
+        input My1 @d1 {
+          field: Int @d2(a: false, b: true)
+        }
+      `);
+      // removing a non-existent directive keeps directives unchanged
+      tc1.removeFieldDirective('field', 'd404');
+      expect(tc1.getFieldDirectives('field')).toEqual([
+        { args: { b: true, a: false }, name: 'd2' },
+      ]);
+    });
+
     it('should create directives via config as object', () => {
       const tc2 = schemaComposer.createInputTC({
         name: 'MyInput',
