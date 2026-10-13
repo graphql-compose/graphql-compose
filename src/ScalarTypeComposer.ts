@@ -17,15 +17,15 @@ import { graphqlVersion } from './utils/graphqlVersion';
 import { printScalar, SchemaPrinterOptions } from './utils/schemaPrinter';
 import { getScalarTypeDefinitionNode } from './utils/definitionNode';
 
-export type ScalarTypeComposerDefinition<TInternal, TExternal> =
+export type ScalarTypeComposerDefinition<TInternal = any, TExternal = any> =
   | TypeAsString
   | Readonly<ScalarTypeComposerAsObjectDefinition<TInternal, TExternal>>
   | Readonly<GraphQLScalarType>;
 
-export type ScalarTypeComposerAsObjectDefinition<TInternal, TExternal> = GraphQLScalarTypeConfig<
-  TInternal,
-  TExternal
-> & {
+export type ScalarTypeComposerAsObjectDefinition<
+  TInternal = any,
+  TExternal = any,
+> = GraphQLScalarTypeConfig<TInternal, TExternal> & {
   extensions?: Extensions;
   directives?: Directive[];
 };
