@@ -200,6 +200,19 @@ describe('ScalarTypeComposer', () => {
       `);
     });
 
+    it('check directive remove-methods', () => {
+      const tc1 = schemaComposer.createScalarTC(`
+        scalar My1 @d0(a: true) @d1 @d0(a: false)
+      `);
+      tc1.removeDirective('d0');
+      expect(tc1.toSDL()).toBe(dedent`
+        scalar My1 @d1
+      `);
+      // removing a non-existent directive keeps directives unchanged
+      tc1.removeDirective('d404');
+      expect(tc1.getDirectiveNames()).toEqual(['d1']);
+    });
+
     if (graphqlVersion >= 15.1) {
       it('check specifiedByUrl', () => {
         const scalar1 = schemaComposer.createScalarTC(
