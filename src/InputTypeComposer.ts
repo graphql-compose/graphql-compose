@@ -943,6 +943,9 @@ export class InputTypeComposer<TContext = any> {
 
   removeFieldDirective(fieldName: string, directiveName: string): this {
     const directives = this.getFieldDirectives(fieldName).filter((d) => d.name !== directiveName);
+    if (directiveName === 'deprecated') {
+      this.getField(fieldName).deprecationReason = undefined;
+    }
     this.setFieldDirectives(fieldName, directives);
     return this;
   }

@@ -758,6 +758,18 @@ describe('InputTypeComposer', () => {
       ]);
     });
 
+    it('removing @deprecated clears deprecationReason', () => {
+      const tc1 = schemaComposer.createInputTC(`
+        input My2 {
+          field: Int @deprecated(reason: "f")
+        }
+      `);
+      tc1.removeFieldDirective('field', 'deprecated');
+      const field = tc1.getType().getFields().field;
+      expect(field.name).toBe('field');
+      expect(field.deprecationReason).toBeUndefined();
+    });
+
     it('should create directives via config as object', () => {
       const tc2 = schemaComposer.createInputTC({
         name: 'MyInput',

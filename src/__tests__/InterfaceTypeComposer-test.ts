@@ -1365,6 +1365,20 @@ describe('InterfaceTypeComposer', () => {
       expect(tc1.getDirectiveNames()).toEqual(['d1']);
     });
 
+    it('removing @deprecated clears deprecationReason of field and arg', () => {
+      const tc1 = schemaComposer.createInterfaceTC(`
+        interface My2 {
+          field(arg: Int @deprecated(reason: "a")): Int @deprecated(reason: "f")
+        }
+      `);
+      tc1.removeFieldArgDirective('field', 'arg', 'deprecated');
+      tc1.removeFieldDirective('field', 'deprecated');
+      const field = tc1.getType().getFields().field;
+      expect(field.deprecationReason).toBeUndefined();
+      expect(field.args[0].deprecationReason).toBeUndefined();
+      expect(field.args[0].name).toBe('arg');
+    });
+
     it('should create directives via config as object', () => {
       const tc2 = schemaComposer.createInterfaceTC({
         name: 'MyObject',

@@ -1805,6 +1805,9 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     const directives = this.getFieldArgDirectives(fieldName, argName).filter(
       (d) => d.name !== directiveName
     );
+    if (directiveName === 'deprecated') {
+      this.getFieldArg(fieldName, argName).deprecationReason = undefined;
+    }
     this.setFieldArgDirectives(fieldName, argName, directives);
     return this;
   }

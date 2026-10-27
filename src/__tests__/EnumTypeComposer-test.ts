@@ -406,6 +406,18 @@ describe('EnumTypeComposer', () => {
       expect(tc1.getDirectiveNames()).toEqual(['d1']);
     });
 
+    it('removing @deprecated clears deprecationReason', () => {
+      const tc1 = schemaComposer.createEnumTC(`
+        enum My2 {
+          AAA @deprecated(reason: "f")
+        }
+      `);
+      tc1.removeFieldDirective('AAA', 'deprecated');
+      const value = tc1.getType().getValue('AAA');
+      expect(value?.name).toBe('AAA');
+      expect(value?.deprecationReason).toBeUndefined();
+    });
+
     it('should create directives via config as object', () => {
       const tc2 = schemaComposer.createEnumTC({
         name: 'MyEnum',

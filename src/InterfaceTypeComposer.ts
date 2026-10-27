@@ -1603,6 +1603,9 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
 
   removeFieldDirective(fieldName: string, directiveName: string): this {
     const directives = this.getFieldDirectives(fieldName).filter((d) => d.name !== directiveName);
+    if (directiveName === 'deprecated') {
+      this.getField(fieldName).deprecationReason = undefined;
+    }
     this.setFieldDirectives(fieldName, directives);
     return this;
   }
@@ -1673,6 +1676,9 @@ export class InterfaceTypeComposer<TSource = any, TContext = any> {
     const directives = this.getFieldArgDirectives(fieldName, argName).filter(
       (d) => d.name !== directiveName
     );
+    if (directiveName === 'deprecated') {
+      this.getFieldArg(fieldName, argName).deprecationReason = undefined;
+    }
     this.setFieldArgDirectives(fieldName, argName, directives);
     return this;
   }
