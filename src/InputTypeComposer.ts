@@ -887,6 +887,12 @@ export class InputTypeComposer<TContext = any> {
     return directive.args;
   }
 
+  removeDirective(directiveName: string): this {
+    const directives = this.getDirectives().filter((d) => d.name !== directiveName);
+    this.setDirectives(directives);
+    return this;
+  }
+
   getFieldDirectives(fieldName: string): Array<Directive> {
     return this.getField(fieldName).directives || [];
   }
@@ -933,6 +939,15 @@ export class InputTypeComposer<TContext = any> {
     const directive = this.getFieldDirectives(fieldName)[idx];
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  removeFieldDirective(fieldName: string, directiveName: string): this {
+    const directives = this.getFieldDirectives(fieldName).filter((d) => d.name !== directiveName);
+    if (directiveName === 'deprecated') {
+      this.getField(fieldName).deprecationReason = undefined;
+    }
+    this.setFieldDirectives(fieldName, directives);
+    return this;
   }
 
   // -----------------------------------------------

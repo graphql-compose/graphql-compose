@@ -1675,6 +1675,12 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     return directive.args;
   }
 
+  removeDirective(directiveName: string): this {
+    const directives = this.getDirectives().filter((d) => d.name !== directiveName);
+    this.setDirectives(directives);
+    return this;
+  }
+
   getFieldDirectives(fieldName: string): Array<Directive> {
     return this.getField(fieldName).directives || [];
   }
@@ -1721,6 +1727,16 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     const directive = this.getFieldDirectives(fieldName)[idx];
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  removeFieldDirective(fieldName: string, directiveName: string): this {
+    const fc = this.getField(fieldName);
+    const directives = (fc.directives || []).filter((d) => d.name !== directiveName);
+    if (directiveName === 'deprecated') {
+      fc.deprecationReason = undefined;
+    }
+    this.setFieldDirectives(fieldName, directives);
+    return this;
   }
 
   getFieldArgDirectives(fieldName: string, argName: string): Array<Directive> {
@@ -1783,6 +1799,17 @@ export class ObjectTypeComposer<TSource = any, TContext = any> {
     const directive = this.getFieldArgDirectives(fieldName, argName)[idx];
     if (!directive) return undefined;
     return directive.args;
+  }
+
+  removeFieldArgDirective(fieldName: string, argName: string, directiveName: string): this {
+    const directives = this.getFieldArgDirectives(fieldName, argName).filter(
+      (d) => d.name !== directiveName
+    );
+    if (directiveName === 'deprecated') {
+      this.getFieldArg(fieldName, argName).deprecationReason = undefined;
+    }
+    this.setFieldArgDirectives(fieldName, argName, directives);
+    return this;
   }
 
   // -----------------------------------------------

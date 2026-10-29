@@ -1743,6 +1743,42 @@ describe('ObjectTypeComposer', () => {
       `);
     });
 
+    it('check directive remove-methods', () => {
+      const tc1 = schemaComposer.createObjectTC(`
+        type My1 @d0(a: true) @d1 @d0(a: false) {
+          field: Int @d0 @d2(a: false, b: true) @d0
+          field2(ok: Int = 15 @d5(a: 5) @d0 @d0): Int
+        }
+      `);
+      tc1
+        .removeDirective('d0')
+        .removeFieldDirective('field', 'd0')
+        .removeFieldArgDirective('field2', 'ok', 'd0');
+      expect(tc1.toSDL()).toBe(dedent`
+        type My1 @d1 {
+          field: Int @d2(a: false, b: true)
+          field2(ok: Int = 15 @d5(a: 5)): Int
+        }
+      `);
+      // removing a non-existent directive keeps directives unchanged
+      tc1.removeDirective('d404');
+      expect(tc1.getDirectiveNames()).toEqual(['d1']);
+    });
+
+    it('removing @deprecated clears deprecationReason of field and arg', () => {
+      const tc1 = schemaComposer.createObjectTC(`
+        type My2 {
+          field(arg: Int @deprecated(reason: "a")): Int @deprecated(reason: "f")
+        }
+      `);
+      tc1.removeFieldArgDirective('field', 'arg', 'deprecated');
+      tc1.removeFieldDirective('field', 'deprecated');
+      const field = tc1.getType().getFields().field;
+      expect(field.deprecationReason).toBeUndefined();
+      expect(field.args[0].deprecationReason).toBeUndefined();
+      expect(field.args[0].name).toBe('arg');
+    });
+
     it('should create directives via config as object', () => {
       const tc2 = schemaComposer.createObjectTC({
         name: 'MyObject',

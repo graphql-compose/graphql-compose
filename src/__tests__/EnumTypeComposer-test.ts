@@ -387,6 +387,37 @@ describe('EnumTypeComposer', () => {
       `);
     });
 
+    it('check directive remove-methods', () => {
+      const tc1 = schemaComposer.createEnumTC(`
+        enum My1 @d0(a: true) @d1 @d0(a: false) {
+          AAA @d0 @d2 @d0
+          BBB
+        }
+      `);
+      tc1.removeDirective('d0').removeFieldDirective('AAA', 'd0');
+      expect(tc1.toSDL()).toBe(dedent`
+        enum My1 @d1 {
+          AAA @d2
+          BBB
+        }
+      `);
+      // removing a non-existent directive keeps directives unchanged
+      tc1.removeDirective('d404');
+      expect(tc1.getDirectiveNames()).toEqual(['d1']);
+    });
+
+    it('removing @deprecated clears deprecationReason', () => {
+      const tc1 = schemaComposer.createEnumTC(`
+        enum My2 {
+          AAA @deprecated(reason: "f")
+        }
+      `);
+      tc1.removeFieldDirective('AAA', 'deprecated');
+      const value = tc1.getType().getValue('AAA');
+      expect(value?.name).toBe('AAA');
+      expect(value?.deprecationReason).toBeUndefined();
+    });
+
     it('should create directives via config as object', () => {
       const tc2 = schemaComposer.createEnumTC({
         name: 'MyEnum',

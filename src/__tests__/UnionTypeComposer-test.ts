@@ -611,6 +611,23 @@ describe('UnionTypeComposer', () => {
       `);
     });
 
+    it('check directive remove-methods', () => {
+      schemaComposer.addTypeDefs(`
+        type My2 { f: Int }
+        type My3 { f: Int }
+      `);
+      const tc1 = schemaComposer.createUnionTC(`
+        union My1 @d0(a: true) @d1 @d0(a: false) = My2 | My3
+      `);
+      tc1.removeDirective('d0');
+      expect(tc1.toSDL()).toBe(dedent`
+        union My1 @d1 = My2 | My3
+      `);
+      // removing a non-existent directive keeps directives unchanged
+      tc1.removeDirective('d404');
+      expect(tc1.getDirectiveNames()).toEqual(['d1']);
+    });
+
     it('should create directives via config as object', () => {
       const tc2 = schemaComposer.createUnionTC({
         name: 'MyUnion',
