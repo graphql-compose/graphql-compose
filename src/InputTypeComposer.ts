@@ -538,6 +538,16 @@ export class InputTypeComposer<TContext = any> {
   // -----------------------------------------------
 
   getType(): GraphQLInputObjectType {
+    // `@oneOf` is carried as a directive on the composer, but graphql-js
+    // only reads `isOneOf` from the type config, not from the astNode, so
+    // a type built from SDL (`input By @oneOf { ... }`) came out with
+    // `isOneOf: false` and OneOf validation never ran. Sync the flag from
+    // the directives whenever they were explicitly set (via SDL or
+    // `setDirectives`); leave it untouched when the composer wraps an
+    // existing GraphQLInputObjectType whose directives were never loaded.
+    if (this._gqcDirectives !== undefined) {
+      (this._gqType as any).isOneOf = this.getDirectives().some((d) => d.name === 'oneOf');
+    }
     if (this._gqcIsModified) {
       this._gqcIsModified = false;
       this._gqType.astNode = getInputObjectTypeDefinitionNode(this);

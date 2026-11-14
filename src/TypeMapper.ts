@@ -28,6 +28,7 @@ import type {
   EnumValueDefinitionNode,
   ArgumentNode,
   StringValueNode,
+  ValueNode,
   Location,
 } from 'graphql/language/ast';
 import deprecate from './utils/deprecate';
@@ -140,6 +141,22 @@ export type TypeAsString = TypeDefinitionString | TypeWrappedString | TypeNameSt
  */
 export class TypeMapper<TContext = any> {
   schemaComposer: SchemaComposer<TContext>;
+  // Default values whose type is defined later in the same SDL document
+  // (forward reference) cannot be converted while parsing, because
+  // `valueFromAST` needs the resolved input type. They are collected here
+  // and resolved once the whole document has been parsed, see
+  // `_resolvePendingDefaultValues`. Entries are located by owner type /
+  // field / arg name at resolve time, because field configs are cloned
+  // when they pass through `convertOutputFieldConfig` / `convertInputFieldConfig`,
+  // so holding a reference to the pre-conversion config would miss.
+  _pendingDefaultValues: Array<{
+    ownerTypeName: string;
+    fieldName: string;
+    argName: string | null;
+    typeNode: TypeNode;
+    defaultValueNode: ValueNode;
+  }> = [];
+  _parseTypesDepth = 0;
 
   constructor(schemaComposer: SchemaComposer<TContext>) {
     if (!schemaComposer) {
@@ -704,15 +721,82 @@ export class TypeMapper<TContext = any> {
   // -----------------------------------------------
 
   parseTypes(astDocument: DocumentNode): Array<NamedTypeComposer<TContext>> {
-    const types = [];
-    for (let i = 0; i < astDocument.definitions.length; i++) {
-      const def = astDocument.definitions[i];
-      const type = this.makeSchemaDef(def);
-      if (type) {
-        types[i] = type;
+    this._parseTypesDepth++;
+    let ok = false;
+    try {
+      const types = [];
+      for (let i = 0; i < astDocument.definitions.length; i++) {
+        const def = astDocument.definitions[i];
+        const type = this.makeSchemaDef(def);
+        if (type) {
+          types[i] = type;
+        }
+      }
+      ok = true;
+      return types;
+    } finally {
+      this._parseTypesDepth--;
+      // Only the outermost parse resolves the deferred defaults: nested
+      // parses (eg. an SDL string inside a definition) finish before the
+      // types they reference are defined in the outer document.
+      if (this._parseTypesDepth === 0) {
+        if (ok) {
+          this._resolvePendingDefaultValues();
+        } else {
+          // The parse failed: drop the deferred defaults instead of
+          // resolving them against a half-built schema (which could
+          // throw a misleading error and mask the real one).
+          this._pendingDefaultValues = [];
+        }
       }
     }
-    return types;
+  }
+
+  _deferDefaultValue(
+    ownerTypeName: string,
+    fieldName: string,
+    argName: string | null,
+    typeNode: TypeNode,
+    defaultValueNode: ValueNode
+  ): void {
+    this._pendingDefaultValues.push({
+      ownerTypeName,
+      fieldName,
+      argName,
+      typeNode,
+      defaultValueNode,
+    });
+  }
+
+  _resolvePendingDefaultValues(): void {
+    const pending = this._pendingDefaultValues;
+    this._pendingDefaultValues = [];
+    pending.forEach((entry) => {
+      const typeName = this.getNamedTypeAST(entry.typeNode).name.value;
+      let defaultValue: unknown;
+      if (this.schemaComposer.has(typeName)) {
+        const typeDef = this.schemaComposer.get(typeName);
+        const wrappedType = this.buildWrappedTypeDef(typeDef, entry.typeNode);
+        if (!isSomeInputTypeComposer(wrappedType)) {
+          throw new Error('Non-input type as an argument.');
+        }
+        defaultValue = valueFromAST(
+          entry.defaultValueNode,
+          wrappedType.getType() as GraphQLInputType
+        );
+      } else {
+        // The type was never defined anywhere: keep the previous lenient
+        // behaviour and take the literal value from the AST node.
+        defaultValue = parseValueNode(entry.defaultValueNode);
+      }
+      const ownerTC = this.schemaComposer.getAnyTC(entry.ownerTypeName) as any;
+      const fieldConfig = ownerTC.getField(entry.fieldName);
+      if (entry.argName) {
+        fieldConfig.args[entry.argName].defaultValue = defaultValue;
+      } else {
+        fieldConfig.defaultValue = defaultValue;
+      }
+    });
   }
 
   typeFromAST(typeNode: TypeNode): AnyTypeComposer<TContext> {
@@ -797,7 +881,9 @@ export class TypeMapper<TContext = any> {
   }
 
   makeArguments(
-    values?: ReadonlyArray<InputValueDefinitionNode>
+    values?: ReadonlyArray<InputValueDefinitionNode>,
+    ownerTypeName: string = '',
+    fieldName: string = ''
   ): ObjectTypeComposerArgumentConfigMap<any> {
     if (!values) {
       return {};
@@ -817,8 +903,14 @@ export class TypeMapper<TContext = any> {
       } as ObjectTypeComposerArgumentConfig;
 
       if (value.defaultValue) {
-        if (!this.schemaComposer.has(typeName) && (value?.defaultValue as any)?.value) {
-          ac.defaultValue = (value.defaultValue as any).value;
+        if (!this.schemaComposer.has(typeName)) {
+          // The type may be defined further down in the same SDL document
+          // (forward reference, eg. `filter: Filter = { min: 1 }` before
+          // `input Filter`). Object/list defaults have no `.value` on
+          // their AST node, so the old shortcut only worked for scalar
+          // and enum defaults and threw for the rest. Defer the
+          // type-aware conversion until the whole document is parsed.
+          this._deferDefaultValue(ownerTypeName, fieldName, key, value.type, value.defaultValue);
         } else {
           const typeDef = this.schemaComposer.get(typeName);
           const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
@@ -853,7 +945,7 @@ export class TypeMapper<TContext = any> {
         const fc: ObjectTypeComposerFieldConfig<any, any, any> = {
           type: this.typeFromASTOutput(field.type),
           description: getDescription(field),
-          args: this.makeArguments(field.arguments),
+          args: this.makeArguments(field.arguments, def.name.value, field.name.value),
           deprecationReason: this.getDeprecationReason(field.directives),
           astNode: field,
           directives: this.parseDirectives(field.directives),
@@ -880,7 +972,20 @@ export class TypeMapper<TContext = any> {
           directives: this.parseDirectives(field.directives),
         };
         if (field.defaultValue) {
-          fc.defaultValue = valueFromAST(field.defaultValue, (fc as any).type.getType());
+          const fieldTypeName = this.getNamedTypeAST(field.type).name.value;
+          if (!this.schemaComposer.has(fieldTypeName)) {
+            // Same forward-reference case as in makeArguments: the input
+            // type may be defined further down in the same SDL document.
+            this._deferDefaultValue(
+              def.name.value,
+              field.name.value,
+              null,
+              field.type,
+              field.defaultValue
+            );
+          } else {
+            fc.defaultValue = valueFromAST(field.defaultValue, (fc as any).type.getType());
+          }
         }
         return fc;
       }
@@ -952,6 +1057,7 @@ export class TypeMapper<TContext = any> {
       description: getDescription(def),
       locations,
       args,
+      isRepeatable: def.repeatable,
       astNode: def,
     });
   }
@@ -1044,6 +1150,37 @@ export class TypeMapper<TContext = any> {
       astNode: def,
       directives: this.parseDirectives(def.directives),
     });
+    if (name === 'Query' || name === 'Mutation' || name === 'Subscription') {
+      // Root types are NOT stored by name in the SchemaComposer (see
+      // ObjectTypeComposer.create), so a `type Query { a }` definition
+      // followed by `extend type Query { b }` in the same `addTypeDefs`
+      // call used to resolve to two different composers and the base
+      // fields were lost. Register the definition here so extensions in
+      // the same document find it, and merge a repeated definition into
+      // the already existing root type instead of replacing it (the
+      // two-call `addTypeDefs` case already worked that way via
+      // `addFields` in SchemaComposer.addTypeDefs).
+      if (this.schemaComposer.has(name)) {
+        const existing = this.schemaComposer.getOTC(name);
+        if (existing !== tc) {
+          existing.addFields(tc.getFields());
+          existing.addInterfaces(tc.getInterfaces());
+          const description = tc.getDescription();
+          if (description) existing.setDescription(description);
+          const existingDirectives = existing.getDirectives();
+          tc.getDirectives().forEach((directive) => {
+            const key = JSON.stringify(directive);
+            if (!existingDirectives.some((d) => JSON.stringify(d) === key)) {
+              existingDirectives.push(directive);
+            }
+          });
+          existing.setDirectives(existingDirectives);
+          return existing;
+        }
+      } else {
+        this.schemaComposer.set(name, tc);
+      }
+    }
     return tc;
   }
 
