@@ -87,6 +87,8 @@ export class InputTypeComposer<TContext = any> {
   _gqcExtensions?: Extensions;
   _gqcDirectives?: Directive[];
   _gqcIsModified?: boolean;
+  // `isOneOf` was set on the GraphQL type from the `@oneOf` directive
+  _gqcIsOneOfFromDirective?: boolean;
 
   /**
    * Create `InputTypeComposer` with adding it by name to the `SchemaComposer`.
@@ -184,17 +186,6 @@ export class InputTypeComposer<TContext = any> {
     this.schemaComposer = schemaComposer;
     this._gqType = graphqlType;
 
-    // A wrapped prebuilt type may already be a OneOf type (`isOneOf`
-    // set on the GraphQL type), but its directives were never loaded
-    // into `_gqcDirectives`. Without seeding, the first
-    // `setDirectiveByName` replaces the directive list with one that
-    // lacks `oneOf`, and getType() then clears the flag. Seed the
-    // marker so unrelated directive edits preserve OneOf validation;
-    // explicitly removing `oneOf` still disables it.
-    if ((graphqlType as any).isOneOf) {
-      this._gqcDirectives = [{ name: 'oneOf', args: {} }];
-    }
-
     // add itself to TypeStorage on create
     // it avoids recursive type use errors
     this.schemaComposer.set(graphqlType, this);
@@ -211,6 +202,13 @@ export class InputTypeComposer<TContext = any> {
         (resolveMaybeThunk(fields) as any) || {},
         this.getTypeName()
       );
+    }
+
+    // Keep OneOf of a pre-built type as the `@oneOf` directive, so `getType()`
+    // does not clear `isOneOf` when other directives are changed.
+    if ((graphqlType as any).isOneOf) {
+      this._gqcDirectives = [{ name: 'oneOf', args: {} }];
+      this._gqcIsOneOfFromDirective = true;
     }
 
     if (!this._gqType.astNode) {
@@ -549,16 +547,14 @@ export class InputTypeComposer<TContext = any> {
   // -----------------------------------------------
 
   getType(): GraphQLInputObjectType {
-    // `@oneOf` is carried as a directive on the composer, but graphql-js
-    // only reads `isOneOf` from the type config, not from the astNode, so
-    // a type built from SDL (`input By @oneOf { ... }`) came out with
-    // `isOneOf: false` and OneOf validation never ran. Sync the flag from
-    // the directives whenever they were explicitly set (via SDL or
-    // `setDirectives`); leave it untouched when the composer wraps an
-    // existing GraphQLInputObjectType whose directives were never loaded.
-    if (this._gqcDirectives !== undefined) {
-      (this._gqType as any).isOneOf = this.getDirectives().some((d) => d.name === 'oneOf');
+    // graphql-js reads OneOf only from `isOneOf`, not from the astNode,
+    // so sync the flag from the `@oneOf` directive. Clear it only if it was
+    // set from the directive, to keep `isOneOf` which was set on the type.
+    const hasOneOf = this.getDirectives().some((d) => d.name === 'oneOf');
+    if (hasOneOf || this._gqcIsOneOfFromDirective) {
+      (this._gqType as any).isOneOf = hasOneOf;
     }
+    this._gqcIsOneOfFromDirective = hasOneOf;
     if (this._gqcIsModified) {
       this._gqcIsModified = false;
       this._gqType.astNode = getInputObjectTypeDefinitionNode(this);
@@ -697,9 +693,7 @@ export class InputTypeComposer<TContext = any> {
     }));
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
-    // Copy the type directives (eg. `@oneOf`), otherwise a cloned SDL
-    // OneOf type comes out as an ordinary input type. Copy the entries
-    // so later directive edits on the clone do not mutate the source.
+    // Copy the entries, so later directive edits on the clone do not mutate the source.
     cloned.setDirectives(
       this.getDirectives().map((d) => ({ ...d, args: d.args ? { ...d.args } : d.args }))
     );
@@ -732,17 +726,12 @@ export class InputTypeComposer<TContext = any> {
     });
     this.addFields(fields);
 
-    // Carry over the merged type's directives (eg. `@oneOf`), so the
-    // OneOf marker survives a merge. Directives already present are
-    // kept once.
-    const mergedDirectives = [...this.getDirectives()];
-    tc.getDirectives().forEach((directive) => {
-      const key = JSON.stringify(directive);
-      if (!mergedDirectives.some((d) => JSON.stringify(d) === key)) {
-        mergedDirectives.push(directive);
-      }
-    });
-    this.setDirectives(mergedDirectives);
+    // OneOf changes how the whole input value is validated, so keep it from the merged type.
+    const hasOneOf = (itc: InputTypeComposer<any>) =>
+      itc.getDirectives().some((d) => d.name === 'oneOf');
+    if (hasOneOf(tc) && !hasOneOf(this)) {
+      this.setDirectiveByName('oneOf', {});
+    }
 
     return this;
   }

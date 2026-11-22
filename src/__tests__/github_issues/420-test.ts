@@ -1,12 +1,18 @@
-import { SchemaComposer } from '../..';
+import { SchemaComposer, ObjectTypeComposer, graphqlVersion } from '../..';
 import {
   buildSchema,
   graphqlSync,
+  parse,
+  GraphQLID,
   GraphQLInputObjectType,
   GraphQLObjectType,
-  ObjectTypeDefinitionNode,
-  parse,
+  GraphQLString,
 } from 'graphql';
+import type { ObjectTypeDefinitionNode } from 'graphql';
+
+// OneOf input objects are supported since graphql-js 16.9
+const supportsOneOf =
+  new GraphQLInputObjectType({ name: 'T', fields: {}, isOneOf: true }).isOneOf === true;
 
 describe('github issue #420', () => {
   it('extend type Query keeps base fields in the same addTypeDefs call', () => {
@@ -57,6 +63,7 @@ describe('github issue #420', () => {
   });
 
   it('keeps repeatable on directive definitions so the printed SDL validates', () => {
+    if (graphqlVersion < 15) return;
     const sc = new SchemaComposer();
     sc.addTypeDefs(`
       directive @tag(name: String) repeatable on OBJECT
@@ -69,6 +76,7 @@ describe('github issue #420', () => {
   });
 
   it('carries @oneOf into the built schema', () => {
+    if (!supportsOneOf) return;
     const sc = new SchemaComposer();
     sc.addTypeDefs(`
       input By @oneOf { id: ID email: String }
@@ -82,51 +90,79 @@ describe('github issue #420', () => {
       schema: built,
       source: '{ user(by: { id: "1", email: "x" }) }',
     });
-    // graphql-js 17 says "exactly one field must be specified", 16 says
-    // "exactly one key must be specified"; match the shared wording.
-    expect(res.errors?.[0].message).toMatch(/exactly one (field|key) must be specified/);
+    // graphql-js 16: "must specify exactly one key", graphql-js 17: "exactly one field must be specified"
+    expect(res.errors?.[0].message).toMatch(/exactly one (key|field)/);
   });
 
-  it('keeps OneOf validation when an unrelated directive is added to a wrapped prebuilt type', () => {
-    const schema = buildSchema(`
-      directive @oneOf on INPUT_OBJECT
-      input By @oneOf { id: ID email: String }
-      type Query { u(by: By): String }
-    `);
+  it('keeps OneOf of a wrapped type until @oneOf is removed', () => {
+    if (!supportsOneOf) return;
     const sc = new SchemaComposer();
-    const itc = sc.createInputTC(schema.getType('By') as GraphQLInputObjectType);
+    sc.addTypeDefs(`directive @other on INPUT_OBJECT`);
+    const createOneOfTC = (name: string) =>
+      sc.createInputTC(
+        new GraphQLInputObjectType({
+          name,
+          isOneOf: true,
+          fields: { id: { type: GraphQLID }, email: { type: GraphQLString } },
+        })
+      );
+    const itc = createOneOfTC('By');
+    itc.setDirectiveByName('other');
     expect(itc.getType().isOneOf).toBe(true);
-    itc.setDirectiveByName('other', {});
+    itc.removeDirective('oneOf');
+    expect(itc.getType().isOneOf).toBe(false);
+    expect(createOneOfTC('By2').removeDirective('oneOf').getType().isOneOf).toBe(false);
+  });
+
+  it('keeps isOneOf which was set on the GraphQL type', () => {
+    const sc = new SchemaComposer();
+    sc.addTypeDefs(`input By { id: ID email: String }`);
+    const itc = sc.getITC('By');
+    (itc.getType() as any).isOneOf = true;
     expect(itc.getType().isOneOf).toBe(true);
   });
 
-  it('keeps OneOf validation through clone() and merge()', () => {
+  it('keeps @oneOf when a schema is cloned or merged', () => {
+    if (!supportsOneOf) return;
     const sc = new SchemaComposer();
     sc.addTypeDefs(`
       input By @oneOf { id: ID email: String }
-      input Empty { x: Int }
       type Query { user(by: By): String }
     `);
-    const cloned = sc.clone();
-    expect(cloned.getITC('By').getType().isOneOf).toBe(true);
-    const res = graphqlSync({
-      schema: cloned.buildSchema(),
-      source: '{ user(by: { id: "1", email: "x" }) }',
-    });
-    expect(res.errors?.[0].message).toMatch(/exactly one (field|key) must be specified/);
+    const isOneOf = (s: SchemaComposer<any>) => s.getITC('By').getType().isOneOf;
+    expect((sc.clone().buildSchema().getType('By') as GraphQLInputObjectType).isOneOf).toBe(true);
+    expect(isOneOf(new SchemaComposer().merge(sc))).toBe(true);
 
-    sc.getITC('Empty').merge(sc.getITC('By'));
-    expect(sc.getITC('Empty').getType().isOneOf).toBe(true);
+    const target = new SchemaComposer();
+    target.addTypeDefs(`
+      input By { id: ID }
+      type Query { user(by: By): String }
+    `);
+    expect(isOneOf(target.merge(sc))).toBe(true);
   });
 
-  it('applies nested defaults inside other deferred defaults', () => {
+  it('resolves nested input-field defaults before the defaults that use them', () => {
     const sc = new SchemaComposer();
     sc.addTypeDefs(`
-      type Query { f(a: A = {}): Int }
+      type Query { f(a: A = {}): String }
       input A { b: B = { n: 1 } }
       input B { n: Int }
     `);
-    expect(sc.Query.getField('f').args!.a.defaultValue).toEqual({ b: { n: 1 } });
+    expect(sc.Query.getFieldArg('f', 'a').defaultValue).toEqual({ b: { n: 1 } });
+    sc.Query.extendField('f', { resolve: (_, args) => JSON.stringify(args.a) });
+    const schema = sc.buildSchema();
+    expect(graphqlSync({ schema, source: '{ f }' }).data).toEqual({ f: '{"b":{"n":1}}' });
+    expect(graphqlSync({ schema, source: '{ f(a: {}) }' }).data).toEqual({ f: '{"b":{"n":1}}' });
+
+    // through an input type without deferred defaults of its own
+    const sc2 = new SchemaComposer();
+    sc2.addTypeDefs(`
+      type Query { f(a: A = { b: {} }): Int }
+      input A { b: B }
+      input B { c: C = {} }
+      input C { x: Int = 1 }
+    `);
+    expect(sc2.Query.getFieldArg('f', 'a').defaultValue).toEqual({ b: { c: { x: 1 } } });
   });
 
   it('applies nested defaults transitively and into the built schema', () => {
@@ -146,18 +182,6 @@ describe('github issue #420', () => {
     ).toEqual({ b: { c: 7 } });
   });
 
-  it('does not throw when the nested type of a registered input is defined later', () => {
-    const sc = new SchemaComposer();
-    expect(() => {
-      sc.addTypeDefs(`
-        input A { b: B }
-        type Query { f(a: A = {}): Int }
-        input B { x: Int }
-      `);
-    }).not.toThrow();
-    expect(sc.Query.getField('f').args!.a.defaultValue).toEqual({});
-  });
-
   it('does not hang on recursive input defaults', () => {
     const sc = new SchemaComposer();
     expect(() => {
@@ -169,15 +193,50 @@ describe('github issue #420', () => {
     expect(sc.Query.getField('f').args!.a.defaultValue).toEqual({ b: {} });
   });
 
-  it('keeps the scalar/enum fallback for direct makeArguments calls', () => {
+  it('defers defaults of already defined input types which refer to later types', () => {
     const sc = new SchemaComposer();
-    const doc = parse(`type Query { f(x: Order = ASC): Int }`);
-    const fieldDef = (doc.definitions[0] as ObjectTypeDefinitionNode).fields![0];
-    const args = sc.typeMapper.makeArguments(fieldDef.arguments);
-    expect(args.x.defaultValue).toBe('ASC');
     expect(() => {
-      sc.addTypeDefs(`input Filter { min: Int } type Query { z: Int }`);
+      sc.addTypeDefs(`
+        input A { b: B }
+        type Query { f(a: A = {}): Int }
+        input C { a: A = {} }
+        input B { x: Int }
+      `);
     }).not.toThrow();
+    expect(sc.Query.getFieldArg('f', 'a').defaultValue).toEqual({});
+    expect(sc.getITC('C').getField('a').defaultValue).toEqual({});
+  });
+
+  it('applies input-field defaults to directive values parsed in the same document', () => {
+    const sc = new SchemaComposer();
+    sc.addTypeDefs(`
+      input Rule { allow: String, ownerField: String = "owner" }
+      directive @auth(rules: [Rule!], rule: Rule = {}) on OBJECT
+      type Post @auth(rules: [{ allow: "owner" }]) { id: ID }
+      type Query { p: Post }
+    `);
+    expect(sc.getOTC('Post').getDirectives()).toEqual([
+      {
+        name: 'auth',
+        args: {
+          rules: [{ allow: 'owner', ownerField: 'owner' }],
+          rule: { ownerField: 'owner' },
+        },
+      },
+    ]);
+  });
+
+  it('converts defaults at once when TypeMapper methods are called outside of a parse', () => {
+    const sc = new SchemaComposer();
+    const def = parse(`type T { f(a: Int = 1, o: Order = ASC): Int }`)
+      .definitions[0] as ObjectTypeDefinitionNode;
+    const args = sc.typeMapper.makeArguments(def.fields![0].arguments);
+    expect(args.a.defaultValue).toBe(1);
+    expect(args.o.defaultValue).toBe('ASC');
+    expect(() => sc.addTypeDefs(`type Query { x: Int }`)).not.toThrow();
+
+    const tc = sc.typeMapper.makeSchemaDef(def) as ObjectTypeComposer;
+    expect(tc.getFieldArg('f', 'o').defaultValue).toBe('ASC');
   });
 
   it('keeps forward-referenced interfaces lazy when Query already exists', () => {
@@ -190,33 +249,27 @@ describe('github issue #420', () => {
     expect(sc.Query.getFieldNames()).toEqual(['a', 'id']);
   });
 
-  it('keeps every application of a repeatable directive on merge', () => {
+  it('merges directives into an existing root type', () => {
+    if (graphqlVersion < 15) return;
     const sc = new SchemaComposer();
-    sc.addTypeDefs(`directive @tag repeatable on OBJECT\ntype Query { a: Int }`);
-    sc.addTypeDefs(`type Query @tag @tag { b: Int }`);
+    sc.Query.addFields({ z: 'Int' });
+    sc.addTypeDefs(`
+      directive @tag(name: String) repeatable on OBJECT
+      directive @auth(role: String) on OBJECT
+      type Query @tag(name: "a") @tag(name: "a") @auth(role: "a") { a: Int }
+    `);
+    sc.addTypeDefs(`
+      type Query @auth(role: "b") @late @late { b: Int }
+      directive @late repeatable on OBJECT
+    `);
     expect(sc.Query.getDirectives()).toEqual([
-      { name: 'tag', args: {} },
-      { name: 'tag', args: {} },
+      { name: 'tag', args: { name: 'a' } },
+      { name: 'tag', args: { name: 'a' } },
+      { name: 'auth', args: { role: 'b' } },
+      { name: 'late', args: {} },
+      { name: 'late', args: {} },
     ]);
-  });
-
-  it('keeps repeatable applications when the directive is defined later in the document', () => {
-    const sc = new SchemaComposer();
-    sc.addTypeDefs(`type Query { a: Int }`);
-    sc.addTypeDefs(`type Query @tag @tag { b: Int }\n directive @tag repeatable on OBJECT`);
-    expect(sc.Query.getDirectives()).toEqual([
-      { name: 'tag', args: {} },
-      { name: 'tag', args: {} },
-    ]);
-  });
-
-  it('still deduplicates a non-repeatable directive on merge', () => {
-    const sc = new SchemaComposer();
-    sc.addTypeDefs(
-      `directive @auth(role: String) on OBJECT\ntype Query @auth(role: "q") { a: Int }`
-    );
-    sc.addTypeDefs(`type Query @auth(role: "q") { b: Int }`);
-    expect(sc.Query.getDirectives()).toEqual([{ name: 'auth', args: { role: 'q' } }]);
+    expect(() => buildSchema(sc.toSDL({ omitScalars: true }))).not.toThrow();
   });
 
   it('still accumulates fields across separate addTypeDefs calls', () => {
@@ -226,5 +279,6 @@ describe('github issue #420', () => {
     sc.addTypeDefs(`"Second doc" type Query { c: Int }`);
     expect(sc.Query.getFieldNames()).toEqual(['a', 'b', 'c']);
     expect(sc.Query.getDescription()).toBe('Second doc');
+    expect(() => sc.buildSchema({ keepUnusedTypes: true })).not.toThrow();
   });
 });

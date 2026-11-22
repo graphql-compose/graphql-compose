@@ -112,10 +112,20 @@ import {
   isEnumTypeDefinitionString,
   isScalarTypeDefinitionString,
   isUnionTypeDefinitionString,
+  unwrapTypeNameString,
 } from './utils/typeHelpers';
 import { parseValueNode } from './utils/definitionNode';
 // @ts-ignore for GraphQL 15 and below (in v16 it was removed)
 import { dedentBlockStringValue } from 'graphql/language/blockString';
+
+type PendingDefaultValue = {
+  ownerTypeName: string;
+  fieldName: string;
+  // `null` for an input-field default
+  argName: string | null;
+  typeNode: TypeNode;
+  defaultValueNode: ValueNode;
+};
 
 /**
  * Eg. `type Name { field: Int }`
@@ -141,21 +151,13 @@ export type TypeAsString = TypeDefinitionString | TypeWrappedString | TypeNameSt
  */
 export class TypeMapper<TContext = any> {
   schemaComposer: SchemaComposer<TContext>;
-  // Default values whose type is defined later in the same SDL document
-  // (forward reference) cannot be converted while parsing, because
-  // `valueFromAST` needs the resolved input type. They are collected here
-  // and resolved once the whole document has been parsed, see
-  // `_resolvePendingDefaultValues`. Entries are located by owner type /
-  // field / arg name at resolve time, because field configs are cloned
-  // when they pass through `convertOutputFieldConfig` / `convertInputFieldConfig`,
-  // so holding a reference to the pre-conversion config would miss.
-  _pendingDefaultValues: Array<{
-    ownerTypeName: string;
-    fieldName: string;
-    argName: string | null;
-    typeNode: TypeNode;
-    defaultValueNode: ValueNode;
-  }> = [];
+  // Default values met while an SDL document is parsed whose input types
+  // (or the field defaults of those types) are not complete yet, because
+  // they are defined further down in the document. They are converted by
+  // `_resolvePendingDefaultValues` once the whole document is parsed.
+  // Entries are located by owner type / field / arg name at resolve time,
+  // because field configs are cloned when they are added to a composer.
+  _pendingDefaultValues: Array<PendingDefaultValue> = [];
   _parseTypesDepth = 0;
 
   constructor(schemaComposer: SchemaComposer<TContext>) {
@@ -752,83 +754,121 @@ export class TypeMapper<TContext = any> {
     }
   }
 
-  _deferDefaultValue(
-    ownerTypeName: string,
-    fieldName: string,
-    argName: string | null,
-    typeNode: TypeNode,
-    defaultValueNode: ValueNode
-  ): void {
-    this._pendingDefaultValues.push({
-      ownerTypeName,
-      fieldName,
-      argName,
-      typeNode,
-      defaultValueNode,
+  _deferDefaultValue(entry: PendingDefaultValue): boolean {
+    // Defer only while a document is parsed: a direct call of
+    // `makeSchemaDef()` or `makeArguments()` has nothing that resolves
+    // the queue, so convert its defaults at once.
+    if (this._parseTypesDepth === 0 || !entry.ownerTypeName) return false;
+    // Convert at once if possible, so directives applied further down in
+    // the document get the input-field defaults while they are parsed.
+    if (this._isInputTypeComplete(this.getNamedTypeAST(entry.typeNode).name.value)) return false;
+    this._pendingDefaultValues.push(entry);
+    return true;
+  }
+
+  /**
+   * Checks that the type and all input types reachable from it are defined
+   * and have no deferred input-field defaults.
+   */
+  _isInputTypeComplete(typeName: string, visitedTypes = new Set<string>()): boolean {
+    if (visitedTypes.has(typeName)) return true;
+    visitedTypes.add(typeName);
+    if (!this.schemaComposer.has(typeName) && !this.getBuiltInType(typeName)) return false;
+    if (
+      this._pendingDefaultValues.some((e) => e.argName === null && e.ownerTypeName === typeName)
+    ) {
+      return false;
+    }
+    if (!this.schemaComposer.hasInstance(typeName, InputTypeComposer)) return true;
+    const itc = this.schemaComposer.getITC(typeName);
+    return itc.getFieldNames().every((fieldName) => {
+      let fieldTypeName;
+      try {
+        fieldTypeName = unwrapTypeNameString(itc.getFieldTypeName(fieldName));
+      } catch (e) {
+        return false;
+      }
+      return this._isInputTypeComplete(fieldTypeName, visitedTypes);
     });
+  }
+
+  _convertDefaultValue(typeNode: TypeNode, defaultValueNode: ValueNode): unknown {
+    const typeName = this.getNamedTypeAST(typeNode).name.value;
+    if (!this.schemaComposer.has(typeName)) {
+      // The type is not defined: take the literal value from the AST node.
+      return parseValueNode(defaultValueNode);
+    }
+    const wrappedType = this.buildWrappedTypeDef(this.schemaComposer.get(typeName), typeNode);
+    if (!isSomeInputTypeComposer(wrappedType)) {
+      throw new Error('Non-input type as an argument.');
+    }
+    return valueFromAST(defaultValueNode, wrappedType.getType() as GraphQLInputType);
   }
 
   _resolvePendingDefaultValues(): void {
     const pending = this._pendingDefaultValues;
     this._pendingDefaultValues = [];
-    // Resolve in dependency order: an entry's default is coerced against
-    // its named input type, whose own field defaults must already be
-    // applied, or nested defaults are lost — eg. `f(a: A = {})` needs
-    // `A.b`'s default before coercing `{}`. An entry is ready when no
-    // unresolved input-field default remains for its named type. A full
-    // pass with no progress means a dependency cycle (recursive input
-    // types); break it by resolving the first remaining entry as-is.
-    const remaining = [...pending];
-    while (remaining.length > 0) {
-      let progressed = false;
-      for (let i = 0; i < remaining.length; i++) {
-        const entry = remaining[i];
-        const typeName = this.getNamedTypeAST(entry.typeNode).name.value;
-        const blocked = remaining.some(
-          (other) => other !== entry && other.argName === null && other.ownerTypeName === typeName
-        );
-        if (blocked) continue;
-        remaining.splice(i, 1);
-        this._applyPendingDefaultValue(entry);
-        progressed = true;
-        break;
-      }
-      if (!progressed) {
-        this._applyPendingDefaultValue(remaining.shift()!);
-      }
-    }
-  }
 
-  _applyPendingDefaultValue(entry: (typeof this._pendingDefaultValues)[number]): void {
-    const typeName = this.getNamedTypeAST(entry.typeNode).name.value;
-    let defaultValue: unknown;
-    if (this.schemaComposer.has(typeName)) {
-      const typeDef = this.schemaComposer.get(typeName);
-      const wrappedType = this.buildWrappedTypeDef(typeDef, entry.typeNode);
-      if (!isSomeInputTypeComposer(wrappedType)) {
-        throw new Error('Non-input type as an argument.');
+    // `valueFromAST` fills missing fields of an input object with their
+    // defaults, so input-field defaults must be resolved before the
+    // defaults which use their types, at any depth.
+    const fieldEntriesByType = new Map<string, PendingDefaultValue[]>();
+    pending.forEach((entry) => {
+      if (entry.argName !== null) return;
+      const entries = fieldEntriesByType.get(entry.ownerTypeName) || [];
+      entries.push(entry);
+      fieldEntriesByType.set(entry.ownerTypeName, entries);
+    });
+    const resolved = new Set<PendingDefaultValue>();
+    const visitedTypes = new Set<string>();
+
+    const resolveTypeDependencies = (typeName: string) => {
+      if (visitedTypes.has(typeName)) return;
+      visitedTypes.add(typeName);
+      if (!this.schemaComposer.hasInstance(typeName, InputTypeComposer)) return;
+      const itc = this.schemaComposer.getITC(typeName);
+      itc.getFieldNames().forEach((fieldName) => {
+        let fieldTypeName;
+        try {
+          fieldTypeName = unwrapTypeNameString(itc.getFieldTypeName(fieldName));
+        } catch (e) {
+          // the field type is not defined, so it has no defaults to resolve
+          return;
+        }
+        resolveTypeDependencies(fieldTypeName);
+      });
+      (fieldEntriesByType.get(typeName) || []).forEach(resolveEntry);
+    };
+
+    const resolveEntry = (entry: PendingDefaultValue) => {
+      if (resolved.has(entry)) return;
+      resolved.add(entry);
+      // The owner may be gone if a later definition with the same name replaced it.
+      if (!this.schemaComposer.has(entry.ownerTypeName)) return;
+      const ownerTC = this.schemaComposer.getAnyTC(entry.ownerTypeName);
+      if (fieldEntriesByType.size > 0) {
+        resolveTypeDependencies(this.getNamedTypeAST(entry.typeNode).name.value);
       }
-      defaultValue = valueFromAST(
-        entry.defaultValueNode,
-        wrappedType.getType() as GraphQLInputType
-      );
-    } else {
-      // The type was never defined anywhere: keep the previous lenient
-      // behaviour and take the literal value from the AST node.
-      defaultValue = parseValueNode(entry.defaultValueNode);
-    }
-    const ownerTC = this.schemaComposer.getAnyTC(entry.ownerTypeName) as any;
-    const fieldConfig = ownerTC.getField(entry.fieldName);
-    if (entry.argName) {
-      fieldConfig.args[entry.argName].defaultValue = defaultValue;
-    } else {
-      fieldConfig.defaultValue = defaultValue;
-    }
-    // The owner type may already have been materialized into a GraphQL
-    // type (eg. by coercing an earlier default), which caches its field
-    // map. Mark it modified so the next getType() rebuilds the field map
-    // from the updated configs.
-    ownerTC._gqcIsModified = true;
+
+      const defaultValue = this._convertDefaultValue(entry.typeNode, entry.defaultValueNode);
+      // Use the setters (not a direct mutation of the configs) so the
+      // composer rebuilds a GraphQL type whose fields are already cached.
+      if (entry.argName !== null) {
+        if (
+          (ownerTC instanceof ObjectTypeComposer || ownerTC instanceof InterfaceTypeComposer) &&
+          ownerTC.hasFieldArg(entry.fieldName, entry.argName)
+        ) {
+          ownerTC.setFieldArg(entry.fieldName, entry.argName, {
+            ...ownerTC.getFieldArg(entry.fieldName, entry.argName),
+            defaultValue,
+          });
+        }
+      } else if (ownerTC instanceof InputTypeComposer && ownerTC.hasField(entry.fieldName)) {
+        ownerTC.extendField(entry.fieldName, { defaultValue });
+      }
+    };
+
+    pending.forEach(resolveEntry);
   }
 
   typeFromAST(typeNode: TypeNode): AnyTypeComposer<TContext> {
@@ -923,7 +963,6 @@ export class TypeMapper<TContext = any> {
     const result = {} as ObjectTypeComposerArgumentConfigMap<any>;
     values.forEach((value) => {
       const key = value.name.value;
-      const typeName = this.getNamedTypeAST(value.type).name.value;
       const type = this.typeFromASTInput(value.type);
 
       const ac = {
@@ -935,30 +974,15 @@ export class TypeMapper<TContext = any> {
       } as ObjectTypeComposerArgumentConfig;
 
       if (value.defaultValue) {
-        if (this._parseTypesDepth > 0) {
-          // Inside an SDL parse, defer every default until the whole
-          // document is parsed. The type may be registered already but
-          // still incomplete (a nested type defined further down), so
-          // coercing eagerly can throw, or lose nested defaults, and a
-          // default applied later would not reach an already
-          // materialized field map. Resolved in dependency order by
-          // _resolvePendingDefaultValues().
-          this._deferDefaultValue(ownerTypeName, fieldName, key, value.type, value.defaultValue);
-        } else if (!this.schemaComposer.has(typeName) && (value?.defaultValue as any)?.value) {
-          // Direct call outside a parse: keep the previous lenient
-          // scalar/enum fallback (a literal value straight off the node).
-          ac.defaultValue = (value.defaultValue as any).value;
-        } else {
-          const typeDef = this.schemaComposer.get(typeName);
-          const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
-          if (isSomeInputTypeComposer(wrappedType)) {
-            ac.defaultValue = valueFromAST(
-              value.defaultValue,
-              wrappedType.getType() as GraphQLInputType
-            );
-          } else {
-            throw new Error('Non-input type as an argument.');
-          }
+        const deferred = this._deferDefaultValue({
+          ownerTypeName,
+          fieldName,
+          argName: key,
+          typeNode: value.type,
+          defaultValueNode: value.defaultValue,
+        });
+        if (!deferred) {
+          ac.defaultValue = this._convertDefaultValue(value.type, value.defaultValue);
         }
       }
 
@@ -1009,17 +1033,15 @@ export class TypeMapper<TContext = any> {
           directives: this.parseDirectives(field.directives),
         };
         if (field.defaultValue) {
-          if (this._parseTypesDepth > 0) {
-            // Same as makeArguments: defer until the document is parsed.
-            this._deferDefaultValue(
-              def.name.value,
-              field.name.value,
-              null,
-              field.type,
-              field.defaultValue
-            );
-          } else {
-            fc.defaultValue = valueFromAST(field.defaultValue, (fc as any).type.getType());
+          const deferred = this._deferDefaultValue({
+            ownerTypeName: def.name.value,
+            fieldName: field.name.value,
+            argName: null,
+            typeNode: field.type,
+            defaultValueNode: field.defaultValue,
+          });
+          if (!deferred) {
+            fc.defaultValue = this._convertDefaultValue(field.type, field.defaultValue);
           }
         }
         return fc;
@@ -1202,22 +1224,25 @@ export class TypeMapper<TContext = any> {
           existing.addInterfaces(tc.getInterfaces().map((iface) => iface.getTypeName()));
           const description = tc.getDescription();
           if (description) existing.setDescription(description);
-          const existingDirectives = existing.getDirectives();
+          const directives = [...existing.getDirectives()];
           tc.getDirectives().forEach((directive) => {
-            const key = JSON.stringify(directive);
-            // Only deduplicate directives known to be non-repeatable.
-            // A repeatable directive keeps every application, even with
-            // identical arguments (`@tag @tag` must stay two). A
-            // directive whose definition has not been parsed yet is kept
-            // too, so a definition appearing later in the document
-            // cannot silently drop an application.
-            const def = this.schemaComposer._getDirective(directive.name);
-            const nonRepeatable = !!def && !def.isRepeatable;
-            if (!nonRepeatable || !existingDirectives.some((d) => JSON.stringify(d) === key)) {
-              existingDirectives.push(directive);
+            // A known non-repeatable directive can be applied only once, so
+            // the later definition replaces it. Keep repeatable directives and
+            // directives which are defined further down in the document.
+            const directiveDef = this.schemaComposer._getDirective(directive.name);
+            if (directiveDef && !directiveDef.isRepeatable) {
+              const idx = directives.findIndex((d) => d.name === directive.name);
+              if (idx >= 0) {
+                directives[idx] = directive;
+                return;
+              }
             }
+            directives.push(directive);
           });
-          existing.setDirectives(existingDirectives);
+          existing.setDirectives(directives);
+          // Drop the temporary composer: it is stored by its GraphQL type and
+          // would add a second `Query` type, eg. with `keepUnusedTypes`.
+          this.schemaComposer.delete(tc._gqType);
           return existing;
         }
       } else {
