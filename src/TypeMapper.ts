@@ -771,32 +771,64 @@ export class TypeMapper<TContext = any> {
   _resolvePendingDefaultValues(): void {
     const pending = this._pendingDefaultValues;
     this._pendingDefaultValues = [];
-    pending.forEach((entry) => {
-      const typeName = this.getNamedTypeAST(entry.typeNode).name.value;
-      let defaultValue: unknown;
-      if (this.schemaComposer.has(typeName)) {
-        const typeDef = this.schemaComposer.get(typeName);
-        const wrappedType = this.buildWrappedTypeDef(typeDef, entry.typeNode);
-        if (!isSomeInputTypeComposer(wrappedType)) {
-          throw new Error('Non-input type as an argument.');
-        }
-        defaultValue = valueFromAST(
-          entry.defaultValueNode,
-          wrappedType.getType() as GraphQLInputType
+    // Resolve in dependency order: an entry's default is coerced against
+    // its named input type, whose own field defaults must already be
+    // applied, or nested defaults are lost — eg. `f(a: A = {})` needs
+    // `A.b`'s default before coercing `{}`. An entry is ready when no
+    // unresolved input-field default remains for its named type. A full
+    // pass with no progress means a dependency cycle (recursive input
+    // types); break it by resolving the first remaining entry as-is.
+    const remaining = [...pending];
+    while (remaining.length > 0) {
+      let progressed = false;
+      for (let i = 0; i < remaining.length; i++) {
+        const entry = remaining[i];
+        const typeName = this.getNamedTypeAST(entry.typeNode).name.value;
+        const blocked = remaining.some(
+          (other) => other !== entry && other.argName === null && other.ownerTypeName === typeName
         );
-      } else {
-        // The type was never defined anywhere: keep the previous lenient
-        // behaviour and take the literal value from the AST node.
-        defaultValue = parseValueNode(entry.defaultValueNode);
+        if (blocked) continue;
+        remaining.splice(i, 1);
+        this._applyPendingDefaultValue(entry);
+        progressed = true;
+        break;
       }
-      const ownerTC = this.schemaComposer.getAnyTC(entry.ownerTypeName) as any;
-      const fieldConfig = ownerTC.getField(entry.fieldName);
-      if (entry.argName) {
-        fieldConfig.args[entry.argName].defaultValue = defaultValue;
-      } else {
-        fieldConfig.defaultValue = defaultValue;
+      if (!progressed) {
+        this._applyPendingDefaultValue(remaining.shift()!);
       }
-    });
+    }
+  }
+
+  _applyPendingDefaultValue(entry: (typeof this._pendingDefaultValues)[number]): void {
+    const typeName = this.getNamedTypeAST(entry.typeNode).name.value;
+    let defaultValue: unknown;
+    if (this.schemaComposer.has(typeName)) {
+      const typeDef = this.schemaComposer.get(typeName);
+      const wrappedType = this.buildWrappedTypeDef(typeDef, entry.typeNode);
+      if (!isSomeInputTypeComposer(wrappedType)) {
+        throw new Error('Non-input type as an argument.');
+      }
+      defaultValue = valueFromAST(
+        entry.defaultValueNode,
+        wrappedType.getType() as GraphQLInputType
+      );
+    } else {
+      // The type was never defined anywhere: keep the previous lenient
+      // behaviour and take the literal value from the AST node.
+      defaultValue = parseValueNode(entry.defaultValueNode);
+    }
+    const ownerTC = this.schemaComposer.getAnyTC(entry.ownerTypeName) as any;
+    const fieldConfig = ownerTC.getField(entry.fieldName);
+    if (entry.argName) {
+      fieldConfig.args[entry.argName].defaultValue = defaultValue;
+    } else {
+      fieldConfig.defaultValue = defaultValue;
+    }
+    // The owner type may already have been materialized into a GraphQL
+    // type (eg. by coercing an earlier default), which caches its field
+    // map. Mark it modified so the next getType() rebuilds the field map
+    // from the updated configs.
+    ownerTC._gqcIsModified = true;
   }
 
   typeFromAST(typeNode: TypeNode): AnyTypeComposer<TContext> {
@@ -903,14 +935,19 @@ export class TypeMapper<TContext = any> {
       } as ObjectTypeComposerArgumentConfig;
 
       if (value.defaultValue) {
-        if (!this.schemaComposer.has(typeName)) {
-          // The type may be defined further down in the same SDL document
-          // (forward reference, eg. `filter: Filter = { min: 1 }` before
-          // `input Filter`). Object/list defaults have no `.value` on
-          // their AST node, so the old shortcut only worked for scalar
-          // and enum defaults and threw for the rest. Defer the
-          // type-aware conversion until the whole document is parsed.
+        if (this._parseTypesDepth > 0) {
+          // Inside an SDL parse, defer every default until the whole
+          // document is parsed. The type may be registered already but
+          // still incomplete (a nested type defined further down), so
+          // coercing eagerly can throw, or lose nested defaults, and a
+          // default applied later would not reach an already
+          // materialized field map. Resolved in dependency order by
+          // _resolvePendingDefaultValues().
           this._deferDefaultValue(ownerTypeName, fieldName, key, value.type, value.defaultValue);
+        } else if (!this.schemaComposer.has(typeName) && (value?.defaultValue as any)?.value) {
+          // Direct call outside a parse: keep the previous lenient
+          // scalar/enum fallback (a literal value straight off the node).
+          ac.defaultValue = (value.defaultValue as any).value;
         } else {
           const typeDef = this.schemaComposer.get(typeName);
           const wrappedType = this.buildWrappedTypeDef(typeDef, value.type);
@@ -972,10 +1009,8 @@ export class TypeMapper<TContext = any> {
           directives: this.parseDirectives(field.directives),
         };
         if (field.defaultValue) {
-          const fieldTypeName = this.getNamedTypeAST(field.type).name.value;
-          if (!this.schemaComposer.has(fieldTypeName)) {
-            // Same forward-reference case as in makeArguments: the input
-            // type may be defined further down in the same SDL document.
+          if (this._parseTypesDepth > 0) {
+            // Same as makeArguments: defer until the document is parsed.
             this._deferDefaultValue(
               def.name.value,
               field.name.value,
@@ -1170,7 +1205,15 @@ export class TypeMapper<TContext = any> {
           const existingDirectives = existing.getDirectives();
           tc.getDirectives().forEach((directive) => {
             const key = JSON.stringify(directive);
-            if (!existingDirectives.some((d) => JSON.stringify(d) === key)) {
+            // Only deduplicate directives known to be non-repeatable.
+            // A repeatable directive keeps every application, even with
+            // identical arguments (`@tag @tag` must stay two). A
+            // directive whose definition has not been parsed yet is kept
+            // too, so a definition appearing later in the document
+            // cannot silently drop an application.
+            const def = this.schemaComposer._getDirective(directive.name);
+            const nonRepeatable = !!def && !def.isRepeatable;
+            if (!nonRepeatable || !existingDirectives.some((d) => JSON.stringify(d) === key)) {
               existingDirectives.push(directive);
             }
           });

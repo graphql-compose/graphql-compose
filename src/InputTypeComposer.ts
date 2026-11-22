@@ -184,6 +184,17 @@ export class InputTypeComposer<TContext = any> {
     this.schemaComposer = schemaComposer;
     this._gqType = graphqlType;
 
+    // A wrapped prebuilt type may already be a OneOf type (`isOneOf`
+    // set on the GraphQL type), but its directives were never loaded
+    // into `_gqcDirectives`. Without seeding, the first
+    // `setDirectiveByName` replaces the directive list with one that
+    // lacks `oneOf`, and getType() then clears the flag. Seed the
+    // marker so unrelated directive edits preserve OneOf validation;
+    // explicitly removing `oneOf` still disables it.
+    if ((graphqlType as any).isOneOf) {
+      this._gqcDirectives = [{ name: 'oneOf', args: {} }];
+    }
+
     // add itself to TypeStorage on create
     // it avoids recursive type use errors
     this.schemaComposer.set(graphqlType, this);
@@ -686,6 +697,12 @@ export class InputTypeComposer<TContext = any> {
     }));
     cloned._gqcExtensions = { ...this._gqcExtensions };
     cloned.setDescription(this.getDescription());
+    // Copy the type directives (eg. `@oneOf`), otherwise a cloned SDL
+    // OneOf type comes out as an ordinary input type. Copy the entries
+    // so later directive edits on the clone do not mutate the source.
+    cloned.setDirectives(
+      this.getDirectives().map((d) => ({ ...d, args: d.args ? { ...d.args } : d.args }))
+    );
 
     return cloned;
   }
@@ -714,6 +731,18 @@ export class InputTypeComposer<TContext = any> {
       };
     });
     this.addFields(fields);
+
+    // Carry over the merged type's directives (eg. `@oneOf`), so the
+    // OneOf marker survives a merge. Directives already present are
+    // kept once.
+    const mergedDirectives = [...this.getDirectives()];
+    tc.getDirectives().forEach((directive) => {
+      const key = JSON.stringify(directive);
+      if (!mergedDirectives.some((d) => JSON.stringify(d) === key)) {
+        mergedDirectives.push(directive);
+      }
+    });
+    this.setDirectives(mergedDirectives);
 
     return this;
   }
