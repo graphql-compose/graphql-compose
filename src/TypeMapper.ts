@@ -1164,7 +1164,7 @@ export class TypeMapper<TContext = any> {
         const existing = this.schemaComposer.getOTC(name);
         if (existing !== tc) {
           existing.addFields(tc.getFields());
-          existing.addInterfaces(tc.getInterfaces());
+          existing.addInterfaces(tc.getInterfaces().map((iface) => iface.getTypeName()));
           const description = tc.getDescription();
           if (description) existing.setDescription(description);
           const existingDirectives = existing.getDirectives();
